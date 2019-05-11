@@ -1,0 +1,1 @@
+Cada carpeta contiene la información de recuperada por el Tocani de cada uno de los pisos

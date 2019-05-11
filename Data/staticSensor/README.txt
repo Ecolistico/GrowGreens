@@ -1,0 +1,1 @@
+El archivo "sampleBaseData_alfa" tiene que ser creado cada día con el formato dd-mm-aaaa

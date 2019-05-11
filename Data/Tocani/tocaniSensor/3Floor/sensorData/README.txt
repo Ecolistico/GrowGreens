@@ -1,0 +1,1 @@
+El archivo "tocaniData" tiene que ser creado cada día con el formato dd-mm-aaaa
