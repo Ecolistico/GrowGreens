@@ -1,0 +1,23 @@
+{
+  "title": "MQTT Settings",
+  "uri": "/mqtt_clear",
+  "menu": false,
+  "element": [
+    {
+      "name": "caption",
+      "type": "ACText",
+      "value": "<h4>Parameters delated:</h4>",
+      "style": "text-align:center;color:#2f4f4f;padding:10px;"
+    },
+    {
+      "name": "parameters",
+      "type": "ACText"
+    },
+    {
+      "name": "clear",
+      "type": "ACSubmit",
+      "value": "Return",
+      "uri": "/mqtt_settings"
+    }
+  ]
+}
