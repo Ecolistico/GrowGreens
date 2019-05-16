@@ -1,12 +1,18 @@
 /*
- * Falta: Guardar parámetros iniciales en memoria EEPROM y cargarlos automáticamente
- */
+ * Falta: 
+ * Crear comando para recalibrar sensores por serial
+ * Crear estructura para guardar datos de calibración de sensores y parametros de filtros en EEPROM
+ * 
+ * Crear comando para reprogramar días por serial
+ * Crear estructura para guardar parámetros de días en EEPROM
+ * 
+ * Crear objetos para controlar el resto de las válvulas solenoides y bombas
+ * Programar condiciones de encendido y apagado de bombas y válvulas solenoides
+*/
  
 /*** Include Libraries ***/
 #include <Wire.h>
-#include <Adafruit_PWMServoDriver.h>
 #include <DHT.h>
-#include <IRremote.h>
 #include <EEPROM.h>
 #include <actuator.h>
 #include <day.h>

@@ -73,7 +73,21 @@ void LED_setup()
       }
     }
   }
-    
+
+/***** Pendiente de aquí para abajo *****/
+/*
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+void MultiDay_setup(){
+  
+}
+
 void sensors_setup(){
   Serial.println(F("Setting up sensors..."));
   pressureSensor.defaultFilter(); // Default Kalman Filter

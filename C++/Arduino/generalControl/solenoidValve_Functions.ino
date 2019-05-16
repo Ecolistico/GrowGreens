@@ -1,3 +1,5 @@
+// Analizar si dichas funciones son requeridas
+/*
 void reorderAllSolenoids(bool a, bool b){
   Serial.print(F("Solenoid valves: Creating routine "));
   if(a){Serial.print("H");}else{Serial.print("L");}
@@ -14,3 +16,4 @@ void reorderSolenoids_byFloor(byte fl){
   Serial.println(F("Solenoid valves: Routine created correctly"));
   }else{Serial.println(F("Solenoid valves: Routine cannot be configured correctly"));}
 }
+*/

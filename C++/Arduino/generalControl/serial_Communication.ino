@@ -1,18 +1,6 @@
 /*****   Lecture on serial Events   *****/
 /*
- * The structure of the commands are: 
- * 1      2     3           4                5              6               7             8
- * char char  char  # of parameters  lenght_parameter1  parameter1  lenght_parameter2  parameter2
- * Where:
- * 1- Refers to the class
- * 2- Refers to the function
- * 3- Refers to object
- * 4- Number of parameters given
- * 5- Lenght of the 1st parameter
- * 6- Parameter 1
- * 7- Length of the 2nd parameter
- * 8- Parameter 2
- * 9- ...
+ * The structure of the commands is specified on each function
  * 
  * Notes: Values of 1, 2, 3, 4, 5, 7, 9, etc... are char type, and its value is assigned according to the ASCII Table starting at char(48)="0"
  * For further information see ASCII Table
@@ -170,30 +158,64 @@ void serialEvent() {                                  //if the hardware serial p
         else if(fl.toInt()<=4 || fl.toInt()>=1){Serial.println(F("Parameter Floor has to be between [1,4]"));}
         else if(zn.toInt()>=1 || zn.toInt()<=4){Serial.println(F("Parameter Zone has to be between [1,4]"));}
         else{Serial.println(F("Parameters Incorrect. Unkown Reason."));}
-      } 
-      
+      }  
     }
      
     else if(inputstring.charAt(0)==zero_char+2){ // EPPROM info --> '2'
       if(inputstring.charAt(1)==zero_char){ // clean_EEPROM Function --> '0'
-        String confirm = inputstring.substring(2);
+        String confirm = inputstring.substring(2); // Form = 20clean
         if(confirm=="clean"){clean_EEPROM();}
         else{Serial.println(F("Key Confirmation is necesary to execute this action"));}
       }
       else if(inputstring.charAt(1)==zero_char+1){ // print_EEPROM Function --> '1'
-        String confirm = inputstring.substring(2);
+        String confirm = inputstring.substring(2); // Form = 21print
         if(confirm=="print"){print_EEPROM();}
         else{Serial.println(F("Key Confirmation is necesary to execute this action"));}
       }
       else if(inputstring.charAt(1)==zero_char+2){ // saveParamters_EEPROM Function --> '2'
-        String confirm = inputstring.substring(2);
+        String confirm = inputstring.substring(2); // Form = 22save
         if(confirm=="save"){saveParamters_EEPROM();}
         else{Serial.println(F("Key Confirmation is necesary to execute this action"));}
       }
     }
-    
+
+    /***** Pendiente de aquí para abajo *****/
+    /*
+     * 
+     * 
+     * 
+     * 
+     * 
+     */
+    else if(inputstring.charAt(0)==zero_char+3){ // MultiDay info --> '3'
+      if(inputstring.charAt(1)==zero_char){ // redefine Function --> '0'
+        // Pendiente programar // Form = 30byteFloatFloat
+      }
+    }
+
+    else if(inputstring.charAt(0)==zero_char+4){ // analogSensor info --> '4'
+      if(inputstring.charAt(1)==zero_char && inputstring.charAt(2)==zero_char){ // analogSensor object #1 --> '0' 
+        // setModel function --> '0'
+        // Form = 400byteFloatFloatFloat
+      }
+      else if(inputstring.charAt(1)==zero_char && inputstring.charAt(2)==zero_char+1){ // analogSensor object #1 --> '0' 
+              // notFilter function --> '1'
+              // Form = 401
+      }
+      else if(inputstring.charAt(1)==zero_char && inputstring.charAt(2)==zero_char+2){ // analogSensor object #1 --> '0' 
+              // defaultFilter function --> '2'
+              // Form = 402
+      }
+      else if(inputstring.charAt(1)==zero_char && inputstring.charAt(2)==zero_char+3){ // analogSensor object #1 --> '0' 
+              // setExponentialFilter function --> '3'
+              // Form = 403Float // Float must be between [0,1]
+      }
+      else if(inputstring.charAt(1)==zero_char && inputstring.charAt(2)==zero_char+4){ // analogSensor object #1 --> '0' 
+              // setKalmanFilter function --> '4'
+              // Form = 404Float // Float is noise
+      }
+    }
     
   }
-  
   input_string_complete = false;
 }
