@@ -235,22 +235,49 @@ bool MultiDay::run( byte HOUR, byte MINUTE )
   }
 
 /***   LED   ***/
-LED::LED( String name ) // Constructor
-    { __State = LOW ;
+// Statics variables definitions
+byte LED::__TotalLeds = 0;
+LED *LED::ptr[MAX_LEDS];
+
+LED::LED( String name, byte floor, byte zone ) // Constructor
+    { // Just the first
+       if(__TotalLeds<1){
+         for (int i=0; i < MAX_LEDS; i++) {
+           ptr[i] = NULL; // All Pointers NULL
+         }
+       }
+      __State = LOW ;
       __Enable = HIGH ;
       __Name = name;
+      __Floor = floor;
+      __Zone = zone;
+      ptr[__TotalLeds] = this; // Set Static pointer to object
+      __TotalLeds++; // Add the new led object to the total
     }
 
-LED::LED( bool state, String name ) // Constructor
-    { __State = state ;
+LED::LED( bool state, String name, byte floor, byte zone ) // Constructor
+    { // Just the first
+       if(__TotalLeds<1){
+         for (int i=0; i < MAX_LEDS; i++) {
+           ptr[i] = NULL; // All Pointers NULL
+         }
+       }
+      __State = state ;
       __Enable = HIGH ;
       __Name = name;
+      __Floor = floor;
+      __Zone = zone;
+      ptr[__TotalLeds] = this; // Set Static pointer to object
+      __TotalLeds++; // Add the new led object to the total
     }
 
 void LED::printState()
   { Serial.print(F("LED Section ")); Serial.print(__Name);
-    if(__State){Serial.println(F(": Turn On")); }
-    else{Serial.println(F(": Turn Off")); }
+    if(__Enable){
+      if(__State){Serial.println(F(": Turn On")); }
+      else{Serial.println(F(": Turn Off")); }
+    }
+    else{Serial.println(F(": Disable"));}
   }
 
 void LED::changeState()
@@ -267,8 +294,27 @@ bool LED::getState()
      else{return LOW ;}
    }
 
+byte LED::getFloor()
+  { return __Floor ; }
+
+byte LED:: getZone()
+  { return __Zone ; }
+
 void LED::enable(bool en)
-    { __Enable = en;  }
+    { __Enable = en;
+      Serial.print(F("LED Section ")); Serial.print(__Name);
+      if(__Enable){Serial.println(F(": Enable"));}
+      else{Serial.println(F(": Disable"));}
+    }
+
+void LED::enable(bool en, byte floor, byte zone)
+  { for(int i = 0; i<__TotalLeds; i++){
+      if(floor==ptr[i]->getFloor() && zone==ptr[i]->getZone()){
+        ptr[i]->enable(en);
+        break;
+      }
+    }
+  }
 
 bool LED::isEnable()
     { return __Enable;  }
@@ -276,5 +322,17 @@ bool LED::isEnable()
 void LED::turnOn()
     {  setState(HIGH);    }
 
+void LED::turnOn(byte floor)
+  { for(int i = 0; i<__TotalLeds; i++){
+      if(floor==ptr[i]->getFloor()){ptr[i]->turnOn();}
+    }
+  }
+
 void LED::turnOff()
     {  setState(LOW);    }
+
+void LED::turnOff(byte floor)
+  { for(int i = 0; i<__TotalLeds; i++){
+      if(floor==ptr[i]->getFloor()){ptr[i]->turnOff();}
+    }
+  }

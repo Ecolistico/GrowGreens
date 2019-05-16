@@ -92,32 +92,74 @@ void serialEvent() {                                  //if the hardware serial p
       }
     }
 
-    if(inputstring.charAt(0)==zero_char+1){ // time info --> '1'
+    if(inputstring.charAt(0)==zero_char+1){ // time/led info --> '1'
       if(inputstring.charAt(1)==zero_char){ // get hour/minute Function --> '0'
          String newHour = inputstring.substring(2,4); // Form = 10Int(2)Int(2)
          String newMinute = inputstring.substring(4,6);
          if(newHour.toInt()>=0 && newHour.toInt()<24 && newMinute.toInt()>=0 && newMinute.toInt()<60){
           dateHour = newHour.toInt();
           dateMinute = newMinute.toInt();
-          Serial.print(F("Recieved Hour Data ")); Serial.print(newHour); Serial.print(F(":")); Serial.print(newMinute); Serial.print(F(" hrs")); 
+          Serial.print(F("Recieved Hour Data ")); Serial.print(newHour); Serial.print(F(":")); Serial.print(newMinute); Serial.println(F(" hrs")); 
+          
           if(day1.getState()!=day1.run(dateHour, dateMinute)){
             Serial.print(F("Floor 1: ")); 
-            if(day1.getState()){Serial.println(F("Starting Day"));}else{Serial.println(F("Starting Night"));}
-            
+            if(day1.getState()){
+              Serial.println(F("Starting Day"));
+              LED::ptr[0]->turnOn(1);
+            }
+            else{
+              Serial.println(F("Starting Night"));
+              LED::ptr[0]->turnOff(1);
+            }
           }
           if(day2.getState()!=day2.run(dateHour, dateMinute)){
-            Serial.print(F("Floor 2: ")); if(day2.getState()){Serial.println(F("Starting Day"));}else{Serial.println(F("Starting Night"));}  
+            Serial.print(F("Floor 2: ")); 
+            if(day2.getState()){
+              Serial.println(F("Starting Day"));
+              LED::ptr[0]->turnOn(2);
+            }
+            else{
+              Serial.println(F("Starting Night"));
+              LED::ptr[0]->turnOff(2);
+            }  
           }
           if(day3.getState()!=day3.run(dateHour, dateMinute)){
-            Serial.print(F("Floor 3: ")); if(day3.getState()){Serial.println(F("Starting Day"));}else{Serial.println(F("Starting Night"));}  
+            Serial.print(F("Floor 3: ")); 
+            if(day3.getState()){
+              Serial.println(F("Starting Day"));
+              LED::ptr[0]->turnOn(3);
+            }
+            else{
+              Serial.println(F("Starting Night"));
+              LED::ptr[0]->turnOff(3);
+            }  
           }
           if(day4.getState()!=day4.run(dateHour, dateMinute)){
-            Serial.print(F("Floor 4: ")); if(day4.getState()){Serial.println(F("Starting Day"));}else{Serial.println(F("Starting Night"));}  
+            Serial.print(F("Floor 4: ")); 
+            if(day4.getState()){
+              Serial.println(F("Starting Day"));
+              LED::ptr[0]->turnOn(4);
+            }
+            else{
+              Serial.println(F("Starting Night"));
+              LED::ptr[0]->turnOff(4);
+            }  
           }
           
          }
          else{Serial.println(F("Time Format Incorrect."));}    
       }
+      else if(inputstring.charAt(1)==zero_char+1){ // enable LED Function --> '1'
+        String en = inputstring.substring(2,3); // Form = 11Bool(1)Byte(1)Byte(1)
+        String fl = inputstring.substring(3,4);
+        String zn = inputstring.substring(4,5);
+        if( (en.toInt()==0 || en.toInt()==1) && fl.toInt()<=4 && fl.toInt()>=1 && zn.toInt()>=1 && zn.toInt()<=4){
+          bool Enable = en.toInt(); 
+          byte Floor = fl.toInt(); 
+          byte Zone = zn.toInt();
+          LED::ptr[0]->enable(Enable, Floor, Zone);
+        }
+      } 
       
     } 
     

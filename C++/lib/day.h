@@ -33,6 +33,9 @@ along with GrowGreens.  If not, see <https://www.gnu.org/licenses/>.
 #include <wiring.h>
 #endif
 
+#define MAX_LEDS 32 // Max LEDs Objects
+
+
 // Class to manage day-night cycles
 class Day
   {  private:
@@ -70,23 +73,42 @@ class MultiDay
 
 
 // Class to control LED´s or actuators with large time cycles of work like day-night cycles
+/*
+Definitions:
+  Floor. It can be a whole number from 1 to 4
+  Region. It can be a whole nuber from 1 to 4
+  In alpha version each region is:
+    * 1 = Germination
+    * 2 = Stage1
+    * 3 = Stage2
+    * 4 = Stage3
+*/
 class LED
   {  private:
          bool __State , __Enable ;
+         byte __Floor, __Zone;
          String __Name;
 
          void printState();
 
      public:
-          LED ( String name ) ; // Constructor
-          LED ( bool state, String name ) ; // Constructor
-          void changeState() ;
-          void setState(bool state) ;
-          bool getState() ;
-          void enable(bool en) ;
-          bool isEnable() ;
-          void turnOn() ;
-          void turnOff() ;
+        static byte __TotalLeds;
+        static LED *ptr[MAX_LEDS] ; // List of pointers to each object
+
+        LED ( String name, byte floor, byte zone ) ; // Constructor
+        LED ( bool state, String name, byte floor, byte zone ) ; // Constructor
+        void changeState() ;
+        void setState(bool state) ;
+        bool getState() ;
+        byte getFloor() ;
+        byte getZone() ;
+        void enable(bool en) ;
+        void enable(bool en, byte floor, byte region) ; // Returns true if succesful
+        bool isEnable() ;
+        void turnOn() ;
+        void turnOn(byte floor) ; // Turn on all the floor
+        void turnOff() ;
+        void turnOff(byte floor) ; // Turn off all the floor
    } ;
 
   #endif

@@ -1,5 +1,5 @@
 /*
- * Falta: Agregar 
+ * Falta: Agregar variable enable por electroválvula en lugar de por grupo para poder decidir sólo regar por regiones
  */
  
 /*** Include Libraries ***/
@@ -36,25 +36,25 @@ analogSensor pressureSensor(A0, "Pressure");
 // Actuator object(time_On, timeOff);
 solenoidValve EV1A1("1A1"); solenoidValve EV1A2("1A2"); solenoidValve EV1A3("1A3"); solenoidValve EV1A4("1A4");
 solenoidValve EV1B1("1B1"); solenoidValve EV1B2("1B2"); solenoidValve EV1B3("1B3"); solenoidValve EV1B4("1B4");
-LED L1S1("L1S1"); LED L1S2("L1S2"); LED L1S3("L1S3"); LED L1S4("L1S4");
+LED L1S1("L1S1", 1, 1); LED L1S2("L1S2", 1, 2); LED L1S3("L1S3", 1, 3); LED L1S4("L1S4", 1, 4);
 Actuator IFan1 (fan_timeOn, fan_timeOff); Actuator OFan1 (fan_timeOn, fan_timeOff); Actuator VFan1 (fan_timeOn, fan_timeOff);
 Actuator humidityValve1 (electrovalve_timeOn, electrovalve_timeOff);
 // 2nd floor
 solenoidValve EV2A1("2A1"); solenoidValve EV2A2("2A2"); solenoidValve EV2A3("2A3"); solenoidValve EV2A4("2A4");
 solenoidValve EV2B1("2B1"); solenoidValve EV2B2("2B2"); solenoidValve EV2B3("2B3"); solenoidValve EV2B4("2B4");
-LED L2S1("L2S1"); LED L2S2("L2S2"); LED L2S3("L2S3"); LED L2S4("L2S4");
+LED L2S1("L2S1", 2, 1); LED L2S2("L2S2", 2, 2); LED L2S3("L2S3", 2, 3); LED L2S4("L2S4", 2, 4);
 Actuator IFan2 (fan_timeOn, fan_timeOff); Actuator OFan2 (fan_timeOn, fan_timeOff); Actuator VFan2 (fan_timeOn, fan_timeOff);
 Actuator humidityValve2 (electrovalve_timeOn, electrovalve_timeOff);
 // 3rd floor
 solenoidValve EV3A1("3A1"); solenoidValve EV3A2("3A2"); solenoidValve EV3A3("3A3"); solenoidValve EV3A4("3A4");
 solenoidValve EV3B1("3B1"); solenoidValve EV3B2("3B2"); solenoidValve EV3B3("3B3"); solenoidValve EV3B4("3B4");
-LED L3S1("L3S1"); LED L3S2("L3S2"); LED L3S3("L3S3"); LED L3S4("L3S4");
+LED L3S1("L3S1", 3, 1); LED L3S2("L3S2", 3, 2); LED L3S3("L3S3", 3, 3); LED L3S4("L3S4", 3, 4);
 Actuator IFan3 (fan_timeOn, fan_timeOff); Actuator OFan3 (fan_timeOn, fan_timeOff); Actuator VFan3 (fan_timeOn, fan_timeOff);
 Actuator humidityValve3 (electrovalve_timeOn, electrovalve_timeOff);
 // 4th floor
 solenoidValve EV4A1("4A1"); solenoidValve EV4A2("4A2"); solenoidValve EV4A3("4A3"); solenoidValve EV4A4("4A4");
 solenoidValve EV4B1("4B1"); solenoidValve EV4B2("4B2"); solenoidValve EV4B3("4B3"); solenoidValve EV4B4("4B4");
-LED L4S1("L4S1"); LED L4S2("L4S2"); LED L4S3("L4S3"); LED L4S4("L4S4");
+LED L4S1("L4S1", 4, 1); LED L4S2("L4S2", 4, 2); LED L4S3("L4S3", 4, 3); LED L4S4("L4S4", 4, 4);
 Actuator IFan4 (fan_timeOn, fan_timeOff); Actuator OFan4 (fan_timeOn, fan_timeOff); Actuator VFan4 (fan_timeOn, fan_timeOff);
 Actuator humidityValve4 (electrovalve_timeOn, electrovalve_timeOff);
 
