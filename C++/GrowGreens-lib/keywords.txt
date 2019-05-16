@@ -41,6 +41,8 @@ isEnable	KEYWORD2
 setCycleTime	KEYWORD2
 getGroup	KEYWORD2
 getOrder	KEYWORD2
+getTimeOn	KEYWORD2
+getCycleTime	KEYWORD2
 getName	KEYWORD2
 changeGroup	KEYWORD2
 changeOrderNumber	KEYWORD2

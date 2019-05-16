@@ -1,21 +1,79 @@
 void solenoid_setup(){
-  // solenoidValve.begin(group, floor, pos, t_On, t_Off);
-  EV1A1.begin(0, 0, 0, 3, 600); EV1A2.begin(0, 0, 1, 4, 600); EV1A3.begin(0, 0, 2, 5, 600); EV1A4.begin(0, 0, 3, 6, 600);
-  EV1B1.begin(0, 0, 4, 3, 600); EV1B2.begin(0, 0, 5, 4, 600); EV1B3.begin(0, 0, 6, 5, 600); EV1B4.begin(0, 0, 7, 6, 600);
-  EV2A1.begin(0, 1, 0, 3, 600); EV2A2.begin(0, 1, 1, 4, 600); EV2A3.begin(0, 1, 2, 5, 600); EV2A4.begin(0, 1, 3, 6, 600);
-  EV2B1.begin(0, 1, 4, 3, 600); EV2B2.begin(0, 1, 5, 4, 600); EV2B3.begin(0, 1, 6, 5, 600); EV2B4.begin(0, 1, 7, 6, 600);
-  EV3A1.begin(0, 2, 0, 3, 600); EV3A2.begin(0, 2, 1, 4, 600); EV3A3.begin(0, 2, 2, 5, 600); EV3A4.begin(0, 2, 3, 6, 600);
-  EV3B1.begin(0, 2, 4, 3, 600); EV3B2.begin(0, 2, 5, 4, 600); EV3B3.begin(0, 2, 6, 5, 600); EV3B4.begin(0, 2, 7, 6, 600);
-  EV4A1.begin(0, 3, 0, 3, 600); EV4A2.begin(0, 3, 1, 4, 600); EV4A3.begin(0, 3, 2, 5, 600); EV4A4.begin(0, 3, 3, 6, 600);
-  EV4B1.begin(0, 3, 4, 3, 600); EV4B2.begin(0, 3, 5, 4, 600); EV4B3.begin(0, 3, 6, 5, 600); EV4B4.begin(0, 3, 7, 6, 600);
-  
-  Serial.println(F("Solenoid valves: Creating routine by default"));
-  if(solenoidValve::ptr[0]->reOrderAll(HIGH, HIGH)){
-  Serial.println(F("Routine created correctly"));
-  }else{Serial.println(F("Routine cannot be configured correctly"));}
-  
+  int count = 0;
+  for( int i = 0 ; i<MAX_ACTUATORS; i++ ){if(EEPROM.read(i)!=0){count++;}}
+  if(count==0){
+    byte reg = 0;
+    byte fl = 0;
+    byte solenoidTime = 3;
+    unsigned long cycleTime = 600;
+    Serial.println(F("Solenoid valves: Setting Default Parameters"));
+    
+    // solenoidValve.begin(floor, pos, t_On, t_Off);
+    for( int i = 0 ; i<solenoidValve::__TotalActuators; i++ ){
+      solenoidValve::ptr[i]->begin(fl, reg, solenoidTime, cycleTime);
+      reg++;
+      solenoidTime++;
+      if(reg>=MAX_IRRIGATION_REGIONS){
+        reg = 0;
+        fl++;
+      }
+      if(reg<=4 && reg%(MAX_IRRIGATION_REGIONS/2)==0){
+        solenoidTime = 3;
+      }
+      else if(reg>4 && reg%MAX_IRRIGATION_REGIONS==0){
+        solenoidTime = 3;
+      }
+    }
+    
+    Serial.println(F("Solenoid valves: Creating routine by default"));
+    if(solenoidValve::ptr[0]->reOrderAll(HIGH, HIGH)){
+    Serial.println(F("Routine created correctly"));
+    }else{Serial.println(F("Routine cannot be configured correctly"));}
+  }
+
+  else{
+    byte reg = 0;
+    byte fl = 0;
+    byte solenoidTime = 0;
+    unsigned long cycleTime = EEPROM.read(MAX_ACTUATORS+1)*(60*0.25);   
+    Serial.println(F("Solenoid valves: Setting Parameters from EEPROM"));
+    
+    for( int i = 0 ; i<solenoidValve::__TotalActuators; i++ ){
+      if(EEPROM.read(i)<128){
+        solenoidTime = EEPROM.read(i);
+        solenoidValve::ptr[i]->begin(fl, reg, solenoidTime, cycleTime);
+        reg++;
+      }
+      else{
+        solenoidTime = EEPROM.read(i)-128;
+        solenoidValve::ptr[i]->begin(fl, reg, solenoidTime, cycleTime);
+        solenoidValve::ptr[i]->enable(LOW);
+        reg++;
+      }
+      if(reg+1>=MAX_IRRIGATION_REGIONS){
+        reg = 0;
+        fl++;
+      }
+    }
+    Serial.println(F("Solenoid valves: Creating routine by default"));
+    solenoidValve::ptr[0]->defaultOrder(MAX_FLOOR);
+  }
 }
 
+void LED_setup()
+  { int count = 0;
+    int gap = MAX_ACTUATORS+1;
+    for( int i = gap ; i<gap+MAX_LEDS; i++ ){if(EEPROM.read(i)!=0){count++;}}
+
+    if(count!=0){
+      Serial.println(F("LEDs: Setting up with EEPROM parameters"));
+      for( int i = gap ; i<gap+LED::__TotalLeds; i++ ){
+        if(EEPROM.read(i)==0){LED::ptr[i-gap]->enable(HIGH);}
+        else{LED::ptr[i-gap]->enable(LOW);}
+      }
+    }
+  }
+    
 void sensors_setup(){
   Serial.println(F("Setting up sensors..."));
   pressureSensor.defaultFilter(); // Default Kalman Filter

@@ -33,7 +33,6 @@ along with GrowGreens.  If not, see <https://www.gnu.org/licenses/>.
 #include <wiring.h>
 #endif
 
-#define MAX_ACTUATORS_GROUPS 10 // Max Groups of Solenoid Valves
 #define MAX_ACTUATORS 50 // Max number of Actuators or Solenoid Valves
 #define MAX_FLOOR 4 // Number of floors
 #define MAX_IRRIGATION_REGIONS 8 // Number of region in each floor
@@ -77,8 +76,8 @@ class Actuator
 
 // Class to manage and synchronize multiples Solenoids Valves
 /*
-Limitation Note: This class is limited by definition to 10 groups
-and maximum 50 actuators this limitations can be changed but,
+Limitation Note: This class is limited by definition to
+maximum 50 actuators this limitations can be changed but,
 you need to keep in mind your procesator memory consumption
 
 Others definitions:
@@ -102,26 +101,26 @@ Others definitions:
 */
 class solenoidValve
   {  private:
-         bool __State ; // Actuator State
-         byte __Group , __Number , __Floor , __Region ; // Actuator Group, place into array, floor and region
+         bool __State, __Enable;// Actuator State and Enable for each solenoid
+         byte __Number , __Floor , __Region ; // Actuator place into array, floor and region
          unsigned long __TimeOn , __Actual_time ;
          String __Name;
          float __H2OVolume; // Water consumption for each solenoidValve
 
-         static byte __ActualNumber[MAX_ACTUATORS_GROUPS] ; // Actual Number working into the array
-         static byte __MaxNumber[MAX_ACTUATORS_GROUPS] ; // Max number of actuators into each array
-         static bool __Enable[MAX_ACTUATORS_GROUPS] ; // Enable variable for each array
-         static unsigned long __CycleTime[MAX_ACTUATORS_GROUPS] ; // Cycle time for each array
-         static unsigned long __ActionTime[MAX_ACTUATORS_GROUPS] ; // Effective action time for each array
+         static String __Group ; // Group Name
+         static byte __ActualNumber ; // Actual Number working into the array
+         static unsigned long __CycleTime; // Cycle time
+         static unsigned long __ActionTime; // Effective action time
          static float __K; // flowSensor constant
          static volatile long __NumPulses ; // count flowSensorpulses
          static void countPulses(); // Interrupt Caudalimeter
          static float __H2Ow; // Potential Water Waster. Flow measure when no solenoids are active.
 
-         void set_time( ) ;
+         void set_time() ;
          void resetTime() ;
          bool changeOrderNumber(byte new_number); // Change the order number. Return 0 if succesful
-
+         void getWasteH2O() ; // Get Water Consumption  when no solenoids are active
+         void getConsumptionH2O() ; // Get Water Consumption for each Region
 
      public:
           static byte __TotalActuators;
@@ -134,6 +133,8 @@ class solenoidValve
           // Variables of time in microseconds
           bool setTimeOn ( unsigned long t_on ) ; // Return true if succesful
           bool setCycleTime ( unsigned long t_cycle ) ; // Return true if succesful
+          unsigned long getTimeOn() ;
+          unsigned long getCycleTime() ;
           bool getState() ; // Returns actuator state
           void changeState() ; // Change actual actuator state
           void turnOn( ) ;
@@ -141,8 +142,6 @@ class solenoidValve
           void changeState(bool rst_time) ; // Change State & RST Time
           void turnOn(bool rst_time) ; // Turn Off State & RST Time
           void turnOff(bool rst_time) ; // Turn On & RST Time
-          byte changeGroup(byte new_gr) ; // Change Actuator to a new group. Return 0 if succesful
-          byte getGroup(); // Returns Actuator Group
           bool reOrder(byte number); // Return true if succesful
           byte getOrder(); // Returns the order number into the group of the actuator
           byte getActualNumber(); // Returns the actual actuator number active into the array
@@ -160,7 +159,7 @@ class solenoidValve
           void printAllH2O(); // Print on serial all the acummulates of water
           String getName(); // Returns the name of the solenoid
           // Variables of time in seconds
-          byte begin( byte gr, byte fl, byte reg, unsigned long t_on, unsigned long cycleTime ) ; // Return true if succesful
+          byte begin( byte fl, byte reg, unsigned long t_on, unsigned long cycleTime ) ; // Return true if succesful
           void run() ;
    } ;
 

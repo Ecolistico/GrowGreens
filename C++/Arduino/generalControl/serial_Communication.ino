@@ -47,9 +47,12 @@ void serialEvent() {                                  //if the hardware serial p
         else{Serial.println(F("Solenoid Number Parameter Incorrect"));}
       }    
       else if(inputstring.charAt(1)==zero_char+3){ // enable Function --> '3'
-        int newEnable = inputstring.substring(2).toInt(); // Form = 03Int
-        if(newEnable==0 || newEnable==1){solenoidValve::ptr[0]->enable(newEnable);}
-        else{Serial.println(F("Bool Parameter Incorrect. It has to be 0 or 1"));}
+        if(inputstring.charAt(2)>=zero_char && inputstring.charAt(2)<zero_char+solenoidValve::__TotalActuators){
+          int newEnable = inputstring.substring(3).toInt(); // Form = 03ValveInt
+          if(newEnable==0 || newEnable==1){solenoidValve::ptr[inputstring.charAt(2)-48]->enable(newEnable);}
+          else{Serial.println(F("Bool Parameter Incorrect. It has to be 0 or 1"));}
+        }
+        else{Serial.println(F("Solenoid Number Parameter Incorrect"));}  
       }
       else if(inputstring.charAt(1)==zero_char+4){ // restartH2O --> '4'
         if(inputstring.charAt(2)>=zero_char && inputstring.charAt(2)<zero_char+solenoidValve::__TotalActuators){ // Form = 04ValveBool
@@ -92,7 +95,7 @@ void serialEvent() {                                  //if the hardware serial p
       }
     }
 
-    if(inputstring.charAt(0)==zero_char+1){ // time/led info --> '1'
+    else if(inputstring.charAt(0)==zero_char+1){ // time/led info --> '1'
       if(inputstring.charAt(1)==zero_char){ // get hour/minute Function --> '0'
          String newHour = inputstring.substring(2,4); // Form = 10Int(2)Int(2)
          String newMinute = inputstring.substring(4,6);
@@ -110,6 +113,7 @@ void serialEvent() {                                  //if the hardware serial p
             else{
               Serial.println(F("Starting Night"));
               LED::ptr[0]->turnOff(1);
+              solenoidValve::ptr[0]->defaultOrder(1);
             }
           }
           if(day2.getState()!=day2.run(dateHour, dateMinute)){
@@ -121,6 +125,7 @@ void serialEvent() {                                  //if the hardware serial p
             else{
               Serial.println(F("Starting Night"));
               LED::ptr[0]->turnOff(2);
+              solenoidValve::ptr[0]->defaultOrder(2);
             }  
           }
           if(day3.getState()!=day3.run(dateHour, dateMinute)){
@@ -132,6 +137,7 @@ void serialEvent() {                                  //if the hardware serial p
             else{
               Serial.println(F("Starting Night"));
               LED::ptr[0]->turnOff(3);
+              solenoidValve::ptr[0]->defaultOrder(3);
             }  
           }
           if(day4.getState()!=day4.run(dateHour, dateMinute)){
@@ -143,6 +149,7 @@ void serialEvent() {                                  //if the hardware serial p
             else{
               Serial.println(F("Starting Night"));
               LED::ptr[0]->turnOff(4);
+              solenoidValve::ptr[0]->defaultOrder(4);
             }  
           }
           
@@ -159,9 +166,31 @@ void serialEvent() {                                  //if the hardware serial p
           byte Zone = zn.toInt();
           LED::ptr[0]->enable(Enable, Floor, Zone);
         }
+        else if(en.toInt()!=0 && en.toInt()!=1){Serial.println(F("Parameter Enable has to be 0 or 1"));}
+        else if(fl.toInt()<=4 || fl.toInt()>=1){Serial.println(F("Parameter Floor has to be between [1,4]"));}
+        else if(zn.toInt()>=1 || zn.toInt()<=4){Serial.println(F("Parameter Zone has to be between [1,4]"));}
+        else{Serial.println(F("Parameters Incorrect. Unkown Reason."));}
       } 
       
-    } 
+    }
+     
+    else if(inputstring.charAt(0)==zero_char+2){ // EPPROM info --> '2'
+      if(inputstring.charAt(1)==zero_char){ // clean_EEPROM Function --> '0'
+        String confirm = inputstring.substring(2);
+        if(confirm=="clean"){clean_EEPROM();}
+        else{Serial.println(F("Key Confirmation is necesary to execute this action"));}
+      }
+      else if(inputstring.charAt(1)==zero_char+1){ // print_EEPROM Function --> '1'
+        String confirm = inputstring.substring(2);
+        if(confirm=="print"){print_EEPROM();}
+        else{Serial.println(F("Key Confirmation is necesary to execute this action"));}
+      }
+      else if(inputstring.charAt(1)==zero_char+2){ // saveParamters_EEPROM Function --> '2'
+        String confirm = inputstring.substring(2);
+        if(confirm=="save"){saveParamters_EEPROM();}
+        else{Serial.println(F("Key Confirmation is necesary to execute this action"));}
+      }
+    }
     
     
   }

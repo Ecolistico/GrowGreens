@@ -154,12 +154,11 @@ bool Actuator::run()
 
 /***   solenoidValve   ***/
 // Statics variables definitions
+String solenoidValve::__Group = "Irrigation";
 byte solenoidValve::__TotalActuators = 0;
-byte solenoidValve::__ActualNumber[MAX_ACTUATORS_GROUPS];
-byte solenoidValve::__MaxNumber[MAX_ACTUATORS_GROUPS];
-bool solenoidValve::__Enable[MAX_ACTUATORS_GROUPS];
-unsigned long solenoidValve::__CycleTime[MAX_ACTUATORS_GROUPS];
-unsigned long solenoidValve::__ActionTime[MAX_ACTUATORS_GROUPS];
+byte solenoidValve::__ActualNumber = 0;
+unsigned long solenoidValve::__CycleTime = 600000;
+unsigned long solenoidValve::__ActionTime = 0;
 float solenoidValve::__K = 6.781; // flowSensor constant
 solenoidValve *solenoidValve::ptr[MAX_ACTUATORS];
 volatile long solenoidValve::__NumPulses = 0;
@@ -176,21 +175,10 @@ void solenoidValve::flowSensorBegin()
 solenoidValve::solenoidValve(String name) // Constructor
    {  // Just the first time init arrays
       if(__TotalActuators<1){
-        for (int i=0; i < MAX_ACTUATORS_GROUPS; i++) {
-         __ActualNumber[i] = 0 ; // All zeros
-         __MaxNumber[i] = 0 ; // All zeros
-         __Enable[i] = LOW ; // All enable LOW
-         __CycleTime[i] = 60000 ; // All Cycles 1 minute
-         __ActionTime[i] = 0 ; // All zeros
-       }
-        for (int i=0; i < MAX_ACTUATORS; i++) {
-          ptr[i] = NULL; // All Pointers NULL
-        }
+        for (int i=0; i < MAX_ACTUATORS; i++) { ptr[i] = NULL; } // All Pointers NULL
       }
-
      __State = LOW ; // Off
-     __Group = 0 ; // Default group
-     __Number = 0 ; // Default number
+     __Enable = HIGH ;; // Enable
      __Floor = 0 ; // Default floor
      __Region = 0; // Default region
      __TimeOn = 10 ; // Default time
@@ -199,10 +187,10 @@ solenoidValve::solenoidValve(String name) // Constructor
      __H2OVolume = 0;
 
      ptr[__TotalActuators] = this; // Set Static pointer to object
-     __TotalActuators++; // Add the new actuator to the total
+     __Number = __TotalActuators++; // Add the new actuator to the total
    }
 
-void solenoidValve::set_time( )
+void solenoidValve::set_time()
   { if(__State == HIGH)
       { resetTime(); }
     else
@@ -225,17 +213,17 @@ unsigned long solenoidValve::getTime()
 
 bool solenoidValve::setTimeOn ( unsigned long t_on)
   { Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.print(F(": ")) ;
-    if(__ActionTime[__Group] - __TimeOn + t_on < __CycleTime[__Group]){
+    if(__ActionTime - __TimeOn + t_on < __CycleTime){
       float seconds = float(t_on)/1000;
-      __ActionTime[__Group] -= __TimeOn ;
+      __ActionTime -= __TimeOn ;
       __TimeOn = t_on ;
-      __ActionTime[__Group] += __TimeOn ;
+      __ActionTime += __TimeOn ;
       Serial.print(F("Time On changed to "));
       Serial.print(seconds); Serial.println(F(" seconds"));
       return true ; // Succesful
     }
     else{ // Not enough time
-      float seconds = float(__CycleTime[__Group])/1000;
+      float seconds = float(__CycleTime)/1000;
       Serial.print(F("Time On cannot be changed. Total solenoids turn-on time has to be smaller than "));
       Serial.print(seconds); Serial.println(F(" seconds"));
       return false ;
@@ -244,20 +232,26 @@ bool solenoidValve::setTimeOn ( unsigned long t_on)
 
 bool solenoidValve::setCycleTime ( unsigned long t_cycle)
   { Serial.print(F("Solenoid Group ")); Serial.print(__Group); Serial.print(F(": ")) ;
-    if( __ActionTime[__Group] < t_cycle ){
+    if( __ActionTime < t_cycle ){
       float minute = float(t_cycle)/60000;
-      __CycleTime[__Group] = t_cycle ;
+      __CycleTime = t_cycle ;
       Serial.print(F("Cycle Time changed to "));
       Serial.print(minute); Serial.println(F(" minutes"));
       return true ; // Succesful
     }
     else{ // Not enough time
-      float minute = float(__ActionTime[__Group])/60000;
+      float minute = float(__ActionTime)/60000;
       Serial.print(F("Cycle Time cannot be changed, it has to be greater than "));
       Serial.print(minute); Serial.println(F(" minutes"));
       return false ;
     }
   }
+
+unsigned long solenoidValve::getTimeOn()
+  { return __TimeOn; }
+
+unsigned long solenoidValve::getCycleTime()
+  { return __CycleTime; }
 
 bool solenoidValve::getState()
   {  return (__State) ;    }
@@ -286,47 +280,14 @@ void solenoidValve::turnOff(bool rst_time)
     if(rst_time){set_time(); }
   }
 
-byte solenoidValve::changeGroup(byte new_gr)
-  { if(new_gr==__Group){return 0 ; } // Succesful
-    else if(new_gr<MAX_ACTUATORS_GROUPS){
-        if( __ActionTime[new_gr] + __TimeOn < __CycleTime[new_gr] ){
-            bool finished = LOW;
-            byte aux = 1;
-            while(finished==LOW){
-              for(int i = 0; i<__TotalActuators; i++){ // Redefine group loop
-                if(ptr[i]->getGroup()==__Group && ptr[i]->getOrder()==__Number+aux){
-                  if( ptr[i]->changeOrderNumber(ptr[i]->getOrder()-1) ){aux++;}
-                  else{return 3;} // Imposible to change the order of the group
-                }
-              }
-              if(__Number+aux >= __MaxNumber[__Group]){ // Readjust group condition
-                finished = HIGH ;
-                __MaxNumber[__Group]--;
-                __ActionTime[__Group]-=__TimeOn;
-              }
-            }
-
-          __Group = new_gr ; // New group
-          __Number = __MaxNumber[__Group]++ ; // New number into the group
-          __ActionTime[__Group] += __TimeOn ; // Add the action time
-          return 0; // Succesful
-        }
-        else {return 1;} // Not enough time
-    }
-    else {return 2;} // Not enough space
-  }
-
-byte solenoidValve::getGroup()
-  {  return __Group ; }
-
 bool solenoidValve::reOrder(byte number)
   { bool finished;
     Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.print(F(": ")) ;
     if(number==__Number){ finished = true; }
 
-    else if(number<__MaxNumber[__Group]){
+    else if(number<__TotalActuators){
       for(int i = 0; i<__TotalActuators; i++){ // Redefine group loop
-        if(ptr[i]->getGroup()==__Group && ptr[i]->getOrder()==number){
+        if(ptr[i]->getOrder()==number){
           if( ptr[i]->changeOrderNumber(__Number) ){
             __Number = number ;
             finished = true ;
@@ -341,7 +302,7 @@ bool solenoidValve::reOrder(byte number)
     if(finished){ Serial.print(F("Reorder Succesful. New Number = ")); Serial.println(__Number);}
     else{
       Serial.print(F("Reorder Failed. Number order has to be smaller than "));
-      Serial.println(__MaxNumber[__Group]);
+      Serial.println(__TotalActuators);
     }
     return finished;
   }
@@ -350,17 +311,17 @@ byte solenoidValve::getOrder()
   {  return __Number ; }
 
 byte solenoidValve::getActualNumber()
-  { return (__ActualNumber[__Group]) ; }
+  { return (__ActualNumber) ; }
 
 void solenoidValve::enable (bool en)
-  { __Enable[__Group] = en ;
-    Serial.print(F("Solenoid Group ")); Serial.print(__Group); Serial.print(F(": ")) ;
-    if(__Enable[__Group]){Serial.println(F("Enabled"));}
+  { __Enable = en ;
+    Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.print(F(": ")) ;
+    if(__Enable){Serial.println(F("Enabled"));}
     else{Serial.println(F("Disabled"));}
   }
 
 bool solenoidValve::isEnable()
-  {  return (__Enable[__Group]) ; }
+  {  return (__Enable) ; }
 
 byte solenoidValve::getFloor()
   { return __Floor ; }
@@ -376,7 +337,7 @@ bool solenoidValve::reOrderAll(bool sequence, bool order)
         for(int k = 0; k<MAX_FLOOR; k++){
           for(int j = 0; j<MAX_IRRIGATION_REGIONS; j++){
             for(int i = 0; i<__TotalActuators; i++){
-              if(ptr[i]->getGroup()==__Group && ptr[i]->getFloor()==k && ptr[i]->getRegion()==j ){
+              if(ptr[i]->getFloor()==k && ptr[i]->getRegion()==j){
                 if(ptr[i]->reOrder(k*MAX_IRRIGATION_REGIONS+j)){
                   count++;
                   break;
@@ -390,7 +351,7 @@ bool solenoidValve::reOrderAll(bool sequence, bool order)
         for(int k = 0; k<MAX_FLOOR; k++){
           for(int j = MAX_IRRIGATION_REGIONS-1; j>=0; j--){
             for(int i = 0; i<__TotalActuators; i++){
-              if(ptr[i]->getGroup()==__Group && ptr[i]->getFloor()==k && ptr[i]->getRegion()==j ){
+              if(ptr[i]->getFloor()==k && ptr[i]->getRegion()==j){
                 if(ptr[i]->reOrder(k*MAX_IRRIGATION_REGIONS+7-j)){
                   count++;
                   break;
@@ -407,7 +368,7 @@ bool solenoidValve::reOrderAll(bool sequence, bool order)
           for(int j = MAX_IRRIGATION_REGIONS-1; j>=0; j--){
             for(int i = 0; i<__TotalActuators; i++){
               if(j<MAX_IRRIGATION_REGIONS/2){
-                if(ptr[i]->getGroup()==__Group && ptr[i]->getFloor()==k && ptr[i]->getRegion()==j ){
+                if(ptr[i]->getFloor()==k && ptr[i]->getRegion()==j){
                   if(ptr[i]->reOrder(k*MAX_IRRIGATION_REGIONS+j*2)){
                     count++;
                     break;
@@ -415,7 +376,7 @@ bool solenoidValve::reOrderAll(bool sequence, bool order)
                 }
               }
               if(j>=MAX_IRRIGATION_REGIONS/2){
-                if(ptr[i]->getGroup()==__Group && ptr[i]->getFloor()==k && ptr[i]->getRegion()==j ){
+                if(ptr[i]->getFloor()==k && ptr[i]->getRegion()==j){
                   if(ptr[i]->reOrder(k*MAX_IRRIGATION_REGIONS+(j-MAX_IRRIGATION_REGIONS/2)*2+1)){
                     count++;
                     break;
@@ -431,7 +392,7 @@ bool solenoidValve::reOrderAll(bool sequence, bool order)
           for(int j = MAX_IRRIGATION_REGIONS-1; j>=0; j--){
             for(int i = 0; i<__TotalActuators; i++){
               if(j<MAX_IRRIGATION_REGIONS/2){
-                if(ptr[i]->getGroup()==__Group && ptr[i]->getFloor()==k && ptr[i]->getRegion()==j ){
+                if(ptr[i]->getFloor()==k && ptr[i]->getRegion()==j){
                   if(ptr[i]->reOrder(k*MAX_IRRIGATION_REGIONS+7-j*2)){
                     count++;
                     break;
@@ -439,7 +400,7 @@ bool solenoidValve::reOrderAll(bool sequence, bool order)
                 }
               }
               if(j>=MAX_IRRIGATION_REGIONS/2){
-                if(ptr[i]->getGroup()==__Group && ptr[i]->getFloor()==k && ptr[i]->getRegion()==j ){
+                if(ptr[i]->getFloor()==k && ptr[i]->getRegion()==j){
                   if(ptr[i]->reOrder(k*MAX_IRRIGATION_REGIONS+6-2*(j-MAX_IRRIGATION_REGIONS/2))){
                     count++;
                     break;
@@ -452,14 +413,14 @@ bool solenoidValve::reOrderAll(bool sequence, bool order)
       }
     }
 
-    if(count==__MaxNumber[__Group]){return true;}
+    if(count==__TotalActuators){return true;}
     else{return false;} // Something is wrong
   }
 
 bool solenoidValve::reOrder_byFloor(byte fl)
   { int count = 0;
     for(int i = 0; i<__TotalActuators; i++){
-      if(ptr[i]->getGroup()==__Group && ptr[i]->getFloor()==fl){
+      if(ptr[i]->getFloor()==fl){
         for(int j = 0; j<MAX_IRRIGATION_REGIONS; j++){
             float order = ptr[i]->getOrder();
             int newOrder = order-int(order/MAX_IRRIGATION_REGIONS)*MAX_IRRIGATION_REGIONS;
@@ -503,11 +464,10 @@ bool solenoidValve::defaultOrder(byte night_floor)
               }
             }
           }
-
         }
       }
     }
-    
+
     for(int i=0; i<MAX_IRRIGATION_REGIONS; i++){
       for(int j = 0; j<__TotalActuators; j++){
         if(ptr[j]->getFloor()==night_floor && ptr[j]->getRegion()==i) {
@@ -539,6 +499,27 @@ bool solenoidValve::defaultOrder(byte night_floor)
     }
   }
 
+void solenoidValve::getWasteH2O()
+  { noInterrupts(); // Disable Interrupts
+    float newVolume = __NumPulses/(60*__K);
+    __H2Ow = newVolume + __H2Ow;
+    __NumPulses = 0;
+    interrupts();   // Enable Interrupts
+    printAllH2O();
+  }
+
+void solenoidValve::getConsumptionH2O()
+  { noInterrupts(); // Disable Interrupts
+    float newVolume = __NumPulses/(60*__K);
+    __H2OVolume= newVolume +__H2OVolume;
+    __NumPulses = 0;
+    __ActualNumber++;
+    interrupts();   // Enable Interrupts
+    Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn Off")) ;
+    Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.print(F(": Water Consumption = ")) ;
+    Serial.print(newVolume);  Serial.println(F(" liters")) ;
+  }
+
 void solenoidValve::restartH2O()
   { Serial.print(F("Solenoid Valve ")); Serial.print(__Name);
     Serial.println(F(": Water Volume Restarted")) ;
@@ -557,98 +538,89 @@ float solenoidValve::getH2O()
 
 void solenoidValve::printH2O()
   { Serial.print(F("Solenoid Valve ")); Serial.print(__Name);
-    Serial.print(F(": Water Volume = ")); Serial.println(__H2OVolume);
+    Serial.print(F(": Water Volume = ")); Serial.print(__H2OVolume);
+    Serial.println(F(" liters"));
   }
 
 void solenoidValve::printAllH2O()
   { Serial.print(F("Solenoid Group ")); Serial.print(__Group);
-    Serial.print(F(": Wasted Water Volume = ")); Serial.println(__H2Ow);
+    Serial.print(F(": Wasted Water Volume = ")); Serial.print(__H2Ow);
+    Serial.println(F(" liters"));
     for(int i = 0; i<__TotalActuators; i++){ptr[i]->printH2O();}
   }
 
 String solenoidValve::getName()
   { return __Name; }
 
-byte solenoidValve::begin( byte gr, byte fl, byte reg, unsigned long t_on, unsigned long cycleTime )
+byte solenoidValve::begin( byte fl, byte reg, unsigned long t_on, unsigned long cycleTime )
   { Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.print(F(": ")) ;
-    if(gr<MAX_ACTUATORS_GROUPS){
-      if( __ActionTime[gr] + t_on*1000UL < cycleTime*1000UL){
-        if(fl<MAX_FLOOR){
-          if(reg<MAX_IRRIGATION_REGIONS){
-            __State = LOW ; // Off
-            __Group = gr ; // Select group
-            __Floor = fl ; // Select floor
-            __Region = reg ; // Select region
-            __Number = __MaxNumber[__Group]++ ; // Number into the group
-            __TimeOn = t_on*1000UL ;
-            set_time() ;
+    if( __ActionTime + t_on*1000UL < cycleTime*1000UL){
+      if(fl<MAX_FLOOR){
+        if(reg<MAX_IRRIGATION_REGIONS){
+          __State = LOW ; // Off
+          __Floor = fl ; // Select floor
+          __Region = reg ; // Select region
+          __TimeOn = t_on*1000UL ;
+          set_time() ;
 
-            __ActualNumber[__Group] = 0 ; // Restart count with each init
-            __Enable[__Group] = HIGH ; // Enable HIGH
-            __CycleTime[__Group] = cycleTime*1000UL;
-            __ActionTime[__Group] += __TimeOn ; // Add action time to each group
+          __ActualNumber = 0 ; // Restart count with each init
+          __Enable = HIGH ; // Enable HIGH
+          __CycleTime = cycleTime*1000UL;
+          __ActionTime += __TimeOn ; // Add action time to each group
 
-            Serial.println(F("Started correctly"));
-            return 0; // Succesful
-          }
-          else{
-            Serial.println(F("Region value incorrectly configured"));
-            return 1; // Region outside of range [0-MAX_IRRIGATION_REGIONS-1]
-          }
+          Serial.println(F("Started correctly"));
+          return 0; // Succesful
         }
         else{
-          Serial.println(F("Floor value incorrectly configured"));
-          return 2; // Floor outside of range [0-MAX_FLOOR-1]
+          Serial.println(F("Region value incorrectly configured"));
+          return 1; // Region outside of range [0-MAX_IRRIGATION_REGIONS-1]
         }
       }
       else{
-        Serial.println(F("ON/OFF times incorrectly configured"));
-        return 3; // Not enough time
+        Serial.println(F("Floor value incorrectly configured"));
+        return 2; // Floor outside of range [0-MAX_FLOOR-1]
       }
     }
     else{
-      Serial.println(F("Number of solenoid valves exceeded the memory limit"));
-      return 4; // Not enough space
+      Serial.println(F("ON/OFF times incorrectly configured"));
+      return 3; // Not enough time
     }
+
   }
 
 void solenoidValve::run()
-  { if(__Enable[__Group] == true){
-        if(__ActualNumber[__Group] == __Number){
+  { if(__Enable == true){
+        if(__ActualNumber == __Number){
           if(__State == LOW){
             if(__Number == 0){
-              // Get Water Consumption  when no solenoids are active
-              noInterrupts(); // Disable Interrupts
-              float newVolume = __NumPulses/(60*__K);
-              __H2Ow = newVolume + __H2Ow;
-              __NumPulses = 0;
-              interrupts();   // Enable Interrupts
-              printAllH2O();
+              getWasteH2O();
             }
             turnOn(true);
             Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn On")) ;
           }
           else if( (millis()-__Actual_time)>=__TimeOn && __State==HIGH){
             turnOff();
-            // Get Water Consumption to that Region
-            noInterrupts(); // Disable Interrupts
-            float newVolume = __NumPulses/(60*__K);
-            __H2OVolume= newVolume +__H2OVolume;
-            __NumPulses = 0;
-            __ActualNumber[__Group]++;
-            interrupts();   // Enable Interrupts
-            Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn Off")) ;
-            Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.print(F(": Water Consumption = ")) ;
-            Serial.print(newVolume);  Serial.println(F(" liters")) ;
+            getConsumptionH2O();
           }
         }
-        else if(__ActualNumber[__Group]>=__MaxNumber[__Group] && (millis()-__Actual_time)>=__CycleTime[__Group]){
-          __ActualNumber[__Group] = 0 ;
+        else if(__ActualNumber>=__TotalActuators && (millis()-__Actual_time)>=__CycleTime){
+          __ActualNumber = 0 ;
           Serial.print(F("Solenoid Group ")); Serial.print(__Group); Serial.println(F(": Restarting cycle")) ;
         }
         return true;
      }
      else{
+       if(__ActualNumber == __Number){
+           if(__Number == 0){
+             getWasteH2O();
+           }
+           set_time();
+           __ActualNumber++;
+       }
+       else if(__ActualNumber>=__TotalActuators && (millis()-__Actual_time)>=__CycleTime){
+         __ActualNumber = 0 ;
+         Serial.print(F("Solenoid Group ")); Serial.print(__Group); Serial.println(F(": Restarting cycle")) ;
+       }
        __State = LOW;
        return false;
      }
