@@ -19,7 +19,7 @@ los siguientes datos:
 5- Una vez ingresados los datos se debe dar click en el botón "save", este guardara la información, en caso de que
 algún dato sea erroneo no lo grabará y se deberá repetir el proceso. En caso de que se haya guardado con éxito
 la información ingresada será desplegada en la pantalla. NOTA: Favor de verificar que la información sea correcta, en
-caso de haber errores dar click en el botón que lleva el nombre de "Clear channel", esto borrara la información y podrá
+caso de haber errores dar click en el botón que lleva el nombre de "Clear channel", esto borrará la información y podrá
 empezar nuevamente desde el paso anterior.
 6- Haga click en la pestaña llamada <SSDI Config> o ingrese en el navegador la dirección http://192.168.10.1/_ac/config
 Una vez que se cargue la ventana favor de seleccionar la red WiFi pertinente e introducir su contraseña, para
