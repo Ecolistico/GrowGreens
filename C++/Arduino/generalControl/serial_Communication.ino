@@ -154,10 +154,10 @@ void serialEvent() {                                  //if the hardware serial p
           byte Zone = zn.toInt();
           LED::ptr[0]->enable(Enable, Floor, Zone);
         }
-        else if(en.toInt()!=0 && en.toInt()!=1){Serial.println(F("Parameter Enable has to be 0 or 1"));}
-        else if(fl.toInt()<=4 || fl.toInt()>=1){Serial.println(F("Parameter Floor has to be between [1,4]"));}
-        else if(zn.toInt()>=1 || zn.toInt()<=4){Serial.println(F("Parameter Zone has to be between [1,4]"));}
-        else{Serial.println(F("Parameters Incorrect. Unkown Reason."));}
+        else if(en.toInt()!=0 && en.toInt()!=1){Serial.println(F("LED: Parameter Enable has to be 0 or 1"));}
+        else if(fl.toInt()<=4 || fl.toInt()>=1){Serial.println(F("LED: Parameter Floor has to be between [1,4]"));}
+        else if(zn.toInt()>=1 || zn.toInt()<=4){Serial.println(F("LED: Parameter Zone has to be between [1,4]"));}
+        else{Serial.println(F("LED: Parameters Incorrect. Unkown Reason."));}
       }  
     }
      
@@ -165,34 +165,29 @@ void serialEvent() {                                  //if the hardware serial p
       if(inputstring.charAt(1)==zero_char){ // clean_EEPROM Function --> '0'
         String confirm = inputstring.substring(2); // Form = 20clean
         if(confirm=="clean"){clean_EEPROM();}
-        else{Serial.println(F("Key Confirmation is necesary to execute this action"));}
+        else{Serial.println(F("EEPROM: Key Confirmation is necesary to execute this action"));}
       }
       else if(inputstring.charAt(1)==zero_char+1){ // print_EEPROM Function --> '1'
         String confirm = inputstring.substring(2); // Form = 21print
         if(confirm=="print"){print_EEPROM();}
-        else{Serial.println(F("Key Confirmation is necesary to execute this action"));}
+        else{Serial.println(F("EEPROM: Key Confirmation is necesary to execute this action"));}
       }
       else if(inputstring.charAt(1)==zero_char+2){ // saveParamters_EEPROM Function --> '2'
         String confirm = inputstring.substring(2); // Form = 22save
         if(confirm=="save"){saveParamters_EEPROM();}
-        else{Serial.println(F("Key Confirmation is necesary to execute this action"));}
+        else{Serial.println(F("EEPROM: Key Confirmation is necesary to execute this action"));}
       }
     }
 
     /***** Pendiente de aquí para abajo *****/
-    /*
-     * 
-     * 
-     * 
-     * 
-     * 
-     */
+    // Revisar pendientes MultiDay
     else if(inputstring.charAt(0)==zero_char+3){ // MultiDay info --> '3'
       if(inputstring.charAt(1)==zero_char){ // redefine Function --> '0'
         // Pendiente programar // Form = 30byteFloatFloat
       }
     }
 
+    // Revisar pendientes analogSensor
     else if(inputstring.charAt(0)==zero_char+4){ // analogSensor info --> '4'
       if(inputstring.charAt(1)==zero_char && inputstring.charAt(2)==zero_char){ // analogSensor object #1 --> '0' 
         // setModel function --> '0'
@@ -213,6 +208,26 @@ void serialEvent() {                                  //if the hardware serial p
       else if(inputstring.charAt(1)==zero_char && inputstring.charAt(2)==zero_char+4){ // analogSensor object #1 --> '0' 
               // setKalmanFilter function --> '4'
               // Form = 404Float // Float is noise
+      }
+    }
+    
+    // Revisar pendientes HVAC controller
+    else if(inputstring.charAt(0)==zero_char+5){ // HVAC controller info --> '5'
+      if(inputstring.charAt(1)==zero_char){ // changeMode Function --> '0'
+        String mod = inputstring.substring(2); // Form = 50Mode
+        if( mod.toInt()>=0 && mod.toInt()<3 ){
+          byte Mode = mod.toInt();
+          HVAC.changeMode(Mode);
+        }
+        else{Serial.println(F("HVAC Controller: Mode Parameter Incorrect"));}
+      }
+      else if(inputstring.charAt(1)==zero_char+1){ // changeFan Function --> '1'
+        String fan = inputstring.substring(2); // Form = 50fan
+        if( fan.toInt()==0 || fan.toInt()==1){
+          byte fanMode = fan.toInt();
+          HVAC.changeFan(fanMode);
+        }
+        else{Serial.println(F("HVAC Controller: Fan Parameter Incorrect"));}
       }
     }
     

@@ -16,7 +16,9 @@
 #include <EEPROM.h>
 #include <actuator.h>
 #include <day.h>
+#include <controllerHVAC.h>
 #include <sensor.h>
+
 
 /*** Temp-Hum Sensors(DHT-22) Definitions ***/ 
 #define DHTTYPE22 DHT22
@@ -31,6 +33,9 @@ const byte shcp = 24;
 /*** Water sensors definitions ***/
 // Pressure
 analogSensor pressureSensor(A0, "Pressure");
+
+/***** HVAC Controller object*****/
+controllerHVAC HVAC(OFF_MODE , AUTO_FAN);
 
 /*** Actuators ***/
 // Define initial time
@@ -87,7 +92,7 @@ void setup() {
   Serial.begin(115200); Serial.println(F("Setting up Device..."));
   
   // Define INPUTS&OUTPUTS
-  pressureSensor.begin();
+  //pressureSensor.begin();
   solenoidValve::flowSensorBegin();
   pinMode(stcp, OUTPUT);
   pinMode(shcp, OUTPUT);
@@ -124,4 +129,5 @@ void loop() {
     (solenoidValve::ptr[i]->run());
   }
   
+  HVAC.run(); // Decide what to do with Air Conditioner
 }
