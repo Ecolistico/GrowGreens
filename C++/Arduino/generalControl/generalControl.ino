@@ -8,6 +8,9 @@
  * 
  * Crear objetos para controlar el resto de las válvulas solenoides y bombas
  * Programar condiciones de encendido y apagado de bombas y válvulas solenoides
+ * 
+ * Falta comprobar funcionamiento de HVAC Controller y revisar si es necesario el tiempo de preparación en modo-HEAT
+ * así como verificar que no sea necesario apagar el sistema después de cierto tiempo de trabajo continuo.
 */
  
 /*** Include Libraries ***/
