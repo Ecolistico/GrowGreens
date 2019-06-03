@@ -7,7 +7,7 @@
       "name": "header",
       "type": "ACText",
       "value": "<h2>MQTT Broker settings</h2>",
-      "style": "text-align:center;color:#2f4f4f;"
+      "style": "text-align:center;color:#3C3C3B;"
     },
     {
       "name": "newline",
@@ -18,7 +18,7 @@
       "name": "caption",
       "type": "ACText",
       "value": "<p>Save your MQTT server credential to connect with the central computer<br></p>",
-      "style": "font-family:serif;color:#4682b4;"
+      "style": "font-family:serif;color:#002514;text-align:center;"
     },
     {
       "name": "ip_mqttServer",

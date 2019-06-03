@@ -7,7 +7,7 @@
       "name": "caption",
       "type": "ACText",
       "value": "<h4>Parameters saved as:</h4>",
-      "style": "text-align:center;color:#2f4f4f;padding:10px;"
+      "style": "text-align:center;color:#002514;padding:10px;"
     },
     {
       "name": "parameters",

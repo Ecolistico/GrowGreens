@@ -134,6 +134,6 @@ void setup_AutoConnect(AutoConnect &Portal, AutoConnectConfig &Config){
   Config.autoReconnect = false;                  // Disable auto-reconnect (prevents save credentials even if they are erased)
   Config.homeUri = "/_ac";  // Sets home path
   Config.bootUri = AC_ONBOOTURI_HOME; // Reboot path
-  Config.title = "SIPPYS Access Point";
+  Config.title = "GrowGreens Access Point by SIPPYS";
   Portal.config(Config);                        // Configure AutoConnect
 }
