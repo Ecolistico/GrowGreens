@@ -124,6 +124,8 @@ void setup() {
       yield();
     }
   }
+
+  setupSensors();
   update_time = millis();  
 }
 

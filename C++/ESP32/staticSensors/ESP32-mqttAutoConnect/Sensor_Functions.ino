@@ -70,4 +70,19 @@ void updateData(){
   getData(dht_3L, data_3L);
   getData(dht_4R, data_4R);
   getData(dht_4L, data_4L);
+  Serial.print(data_1R.temperature); Serial.print(","); Serial.print(data_1R.humidity); Serial.print(","); Serial.print(data_1L.temperature); Serial.print(","); Serial.print(data_1L.humidity); Serial.print(",");
+  Serial.print(data_2R.temperature); Serial.print(","); Serial.print(data_2R.humidity); Serial.print(","); Serial.print(data_2L.temperature); Serial.print(","); Serial.print(data_2L.humidity); Serial.print(",");
+  Serial.print(data_3R.temperature); Serial.print(","); Serial.print(data_3R.humidity); Serial.print(","); Serial.print(data_3L.temperature); Serial.print(","); Serial.print(data_3L.humidity); Serial.print(",");
+  Serial.print(data_4R.temperature); Serial.print(","); Serial.print(data_4R.humidity); Serial.print(","); Serial.print(data_4L.temperature); Serial.print(","); Serial.println(data_4L.humidity);
+}
+
+void setupSensors(){
+  dht_1R.setup(dht_1R_pin, DHTesp::DHT22);
+  dht_1L.setup(dht_1L_pin, DHTesp::DHT22);
+  dht_2R.setup(dht_2R_pin, DHTesp::DHT22);
+  dht_2L.setup(dht_2L_pin, DHTesp::DHT22);
+  dht_3R.setup(dht_3R_pin, DHTesp::DHT22);
+  dht_3L.setup(dht_3L_pin, DHTesp::DHT22);
+  dht_4R.setup(dht_4R_pin, DHTesp::DHT22);
+  dht_4L.setup(dht_4L_pin, DHTesp::DHT22);
 }
