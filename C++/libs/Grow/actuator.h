@@ -34,10 +34,10 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #include <wiring.h>
 #endif
 
-#define MAX_ACTUATORS 50 // Max number of Actuators or Solenoid Valves
-#define MAX_FLOOR 4 // Number of floors
-#define MAX_IRRIGATION_REGIONS 8 // Number of region in each floor
-#define flowSensor 2 // Define flowSensor pin
+#define MAX_ACTUATORS           50 // Max number of Actuators or Solenoid Valves
+#define MAX_FLOOR               4 // Number of floors
+#define MAX_IRRIGATION_REGIONS  8 // Number of region in each floor
+#define flowSensor              2 // Define flowSensor pin
 
 // Class to manage an actuator with defined time cycles.
 /* Limitation Note: This class is limited by definition to 50
