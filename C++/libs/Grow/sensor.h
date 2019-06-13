@@ -82,7 +82,7 @@ class UltraSonic
         NewPing *__Sonar;
         int __minDist, __maxDist, __countState;
         float __Value , __PreValue ;
-        unsigned long __ActualTime; // Time Counter
+        static unsigned long __ActualTime; // Time Counter
 
         // Constants for the filters
         byte __Filter ;
@@ -114,8 +114,7 @@ class UltraSonic
         void readAndPrint() ;
         float read() ;
         byte run() ;
-        void runAll() ;
-
+        static void runAll() ;
   } ;
 
   #endif

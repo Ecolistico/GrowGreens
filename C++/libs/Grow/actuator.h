@@ -162,6 +162,7 @@ class solenoidValve
           // Variables of time in seconds
           byte begin( byte fl, byte reg, unsigned long t_on, unsigned long cycleTime ) ; // Return true if succesful
           bool run() ;
+          static void runAll();
    } ;
 
   #endif

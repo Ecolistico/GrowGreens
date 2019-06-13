@@ -169,6 +169,7 @@ float analogSensor::read()
 // Statics variables definitions
 byte UltraSonic::__TotalActuators = 0;
 UltraSonic *UltraSonic::ptr[MAX_ULTRASONIC];
+unsigned long UltraSonic::__ActualTime = 0;
 
 UltraSonic::UltraSonic( byte pin, String name, int minDist = MIN_SECUTIRY_DISTANCE, int maxDist = MAX_SECUTIRY_DISTANCE ) // Constructor
   {  // Just the first time init pointers

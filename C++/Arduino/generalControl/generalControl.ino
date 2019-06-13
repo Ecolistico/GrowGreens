@@ -141,12 +141,7 @@ void setup() {
 }
 
 void loop() {
-  for (int i = 0; i < solenoidValve::__TotalActuators; i++){
-    (solenoidValve::ptr[i]->run());
-  }
-  
+  solenoidValve::runAll(); // Run irrigation routine
   HVAC.run(); // Decide what to do with Air Conditioner
-  
-  US1.runAll();
- 
+  UltraSonic::runAll(); // Run all the UltraSonic Sensors measurements
 }

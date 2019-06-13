@@ -625,3 +625,10 @@ bool solenoidValve::run()
        return false;
      }
   }
+
+  void solenoidValve::runAll()
+    {
+      for (int i = 0; i < __TotalActuators; i++){
+        (ptr[i]->run());
+      }
+    }
