@@ -90,11 +90,26 @@ void MultiDay_setup(){
 
 void sensors_setup(){
   Serial.println(F("Setting up sensors..."));
-  pressureSensor.defaultFilter(); // Default Kalman Filter
-  if(pressureSensor.setModel(1, -22.969, 0.2155) ){
-    Serial.println(F("Sensors started correctly"));
-     pressureSensor.printModel();
-     pressureSensor.printFilter();
+
+  pressureSensorA.begin();
+  pressureSensorB.begin();
+  pressureSensorC.begin();
+  
+  pressureSensorA.defaultFilter(); // Default Kalman Filter
+  pressureSensorB.defaultFilter(); // Default Kalman Filter
+  pressureSensorC.defaultFilter(); // Default Kalman Filter
+  
+  if(pressureSensorA.setModel(1, -22.969, 0.2155) && pressureSensorB.setModel(1, -22.969, 0.2155) && pressureSensorC.setModel(1, -22.969, 0.2155)){
+    Serial.println(F("Pressure Sensors started correctly"));
+     pressureSensorA.printModel();
+     pressureSensorA.printFilter();
+     pressureSensorB.printModel();
+     pressureSensorB.printFilter();
+     pressureSensorC.printModel();
+     pressureSensorC.printFilter();
   }
-  else{Serial.println(F("Sensors started incorrectly"));}
+  else{Serial.println(F("Pressure Sensors started incorrectly"));}
+
+  US1.beginAll();
+  Serial.println(F("UltraSonic Sensors started correctly"));
 }

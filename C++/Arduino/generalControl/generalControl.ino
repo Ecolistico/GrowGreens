@@ -17,11 +17,11 @@
 #include <Wire.h>
 #include <DHT.h>
 #include <EEPROM.h>
+//#include <NewPing.h>
 #include <actuator.h>
 #include <day.h>
 #include <controllerHVAC.h>
 #include <sensor.h>
-
 
 /*** Temp-Hum Sensors(DHT-22) Definitions ***/ 
 #define DHTTYPE22 DHT22
@@ -35,9 +35,23 @@ const byte shcp = 24;
 
 /*** Water sensors definitions ***/
 // Pressure
-analogSensor pressureSensor(A0, "Pressure");
+analogSensor pressureSensorA(A0, "Pressure A");
+analogSensor pressureSensorB(A1, "Pressure B");
+analogSensor pressureSensorC(A2, "Pressure C");
 
-/***** HVAC Controller object*****/
+/*** UltraSonic Sensors ***/
+UltraSonic US1(25, "US1");
+UltraSonic US2(26, "US2");
+UltraSonic US3(27, "US3");
+UltraSonic US4(28, "US4");
+UltraSonic US5(29, "US5");
+UltraSonic US6(30, "US6");
+UltraSonic US7(31, "US7");
+UltraSonic US8(32, "US8");
+UltraSonic US9(33, "US9");
+UltraSonic US10(34, "US10");
+
+/*** HVAC Controller object ***/
 controllerHVAC HVAC(OFF_MODE , AUTO_FAN);
 
 /*** Actuators ***/
@@ -86,6 +100,7 @@ String inputstring = "";
 bool input_string_complete = false;
 byte serial_Count;
 byte serial_State;
+
 // DateTime Info
 byte dateHour;
 byte dateMinute;
@@ -95,7 +110,6 @@ void setup() {
   Serial.begin(115200); Serial.println(F("Setting up Device..."));
   
   // Define INPUTS&OUTPUTS
-  //pressureSensor.begin();
   solenoidValve::flowSensorBegin();
   pinMode(stcp, OUTPUT);
   pinMode(shcp, OUTPUT);
@@ -126,11 +140,13 @@ void setup() {
   // Testing settings 
 }
 
-
 void loop() {
   for (int i = 0; i < solenoidValve::__TotalActuators; i++){
     (solenoidValve::ptr[i]->run());
   }
   
   HVAC.run(); // Decide what to do with Air Conditioner
+  
+  US1.runAll();
+ 
 }
