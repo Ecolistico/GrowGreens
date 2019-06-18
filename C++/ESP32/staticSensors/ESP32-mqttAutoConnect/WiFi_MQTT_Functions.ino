@@ -75,7 +75,7 @@ void sendData(){
   String topicString = container_ID + "/esp32" + esp32Type;
   char topicData[topicString.length()+1];
   topicString.toCharArray(topicData,topicString.length()+1);
-  
+    
   mqttClient.publish(topicData, textData);  
 }
 
