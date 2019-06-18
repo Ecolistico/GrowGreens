@@ -1,16 +1,34 @@
-/*
+/* Por probar:
+ *  a) pressure_Conditions
+ *  b) recirculationController
+ *    
  * Falta: 
- * Crear comando para recalibrar sensores por serial
- * Crear estructura para guardar datos de calibración de sensores y parametros de filtros en EEPROM
+ * 1: Libería sensor.h
+ *    a) Crear comando para recalibrar sensores por serial
+ *    b) Crear estructura para guardar datos de calibración de sensores y parametros de filtros en EEPROM
  * 
- * Crear comando para reprogramar días por serial
- * Crear estructura para guardar parámetros de días en EEPROM
+ * 2: serial_Communication functions to link with day.h
+ *    a) Crear comando para reprogramar días por serial
+ *    b) Crear estructura para guardar parámetros de días en EEPROM
  * 
- * Crear objetos para controlar el resto de las válvulas solenoides y bombas
- * Programar condiciones de encendido y apagado de bombas y válvulas solenoides
+ * 3: compressorController.h and recirculationController.h
+ *    a) Condiciones excepcionales para cambiar de decisión -> pressure_Conditions
  * 
- * Falta comprobar funcionamiento de HVAC Controller y revisar si es necesario el tiempo de preparación en modo-HEAT
- * así como verificar que no sea necesario apagar el sistema después de cierto tiempo de trabajo continuo.
+ * 4: controllerHVAC.h
+ *    a) Falta comprobar funcionamiento de HVAC Controller y revisar si es necesario el tiempo de preparación en modo-HEAT
+ *    b) Verificar que no sea necesario apagar el sistema después de cierto tiempo de trabajo continuo.
+ * 
+ * 5: EEPROM_Function:
+ *    a)  Probar a fondo funciones saveParamters_EEPROM(), print_EEPROM() y clean_EEPROM()
+ *    b) Falta desarrollar funciones daySave_EEPROM() y sensorSave_EEPROM()
+ * 
+ * 6: set_up:
+ *    a) Give enough time to charge all the paremeters and get multiples lectures from sensor to estabilizar lectures
+ *    
+ * 7: recirculationController.h:
+ *    a) Desecho cuando todo esta saturado
+ *    b) Salida del recirculado - entrada kegs/Solucion mezclas
+ *    
 */
  
 /*** Include Libraries ***/
@@ -22,6 +40,7 @@
 #include <controllerHVAC.h>
 #include <sensor.h>
 #include <compressorController.h>
+#include <recirculationController.h>
 
 /*** Temp-Hum Sensors(DHT-22) Definitions ***/ 
 #define DHTTYPE22 DHT22
@@ -44,22 +63,22 @@ float min_cycle_pressure = 145; // Minimun Pressure in the system when it is goi
 byte pressureDecision = 0; // Variable for control on decisions taken
 
 /*** UltraSonic Sensors ***/
-UltraSonic US1(25, "US1");
-UltraSonic US2(26, "US2");
-UltraSonic US3(27, "US3");
-UltraSonic US4(28, "US4");
-UltraSonic US5(29, "US5");
-UltraSonic US6(30, "US6");
-UltraSonic US7(31, "US7");
-UltraSonic US8(32, "US8");
-UltraSonic US9(33, "US9");
-UltraSonic US10(34, "US10");
+UltraSonic US0(PIN_LEVEL_0, NAME_LEVEL_0);
+UltraSonic US1(PIN_LEVEL_1, NAME_LEVEL_1);
+UltraSonic US2(PIN_LEVEL_2, NAME_LEVEL_2);
+UltraSonic US3(PIN_LEVEL_3, NAME_LEVEL_3);
+UltraSonic US4(PIN_LEVEL_4, NAME_LEVEL_4);
+UltraSonic US5(PIN_LEVEL_5, NAME_LEVEL_5);
 
 /*** HVAC Controller object ***/
 controllerHVAC HVAC(OFF_MODE , AUTO_FAN);
 
 /*** Compressor Controller object ***/
+// Parameters are the logic of the solenoids where LOW is normally closed : Compressor_invertedLogic, Nutrition_invertedLogic and Water_invertedLogic
 compressorController Compressor(LOW, HIGH, LOW);
+
+/*** Recirculation Controller ***/
+recirculationController Recirculation(LOW, LOW); // recirculationController without solenoids normally open
 
 /*** Actuators ***/
 // Define initial time
@@ -137,6 +156,9 @@ void setup() {
   
   // Initialize Multiplexers
   codification_Multiplexer();
+
+  // Initialize recController
+  Recirculation.begin(PIN_LEVEL_SWITCH, US0, US1, US2, US3, US4, US5);
   
   // Initialize counters
 

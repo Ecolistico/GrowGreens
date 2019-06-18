@@ -6,7 +6,6 @@
 
 /***   compressorController   ***/
 // Statics variables definitions
-
 compressorController::compressorController(bool comprLogic, bool nutrLogic, bool waterLogic) // Constructor
    { __State = LOW ;
      __Enable = LOW ;
@@ -37,107 +36,87 @@ void compressorController::doNothing()
 
 void compressorController::openCompressor()
   { turnOff();
-    turnOn_ValveCompressor(__Compressor_invertedLogic);
-    turnOff_ValveNutrition(__Nutrition_invertedLogic);
-    turnOff_ValveWater(__Water_invertedLogic);
+    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
+    turnOff_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
+    turnOff_Valve(__Valve_Water, __Water_invertedLogic);
   }
 
 void compressorController::openNutrition()
   { turnOff();
-    turnOn_ValveCompressor(__Compressor_invertedLogic);
-    turnOn_ValveNutrition(__Nutrition_invertedLogic);
-    turnOff_ValveWater(__Water_invertedLogic);
+    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
+    turnOn_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
+    turnOff_Valve(__Valve_Water, __Water_invertedLogic);
   }
 
 void compressorController::openWater()
   { turnOff();
-    turnOff_ValveCompressor(__Compressor_invertedLogic);
-    turnOff_ValveNutrition(__Nutrition_invertedLogic);
-    turnOn_ValveWater(__Water_invertedLogic);
+    turnOff_Valve(__Valve_Compressor, __Compressor_invertedLogic);
+    turnOff_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
+    turnOn_Valve(__Valve_Water, __Water_invertedLogic);
   }
 
 void compressorController::openEverything()
   { turnOff();
-    turnOn_ValveCompressor(__Compressor_invertedLogic);
-    turnOn_ValveNutrition(__Nutrition_invertedLogic);
-    turnOn_ValveWater(__Water_invertedLogic);
+    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
+    turnOn_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
+    turnOn_Valve(__Valve_Water, __Water_invertedLogic);
   }
 
 void compressorController::fillCompressor()
   { turnOn();
-    turnOn_ValveCompressor(__Compressor_invertedLogic);
-    turnOff_ValveNutrition(__Nutrition_invertedLogic);
-    turnOff_ValveWater(__Water_invertedLogic);
+    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
+    turnOff_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
+    turnOff_Valve(__Valve_Water, __Water_invertedLogic);
   }
 
 void compressorController::fillNutrition()
   { turnOn();
-    turnOn_ValveCompressor(__Compressor_invertedLogic);
-    turnOn_ValveNutrition(__Nutrition_invertedLogic);
-    turnOff_ValveWater(__Water_invertedLogic);
+    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
+    turnOn_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
+    turnOff_Valve(__Valve_Water, __Water_invertedLogic);
   }
 
 void compressorController::fillWater()
   { turnOn();
-    turnOff_ValveCompressor(__Compressor_invertedLogic);
-    turnOff_ValveNutrition(__Nutrition_invertedLogic);
-    turnOn_ValveWater(__Water_invertedLogic);
+    turnOff_Valve(__Valve_Compressor, __Compressor_invertedLogic);
+    turnOff_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
+    turnOn_Valve(__Valve_Water, __Water_invertedLogic);
   }
 
 void compressorController::fillEverything()
   { turnOn();
-    turnOn_ValveCompressor(__Compressor_invertedLogic);
-    turnOn_ValveNutrition(__Nutrition_invertedLogic);
-    turnOn_ValveWater(__Water_invertedLogic);
+    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
+    turnOn_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
+    turnOn_Valve(__Valve_Water, __Water_invertedLogic);
   }
 
-void compressorController::turnOn_ValveCompressor(bool inverted_logic)
-  { if(inverted_logic){__Valve_Compressor = LOW;}
-    else{__Valve_Compressor = HIGH;}
+void compressorController::turnOn_Valve(bool &state, bool inverted_logic)
+  { if(inverted_logic){state = LOW;}
+    else{state = HIGH;}
   }
 
-void compressorController::turnOff_ValveCompressor(bool inverted_logic)
-  { if(inverted_logic){__Valve_Compressor = HIGH;}
-    else{__Valve_Compressor = LOW;}
-  }
-
-void compressorController::turnOn_ValveNutrition(bool inverted_logic)
-  { if(inverted_logic){__Valve_Nutrition = LOW;}
-    else{__Valve_Nutrition = HIGH;}
-  }
-
-void compressorController::turnOff_ValveNutrition(bool inverted_logic)
-  {  if(inverted_logic){__Valve_Nutrition = HIGH;}
-    else{__Valve_Nutrition = LOW;}
-  }
-
-void compressorController::turnOn_ValveWater(bool inverted_logic)
-  { if(inverted_logic){__Valve_Water = LOW;}
-    else{__Valve_Water = HIGH;}
-  }
-
-void compressorController::turnOff_ValveWater(bool inverted_logic)
-  { if(inverted_logic){__Valve_Water = HIGH;}
-    else{__Valve_Water = LOW;}
+void compressorController::turnOff_Valve(bool &state, bool inverted_logic)
+  { if(inverted_logic){state = HIGH;}
+    else{state = LOW;}
   }
 
 bool compressorController::getState() // Constructor
   { return __State; }
 
-bool compressorController::getValvCompressorState()
+bool compressorController::getValveCompressorState()
   { return __Valve_Compressor; }
 
-bool compressorController::getValvNutritionState()
+bool compressorController::getValveNutritionState()
   { return __Valve_Nutrition; }
 
-bool compressorController::getValvWaterState()
+bool compressorController::getValveWaterState()
   { return __Valve_Water; }
 
 void compressorController::close_ValveNutrition()
-  { turnOff_ValveNutrition(__Nutrition_invertedLogic); }
+  { turnOff_Valve(__Valve_Nutrition, __Nutrition_invertedLogic); }
 
 void compressorController::close_ValveWater()
-  { turnOff_ValveWater(__Water_invertedLogic); }
+  { turnOff_Valve(__Valve_Water, __Water_invertedLogic); }
 
 void compressorController::enable(bool en)
   { __Enable = en;

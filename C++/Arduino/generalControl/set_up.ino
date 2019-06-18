@@ -110,6 +110,6 @@ void sensors_setup(){
   }
   else{Serial.println(F("Pressure Sensors started incorrectly"));}
 
-  US1.beginAll();
+  US0.beginAll();
   Serial.println(F("UltraSonic Sensors started correctly"));
 }

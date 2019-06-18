@@ -36,9 +36,6 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 
 
 // Class to control the air compressor
-/* Limitation Note: This class is limited by definition to 50
-  actuators this limitations can be changed but, you need to keep
-  in mind your procesator memory consumption */
 class compressorController
  {  private:
         bool __State, __Enable;
@@ -58,26 +55,22 @@ class compressorController
         void fillNutrition(); // Settings to fill the nutrition kegs
         void fillWater(); // Settings to fill the water kegs
         void fillEverything(); // Settings to fill everything
-        void turnOn_ValveCompressor(bool inverted_logic); //
-        void turnOff_ValveCompressor(bool inverted_logic);
-        void turnOn_ValveNutrition(bool inverted_logic);
-        void turnOff_ValveNutrition(bool inverted_logic);
-        void turnOn_ValveWater(bool inverted_logic);
-        void turnOff_ValveWater(bool inverted_logic);
+
+        void turnOn_Valve(bool &state, bool inverted_logic);
+        void turnOff_Valve(bool &state, bool inverted_logic);
 
     public:
          compressorController(bool comprLogic, bool nutrLogic, bool waterLogic); // Constructor
 
          bool getState() ; // Returns Compressor State
-         bool getValvCompressorState(); // Return Valve Compressor State
-         bool getValvNutritionState(); // Return Valve Nutrition State
-         bool getValvWaterState(); // Return Valve Water State
+         bool getValveCompressorState(); // Return Valve Compressor State
+         bool getValveNutritionState(); // Return Valve Nutrition State
+         bool getValveWaterState(); // Return Valve Water State
          void close_ValveNutrition(); // Close the Nutrition Valve (Usefull for free pressure)
          void close_ValveWater(); // CLose the Water Valve (Usefull for free pressure)
          void enable (bool en) ; // Enable the Compressor
          bool isEnable() ; // Returns true if Compressor is enable
          byte setMode(byte mode) ;
   } ;
-
 
   #endif

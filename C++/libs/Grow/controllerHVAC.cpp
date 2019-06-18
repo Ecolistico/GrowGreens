@@ -110,6 +110,8 @@ void controllerHVAC::run()
     // Mode 0: Turn Off
     if(__Mode == 0){
       // All off
+      __Work = LOW;
+      __Warn = LOW;
       __W = LOW; // Heat Relay Off
       __Y = LOW; // Compressor Contactor Off
       __O = LOW; // Changeover Valve Cooling Off
@@ -127,9 +129,13 @@ void controllerHVAC::run()
         __PrevMode = __Mode;
       }
       if(millis()-__Actual_time<=WAIT_TIME){
+        __Work = LOW;
+        __Warn = HIGH;
         __Y = LOW; // Compressor Contactor  Off
       }
       else if(millis()-__Actual_time>WAIT_TIME){
+        __Work = HIGH;
+        __Warn = LOW;
         __Y = HIGH; // Compressor Contactor Cooling On
       }
     }
@@ -145,9 +151,13 @@ void controllerHVAC::run()
         __PrevMode = __Mode;
       }
       if(millis()-__Actual_time<=WAIT_TIME){
+        __Work = LOW;
+        __Warn = HIGH;
         __W = LOW; // Heat Relay  Off
       }
       else if(millis()-__Actual_time>WAIT_TIME){
+        __Work = HIGH;
+        __Warn = LOW;
         __W = HIGH; // Heat Relay Cooling On
       }
     }
