@@ -154,6 +154,7 @@ bool Actuator::run()
 
 /***   solenoidValve   ***/
 // Statics variables definitions
+bool solenoidValve::__Enable_group = LOW;
 String solenoidValve::__Group = "Irrigation";
 byte solenoidValve::__TotalActuators = 0;
 byte solenoidValve::__ActualNumber = 0;
@@ -175,6 +176,7 @@ void solenoidValve::flowSensorBegin()
 solenoidValve::solenoidValve(String name) // Constructor
    {  // Just the first time init arrays
       if(__TotalActuators<1){
+        __Enable_group = HIGH;
         for (int i=0; i < MAX_ACTUATORS; i++) { ptr[i] = NULL; } // All Pointers NULL
       }
      __State = LOW ; // Off
@@ -257,26 +259,37 @@ bool solenoidValve::getState()
   {  return (__State) ;    }
 
 void solenoidValve::changeState()
-  { __State = !__State; }
+  { __State = !__State;
+    if( __State == HIGH ){Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn On")) ;}
+    else{  Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn Off")) ;}
+  }
 
 void solenoidValve::turnOn( )
-  { __State = HIGH; }
+  { __State = HIGH;
+    Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn On")) ;
+  }
 
 void solenoidValve::turnOff()
-  { __State = LOW; }
+  { __State = LOW;
+    Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn Off")) ;
+  }
 
 void solenoidValve::changeState(bool rst_time)
   { __State = !__State;
+    if( __State == HIGH ){Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn On")) ;}
+    else{  Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn Off")) ;}
     if(rst_time){set_time();}
   }
 
 void solenoidValve::turnOn(bool rst_time)
   { __State = HIGH;
+    Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn On")) ;
     if(rst_time){set_time(); }
   }
 
 void solenoidValve::turnOff(bool rst_time)
   { __State = LOW;
+    Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn Off")) ;
     if(rst_time){set_time(); }
   }
 
@@ -322,6 +335,22 @@ void solenoidValve::enable (bool en)
 
 bool solenoidValve::isEnable()
   {  return (__Enable) ; }
+
+void solenoidValve::enableGroup (bool en)
+  { __Enable_group = en ;
+    Serial.print(F("Solenoid Group: "));
+    if(__Enable_group){
+      Serial.println(F("Enabled"));
+      ptr[__ActualNumber]->getWasteH2O(false);
+    }
+    else{
+      Serial.println(F("Disabled"));
+      ptr[__ActualNumber]->getConsumptionH2O();
+      }
+  }
+
+bool solenoidValve::isEnableGroup()
+  {  return (__Enable_group) ; }
 
 byte solenoidValve::getFloor()
   { return __Floor ; }
@@ -499,13 +528,13 @@ bool solenoidValve::defaultOrder(byte night_floor)
     }
   }
 
-void solenoidValve::getWasteH2O()
+void solenoidValve::getWasteH2O(bool print = HIGH)
   { noInterrupts(); // Disable Interrupts
     float newVolume = __NumPulses/(60*__K);
     __H2Ow = newVolume + __H2Ow;
     __NumPulses = 0;
     interrupts();   // Enable Interrupts
-    printAllH2O();
+    printAllH2O(print);
   }
 
 void solenoidValve::getConsumptionH2O()
@@ -515,7 +544,6 @@ void solenoidValve::getConsumptionH2O()
     __NumPulses = 0;
     __ActualNumber++;
     interrupts();   // Enable Interrupts
-    Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn Off")) ;
     Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.print(F(": Water Consumption = ")) ;
     Serial.print(newVolume);  Serial.println(F(" liters")) ;
   }
@@ -542,11 +570,11 @@ void solenoidValve::printH2O()
     Serial.println(F(" liters"));
   }
 
-void solenoidValve::printAllH2O()
+void solenoidValve::printAllH2O(bool printAll = HIGH)
   { Serial.print(F("Solenoid Group ")); Serial.print(__Group);
     Serial.print(F(": Wasted Water Volume = ")); Serial.print(__H2Ow);
     Serial.println(F(" liters"));
-    for(int i = 0; i<__TotalActuators; i++){ptr[i]->printH2O();}
+    if(printAll){for(int i = 0; i<__TotalActuators; i++){ptr[i]->printH2O();}}
   }
 
 String solenoidValve::getName()
@@ -589,14 +617,12 @@ byte solenoidValve::begin( byte fl, byte reg, unsigned long t_on, unsigned long 
   }
 
 bool solenoidValve::run()
-  { if(__Enable == true){
+  { if(__Enable_group == true){
+      if(__Enable == true){
         if(__ActualNumber == __Number){
           if(__State == LOW){
-            if(__Number == 0){
-              getWasteH2O();
-            }
+            if(__Number == 0){getWasteH2O();}
             turnOn(true);
-            Serial.print(F("Solenoid Valve ")); Serial.print(__Name); Serial.println(F(": Turn On")) ;
           }
           else if( (millis()-__Actual_time)>=__TimeOn && __State==HIGH){
             turnOff();
@@ -611,9 +637,8 @@ bool solenoidValve::run()
      }
      else{
        if(__ActualNumber == __Number){
-           if(__Number == 0){
-             getWasteH2O();
-           }
+           if(__Number == 0){getWasteH2O();}
+           if(__State==HIGH){turnOff();}
            set_time();
            __ActualNumber++;
        }
@@ -624,6 +649,12 @@ bool solenoidValve::run()
        __State = LOW;
        return false;
      }
+    }
+    else{
+      if(__State==HIGH){turnOff();}
+      return false;
+    }
+
   }
 
   void solenoidValve::runAll()

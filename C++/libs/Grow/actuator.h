@@ -108,6 +108,7 @@ class solenoidValve
          String __Name;
          float __H2OVolume; // Water consumption for each solenoidValve
 
+         static bool __Enable_group; // Group Enable variable
          static String __Group ; // Group Name
          static byte __ActualNumber ; // Actual Number working into the array
          static unsigned long __CycleTime; // Cycle time
@@ -120,7 +121,7 @@ class solenoidValve
          void set_time() ;
          void resetTime() ;
          bool changeOrderNumber(byte new_number); // Change the order number. Return 0 if succesful
-         void getWasteH2O() ; // Get Water Consumption  when no solenoids are active
+         void getWasteH2O(bool print = HIGH) ; // Get Water Consumption  when no solenoids are active
          void getConsumptionH2O() ; // Get Water Consumption for each Region
 
      public:
@@ -146,8 +147,10 @@ class solenoidValve
           bool reOrder(byte number); // Return true if succesful
           byte getOrder(); // Returns the order number into the group of the actuator
           byte getActualNumber(); // Returns the actual actuator number active into the array
-          void enable (bool en) ; // Enable the array of the actuator
+          void enable (bool en) ; // Enable the actuator
           bool isEnable() ; // Returns true if the array of the actuator is enable
+          static void enableGroup(bool en); // Enable the group
+          static bool isEnableGroup(); // Returns true if the array of the actuator is enable
           byte getFloor(); // Returns the floor of the actuator
           byte getRegion(); // Return the region of the actuator
           bool reOrderAll(bool sequence, bool order); // True if succesful
@@ -157,7 +160,7 @@ class solenoidValve
           void restartAllH2O(); // Set all Volumes in zero
           float getH2O(); // Return Volume of H2O
           void printH2O(); // Print on serial the acummulate water consumption
-          void printAllH2O(); // Print on serial all the acummulates of water
+          void printAllH2O(bool printAll = HIGH); // Print on serial all the acummulates of water
           String getName(); // Returns the name of the solenoid
           // Variables of time in seconds
           byte begin( byte fl, byte reg, unsigned long t_on, unsigned long cycleTime ) ; // Return true if succesful

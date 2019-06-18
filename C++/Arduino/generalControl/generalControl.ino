@@ -17,11 +17,11 @@
 #include <Wire.h>
 #include <DHT.h>
 #include <EEPROM.h>
-//#include <NewPing.h>
 #include <actuator.h>
 #include <day.h>
 #include <controllerHVAC.h>
 #include <sensor.h>
+#include <compressorController.h>
 
 /*** Temp-Hum Sensors(DHT-22) Definitions ***/ 
 #define DHTTYPE22 DHT22
@@ -35,9 +35,13 @@ const byte shcp = 24;
 
 /*** Water sensors definitions ***/
 // Pressure
-analogSensor pressureSensorA(A0, "Pressure A");
-analogSensor pressureSensorB(A1, "Pressure B");
-analogSensor pressureSensorC(A2, "Pressure C");
+analogSensor pressureSensorNutrition(A0, "Nutrition Pressure");
+analogSensor pressureSensorWater(A1, "Water Pressure");
+analogSensor pressureSensorCompressor(A2, "Compressor Pressure");
+float max_pressure = 160; // Maximum Pressure in the system (psi)
+float min_pressure = 100; // Minimum Pressure in the system (psi)
+float min_cycle_pressure = 145; // Minimun Pressure in the system when it is going to start a new irrigation cycle (psi)
+byte pressureDecision = 0; // Variable for control on decisions taken
 
 /*** UltraSonic Sensors ***/
 UltraSonic US1(25, "US1");
@@ -53,6 +57,9 @@ UltraSonic US10(34, "US10");
 
 /*** HVAC Controller object ***/
 controllerHVAC HVAC(OFF_MODE , AUTO_FAN);
+
+/*** Compressor Controller object ***/
+compressorController Compressor(LOW, HIGH, LOW);
 
 /*** Actuators ***/
 // Define initial time
