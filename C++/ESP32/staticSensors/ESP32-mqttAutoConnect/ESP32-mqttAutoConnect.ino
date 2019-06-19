@@ -1,7 +1,11 @@
-/*Falta Agregar:
- * 1- Funciones comunicación MQTT para:
- *    a) Cambiar opciones y parámetros de los filtros utilizados
- *    b) Cambiar opciones y parámetros del tiempo entre muestreo
+/* Add:
+ * 1 - Communication functions MQTT to:
+ *    a) Change options and parameters and filters that can be used
+ *    b) Change update time for sensors
+ * 2 - Memory functions to:
+ *    a) Save in EEPROM all the parameters that the users set in point a).
+ *    
+ *    Point 1) and 2) already write, just need to be tested and debugged
 */
 
 /*** Include Libraries ***/
