@@ -20,7 +20,7 @@ float exponential_filter(float alpha, float t, float t_1){
 
 // Kalman Filter 
 bool setKalmanFilter(float noise){
-  if(noise!=0){
+  if(noise>0){
     filter = 2;
     kalman_noise = noise; // Enviromental Noise
     kalman_err = 1; // Initial Error
