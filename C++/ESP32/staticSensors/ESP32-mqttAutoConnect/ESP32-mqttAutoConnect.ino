@@ -13,7 +13,8 @@
 #include <PubSubClient.h>
 #include <AutoConnect.h>
 #include <AutoConnectCredential.h>
-#include <EEPROM.h>
+//#include <EEPROM.h>
+#include <Preferences.h>
 
 /*** Include files ***/
 // All files are stored in flash memory
@@ -25,6 +26,9 @@
 
 /*** Redifine existing functions ***/
 #define GET_CHIPID()  ((uint16_t)(ESP.getEfuseMac()>>32))
+
+/*** Create memory object ***/
+Preferences memory;
 
 /*** Initialization of object and variables ***/
 AutoConnect Portal;
@@ -70,14 +74,14 @@ TempAndHumidity data_4R;
 TempAndHumidity data_4L;
 
 // Filter Settings
-uint8_t filter = 0; // Set filter to use: 0=none, 1=exponential, 2=kalman
-uint8_t exp_alpha = 40; // Smooth Constant in Exponencial Filter. uint8_8 divided by 100
-uint8_t kalman_noise = 50; // Noise in Kalman Filter. uint8_8 divided by 100
-float kalman_err = 1; // Error in Kalman Filter. uint8_8 divided by 100
+uint8_t filter; // = 0; // Set filter to use: 0=none, 1=exponential, 2=kalman
+uint8_t exp_alpha; // = 40; // Smooth Constant in Exponencial Filter. uint8_8 divided by 100
+uint8_t kalman_noise; // = 50; // Noise in Kalman Filter. uint8_8 divided by 100
+float kalman_err; // = 1; // Error in Kalman Filter. uint8_8 divided by 100
 
 // Temporal variables
 unsigned long update_time;
-uint8_t update_constant = 5; // Update info every 5 seconds
+uint8_t update_constant; // = 5; // Update info every 5 seconds
 
 void setup() {
   Serial.begin(115200);
@@ -126,6 +130,7 @@ void setup() {
     }
   }
 
+  memorySetup();
   setupSensors();
   update_time = millis();  
 }
