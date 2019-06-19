@@ -1,4 +1,3 @@
-
 void loadSettings(){
   File file = SPIFFS.open(PARAM_FILE, "r");
   

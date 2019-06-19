@@ -78,8 +78,9 @@ void callback(char* topic, byte* message, unsigned int length) {
       delay(1000);
     }
     
-    else if(messageTemp.startsWith("updateConstant")){
-      unsigned long newValue;
+    else if(messageTemp.startsWith("updateConstant")){ // Change update constant to get measurements from the sensor at different frequency
+      // Msg command structure= "updateConstant,int" where int is the number of seconds
+      int newValue;
       
       for (int i = 0; i < messageTemp.length(); i++) {
         if (messageTemp.substring(i, i+1) == ",") {
@@ -89,14 +90,14 @@ void callback(char* topic, byte* message, unsigned int length) {
       }
       
       Serial.print(F("New Update Constant Value = ")); Serial.println(newValue); // If this line works change for -> 
-      /*  if(newValue>=2000){
+      /*  if(newValue>=2){
        *    update_constant = newValue;
-       *    Serial.print(F("Attemp to change update time constant succeed,Taking measurements every ")); Serial.print(newValue); Srial.println(F(" ms"));
-       *    mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attemp to change update time constant succeed,Taking measurements every "+String(newValue)+" ms");
+       *    Serial.print(F("Attemp to change update time constant succeed,Taking measurements every ")); Serial.print(newValue); Serial.println(F(" s"));
+       *    mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attemp to change update time constant succeed,Taking measurements every "+String(newValue)+" s");
        *  }
        *  else{
-       *    Serial.println(F("Attemp to change update time constant failed,Parameter has to be at least 2000ms"));
-       *    mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attemp to change update time constant failed,Parameter has to be at least 2000ms");
+       *    Serial.println(F("Attemp to change update time constant failed,Parameter has to be at least 2 s"));
+       *    mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attemp to change update time constant failed,Parameter has to be at least 2 s");
        *  }
       */
       // test after that
@@ -104,16 +105,16 @@ void callback(char* topic, byte* message, unsigned int length) {
 
     else if(messageTemp == "notFilter"){
       filter = 0;
-      Serial.println(F("Attemp to change Not Filter Configuration succed"));
-      /*mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attemp to change Not Filter Configuration succed");*/
+      Serial.println(F("Attemp to change -Not Filter- Configuration succed"));
+      /*mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attemp to change -Not Filter- Configuration succed");*/
     }
     
     else if(messageTemp.startsWith("setExponentialFilter")){
-      float newValue;
+      int newValue;
         
       for (int i = 0; i < messageTemp.length(); i++) {
         if (messageTemp.substring(i, i+1) == ",") {
-          newValue = messageTemp.substring(i+1).toFloat();
+          newValue = messageTemp.substring(i+1).toInt();
           break;
         }
       }
@@ -131,11 +132,11 @@ void callback(char* topic, byte* message, unsigned int length) {
     }
 
     else if(messageTemp.startsWith("setKalmanFilter")){
-      float newValue;
+      int newValue;
         
       for (int i = 0; i < messageTemp.length(); i++) {
         if (messageTemp.substring(i, i+1) == ",") {
-          newValue = messageTemp.substring(i+1).toFloat();
+          newValue = messageTemp.substring(i+1).toInt();
           break;
         }
       }
@@ -154,11 +155,10 @@ void callback(char* topic, byte* message, unsigned int length) {
     /*
     * a) Probar nuevas funciones agregadas
     * b) Agregar grabar y borrar parametros EEPROM, revisar que no interfiera con el guardado de las credenciales del WiFi. Se tiene que guardar al menos: 
-    * byte filter
-    * float exp_alpha
-    * float kalman_noise
-    * float kalman_err
-    * unsigned long update_constant
+    * uint8_t filter
+    * uint8_t exp_alpha
+    * uint8_t kalman_noise
+    * uint8_t update_constant
     */
     /*** Not tested yet ***/ 
     }  
