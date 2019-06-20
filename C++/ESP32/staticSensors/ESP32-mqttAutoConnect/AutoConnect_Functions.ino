@@ -72,8 +72,8 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   esp32Type = args.arg("esp32Type");
   esp32Type.trim();
 
-
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length ) {
+  bool testContID = testContainerId(container_ID);
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && testContID ) {
     // The entered value is owned by AutoConnectAux of /mqtt_setting.
     // To retrieve the elements of /mqtt_setting, it is necessary to get
     // the AutoConnectAux object of /mqtt_setting.
@@ -84,7 +84,7 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   
   // Echo back saved parameters to AutoConnectAux page.
   AutoConnectText&  echo = aux.getElement<AutoConnectText>("parameters");
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length ) {
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && testContID ) {
     echo.value = "<p style='color:green;'>Parameters were saved correcty!</p><br>";
   }
   else{
@@ -95,10 +95,10 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   }else{
     echo.value += "MQTT Broker IP: <p style='color:red;'>You did not provide a correct IP Address</p><br>";
   }
-  if(container_ID.length()==container_ID_length){
+  if(testContID){
     echo.value += "Container ID: " + container_ID + "<br>";
   }else{
-    echo.value += "Container ID: <p style='color:red;'>The ID does not have the correct size</p><br>";
+    echo.value += "Container ID: <p style='color:red;'>The ID does not have the correct size/form</p><br>";
   }
   if(esp32Type=="front" || esp32Type=="center" || esp32Type=="back"){
     echo.value += "ESP32 Type: " + esp32Type + "<br>";
@@ -135,4 +135,31 @@ void setup_AutoConnect(AutoConnect &Portal, AutoConnectConfig &Config){
   Config.bootUri = AC_ONBOOTURI_HOME; // Reboot path
   Config.title = "GrowGreens Access Point by SIPPYS";
   Portal.config(Config);                        // Configure AutoConnect
+}
+
+bool testContainerId(String ID){
+  bool resp = false;
+  int cont = 0;
+
+  
+  if(ID.length()==container_ID_length){
+    for(int i=0; i<container_ID_length; i++){
+      int test = -1;
+      if(i==1 || i==5 || i ==9){
+        test = int(ID[i])-48;
+        if(test>0 && test<=9){cont++;}
+      }
+      else if(i==2 || i==6){
+        if(ID[i]=='-'){cont++;}
+      }
+      else{
+        test = int(ID[i])-48;
+        if(test>=0 && test<=9){cont++;}
+      }
+    }
+  }
+
+  if(cont==container_ID_length){resp=true;}
+  
+  return resp;
 }

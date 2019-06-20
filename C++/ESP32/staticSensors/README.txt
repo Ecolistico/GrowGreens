@@ -14,9 +14,9 @@ manualmente y entrar a la dirección http://192.168.10.1/_ac.
 los siguientes datos:
 	* MQTT Broker IP Address: Es la dirección IP del dispósitivo/broker en formato IPV4.
 	* Container ID: Es el número de serie asignado al contenedor en el cual trabajara el microcontrolador.
-	Debe contener exactamente 12 carácteres.
+	Debe contener exactamente 10 carácteres y tener el siguiente formato "01-001-001".
 	* Tipo de ESP32: Sólo existen tres tipos frontal(front), central(center) y trasero(back).
-5- Una vez ingresados los datos se debe dar click en el botón "save", este guardara la información, en caso de que
+5- Una vez ingresados los datos se debe dar click en el botón "save", este guardará la información, en caso de que
 algún dato sea erroneo no lo grabará y se deberá repetir el proceso. En caso de que se haya guardado con éxito
 la información ingresada será desplegada en la pantalla. NOTA: Favor de verificar que la información sea correcta, en
 caso de haber errores dar click en el botón que lleva el nombre de "Clear channel", esto borrará la información y podrá
@@ -30,10 +30,20 @@ paso 6.
 nuevamente.
 9- !Felicidades ha logrado configurar un dispósitivo!
 
+Funciones a través de MQTT:
+	* "sendData": envía la información de los sensores
+	* "reboot": reinicia el dispósitivo
+	* "hardReset": borra todos los datos guardados en la NVS (Non-Volatile Storage) como las credenciales de las
+	redes WiFi y los parámetros configurados
+	* "updateConstant,X": Modifica la frecuencia de captura de datos cada X segundos.
+	La X debe ser un valor entre [2-200]
+	* "notFilter": Quita la aplicación de cualquier filtro a la captura de datos.
+	* "setExponentialFilter,X": Establece un filtro exponencial con parámetro alfa=(X/100)
+	La X debe ser un valor entre [0-100]
+	* "setKalmanFilter,X": Establece un filtro de Kalman con parámetro Kalman_Noise=(X/100)
+	La X debe ser un valor entre [0-200]
 
 PENDIENTES/LIMITANTES:
-* Falta crear mayor número de funciones que sirvan mediante la llegada de mensajes MQTT, como:
-	1. Una función que permita modificar los parámetros de cualquier y la configuración de los filtros.
-	2. Una función que permita modificar el parámetro del tiempo entre mediciones.
+* Funciones pendientes MQTT: TBD
 
-* Analizar si se anexaran más cantidad de DHT o algún otro tipo de sensores.
+* Sensores por añadir: TBD

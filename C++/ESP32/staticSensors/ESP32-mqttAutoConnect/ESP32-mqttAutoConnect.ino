@@ -37,7 +37,7 @@ IPAddress addr;
 String mqttBrokerIp;
 String container_ID;
 String esp32Type;
-byte container_ID_length = 12;
+byte container_ID_length = 10;
 
 /***** Sensors Definitions *****/
 byte dht_1R_pin = 13;

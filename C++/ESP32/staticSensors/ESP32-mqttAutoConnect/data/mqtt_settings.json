@@ -32,9 +32,9 @@
       "name": "containerID",
       "type": "ACInput",
       "value": "",
-      "placeholder": "Example: alfaedmex001",
+      "placeholder": "Example: 99-999-999",
       "label": "Container ID:",
-      "pattern": "^[a-z0-9]{12}$"
+      "pattern": "^([0-9][1-9][-][0-9]{2}[1-9][-][0-9]{2}[1-9])$"
     },
     {
       "name": "esp32Type",
