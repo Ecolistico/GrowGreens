@@ -1,6 +1,6 @@
 El código para los ESP32 actualmente funciona para trabajar con 8 sensores DHT22(temp/hum).
-Recolectan datos cada X segundos utilizando un filtro exponencial, y la envían a un servidor mediante
-el protocolo MQTT cada que el servidor pide la información.
+Recolectan datos cada X segundos sin filtro por default, y la envían a través de el
+protocolo MQTT cada que un cliente solicita la información.
 
 Se utiliza la librería AutoConnect para crear un Access Point que permite configurar previamente o en cualquier momento
 el ESP32 en cuestión. Los pasos que se deben seguir para configurar el dispósitivo (en el siguiente orden) son:
@@ -35,6 +35,5 @@ PENDIENTES/LIMITANTES:
 * Falta crear mayor número de funciones que sirvan mediante la llegada de mensajes MQTT, como:
 	1. Una función que permita modificar los parámetros de cualquier y la configuración de los filtros.
 	2. Una función que permita modificar el parámetro del tiempo entre mediciones.
-	***3. Una función que permita modificar la longitud del ID del contenedor para posteriores reconfiguraciones.
 
 * Analizar si se anexaran más cantidad de DHT o algún otro tipo de sensores.

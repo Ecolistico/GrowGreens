@@ -2,7 +2,8 @@
 // Exponencial filter
 bool setExponentialFilter(uint8_t alpha = 50){
   if(alpha>0 && alpha<100){
-      filter = 1; 
+      filter = 1;
+      memorySave(0);
       exp_alpha = alpha;
       return true;
     }
@@ -23,6 +24,7 @@ float exponential_filter(uint8_t alpha, float t, float t_1){
 bool setKalmanFilter(uint8_t noise){
   if(noise>0){
     filter = 2;
+    memorySave(0);
     kalman_noise = noise; // Enviromental Noise
     kalman_err = 1; // Initial Error
     return true;
@@ -72,10 +74,10 @@ void updateData(){
   getData(dht_3L, data_3L);
   getData(dht_4R, data_4R);
   getData(dht_4L, data_4L);
-  Serial.print(data_1R.temperature); Serial.print(","); Serial.print(data_1R.humidity); Serial.print(","); Serial.print(data_1L.temperature); Serial.print(","); Serial.print(data_1L.humidity); Serial.print(",");
-  Serial.print(data_2R.temperature); Serial.print(","); Serial.print(data_2R.humidity); Serial.print(","); Serial.print(data_2L.temperature); Serial.print(","); Serial.print(data_2L.humidity); Serial.print(",");
-  Serial.print(data_3R.temperature); Serial.print(","); Serial.print(data_3R.humidity); Serial.print(","); Serial.print(data_3L.temperature); Serial.print(","); Serial.print(data_3L.humidity); Serial.print(",");
-  Serial.print(data_4R.temperature); Serial.print(","); Serial.print(data_4R.humidity); Serial.print(","); Serial.print(data_4L.temperature); Serial.print(","); Serial.println(data_4L.humidity);
+  Serial.print(data_1R.temperature); Serial.print(F(",")); Serial.print(data_1R.humidity); Serial.print(F(",")); Serial.print(data_1L.temperature); Serial.print(F(",")); Serial.print(data_1L.humidity); Serial.print(F(","));
+  Serial.print(data_2R.temperature); Serial.print(F(",")); Serial.print(data_2R.humidity); Serial.print(F(",")); Serial.print(data_2L.temperature); Serial.print(F(",")); Serial.print(data_2L.humidity); Serial.print(F(","));
+  Serial.print(data_3R.temperature); Serial.print(F(",")); Serial.print(data_3R.humidity); Serial.print(F(",")); Serial.print(data_3L.temperature); Serial.print(F(",")); Serial.print(data_3L.humidity); Serial.print(F(","));
+  Serial.print(data_4R.temperature); Serial.print(F(",")); Serial.print(data_4R.humidity); Serial.print(F(",")); Serial.print(data_4L.temperature); Serial.print(F(",")); Serial.println(data_4L.humidity);
 }
 
 void setupSensors(){

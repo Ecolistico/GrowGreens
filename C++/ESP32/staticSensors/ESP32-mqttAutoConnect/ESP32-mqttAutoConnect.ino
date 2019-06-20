@@ -1,11 +1,4 @@
 /* Add:
- * 1 - Communication functions MQTT to:
- *    a) Change options and parameters and filters that can be used
- *    b) Change update time for sensors
- * 2 - Memory functions to:
- *    a) Save in EEPROM all the parameters that the users set in point a).
- *    
- *    Point 1) and 2) already write, just need to be tested and debugged
 */
 
 /*** Include Libraries ***/
@@ -17,7 +10,6 @@
 #include <PubSubClient.h>
 #include <AutoConnect.h>
 #include <AutoConnectCredential.h>
-//#include <EEPROM.h>
 #include <Preferences.h>
 
 /*** Include files ***/
@@ -85,19 +77,19 @@ float kalman_err; // = 1; // Error in Kalman Filter. uint8_8 divided by 100
 
 // Temporal variables
 unsigned long update_time;
-uint8_t update_constant; // = 5; // Update info every 5 seconds
+uint8_t update_constant; // Update time every X seconds
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Initial setup");
-  Serial.print("Please wait");
+  Serial.println(F("Initial setup"));
+  Serial.print(F("Please wait"));
   for(int i=0;i<30;i++){
     Serial.print(".");
     delay(1000);  
   }
   Serial.println();
   
-  Serial.println("Trying connection");
+  Serial.println(F("Trying connection"));
   SPIFFS.begin();
   
   loadAux(AUX_MQTTSETTING);
@@ -117,10 +109,10 @@ void setup() {
     Portal.on(AUX_MQTTSAVE, saveParams);
   }
   else{
-    Serial.println("aux. load error");
+    Serial.println(F("aux. load error"));
   }
   
-  Serial.print("WiFi ");
+  Serial.print(F("WiFi "));
   if (Portal.begin()) {
     Serial.println("connected:" + WiFi.SSID());
     Serial.println("IP:" + WiFi.localIP().toString());

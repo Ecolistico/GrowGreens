@@ -17,12 +17,12 @@ void loadSettings(){
 
   file.close();
   if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length ){
-    Serial.println("Uploading Settings...");
-    Serial.print("MQTT Broker Ip: "); Serial.println(mqttBrokerIp);
-    Serial.print("Container ID: "); Serial.println(container_ID);
-    Serial.print("ESP32 Type: "); Serial.println(esp32Type);
+    Serial.println(F("Uploading Settings..."));
+    Serial.print(F("MQTT Broker Ip: ")); Serial.println(mqttBrokerIp);
+    Serial.print(F("Container ID: ")); Serial.println(container_ID);
+    Serial.print(F("ESP32 Type: ")); Serial.println(esp32Type);
   }else{
-    Serial.println("Settings are wrong\nReseting credentials and rebooting...");
+    Serial.println(F("Settings are wrong\nReseting credentials and rebooting..."));
     resetCredentials();
   }
   

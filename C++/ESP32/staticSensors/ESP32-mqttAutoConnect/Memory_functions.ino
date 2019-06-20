@@ -13,11 +13,11 @@ void memorySetup(){
     memorySave(1);
   }
   if(kalman_noise == 0){
-    kalman_noise = 50;
+    kalman_noise = 30;
     memorySave(2);
   }
   if(update_constant == 0){
-    update_constant = 2;
+    update_constant = 5;
     memorySave(3);
   }
   
