@@ -1,6 +1,6 @@
 import os
 import subprocess
-import urllib.request
+#import urllib.request
 
 def getIPaddr():
     wifi_ip = subprocess.check_output(['hostname', '-I'])
