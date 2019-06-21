@@ -56,76 +56,100 @@ class Grower:
         GPIO.output(gpio, GPIO.LOW)
 
     def enable_IRCUT(self, ircut):
-        print("IRCUT: Enable")
         if(ircut == 0): GPIO.output(self.En1,GPIO.HIGH)
         else: GPIO.output(self.En2,GPIO.HIGH)
 
     def disable_IRCUT(self, ircut):
-        print("IRCUT: Disable")
         if(ircut == 0): GPIO.output(self.En1,GPIO.LOW)
         else: GPIO.output(self.En2,GPIO.LOW)
 
     def turnOn_IRCUT(self, ircut):
-        print("IRCUT: Turn On")
         if(ircut == 0):
-            if not GPIO.input(self.En1): self.enable_IRCUT(ircut)
-            GPIO.output(self.In1,GPIO.HIGH)
-            GPIO.output(self.In2,GPIO.LOW)
+            #if not GPIO.input(self.En1): self.enable_IRCUT(ircut)
+            GPIO.output(self.En1, GPIO.HIGH)
+            GPIO.output(self.In1, GPIO.HIGH)
+            GPIO.output(self.In2, GPIO.LOW)
         else:
-            if not GPIO.input(self.En2): self.enable_IRCUT(ircut)
-            GPIO.output(self.In3,GPIO.HIGH)
-            GPIO.output(self.In4,GPIO.LOW)
+            #if not GPIO.input(self.En2): self.enable_IRCUT(ircut)
+            GPIO.output(self.En2, GPIO.HIGH)
+            GPIO.output(self.In3, GPIO.HIGH)
+            GPIO.output(self.In4, GPIO.LOW)
+        time.sleep(2)
 
     def turnOff_IRCUT(self, ircut):
-        print("IRCUT: Turn Off")
         if(ircut == 0):
-            if not GPIO.input(self.En1): self.enable_IRCUT(ircut)
+            #if not GPIO.input(self.En1): self.enable_IRCUT(ircut)
+            GPIO.output(self.En1, GPIO.HIGH)
             GPIO.output(self.In1, GPIO.LOW)
             GPIO.output(self.In2, GPIO.HIGH)
         else:
-            if not GPIO.input(self.En2): self.enable_IRCUT(ircut)
-            GPIO.output(self.In3,GPIO.LOW)
-            GPIO.output(self.In4,GPIO.HIGH)
+            #if not GPIO.input(self.En2): self.enable_IRCUT(ircut)
+            GPIO.output(self.En2, GPIO.HIGH)
+            GPIO.output(self.In3, GPIO.LOW)
+            GPIO.output(self.In4, GPIO.HIGH)
+        time.sleep(2)
 
     def takePicture(self, mode):
         # Thermal Mode
         if(mode == 0):
             print("Picture: Thermal Mode")
+            print("IRCUT: Turn Off")
             self.turnOff_IRCUT(self.IrCut)
+            print("IR: Turn On")
             self.turnOn(self.IR)
             time.sleep(2) #Wait 2 seconds
             #os.system('sudo raspistill -o {}}.jpg -t 1'.format()) # Take picture and give it a name
             #get thermal cam readings
+            print("IR: Turn Off")
             self.turnOff(self.IR)
+            print("IRCUT: Disable")
             self.disable_IRCUT(self.IrCut)
+            print()
+            time.sleep(2) # Wait 2 seconds
 
         # LED mode
         elif(mode == 1):
             print("Picture: LED Mode")
+            print("IRCUT: Turn On")
             self.turnOn_IRCUT(self.IrCut)
+            print("LED: Turn On")
             self.turnOn(self.LED)
             time.sleep(2) #Wait 2 seconds
             #os.system('sudo raspistill -o {}}.jpg -t 1'.format()) # Take picture and give it a name
+            print("LED: Turn Off")
             self.turnOff(self.LED)
+            print("IRCUT: Turn Off and Disabled")
             self.turnOff_IRCUT(self.IrCut)
             self.disable_IRCUT(self.IrCut)
+            print()
+            time.sleep(2) # Sleep 2 seconds
 
         # XENON mode
         elif(mode == 2):
             print("Picture: XENON Mode")
+            print("IRCUT: Turn On")
             self.turnOn_IRCUT(self.IrCut)
+            print("XENON: Turn On")
             self.turnOn(self.XENON)
             time.sleep(2) #Wait 2 seconds
             #os.system('sudo raspistill -o {}}.jpg -t 1'.format()) # Take picture and give it a name
+            print("XENON: Turn Off")
             self.turnOff(self.XENON)
+            print("IRCUT: Turn Off and disabled")
             self.turnOff_IRCUT(self.IrCut)
             self.disable_IRCUT(self.IrCut)
+            print()
+            time.sleep(2) # Sleep 2 seconds
 
-        def close(self):
-            GPIO.cleanup() # Clean GPIO
+    def close(self):
+        GPIO.cleanup() # Clean GPIO
 
 grower1 = Grower()
-grower1.takePicture(0)
-grower1.takePicture(1)
-grower1.takePicture(2)
+grower1.turnOn_IRCUT(0)
+#time.sleep(5)
+grower1.turnOff_IRCUT(0)
+#time.sleep(5)
+#grower1.takePicture(0)
+#grower1.takePicture(1)
+#grower1.takePicture(2)
 grower1.close()
