@@ -121,7 +121,11 @@ class Grower:
             self.turnOff_IRCUT(self.IrCut)
             self.disable_IRCUT(self.IrCut)
 
+        def close(self):
+            GPIO.cleanup() # Clean GPIO
+
 grower1 = Grower()
 grower1.takePicture(0)
 grower1.takePicture(1)
 grower1.takePicture(2)
+grower1.close()
