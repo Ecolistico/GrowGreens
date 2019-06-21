@@ -91,35 +91,35 @@ class Grower:
         # Thermal Mode
         if(mode == 0):
             print("Picture: Thermal Mode")
-            turnOff_IRCUT(self.IrCut)
-            turnOn(self.IR)
+            self.turnOff_IRCUT(self.IrCut)
+            self.turnOn(self.IR)
             time.sleep(2) #Wait 2 seconds
             #os.system('sudo raspistill -o {}}.jpg -t 1'.format()) # Take picture and give it a name
             #get thermal cam readings
-            turnOff(self.IR)
-            disable_IRCUT(self.IrCut)
+            self.turnOff(self.IR)
+            self.disable_IRCUT(self.IrCut)
 
         # LED mode
         elif(mode == 1):
             print("Picture: LED Mode")
-            turnOn_IRCUT(self.IrCut)
-            turnOn(self.LED)
+            self.turnOn_IRCUT(self.IrCut)
+            self.turnOn(self.LED)
             time.sleep(2) #Wait 2 seconds
             #os.system('sudo raspistill -o {}}.jpg -t 1'.format()) # Take picture and give it a name
-            turnOff(self.LED)
-            turnOff_IRCUT(self.IrCut)
-            disable_IRCUT(self.IrCut)
+            self.turnOff(self.LED)
+            self.turnOff_IRCUT(self.IrCut)
+            self.disable_IRCUT(self.IrCut)
 
         # XENON mode
         elif(mode == 2):
             print("Picture: XENON Mode")
-            turnOn_IRCUT(self.IrCut)
-            turnOn(self.XENON)
+            self.turnOn_IRCUT(self.IrCut)
+            self.turnOn(self.XENON)
             time.sleep(2) #Wait 2 seconds
             #os.system('sudo raspistill -o {}}.jpg -t 1'.format()) # Take picture and give it a name
-            turnOff(self.XENON)
-            turnOff_IRCUT(self.IrCut)
-            disable_IRCUT(self.IrCut)
+            self.turnOff(self.XENON)
+            self.turnOff_IRCUT(self.IrCut)
+            self.disable_IRCUT(self.IrCut)
 
 grower1 = Grower()
 grower1.takePicture(0)
