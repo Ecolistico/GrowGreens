@@ -68,22 +68,22 @@ class Grower:
     def turnOn_IRCUT(self, ircut):
         print("IRCUT: Turn On")
         if(ircut == 0):
-            if not GPIO.input(self.En1): enable_IRCUT(ircut)
+            if not GPIO.input(self.En1): self.enable_IRCUT(ircut)
             GPIO.output(self.In1,GPIO.HIGH)
             GPIO.output(self.In2,GPIO.LOW)
         else:
-            if not GPIO.input(self.En2): enable_IRCUT(ircut)
+            if not GPIO.input(self.En2): self.enable_IRCUT(ircut)
             GPIO.output(self.In3,GPIO.HIGH)
             GPIO.output(self.In4,GPIO.LOW)
 
     def turnOff_IRCUT(self, ircut):
         print("IRCUT: Turn Off")
         if(ircut == 0):
-            if not GPIO.input(self.En1): enable_IRCUT(ircut)
+            if not GPIO.input(self.En1): self.enable_IRCUT(ircut)
             GPIO.output(self.In1, GPIO.LOW)
             GPIO.output(self.In2, GPIO.HIGH)
         else:
-            if not GPIO.input(self.En2): enable_IRCUT(ircut)
+            if not GPIO.input(self.En2): self.enable_IRCUT(ircut)
             GPIO.output(self.In3,GPIO.LOW)
             GPIO.output(self.In4,GPIO.HIGH)
 
