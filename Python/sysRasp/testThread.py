@@ -2,40 +2,56 @@ import threading
 import time
 import sysRasp
 
-WiFiState = 0
-WiFiTime = time.time()
-WiFiCount = 0
-
-TocaniTime = time.time()
+containerID, floor, brokerIP = sysRasp.getData_JSON(sysRasp.PATH)
 
 def check_WiFi():
-    global WiFiState
-    global WiFiTime
-    global WiFiCount
+    global containerID
+    global floor
+    global brokerIP
+    
+    WiFiState = 0
+    WiFiTime = time.time()
+    WiFiCount = 0
+    prevWiFiState = 0
+    
     while True:
         if(time.time()- WiFiTime > 20):
             if(sysRasp.isWiFi()):
-                WiFiState = 1
+                if(prevWiFiState == 2):
+                     ID, fl, IP = sysRasp.getData_JSON(sysRasp.PATH)
+                     if(ID!= containerID and ID!=""):
+                         containerID = ID
+                     if(fl!= floor and fl!=""):
+                         floor = fl
+                     if(IP!=brokerIP and IP!=""):
+                         brokerIP = IP
+                prevWiFiState = WiFiState
+                WiFiState = 1 # Conected to WiFi
                 WiFiCount = 0
             elif(sysRasp.isAP()):
-                WiFiState = 2
+                prevWiFiState = WiFiState
+                WiFiState = 2 # Access Point created
                 WiFiCount = 0
             else:
-                WiFiState = 0
+                prevWiFiState = WiFiState
+                WiFiState = 0 # Not accesPoint or WiFi
                 WiFiCount += 1
             WiFiTime = time.time()
-            
+        
         if(WiFiCount>=5):
             WiFiCount = 0
             print("Configuring AP...")
             sysRasp.runShellCommand('sudo python APconfig.py')
 
 def tocani():
-    global TocaniTime
+    TocaniTime = time.time()
+
     while True:
         if(time.time()- TocaniTime > 10):
             TocaniTime = time.time()
-            print("Tocani has to move")
+            print(containerID)
+            print(floor)
+            print(brokerIP)
         
 if __name__ == "__main__":
     while True:

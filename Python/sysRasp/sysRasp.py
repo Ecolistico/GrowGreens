@@ -1,6 +1,9 @@
 import os
 import subprocess
 import urllib.request
+import json
+
+PATH = '/var/www/html/data/data.json'
 
 def getIPaddr():
     wifi_ip = subprocess.check_output(['hostname', '-I'])
@@ -69,3 +72,10 @@ def isAP():
         return AP
     else:
         return AP
+
+def getData_JSON(path):
+    if(os.path.isfile(path)):
+        with open(path) as json_file:
+            data = json.load(json_file)
+            return data['containerID'], data['floor'], data['mqttIP']
+    else: return "", "", ""
