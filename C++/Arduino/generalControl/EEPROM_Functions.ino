@@ -1,8 +1,3 @@
-/*
- * Probar a fondo funciones saveParamters_EEPROM(), print_EEPROM() y clean_EEPROM()
- * Falta desarrollar funciones daySave_EEPROM() y sensorSave_EEPROM()
- */
- 
 void saveParamters_EEPROM(){
   solenoidSave_EEPROM();
   ledSave_EEPROM();

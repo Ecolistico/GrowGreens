@@ -1,27 +1,30 @@
 /***** Filters Functions *****/
 // Exponencial filter
-bool setExponentialFilter(float alpha = 0.5){
-  if(alpha>0 && alpha<1){
-      filter = 1; 
+bool setExponentialFilter(uint8_t alpha = 50){
+  if(alpha>0 && alpha<100){
+      filter = 1;
+      memorySave(0);
       exp_alpha = alpha;
       return true;
     }
   else{return false;}
 }
 
-float exponential_filter(float alpha, float t, float t_1){
+float exponential_filter(uint8_t alpha, float t, float t_1){
   if(isnan(alpha) || isnan(t) || isnan(t_1)){
     return t;
   }
   else{
-    return (t*alpha+(1-alpha)*t_1);  
+    float a = float(alpha)/100;
+    return (t*a+(1-a)*t_1);  
   }
 }
 
 // Kalman Filter 
-bool setKalmanFilter(float noise){
-  if(noise!=0){
+bool setKalmanFilter(uint8_t noise){
+  if(noise>0){
     filter = 2;
+    memorySave(0);
     kalman_noise = noise; // Enviromental Noise
     kalman_err = 1; // Initial Error
     return true;
@@ -37,8 +40,9 @@ float kalman_filter(float t, float t_1){
     return t;
   }
   else{
-    float kalman_gain = kalman_err/(kalman_err+kalman_noise);
-    kalman_err = (1-kalman_gain)*kalman_err;
+    float kal_noise = float(kalman_noise)/100; // Convert uint8_t to float
+    float kalman_gain = (kalman_err)/(kalman_err+kal_noise); // Calculate Kalman Gain
+    kalman_err = (1-kalman_gain)*kalman_err; // Calculate Kalma Error
     return (t_1+kalman_gain*(t-t_1));
   }  
 }
@@ -70,10 +74,10 @@ void updateData(){
   getData(dht_3L, data_3L);
   getData(dht_4R, data_4R);
   getData(dht_4L, data_4L);
-  Serial.print(data_1R.temperature); Serial.print(","); Serial.print(data_1R.humidity); Serial.print(","); Serial.print(data_1L.temperature); Serial.print(","); Serial.print(data_1L.humidity); Serial.print(",");
-  Serial.print(data_2R.temperature); Serial.print(","); Serial.print(data_2R.humidity); Serial.print(","); Serial.print(data_2L.temperature); Serial.print(","); Serial.print(data_2L.humidity); Serial.print(",");
-  Serial.print(data_3R.temperature); Serial.print(","); Serial.print(data_3R.humidity); Serial.print(","); Serial.print(data_3L.temperature); Serial.print(","); Serial.print(data_3L.humidity); Serial.print(",");
-  Serial.print(data_4R.temperature); Serial.print(","); Serial.print(data_4R.humidity); Serial.print(","); Serial.print(data_4L.temperature); Serial.print(","); Serial.println(data_4L.humidity);
+  Serial.print(data_1R.temperature); Serial.print(F(",")); Serial.print(data_1R.humidity); Serial.print(F(",")); Serial.print(data_1L.temperature); Serial.print(F(",")); Serial.print(data_1L.humidity); Serial.print(F(","));
+  Serial.print(data_2R.temperature); Serial.print(F(",")); Serial.print(data_2R.humidity); Serial.print(F(",")); Serial.print(data_2L.temperature); Serial.print(F(",")); Serial.print(data_2L.humidity); Serial.print(F(","));
+  Serial.print(data_3R.temperature); Serial.print(F(",")); Serial.print(data_3R.humidity); Serial.print(F(",")); Serial.print(data_3L.temperature); Serial.print(F(",")); Serial.print(data_3L.humidity); Serial.print(F(","));
+  Serial.print(data_4R.temperature); Serial.print(F(",")); Serial.print(data_4R.humidity); Serial.print(F(",")); Serial.print(data_4L.temperature); Serial.print(F(",")); Serial.println(data_4L.humidity);
 }
 
 void setupSensors(){

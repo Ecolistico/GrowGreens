@@ -39,28 +39,116 @@ bool mqttConnect() {
   return false;
 }
 
+void mqttPublish(String top, String msg){
+  char textData[msg.length()+1];
+  msg.toCharArray(textData,msg.length()+1);
+
+  char topicData[top.length()+1];
+  top.toCharArray(topicData,top.length()+1);
+
+  mqttClient.publish(topicData, textData);  
+}
+
 void callback(char* topic, byte* message, unsigned int length) {
   String topicName = container_ID + "/esp32" + esp32Type;
   String messageTemp;
+  
   for (int i = 0; i < length; i++) {
     messageTemp += (char)message[i];
   }
   
-  if (String(topic) == topicName && messageTemp == "sendData") {
-    Serial.println("Sending sensor data to MQTT Broker");
-    sendData();
-  }
-
-  if(String(topic) == topicName && messageTemp == "hardRestart"){
-    resetCredentials();
-  }
-
-  /*
- * Agregar función para que cambie el parámetro alfa
- * Agregar función para que modifique parámetro entre toma de mediciones (update_constant)
- * Agregar función para que modifique parámetro longitud ID (container_ID_length)
- */
+  if(String(topic) == topicName){
+    if (messageTemp == "sendData") { // Send sensor data to Broker
+      sendData();
+      Serial.println(F("Sending sensor data to MQTT Broker"));
+      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Sensor data sended");
+    }
   
+    else if(messageTemp == "hardReset"){ // Erase WiFi Credentials and reboot ESP32
+      Serial.println(F("Deleting WiFi credentials and rebooting..."));
+      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Deleting WiFi credentials and rebooting...");
+      resetCredentials();
+    }
+  
+    else if(messageTemp == "reboot"){ // Reboot ESP32
+      Serial.println(F("Rebooting..."));
+      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Rebooting...");
+      ESP.restart();
+      delay(1000);
+    }
+    
+    else if(messageTemp.startsWith("updateConstant")){ // Change update constant to get measurements from the sensor at different frequency
+      // Msg command structure= "updateConstant,int" where int is the number of seconds
+      int newValue;
+      
+      for (int i = 0; i < messageTemp.length(); i++) {
+        if (messageTemp.substring(i, i+1) == ",") {
+          newValue = messageTemp.substring(i+1).toInt();
+          break;
+        }
+      }
+    
+      if(newValue>=2){
+        update_constant = newValue;
+        memorySave(3);
+        Serial.print(F("Attemp to change update time constant succeed,Taking measurements every ")); Serial.print(newValue); Serial.println(F(" s"));
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attemp to change update time constant succeed,Taking measurements every "+String(newValue)+" s");
+      }
+      else{
+        Serial.println(F("Attemp to change update time constant failed,Parameter has to be at least 2 s"));
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attemp to change update time constant failed,Parameter has to be at least 2 s");
+      }
+    }
+
+    else if(messageTemp == "notFilter"){
+      filter = 0;
+      memorySave(0);
+      Serial.println(F("Attemp to change -Not Filter- Configuration succed"));
+      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attemp to change -Not Filter- Configuration succed");
+    }
+    
+    else if(messageTemp.startsWith("setExponentialFilter")){
+      int newValue;
+        
+      for (int i = 0; i < messageTemp.length(); i++) {
+        if (messageTemp.substring(i, i+1) == ",") {
+          newValue = messageTemp.substring(i+1).toInt();
+          break;
+        }
+      }
+      
+      if(setExponentialFilter(newValue)){
+        memorySave(1);
+        Serial.print(F("Attemp to set Exponential Filter succed,New Alpha = ")); Serial.println(newValue);
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/log",  "Attemp to set Exponential Filter succed,New Alpha = "+String(newValue));
+      }
+      else{
+        Serial.println(F("Attemp to set Exponential Filter failed,Alpha parameter is wrong"));
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attemp to set Exponential Filter failed,Alpha parameter is wrong");
+      }
+    }
+
+    else if(messageTemp.startsWith("setKalmanFilter")){
+      int newValue;
+        
+      for (int i = 0; i < messageTemp.length(); i++) {
+        if (messageTemp.substring(i, i+1) == ",") {
+          newValue = messageTemp.substring(i+1).toInt();
+          break;
+        }
+      }
+
+      if(setKalmanFilter(newValue)){
+        memorySave(2);
+        Serial.print(F("Attemp to set Kalman Filter succed,New Kalman Noise = ")); Serial.println(newValue);
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/log",  "Attemp to set Kalman Filter succed,New Kalman Noise = "+String(newValue));
+      }
+      else{
+        Serial.println(F("Attemp to set Kalman Filter failed,Kalman Noise parameter is wrong"));
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attemp to set Kalman Filter failed,Kalman Noise parameter is wrong");
+      }
+    }  
+  }
 }
 
 // Send over MQTT sensor data
@@ -75,7 +163,7 @@ void sendData(){
   String topicString = container_ID + "/esp32" + esp32Type;
   char topicData[topicString.length()+1];
   topicString.toCharArray(topicData,topicString.length()+1);
-  
+    
   mqttClient.publish(topicData, textData);  
 }
 
@@ -86,16 +174,25 @@ void resetCredentials(){
 
   int8_t entries1 = AutoConnectCredential().entries();
   if(entries1>0){
-    Serial.print("There is(are) "); Serial.print(entries1); Serial.println(" entrie(s) that will be deleted");
+    Serial.print(F("There is(are) ")); Serial.print(entries1); Serial.println(F(" entrie(s) that will be deleted"));
     for(int i=entries1-1;i>=0;i--){
       if( AutoConnectCredential().load(i, AC_credential) ){
         Serial.print("Deleting credential: "); Serial.println(reinterpret_cast<char*>(AC_credential->ssid));
         if(AutoConnectCredential().del(reinterpret_cast<char*>(AC_credential->ssid))){
-          Serial.println("Deleted with success");
+          Serial.println(F("Deleted with success"));
         }
       }
     }
   }
+  
+  filter = 0;
+  exp_alpha = 0;
+  kalman_noise = 0;
+  update_constant = 0;
+  for(int i=0; i<4; i++){
+    memorySave(i);
+  }
+  Serial.println(F("Parameters filter, alpha, kalman_noise and update_constant deleted"));
   
   ESP.restart();
   delay(1000);

@@ -1,7 +1,4 @@
-/*Falta Agregar:
- * 1- Funciones comunicación MQTT para:
- *    a) Cambiar opciones y parámetros de los filtros utilizados
- *    b) Cambiar opciones y parámetros del tiempo entre muestreo
+/* Add:
 */
 
 /*** Include Libraries ***/
@@ -13,7 +10,7 @@
 #include <PubSubClient.h>
 #include <AutoConnect.h>
 #include <AutoConnectCredential.h>
-#include <EEPROM.h>
+#include <Preferences.h>
 
 /*** Include files ***/
 // All files are stored in flash memory
@@ -22,8 +19,12 @@
 #define AUX_MQTTSETTING_CLEAR "/mqtt_settings_clear"
 #define AUX_MQTTSAVE "/mqtt_save"
 #define AUX_MQTTCLEAR "/mqtt_clear"
+
 /*** Redifine existing functions ***/
 #define GET_CHIPID()  ((uint16_t)(ESP.getEfuseMac()>>32))
+
+/*** Create memory object ***/
+Preferences memory;
 
 /*** Initialization of object and variables ***/
 AutoConnect Portal;
@@ -36,7 +37,7 @@ IPAddress addr;
 String mqttBrokerIp;
 String container_ID;
 String esp32Type;
-byte container_ID_length = 12;
+byte container_ID_length = 10;
 
 /***** Sensors Definitions *****/
 byte dht_1R_pin = 13;
@@ -69,26 +70,26 @@ TempAndHumidity data_4R;
 TempAndHumidity data_4L;
 
 // Filter Settings
-byte filter = 0; // Set filter to use: 0=none, 1=exponential, 2=kalman
-float exp_alpha = 0.4; // Smooth Constant in Exponencial Filter
-float kalman_noise = 0.5; // Noise in Kalman Filter
-float kalman_err = 1; // Error in Kalman Filter
+uint8_t filter; // = 0; // Set filter to use: 0=none, 1=exponential, 2=kalman
+uint8_t exp_alpha; // = 40; // Smooth Constant in Exponencial Filter. uint8_8 divided by 100
+uint8_t kalman_noise; // = 50; // Noise in Kalman Filter. uint8_8 divided by 100
+float kalman_err; // = 1; // Error in Kalman Filter. uint8_8 divided by 100
 
 // Temporal variables
 unsigned long update_time;
-unsigned long update_constant = 5000; // Actualizar información cada 5 segundos.
+uint8_t update_constant; // Update time every X seconds
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Initial setup");
-  Serial.print("Please wait");
+  Serial.println(F("Initial setup"));
+  Serial.print(F("Please wait"));
   for(int i=0;i<30;i++){
     Serial.print(".");
     delay(1000);  
   }
   Serial.println();
   
-  Serial.println("Trying connection");
+  Serial.println(F("Trying connection"));
   SPIFFS.begin();
   
   loadAux(AUX_MQTTSETTING);
@@ -108,10 +109,10 @@ void setup() {
     Portal.on(AUX_MQTTSAVE, saveParams);
   }
   else{
-    Serial.println("aux. load error");
+    Serial.println(F("aux. load error"));
   }
   
-  Serial.print("WiFi ");
+  Serial.print(F("WiFi "));
   if (Portal.begin()) {
     Serial.println("connected:" + WiFi.SSID());
     Serial.println("IP:" + WiFi.localIP().toString());
@@ -125,6 +126,7 @@ void setup() {
     }
   }
 
+  memorySetup();
   setupSensors();
   update_time = millis();  
 }
@@ -136,7 +138,7 @@ void loop() {
       mqttConnect();
     }
 
-    if(millis()-update_time>update_constant){
+    if(millis()-update_time>update_constant*1000){
       updateData();
       update_time = millis();
     }

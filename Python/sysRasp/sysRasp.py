@@ -1,6 +1,5 @@
 import os
 import subprocess
-import urllib.request
 import json
 
 PATH = '/var/www/html/data/data.json'

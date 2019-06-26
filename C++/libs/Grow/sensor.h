@@ -36,10 +36,11 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <NewPing.h>
 #define MAX_EQUATION_DEGREE   2   // Max degree of equation for calibration
-#define MAX_ULTRASONIC        12  // Max number of sensors
+#define MAX_ULTRASONIC        10  // Max number of sensors
 #define MAX_DISTANCE          300 // Maximum distance(cm) we want to ping
 #define MIN_SECUTIRY_DISTANCE 10  // Minimum distance(cm) expected
-#define MAX_SECUTIRY_DISTANCE 100 // Maximum distance(cm) expected
+#define MAX_SECUTIRY_DISTANCE 88 // Maximum distance(cm) expected
+#define PI 3.1415
 
 // Class to declarate Analog Sensor and applied different filters
 class analogSensor

@@ -91,25 +91,25 @@ void MultiDay_setup(){
 void sensors_setup(){
   Serial.println(F("Setting up sensors..."));
 
-  pressureSensorA.begin();
-  pressureSensorB.begin();
-  pressureSensorC.begin();
+  pressureSensorNutrition.begin();
+  pressureSensorWater.begin();
+  pressureSensorCompressor.begin();
   
-  pressureSensorA.defaultFilter(); // Default Kalman Filter
-  pressureSensorB.defaultFilter(); // Default Kalman Filter
-  pressureSensorC.defaultFilter(); // Default Kalman Filter
+  pressureSensorNutrition.defaultFilter(); // Default Kalman Filter
+  pressureSensorWater.defaultFilter(); // Default Kalman Filter
+  pressureSensorCompressor.defaultFilter(); // Default Kalman Filter
   
-  if(pressureSensorA.setModel(1, -22.969, 0.2155) && pressureSensorB.setModel(1, -22.969, 0.2155) && pressureSensorC.setModel(1, -22.969, 0.2155)){
+  if(pressureSensorNutrition.setModel(1, -22.969, 0.2155) && pressureSensorWater.setModel(1, -22.969, 0.2155) && pressureSensorCompressor.setModel(1, -22.969, 0.2155)){
     Serial.println(F("Pressure Sensors started correctly"));
-     pressureSensorA.printModel();
-     pressureSensorA.printFilter();
-     pressureSensorB.printModel();
-     pressureSensorB.printFilter();
-     pressureSensorC.printModel();
-     pressureSensorC.printFilter();
+     pressureSensorNutrition.printModel();
+     pressureSensorNutrition.printFilter();
+     pressureSensorWater.printModel();
+     pressureSensorWater.printFilter();
+     pressureSensorCompressor.printModel();
+     pressureSensorCompressor.printFilter();
   }
   else{Serial.println(F("Pressure Sensors started incorrectly"));}
 
-  US1.beginAll();
+  US0.beginAll();
   Serial.println(F("UltraSonic Sensors started correctly"));
 }
