@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, '../')
 from sysRasp import runShellCommand, existFile
 
 # Stop hostapd

@@ -1,5 +1,7 @@
 import threading
 import time
+import sys
+sys.path.insert(0, '../')
 import sysRasp
 
 containerID, floor, brokerIP = sysRasp.getData_JSON(sysRasp.PATH)
