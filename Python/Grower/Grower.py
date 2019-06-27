@@ -1,11 +1,33 @@
 import os
-import time
+from time import time
 from picamera import PiCamera
 from datetime import datetime
-import numpy as np
+from numpy import reshape, concatenate, savetxt
 import RPi.GPIO as GPIO
 from Adafruit_AMG88xx import Adafruit_AMG88xx
+import cozir
+import sys
+sys.path.insert(0, '../sysRasp/')
+from sysRasp import runShellCommand, getOutput_ShellCommand, getIPaddr
 
+"""
+Functions resume:
+    * Grower()- Constructor for the class
+    * getState() - returns the state of some gpio
+    * turnOn() - turn On some gpio
+    * turnOff() - turn Off some gpio
+    * turnOn_IRCUT() - activate ircut
+    * turnOff_IRCUT() - desactivate ircut
+    * enable_IRCUT() - enable ircut
+    * disable_IRCUT - disable ircut
+    * takePicture(mode, name) - Mode(0=thermal, 1=led, 2=xenon) and Name(the name of the picture)
+    * photoSequence(name) - Run the 3 modes of the takePicture function giving the same name on each picture
+    * thermalPhoto(name) - Gives an csv with thermal information of the two cameras
+    * enableStreaming() - Close the cam in the local program to stream over internet
+    * disableStreaming() - Close the cam streaming to open the cam in local program
+    * whatIsMyIP() - Returns a string with the IP addres from this device
+    * close() - Cleanup the GPIO´s
+"""
 class Grower:
     def __init__(self, ir = 22, led = 23, xenon = 26, en1 = 4, en2 = 27, in1 = 24, in2 = 18, in3 = 17, in4 = 10, thermal1Addr = 0x69, thermal2Addr = 0x68, ircut = 0):
         self.now = datetime.now()
@@ -26,10 +48,20 @@ class Grower:
 
         self.IrCut = ircut # Default IRCUT output. 0 for outputs 1, 2 and 1 for outputs 3, 4
 
+        # Setting Up Thermal Cams
         self.thermalCam1 = Adafruit_AMG88xx(address=thermal1Addr) # Set thermalCam1 on its i2c addres
         self.thermalCam2 = Adafruit_AMG88xx(address=thermal2Addr) # Set thermalCam2 on its i2c addres
-        self.cam = PiCamera()
-
+        # Set Cam Disable by Default
+        self.camEnable = 0
+        # Setting Up Cozir
+        self.coz = cozir.Cozir()
+            # For now just stable in polling mode
+        if(self.coz.opMode(self.coz.polling)):
+            print("Cozir: Set Mode = K{0}".format(self.coz.act_OpMode))
+            # Get hum, temp and co2_filter        
+        if(self.coz.setData_output(self.coz.Hum + self.coz.Temp + self.coz.CO2_filt)):
+            print("Cozir: Data Mode = M{}".format(self.coz.act_OutMode))
+    
         GPIO.setmode(GPIO.BCM)
 
         GPIO.setup(self.IR, GPIO.OUT)
@@ -163,11 +195,11 @@ class Grower:
         thermalPixels2 = self.thermalCam2.readPixels()
         
         # Process and join data
-        thermalPixels1 = np.reshape(thermalPixels1, (8,8))
-        thermalPixels2 = np.reshape(thermalPixels2, (8,8))
-        thermalJoin = np.concatenate((thermalPixels1, thermalPixels2), axis=0)
+        thermalPixels1 = reshape(thermalPixels1, (8,8))
+        thermalPixels2 = reshape(thermalPixels2, (8,8))
+        thermalJoin = concatenate((thermalPixels1, thermalPixels2), axis=0)
         
-        np.savetxt("{}.csv".format(name), thermalJoin, fmt="%.2f", delimiter=",")
+        savetxt("{}.csv".format(name), thermalJoin, fmt="%.2f", delimiter=",")
     
     def checkDayDirectory(self):
         day, month, year = self.getDateFormat()
@@ -194,16 +226,75 @@ class Grower:
         return day, month, year
     
     def wait(self, timeout):
-        actualTime = time.time()
-        while(time.time()-actualTime<timeout): continue
+        actualTime = time()
+        while(time()-actualTime<timeout): continue
             
+    def enableStreaming(self):
+        # Disconnecting cam from this program
+        if self.camEnable: self.cam_stop()
+        
+        # Create camera1 in motionEye
+        runShellCommand('sudo cp ../sysRasp/configFiles_MotionEye/camera-1.conf /etc/motioneye/camera-1.conf')
+        
+        # Change to python 2
+            # Check Alternatives
+        alt = getOutput_ShellCommand('update-alternatives --list python')    
+        if(alt == ''):
+            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
+            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
+            # Set Python Version
+        runShellCommand("sudo update-alternatives --set python /usr/bin/python2.7")
+        
+        # Restart motionEye
+        runShellCommand('sudo systemctl restart motioneye')
+        
+        # Change to python 3
+            # Check Alternatives
+        alt = getOutput_ShellCommand('update-alternatives --list python')    
+        if(alt == ''):
+            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
+            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
+            # Set Python Version
+        runShellCommand("sudo update-alternatives --set python /usr/bin/python3.5")
+        
+    def disableStreaming(self):
+        # Remove camera1 in motionEye
+        runShellCommand('sudo rm /etc/motioneye/camera-1.conf')
+        
+        # Change to python 2
+            # Check Alternatives
+        alt = getOutput_ShellCommand('update-alternatives --list python')    
+        if(alt == ''):
+            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
+            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
+            # Set Python Version
+        runShellCommand("sudo update-alternatives --set python /usr/bin/python2.7")
+        
+        # Restart motionEye
+        runShellCommand('sudo systemctl restart motioneye')
+        
+        # Change to python 3
+            # Check Alternatives
+        alt = getOutput_ShellCommand('update-alternatives --list python')    
+        if(alt == ''):
+            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
+            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
+            # Set Python Version
+        runShellCommand("sudo update-alternatives --set python /usr/bin/python3.5")
+        
+        # Connecting camara to this program
+        if not self.camEnable: self.cam_begin()
+    
+    def cam_begin(self):
+        self.cam = PiCamera()
+        self.camEnable = 1
+        
+    def cam_stop(self):
+        self.cam.close()
+        self.camEnable = 0
+    
+    def whatIsMyIP(self):
+        return getIPaddr()
+    
     def close(self):
         GPIO.cleanup() # Clean GPIO
-        self.cam.close()
-
-counter = time.time()
-print(counter)
-grower = Grower()
-grower.photoSequence(1)
-grower.close()
-print(time.time()-counter)

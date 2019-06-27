@@ -6,7 +6,8 @@ PATH = '/var/www/html/data/data.json'
 
 def getIPaddr():
     wifi_ip = subprocess.check_output(['hostname', '-I'])
-    return str(wifi_ip,'utf-8')
+    ip_str = str(wifi_ip,'utf-8')
+    return ip_str[:-2]
 
 def getSerial():
     # Extract serial from cpuinfo file
