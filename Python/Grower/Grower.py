@@ -27,6 +27,7 @@ Functions resume:
     * enableStreaming() - Close the cam in the local program to stream over internet
     * disableStreaming() - Close the cam streaming to open the cam in local program
     * whatIsMyIP() - Returns a string with the IP addres from this device
+    * sendPhotos(host, name, password, floor)
     * close() - Cleanup the GPIO´s
 """
 class Grower:
@@ -312,13 +313,13 @@ class Grower:
     def sendPhotos(self, host, name, pskw, floor = 0):
         try:
             with Connection(host, username=name, password=pskw) as sftp:
-                if(sftp.isdir('/home/pi/Documents/GrowGreens/Master')):
-                    sftp.chdir('/home/pi/Documents/GrowGreens/Master')
+                if(sftp.isdir('/home/pi/Documents/GrowGreens/Data/Photos')):
+                    sftp.chdir('/home/pi/Documents/GrowGreens/Data/Photos')
                     if not sftp.isdir("Grower{}".format(floor)):
                         sftp.makedirs("Grower{}".format(floor))
                     sftp.chdir("Grower{}".format(floor))
                     sftp.makedirs(self.photoPath())
-                    sftp.put_r(self.photoPath(), '/home/pi/Documents/GrowGreens/Master/Grower{}/{}'.format(floor, self.photoPath()), preserve_mtime=False)
+                    sftp.put_r(self.photoPath(), '/home/pi/Documents/GrowGreens/Data/Photos/Grower{}/{}'.format(floor, self.photoPath()), preserve_mtime=False)
                     return True
                 else: return False
         except:
