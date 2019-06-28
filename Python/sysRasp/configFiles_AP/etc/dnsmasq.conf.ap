@@ -1,0 +1,3 @@
+interface=wlan0 	# Use interface wlan0
+server=1.1.1.1 		# Use Cloudflare DNS
+dhcp-range=192.168.1.50,192.168.1.150,24h # IP range and lease time

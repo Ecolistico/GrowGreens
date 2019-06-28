@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, '../')
 from sysRasp import runShellCommand, getOutput_ShellCommand
 
 # Check Alternatives
@@ -6,5 +8,4 @@ if(alt == ''):
     runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
     runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
 # Set Python Version
-runShellCommand("sudo update-alternatives --set python /usr/bin/python2.7")
-
+runShellCommand("sudo update-alternatives --set python /usr/bin/python3.5")
