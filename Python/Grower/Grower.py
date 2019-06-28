@@ -3,6 +3,7 @@ from time import time
 from picamera import PiCamera
 from datetime import datetime
 from numpy import reshape, concatenate, savetxt
+from pysftp import Connection
 import RPi.GPIO as GPIO
 from Adafruit_AMG88xx import Adafruit_AMG88xx
 import cozir
@@ -125,82 +126,10 @@ class Grower:
             GPIO.output(self.In3, GPIO.HIGH)
             GPIO.output(self.In4, GPIO.LOW)
 
-    def takePicture(self, mode, name):
-        # Check if directory exist, if not create it
-        if not self.checkDayDirectory(): self.createDayDirectory()
+    def wait(self, timeout):
+        actualTime = time()
+        while(time()-actualTime<timeout): continue
         
-        day, month, year = self.getDateFormat()
-        # Thermal Mode
-        if(mode == 0):
-            self.turnOff_IRCUT(self.IrCut)
-            self.turnOn(self.IR)
-            self.wait(0.45) # Wait 0.45 seconds
-            self.cam.capture("photos_{}-{}-{}/ir/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
-            self.thermalPhoto("photos_{}-{}-{}/thermalPhotos/{}".format(day, month, year, name)) #get thermal cam readings
-            self.wait(0.1) # Wait 100ms
-            self.turnOff(self.IR)
-            self.wait(0.05) # Wait 50ms
-
-        # LED mode
-        elif(mode == 1):
-            self.turnOn_IRCUT(self.IrCut)
-            self.turnOn(self.LED)
-            self.wait(0.45) # Wait 0.45 seconds
-            self.cam.capture("photos_{}-{}-{}/led/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
-            self.wait(0.1) # Wait 100ms
-            self.turnOff(self.LED)
-            self.turnOff_IRCUT(self.IrCut)
-            self.wait(0.05) # Wait 50ms
-
-        # XENON mode
-        elif(mode == 2):
-            self.turnOn_IRCUT(self.IrCut)
-            self.turnOn(self.XENON)
-            self.wait(0.45) # Wait 0.45 seconds
-            self.cam.capture("photos_{}-{}-{}/xenon/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
-            self.wait(0.1) # Wait 100ms
-            self.turnOff(self.XENON)
-            self.turnOff_IRCUT(self.IrCut)
-            self.wait(0.05) # Wait 50ms
-            
-    def photoSequence(self, name):
-        # Check if directory exist, if not create it
-        if not self.checkDayDirectory(): self.createDayDirectory()
-        day, month, year = self.getDateFormat()
-        self.cam.start_preview()
-        self.turnOn_IRCUT(self.IrCut)
-        self.turnOn(self.LED)
-        self.wait(0.45) # Wait 0.45 seconds
-        self.cam.capture("photos_{}-{}-{}/led/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
-        self.wait(0.1) # Wait 100ms
-        self.turnOff(self.LED)
-        self.turnOn(self.XENON)
-        self.wait(0.45) # Wait 0.45 seconds
-        self.cam.capture("photos_{}-{}-{}/xenon/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
-        self.wait(0.1) # Wait 100ms
-        self.turnOff(self.XENON)
-        self.turnOff_IRCUT(self.IrCut)
-        self.turnOn(self.IR)
-        self.wait(0.45) # Wait 0.45 seconds        
-        self.cam.capture("photos_{}-{}-{}/ir/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
-        self.thermalPhoto("photos_{}-{}-{}/thermalPhotos/{}".format(day, month, year, name)) #get thermal cam readings
-        self.wait(0.1) # Wait 100ms
-        self.turnOff(self.IR)
-        self.wait(0.05) # Wait 50ms
-        self.cam.stop_preview()
-        
-    def thermalPhoto(self, name):
-        # Get lecture
-        thermalPixels1 = self.thermalCam1.readPixels()
-        thermalPixels2 = self.thermalCam2.readPixels()
-        
-        # Process and join data
-        thermalPixels1 = reshape(thermalPixels1, (8,8))
-        thermalPixels2 = reshape(thermalPixels2, (8,8))
-        thermalJoin = concatenate((thermalPixels1, thermalPixels2), axis=0)
-        
-        savetxt("{}.csv".format(name), thermalJoin, fmt="%.2f", delimiter=",")
-    
     def checkDayDirectory(self):
         day, month, year = self.getDateFormat()
         if os.path.exists('photos_{}-{}-{}'.format(day, month, year)): return True
@@ -225,9 +154,104 @@ class Grower:
         
         return day, month, year
     
-    def wait(self, timeout):
-        actualTime = time()
-        while(time()-actualTime<timeout): continue
+    def whatIsMyIP(self):
+        return getIPaddr()
+    
+    def photoPath(self):
+        day, month, year = self.getDateFormat()
+        return "photos_{}-{}-{}".format(day, month, year) # Return folder name
+    
+    def thermalPhoto(self, name):
+        # Get lecture
+        thermalPixels1 = self.thermalCam1.readPixels()
+        thermalPixels2 = self.thermalCam2.readPixels()
+        
+        # Process and join data
+        thermalPixels1 = reshape(thermalPixels1, (8,8))
+        thermalPixels2 = reshape(thermalPixels2, (8,8))
+        thermalJoin = concatenate((thermalPixels1, thermalPixels2), axis=0)
+        
+        savetxt("{}.csv".format(name), thermalJoin, fmt="%.2f", delimiter=",")
+    
+    def cam_begin(self):
+        self.cam = PiCamera()
+        self.camEnable = 1
+        
+    def cam_stop(self):
+        self.cam.close()
+        self.camEnable = 0
+        
+    def takePicture(self, mode, name):
+        # Check if directory exist, if not create it
+        if not self.checkDayDirectory(): self.createDayDirectory()
+        
+        day, month, year = self.getDateFormat()
+        # Thermal Mode
+        if(mode == 0):
+            self.turnOff_IRCUT(self.IrCut)
+            self.turnOn(self.IR)
+            self.turnOff(self.LED)
+            self.turnOff(self.XENON)
+            self.wait(0.45) # Wait 0.45 seconds
+            self.cam.capture("photos_{}-{}-{}/ir/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
+            self.thermalPhoto("photos_{}-{}-{}/thermalPhotos/{}".format(day, month, year, name)) #get thermal cam readings
+            self.wait(0.1) # Wait 100ms
+            self.turnOff(self.IR)
+            self.wait(0.05) # Wait 50ms
+
+        # LED mode
+        elif(mode == 1):
+            self.turnOn_IRCUT(self.IrCut)
+            self.turnOn(self.LED)
+            self.turnOff(self.IR)
+            self.turnOff(self.XENON)   
+            self.wait(0.45) # Wait 0.45 seconds
+            self.cam.capture("photos_{}-{}-{}/led/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
+            self.wait(0.1) # Wait 100ms
+            self.turnOff(self.LED)
+            self.turnOff_IRCUT(self.IrCut)
+            self.wait(0.05) # Wait 50ms
+
+        # XENON mode
+        elif(mode == 2):
+            self.turnOn_IRCUT(self.IrCut)
+            self.turnOn(self.XENON)
+            self.turnOff(self.IR)
+            self.turnOff(self.LED)
+            self.wait(0.45) # Wait 0.45 seconds
+            self.cam.capture("photos_{}-{}-{}/xenon/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
+            self.wait(0.1) # Wait 100ms
+            self.turnOff(self.XENON)
+            self.turnOff_IRCUT(self.IrCut)
+            self.wait(0.05) # Wait 50ms
+            
+    def photoSequence(self, name):
+        # Check if directory exist, if not create it
+        if not self.checkDayDirectory(): self.createDayDirectory()
+        day, month, year = self.getDateFormat()
+        self.cam.start_preview()
+        self.turnOn_IRCUT(self.IrCut)
+        self.turnOn(self.LED)
+        self.turnOff(self.IR)
+        self.turnOff(self.XENON)
+        self.wait(0.45) # Wait 0.45 seconds
+        self.cam.capture("photos_{}-{}-{}/led/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
+        self.wait(0.1) # Wait 100ms
+        self.turnOff(self.LED)
+        self.turnOn(self.XENON)
+        self.wait(0.45) # Wait 0.45 seconds
+        self.cam.capture("photos_{}-{}-{}/xenon/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
+        self.wait(0.1) # Wait 100ms
+        self.turnOff(self.XENON)
+        self.turnOff_IRCUT(self.IrCut)
+        self.turnOn(self.IR)
+        self.wait(0.45) # Wait 0.45 seconds        
+        self.cam.capture("photos_{}-{}-{}/ir/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
+        self.thermalPhoto("photos_{}-{}-{}/thermalPhotos/{}".format(day, month, year, name)) #get thermal cam readings
+        self.wait(0.1) # Wait 100ms
+        self.turnOff(self.IR)
+        self.wait(0.05) # Wait 50ms
+        self.cam.stop_preview()
             
     def enableStreaming(self):
         # Disconnecting cam from this program
@@ -285,16 +309,20 @@ class Grower:
         # Connecting camara to this program
         if not self.camEnable: self.cam_begin()
     
-    def cam_begin(self):
-        self.cam = PiCamera()
-        self.camEnable = 1
+    def sendPhotos(self, host, name, pskw, floor = 0):
+        try:
+            with Connection(host, username=name, password=pskw) as sftp:
+                if(sftp.isdir('/home/pi/Documents/GrowGreens/Master')):
+                    sftp.chdir('/home/pi/Documents/GrowGreens/Master')
+                    if not sftp.isdir("Grower{}".format(floor)):
+                        sftp.makedirs("Grower{}".format(floor))
+                    sftp.chdir("Grower{}".format(floor))
+                    sftp.makedirs(self.photoPath())
+                    sftp.put_r(self.photoPath(), '/home/pi/Documents/GrowGreens/Master/Grower{}/{}'.format(floor, self.photoPath()), preserve_mtime=False)
+                    return True
+                else: return False
+        except:
+            return False
         
-    def cam_stop(self):
-        self.cam.close()
-        self.camEnable = 0
-    
-    def whatIsMyIP(self):
-        return getIPaddr()
-    
     def close(self):
         GPIO.cleanup() # Clean GPIO
