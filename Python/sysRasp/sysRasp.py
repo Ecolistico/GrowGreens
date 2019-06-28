@@ -2,7 +2,7 @@ import os
 import subprocess
 import json
 
-PATH = '/var/www/html/data/data.json'
+MQTT_PATH = '/var/www/html/data/data.json'
 
 def getIPaddr():
     wifi_ip = subprocess.check_output(['hostname', '-I'])

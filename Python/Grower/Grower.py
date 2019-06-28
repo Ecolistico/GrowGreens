@@ -20,14 +20,14 @@ Functions resume:
     * turnOn_IRCUT() - activate ircut
     * turnOff_IRCUT() - desactivate ircut
     * enable_IRCUT() - enable ircut
-    * disable_IRCUT - disable ircut
+    * disable_IRCUT() - disable ircut
     * takePicture(mode, name) - Mode(0=thermal, 1=led, 2=xenon) and Name(the name of the picture)
     * photoSequence(name) - Run the 3 modes of the takePicture function giving the same name on each picture
     * thermalPhoto(name) - Gives an csv with thermal information of the two cameras
     * enableStreaming() - Close the cam in the local program to stream over internet
     * disableStreaming() - Close the cam streaming to open the cam in local program
     * whatIsMyIP() - Returns a string with the IP addres from this device
-    * sendPhotos(host, name, password, floor)
+    * sendPhotos(host, name, password, floor) - sendPhotos to server
     * close() - Cleanup the GPIO´s
 """
 class Grower:
@@ -48,7 +48,7 @@ class Grower:
         self.In3 = in3    # GPIO to input 3 -> motor/IRCUT 2
         self.In4 = in4    # GPIO to input 4 -> motor/IRCUT 2
 
-        self.IrCut = ircut # Default IRCUT output. 0 for outputs 1, 2 and 1 for outputs 3, 4
+        self.IRCUT = ircut # Default IRCUT output. 0 for outputs 1, 2 and 1 for outputs 3, 4
 
         # Setting Up Thermal Cams
         self.thermalCam1 = Adafruit_AMG88xx(address=thermal1Addr) # Set thermalCam1 on its i2c addres
@@ -103,7 +103,7 @@ class Grower:
         if(ircut == 0): GPIO.output(self.En1,GPIO.LOW)
         else: GPIO.output(self.En2,GPIO.LOW)
 
-    def turnOn_IRCUT(self, ircut):
+    def turnOff_IRCUT(self, ircut):
         if(ircut == 0):
             if not GPIO.input(self.En1): self.enable_IRCUT(ircut)
             #GPIO.output(self.En1, GPIO.HIGH)
@@ -115,7 +115,7 @@ class Grower:
             GPIO.output(self.In3, GPIO.LOW)
             GPIO.output(self.In4, GPIO.HIGH)
 
-    def turnOff_IRCUT(self, ircut):
+    def turnOn_IRCUT(self, ircut):
         if(ircut == 0):
             if not GPIO.input(self.En1): self.enable_IRCUT(ircut)
             #GPIO.output(self.En1, GPIO.HIGH)
@@ -143,6 +143,8 @@ class Grower:
         os.makedirs('photos_{}-{}-{}/led'.format(day, month, year))
         os.makedirs('photos_{}-{}-{}/xenon'.format(day, month, year))
         os.makedirs('photos_{}-{}-{}/ir'.format(day, month, year))
+        os.makedirs('photos_{}-{}-{}/manual'.format(day, month, year))
+        
     
     def getDateFormat(self):
         self.now = datetime.now()
@@ -163,6 +165,11 @@ class Grower:
         return "photos_{}-{}-{}".format(day, month, year) # Return folder name
     
     def thermalPhoto(self, name):
+        # Check if directory exist, if not create it
+        if not self.checkDayDirectory(): self.createDayDirectory()
+        
+        day, month, year = self.getDateFormat()
+        
         # Get lecture
         thermalPixels1 = self.thermalCam1.readPixels()
         thermalPixels2 = self.thermalCam2.readPixels()
@@ -172,7 +179,7 @@ class Grower:
         thermalPixels2 = reshape(thermalPixels2, (8,8))
         thermalJoin = concatenate((thermalPixels1, thermalPixels2), axis=0)
         
-        savetxt("{}.csv".format(name), thermalJoin, fmt="%.2f", delimiter=",")
+        savetxt("photos_{}-{}-{}/thermalPhotos/{}.csv".format(day, month, year, name), thermalJoin, fmt="%.2f", delimiter=",")
     
     def cam_begin(self):
         self.cam = PiCamera()
@@ -187,22 +194,24 @@ class Grower:
         if not self.checkDayDirectory(): self.createDayDirectory()
         
         day, month, year = self.getDateFormat()
+        
         # Thermal Mode
         if(mode == 0):
-            self.turnOff_IRCUT(self.IrCut)
+            self.turnOn_IRCUT(self.IRCUT)
             self.turnOn(self.IR)
             self.turnOff(self.LED)
             self.turnOff(self.XENON)
             self.wait(0.45) # Wait 0.45 seconds
             self.cam.capture("photos_{}-{}-{}/ir/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
-            self.thermalPhoto("photos_{}-{}-{}/thermalPhotos/{}".format(day, month, year, name)) #get thermal cam readings
+            self.thermalPhoto("{}".format(name)) #get thermal cam readings
             self.wait(0.1) # Wait 100ms
             self.turnOff(self.IR)
+            self.turnOff_IRCUT(self.IRCUT)
             self.wait(0.05) # Wait 50ms
 
         # LED mode
         elif(mode == 1):
-            self.turnOn_IRCUT(self.IrCut)
+            self.turnOff_IRCUT(self.IRCUT)
             self.turnOn(self.LED)
             self.turnOff(self.IR)
             self.turnOff(self.XENON)   
@@ -210,12 +219,11 @@ class Grower:
             self.cam.capture("photos_{}-{}-{}/led/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
             self.wait(0.1) # Wait 100ms
             self.turnOff(self.LED)
-            self.turnOff_IRCUT(self.IrCut)
             self.wait(0.05) # Wait 50ms
 
         # XENON mode
         elif(mode == 2):
-            self.turnOn_IRCUT(self.IrCut)
+            self.turnOff_IRCUT(self.IRCUT)
             self.turnOn(self.XENON)
             self.turnOff(self.IR)
             self.turnOff(self.LED)
@@ -223,15 +231,19 @@ class Grower:
             self.cam.capture("photos_{}-{}-{}/xenon/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
             self.wait(0.1) # Wait 100ms
             self.turnOff(self.XENON)
-            self.turnOff_IRCUT(self.IrCut)
             self.wait(0.05) # Wait 50ms
+        
+        elif(mode == 3):
+            self.wait(0.45) # Wait 0.45 seconds
+            self.cam.capture("photos_{}-{}-{}/manual/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
+            self.wait(0.1) # Wait 100ms
             
     def photoSequence(self, name):
         # Check if directory exist, if not create it
         if not self.checkDayDirectory(): self.createDayDirectory()
         day, month, year = self.getDateFormat()
-        self.cam.start_preview()
-        self.turnOn_IRCUT(self.IrCut)
+        #self.cam.start_preview()
+        self.turnOff_IRCUT(self.IRCUT)
         self.turnOn(self.LED)
         self.turnOff(self.IR)
         self.turnOff(self.XENON)
@@ -244,15 +256,16 @@ class Grower:
         self.cam.capture("photos_{}-{}-{}/xenon/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
         self.wait(0.1) # Wait 100ms
         self.turnOff(self.XENON)
-        self.turnOff_IRCUT(self.IrCut)
+        self.turnOn_IRCUT(self.IRCUT)
         self.turnOn(self.IR)
         self.wait(0.45) # Wait 0.45 seconds        
         self.cam.capture("photos_{}-{}-{}/ir/{}.jpg".format(day, month, year, name)) # Take photo and give it a name
-        self.thermalPhoto("photos_{}-{}-{}/thermalPhotos/{}".format(day, month, year, name)) #get thermal cam readings
+        self.thermalPhoto("{}".format(name)) #get thermal cam readings
         self.wait(0.1) # Wait 100ms
         self.turnOff(self.IR)
+        self.turnOff_IRCUT(self.IRCUT)
         self.wait(0.05) # Wait 50ms
-        self.cam.stop_preview()
+        #self.cam.stop_preview()
             
     def enableStreaming(self):
         # Disconnecting cam from this program
