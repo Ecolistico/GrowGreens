@@ -152,7 +152,6 @@ class Grower:
     
     def getDateFormat(self):
         now = datetime.now()
-        
         if now.day<10: self.day = "0{}".format(now.day)
         else: self.day = "{}".format(now.day) 
         if now.month<10: self.month = "0{}".format(now.month)
