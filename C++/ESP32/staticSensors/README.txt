@@ -1,7 +1,3 @@
-El código para los ESP32 actualmente funciona para trabajar con 8 sensores DHT22(temp/hum).
-Recolectan datos cada X segundos sin filtro por default, y la envían a través de el
-protocolo MQTT cada que un cliente solicita la información.
-
 Se utiliza la librería AutoConnect para crear un Access Point que permite configurar previamente o en cualquier momento
 el ESP32 en cuestión. Los pasos que se deben seguir para configurar el dispósitivo (en el siguiente orden) son:
 
@@ -30,6 +26,10 @@ paso 6.
 nuevamente.
 9- !Felicidades ha logrado configurar un dispósitivo!
 
+El código para los ESP32 actualmente funciona para trabajar con 8 sensores DHT22(temp/hum).
+Recolectan datos cada X segundos sin filtro por default, y la envían a través de el
+protocolo MQTT cada que un cliente solicita la información.
+
 Funciones a través de MQTT:
 	* "sendData": envía la información de los sensores
 	* "reboot": reinicia el dispósitivo
@@ -44,6 +44,6 @@ Funciones a través de MQTT:
 	La X debe ser un valor entre [0-200]
 
 PENDIENTES/LIMITANTES:
+* Agregar programación OTA (Over The Air)
 * Funciones pendientes MQTT: TBD
-
 * Sensores por añadir: TBD

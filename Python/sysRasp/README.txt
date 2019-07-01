@@ -1,0 +1,1 @@
+Esta carpeta contiene una serie de recursos, archivos y programas que son utilizados en diversas partes del proyecto.
