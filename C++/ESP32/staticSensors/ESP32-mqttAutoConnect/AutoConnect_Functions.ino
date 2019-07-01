@@ -141,13 +141,28 @@ bool testContainerId(String ID){
   bool resp = false;
   int cont = 0;
 
-  
   if(ID.length()==container_ID_length){
     for(int i=0; i<container_ID_length; i++){
       int test = -1;
-      if(i==1 || i==5 || i ==9){
+      int prevTest = -1;
+      int prevTest1 = -1;
+      
+      if(i==1){
         test = int(ID[i])-48;
-        if(test>0 && test<=9){cont++;}
+        prevTest = int(ID[i-1])-48;
+        if(prevTest==0){
+          if(test>0 && test<=9){cont++;}
+        }
+        else if(test>=0 && test<=9){cont++;}
+      }
+      else if(i==5 || i==9){
+        test = int(ID[i])-48;
+        prevTest = int(ID[i-1])-48;
+        prevTest1 = int(ID[i-2])-48;
+        if(prevTest==0 && prevTest1==0){
+          if(test>0 && test<=9){cont++;}
+        }
+        else if(test>=0 && test<=9){cont++;}
       }
       else if(i==2 || i==6){
         if(ID[i]=='-'){cont++;}
