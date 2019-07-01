@@ -1,24 +1,36 @@
+import sys
+sys.path.insert(0, '../sysRasp/')
+sys.path.insert(0, './src/')
 from threading import Thread
 from time import time
 from Grower import Grower
 from pysftp import Connection
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
-import sys
-sys.path.insert(0, '../sysRasp/')
 import sysRasp
 
 # Global Variables
 containerID, floor, brokerIP = sysRasp.getData_JSON(sysRasp.MQTT_PATH)
 WiFiState = 0
+print("Setting up Grower...")
 grower = Grower()
+print("Setting Up Streaming...")
 growerStreaming = False
 client = None
 
 # On Conenct Callback for MQTT
 def on_connect(client, userdata, flags, rc):
+    Topic = "{}/Grower{}".format(containerID, floor)
+    logTopic = "{}/Grower{}/log".format(containerID, floor)
+    
     message = "MQTT"
-    if(rc == 0): message += " Connection succesful"
+    if(rc == 0):
+        message += " Connection succesful"
+        mssg = "Grower connected"
+        client.subscribe(Topic)
+        publish.single(logTopic, mssg, hostname = brokerIP)
+        print(message)
+        print("Subscribed topic: {}".format(Topic))
     else:
         message += " Connection refused"
         if(rc == 1): message += " - incorrect protocol version"
@@ -27,11 +39,6 @@ def on_connect(client, userdata, flags, rc):
         elif(rc == 4): message += " - bad username or password"
         elif(rc == 5): message += " - not authorised"
         else: message += " - currently unused"
-        
-    Topic = "{}/Grower{}".format(containerID, floor)
-    client.subscribe(Topic)
-    print(message)
-    print("Subscribed topic: {}".format(Topic))
 
 # On Message Callback for MQTT
 def on_message(client, userdata, msg):
@@ -151,6 +158,19 @@ def on_message(client, userdata, msg):
         hum, temp, co2 = grower.coz.getData()
         mssg = "{},{},{}".format(hum, temp, co2)
         publish.single(logTopic, mssg, hostname = brokerIP)
+    
+    elif(message == "reboot"):
+        publish.single(logTopic, "Rebooting", hostname = brokerIP)
+        sysRasp.runShellCommand('sudo reboot')
+    
+    elif(message == "forgetWiFi"):
+        publish.single(logTopic, "Forgeting WiFi Credentials", hostname = brokerIP)
+        sysRasp.runShellCommand('sudo python ./src/forgetWiFi.py')
+        sysRasp.runShellCommand('sudo python ./src/APconfig.py')
+        
+    else:
+        publish.single(logTopic, "MQTT command unknown", hostname = brokerIP)
+        print("MQTT command unknown")
         
     print("Message enter: Topic = {}\tMessage = {}".format(top, message))
         
@@ -171,7 +191,7 @@ def check_WiFi():
         if(time()- WiFiTime > 20):
             if(sysRasp.isWiFi()):
                 if(prevWiFiState == 2):
-                     ID, fl, IP = sysRasp.getData_JSON(sysRasp.PATH)
+                     ID, fl, IP = sysRasp.getData_JSON(sysRasp.MQTT_PATH)
                      if(ID!= containerID and ID!=""):
                          containerID = ID
                      if(fl!= floor and fl!=""):
@@ -194,8 +214,8 @@ def check_WiFi():
         if(WiFiCount>=5):
             WiFiCount = 0
             print("Configuring AP...")
-            sysRasp.runShellCommand('sudo python APconfig.py')
-
+            sysRasp.runShellCommand('sudo python ./src/APconfig.py')
+            
 def MQTT():
     #global brokerIP
     global WiFiState
