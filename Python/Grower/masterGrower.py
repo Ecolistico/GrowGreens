@@ -159,6 +159,10 @@ def on_message(client, userdata, msg):
         mssg = "{},{},{}".format(hum, temp, co2)
         publish.single(logTopic, mssg, hostname = brokerIP)
     
+    elif(message == "updateGrowerDate"):
+        grower.getDateFormat()
+        publish.single(logTopic, "Updating Date Format", hostname = brokerIP)
+        
     elif(message == "reboot"):
         publish.single(logTopic, "Rebooting", hostname = brokerIP)
         sysRasp.runShellCommand('sudo reboot')
