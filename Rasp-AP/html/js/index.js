@@ -77,8 +77,8 @@ $(document).ready(function(){
     var control = 0;
 
     if(currentSectionIndex === 1){
-        var IP_REGEXP = /[0-9][0-9][-][0-9][0-9][0-9][-][0-9][0-9][0-9]/;
-        if( IP_REGEXP.test(document.getElementById("containerID").value) == false){
+        var IP_REGEXP = /^([0][1-9]|[1-9][0-9])([-])([0][0][1-9]|[1-9][0-9][0-9]|[0-9][1-9][0-9])([-])([0][0][1-9]|[1-9][0-9][0-9]|[0-9][1-9][0-9])$/;
+        if( IP_REGEXP.test(document.getElementById("containerID").value) == false || document.getElementById("containerID").value.length != 10){
             control = 1;
             document.getElementById("warn1").innerHTML = "Container ID inválido";
         }
