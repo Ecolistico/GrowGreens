@@ -37,6 +37,7 @@ Funciones a través de MQTT:
 	* forgetWiFi: Olvida las redes WiFi previamente configuradas e inmediatamente configura el AP.
 
 PENDIENTES/LIMITANTES:
+* Ajustar concatenación de imágenes térmicas.
 * Funciones pendientes MQTT: 
 	a) Funciones de calibración cozir
 * Sensores por añadir: TBD
