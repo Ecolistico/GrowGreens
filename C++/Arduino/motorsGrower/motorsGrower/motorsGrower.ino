@@ -62,6 +62,7 @@ const byte gr4_XHome2 = A5;
 const byte gr4_YHome = A4;
 
 growerStepper grower1(
+  1,
   gr1_XDir1, 
   gr1_XStep1, 
   gr1_XDir2, 
@@ -75,6 +76,7 @@ growerStepper grower1(
   );
 
 growerStepper grower2(
+  2,
   gr2_XDir1, 
   gr2_XStep1, 
   gr2_XDir2, 
@@ -88,6 +90,7 @@ growerStepper grower2(
   );
 
 growerStepper grower3(
+  3,
   gr3_XDir1, 
   gr3_XStep1, 
   gr3_XDir2, 
@@ -101,6 +104,7 @@ growerStepper grower3(
   );
 
 growerStepper grower4(
+  4,
   gr4_XDir1, 
   gr4_XStep1, 
   gr4_XDir2, 
@@ -112,11 +116,15 @@ growerStepper grower4(
   gr4_YHome,
   gr4_En
   );
-  
+
+// Serial comunication
+String inputstring = "";
+bool input_string_complete = false;
+
 void setup() {
   Serial.begin(9600);
-
-  grower1.begin();
+  Serial.println(F("Setting up growers..."));
+  grower1.begin(LOW);
   grower2.begin(LOW); // Not send to home
   grower3.begin(LOW); // Not send to home
   grower4.begin(LOW); // Not send to home

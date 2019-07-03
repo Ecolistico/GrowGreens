@@ -121,11 +121,8 @@ MultiDay day3( 3, 75, 4);
 MultiDay day4( 3, 75, 6);
 
 // Serial comunication
-const byte CMDBUFFER_SIZE = 32;
 String inputstring = "";
 bool input_string_complete = false;
-byte serial_Count;
-byte serial_State;
 
 // DateTime Info
 byte dateHour;

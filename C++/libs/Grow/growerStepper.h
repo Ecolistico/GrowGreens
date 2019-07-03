@@ -76,6 +76,8 @@ class growerStepper
         long __MaxX, __MaxY; // Maximun security distances
         bool __OutHomeX1, __OutHomeX2, __OutHomeY; // Aux variables to allow move out of the limits switch
 
+        byte __Floor;
+
         //static uint8_t __steppersRunning;
 
         long StepsToMM_X(long steps); // Return the number of mm that equals the steps parameter in X
@@ -84,10 +86,12 @@ class growerStepper
         long MMToSteps_Y(long dist_mm); // Return the number of steps that equals the mm  parameter in Y
         void resetTime(); // Reset the time since the last time the motors were used
         bool isTimeToGoHome(); // Return true when it´s been a while without moving the motors and it´s not at home
+        void printAction(String act); // Print in serial an action executed with the coorect format for each grower
 
     public:
         // Constructor. Dir, Step and Home Pins for all the motors
         growerStepper(
+          uint8_t fl,
           uint8_t dirX1,
           uint8_t stepX1,
           uint8_t dirX2,
@@ -102,12 +106,12 @@ class growerStepper
 
          // Init the group of motors with default configuration and send grower to home
         void begin(
+          bool goHome,
           uint8_t steps_per_rev = MOTOR_STEP_PER_REV,
           uint8_t microStep = DEFAULT_MICROSTEP,
           uint8_t pulleyTeeth = DEFAULT_PULLEY_TEETH,
           uint8_t Xmm = DEFAULT_X_MM_TOOTH,
-          uint8_t Ymm = DEFAULT_Y_MM_TOOTH,
-          bool goHome = HIGH
+          uint8_t Ymm = DEFAULT_Y_MM_TOOTH
         );
 
         long getXPosition(); // Returns the position in mm. It assumes that home was reached
@@ -120,7 +124,7 @@ class growerStepper
         bool moveY(long some_mm); // Move Y some_mm relative to its actual position
         bool moveXTo(long some_mm); // Move X to absolut position some_mm
         bool moveYTo(long some_mm); // Move Y to absolut position some_mm
-        void calibration(); // Runs the calibration mode to stablish the maximun security distance in X and Y
+        bool calibration(); // Runs the calibration mode to stablish the maximun security distance in X and Y
         void enable(); // Enable the steppers
         void disable(); // Disable the steppers
         bool isEnable(); // Returns true if enable
