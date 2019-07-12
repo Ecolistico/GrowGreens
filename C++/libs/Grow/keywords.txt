@@ -18,6 +18,7 @@ sensor	KEYWORD1
 controllerHVAC	KEYWORD1
 compressorController	KEYWORD1
 recirculationController	KEYWORD1
+growerStepper	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -41,6 +42,7 @@ getTimeOn	KEYWORD2
 getTimeOff	KEYWORD2
 getTime	KEYWORD2
 enable	KEYWORD2
+disable	KEYWORD2
 isEnable	KEYWORD2
 setCycleTime	KEYWORD2
 getGroup	KEYWORD2
@@ -119,6 +121,23 @@ changeMinDist	KEYWORD2
 changeMaxDist	KEYWORD2
 readAndPrint	KEYWORD2
 runAll	KEYWORD2
+getXPosition	KEYWORD2
+getYPosition	KEYWORD2
+setMaxDistanceX	KEYWORD2
+setMaxDistanceY	KEYWORD2
+getMaxDistanceX	KEYWORD2
+getMaxDistanceY	KEYWORD2
+moveX	KEYWORD2
+moveY	KEYWORD2
+moveXTo	KEYWORD2
+moveYTo	KEYWORD2
+calibration	KEYWORD2
+isAvailable	KEYWORD2
+isInCalibration	KEYWORD2
+continueSequence	KEYWORD2
+stopSequence	KEYWORD2
+sequence	KEYWORD2
+home	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -146,3 +165,5 @@ NAME_LEVEL_3	LITERAL1
 NAME_LEVEL_4	LITERAL1
 NAME_LEVEL_5	LITERAL1
 PIN_LEVEL_SWITCH	LITERAL1
+DEFAULT_MAX_X_DISTANCE_MM	LITERAL1
+DEFAULT_MAX_Y_DISTANCE_MM	LITERAL1
