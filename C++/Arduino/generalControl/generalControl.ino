@@ -48,9 +48,9 @@ const byte DHT22_EXT = 25;
 DHT dht22_ext(DHT22_EXT, DHTTYPE22);
 
 /*** Multiplexor Definitions ***/
-const byte ds = 22;
-const byte stcp = 23;
-const byte shcp = 24;
+const byte ds = 22; // Data
+const byte stcp = 23; // Latch
+const byte shcp = 24; // Clock
 
 /*** Water sensors definitions ***/
 // Pressure
@@ -128,6 +128,9 @@ bool input_string_complete = false;
 byte dateHour;
 byte dateMinute;
 
+// Multiplexer timer
+unsigned long multiplexerTime;
+
 void setup() {
   // Initialize Serial
   Serial.begin(115200); Serial.println(F("Setting up Device..."));
@@ -158,7 +161,8 @@ void setup() {
   Recirculation.begin(PIN_LEVEL_SWITCH, US0, US1, US2, US3, US4, US5);
   
   // Initialize counters
-
+  multiplexerTime = millis();
+  
   // Finished
   Serial.println(F("Device Ready"));
 
@@ -170,4 +174,9 @@ void loop() {
   solenoidValve::runAll(); // Run irrigation routine
   HVAC.run(); // Decide what to do with Air Conditioner
   UltraSonic::runAll(); // Run all the UltraSonic Sensors measurements
+
+  if(millis()-multiplexerTime>100){
+    multiplexerTime = millis();
+    codification_Multiplexer();
+  }
 }
