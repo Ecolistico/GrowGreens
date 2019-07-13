@@ -1,11 +1,3 @@
-/*
- * Falta Agregar:
- *  - Funciones EEPROM para codificar/guardar/descodificar parametros de calibración
- *  - Funciones seriales de comunicación
- *  - *Probar todas las funciones de la libraría*
- *  
- */
-
 #include "growerStepper.h"
 #include <EEPROM.h>
 
