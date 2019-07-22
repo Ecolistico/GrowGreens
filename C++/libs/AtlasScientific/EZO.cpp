@@ -54,7 +54,7 @@ void EZO::requestResponse()
     code = Wire.read();      // The first byte is the response code, we read this separately.
     switch (code) {
       case 1:                        // Succesful
-        printAction("Request Success");
+        //printAction("Request Success"); // Just for debbugging
         __Request = false;
         break;
       case 2:                        // Failed
@@ -254,7 +254,7 @@ void EZO::decodeResults()
       if(__Type==EZO_PH){act+= "PH read = ";}
       else if(__Type==EZO_EC){act+= "EC read = ";}
       act += __ParamResponse[0];
-      printAction(act);
+      //printAction(act); // Just for debbugging
     }
 
     else if(__CalibrationCount!=0){
@@ -299,7 +299,7 @@ void EZO::calibration(byte act, float value)
                 cmd += String(value);
                 printAction("Low Calibration," + String(value));
                 break;
-              case 1: // Med calibration
+              case 1: // Mid calibration
                 cmd += "mid,";
                 cmd += String(value);
                 printAction("Mid Calibration," + String(value));
@@ -518,7 +518,7 @@ void EZO::read()
       if(__Type == EZO_PH){__Time = 900;}
       else if(__Type == EZO_EC){__Time = 600;}
       sendCmd("r");
-      printAction("Asking for single reading");
+      // printAction("Asking for single reading"); // Just for debbugging
       __Request = true;
       __Read = true;
       __ActualTime = millis();
@@ -533,7 +533,7 @@ void EZO::readWithTempCompensation(float temp)
         else if(__Type == EZO_EC){__Time = 600;}
         String cmd = "rT," + String(temp);
         sendCmd(cmd);
-        printAction("Asking for single reading with temperature compensation");
+        // printAction("Asking for single reading with temperature compensation"); // Just for debbugging
         __Request = true;
         __Read = true;
         __ActualTime = millis();

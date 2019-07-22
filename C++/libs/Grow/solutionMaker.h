@@ -39,6 +39,8 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #include <LiquidCrystal_I2C.h> // For LCD screen
 #include <OneWire.h> // Necessary for 1-wire communication
 #include <DallasTemperature.h> // For temperature sensor
+#include <EZO.h> // For Atlas Scientific sensors
+#include <math.h> // For ph/conductivity equations
 
 #define MAX_SOLUTIONS_NUMBER 4 // The max number of motors that can dispense
 #define MAX_PUMPS_NUMBER 2 // The max number of peristaltic pumps
@@ -51,10 +53,6 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define LCD_I2C_DIR 0x27 // Direction for screen
 #define LCD_COLUMNS 20 // Screen columns number
 #define LCD_ROWS 4 // Screen rows number
-
-#define PH_I2C_ADDRESS 99 // default I2C ID number for EZO pH Circuit.
-#define SHORT_PH_DELAY 300 // Short delay for some ph responses
-#define LONG_PH_DELAY 900 // Long delay for some ph responses
 
 // Class to control the Solution Maker
 /*
@@ -69,6 +67,7 @@ class solutionMaker
         bool           __IsEnable[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER]; // Let´s know if the motor/pump isenable/disable
         bool           __Available[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER]; // Let´s know if the motor/pump available/unavailable
         uint8_t        __Calibration[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER]; // Calibration parameter for motor/pumps
+        uint8_t        __Calibration1[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER]; // Calibration parameter for ph/conductivity equations
 
         uint8_t        __MicroSteps; // Inverse of the configurated microSteps in the driver
         uint8_t        __StepPerRev; // Steps per rev
@@ -77,19 +76,21 @@ class solutionMaker
         bool           __InvertPump; // Invert the direction of all the pumps
         unsigned long  __PumpTime[MAX_PUMPS_NUMBER]; // Time counter for pumps working
         unsigned long  __PumpOnTime[MAX_PUMPS_NUMBER]; // The time that the pumps will be working
-        unsigned long __ReadTime, __LCDTime; // Auxiliars counter for tempReads and LCD turn off light
-        
-        uint8_t        __Led[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER+2]; // Pins for LED´s
+        unsigned long  __ReadTime, __LCDTime; // Auxiliars counter for tempReads and LCD turn off light
         // One led for each solution, one for each acid and two for status
+        uint8_t        __Led[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER+2]; // Pins for LED´s
+        uint8_t        __LCDButton; // Pin to read LCD button
+
         bool           __Work; // Variable to know if is working the Solution Maker
         bool           __StatusLCD; // Variable to know if the screen is on/off
         bool           __LCDLightOn; // Variable to turn off the LCD light
 
         // Atlas Scientific Sensors variables
-        byte __PHcode;  // Variable to hold the I2C response code from phMeter
-        char __PHdata[20]; // Variable to read the incoming data form the sensor
-        unsigned long __PHtime; // Variable to wait for the ph response
-        float __PHvalue; // Variable to hold the phMeter value
+        float __pH, __eC; // Variables to hold the phMeter and ecMeter values
+        // Variable to know if some Atlas Scientific Sensor is exporting its calibration parameters
+        bool  __ExportEzo;
+        bool  __ImportEzo; // Variable to know if we are importing some calibration parameter
+        bool  __SleepEzo; // Variable to know if Atlas Scientific Sensors are in sleep mode
 
         // Temperature sensor
         float __Temp; // Variable to hold the temperature
@@ -103,9 +104,11 @@ class solutionMaker
 
         // Pointers
         AccelStepper *stepperS[MAX_SOLUTIONS_NUMBER]; // Pointer for each stepper motor
-        LiquidCrystal_I2C *lcd; // Pointer to control LCD screen
+        EZO *phMeter; // Pointer to phMeter (Atlas Scientific sensor)
+        EZO *ecMeter; // Pointer to ecMeter (Atlas Scientific sensor)
         OneWire *ourWire; // Pointer to Wire Object
         DallasTemperature *tempSensor; // Pointer to temperature sensor
+        LiquidCrystal_I2C *lcd; // Pointer to control LCD screen
 
         bool isWorking(); // Returns true if some actuator is unavailable, else false
         void enable(uint8_t actuator); // Enable/Disable the actuator
@@ -130,11 +133,17 @@ class solutionMaker
         void resetPosition(uint8_t st); // reset the position to zero of some stepper
         // Print in serial an action executed with the correct format
         void printAction(String act, uint8_t actuator);
+        // Print in serial an action executed with the correct format (Atlas Scientific Sensors)
+        void printEZOAction(String act, uint8_t sensorType);
         void printLCD(String main, String subAction = ""); // Print something in LCD Screen
+        void checkButtonLCD(); // Check if the button is pressed and turn on the backlight
         float filter(float val, float preVal);
         float exponential_filter(float alpha, float t, float t_1);
         float kalman_filter(float t, float t_1);
-        void readTemperature(); // Take a single reading of the temperature
+        void readTemp(); // Read temperature from DSB1820
+        void EZOReadRequest(float temp, bool sleep = false); // Request a single read in Atlas Scientific Sensors
+        void readRequest(); // Request a single reading of the temperature, ph and ec
+        void EZOexportFinished(); // When some export is finished set variable to ask for a new one
 
     public:
         // Constructor. Dir, Step and Enable Pins for all the motors
@@ -165,7 +174,8 @@ class solutionMaker
           uint8_t led6,
           uint8_t led7,
           uint8_t led8,
-          uint8_t tempSens
+          uint8_t tempSens,
+          uint8_t lcdButton
         );
 
          // Init the object with default configuration
@@ -190,16 +200,29 @@ class solutionMaker
         bool isEnable(uint8_t actuator); // Returns true if actuator is enable, else false
         bool isAvailable(uint8_t actuator); // Returns true if actuator is available, else false
         long getGrams(uint8_t st); // Returns the grams that were dispense
-        void setPHtime(); // Set the timer to wait for phMeter response
         void stop(uint8_t st); // Stops some motor/pump
         void notFilter() ;
         void defaultFilter() ; // Set Kalman with Noise = 0.5
         bool setExponentialFilter(float alpha = 0.5) ;
         bool setKalmanFilter(float noise) ;
         void printFilter();
+        bool EZOisEnable(byte sensorType); // Ask to atlas Scientific Sensor if they are enable
+        void EZOcalibration(byte sensorType, byte act, float value);
+        void EZOexportCal(byte sensorType); // Run Export Calibration Sequence in Atlas Scientific Sensor
+        // Import calibration parameter to Atlas Scientific Sensor
+        void EZOimportCalibration(byte sensorType, String parameters);
+        void EZOimport(bool start); // If start true (start import), else (stop import)
+        void EZOsleep(); // Enter in low power mode the Atlas Scientific Sensor
+        void EZOawake(); // Awake the Atlas Scientific Sensors if they are in sleep mode
+        bool EZOisSleep(); // Returns __Sleep variable
+        // Make all the maths and execute the actions to prepare a solution
         void eventLCD(); // Read Solution Maker Status and print it on the screen
         void run(); // Run all the actuator with conditions
-
+        void prepareSolution(float liters, byte sol, float ph, float ec);
+        // Not ready EZO functions
+        //void EZOread(byte sensorType) // Takes read for the Atlas Scientific Sensor
+        //void EZOreadWithTempCompensation(byte sensorType) // Takes read for the Atlas Scientific Sensor
+        // EZOtempCompensation(byte sensorType) // Set a new temperature to adjust new readings
   };
 
 #endif

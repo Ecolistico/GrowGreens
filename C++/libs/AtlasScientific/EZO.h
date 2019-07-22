@@ -86,11 +86,11 @@ class EZO
 
         /* Both sensors */
         void init(); // Set up the sensor
-        bool isEnable(); // Returns false when we are awaiting for some response
+        bool isEnable(); // Returns false when we are awaiting for some response, else true
         float getValue(); // Returns the last value readed
         //void UART(unsigned long baud); Right now is not necessary // Change EZO sensor to UART Mode
         void calibration(byte act, float value); // Performs Calibration
-        void exportCal(); //
+        void exportCal(); // Run Export Calibration Sequence
         void importCalibration(String parameters); // Imports Calibration
         void reboot(); // Reboot device
         void find(); // Find device with blinking white led

@@ -32,7 +32,8 @@ solutionMaker sMaker(
           42, // LedA2
           38, // LedReady
           40, // LedWorking
-          22  // Temperature sensor
+          22, // Temperature sensor
+          24  // LCD button 
         );
 
 // Serial comunication
@@ -40,12 +41,11 @@ String inputstring = "";
 bool input_string_complete = false;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   sMaker.begin();
   read_EEPROM(HIGH); // Charge calibration parameters
 }
 
 void loop() {
-  sMaker.run();
-  
+  sMaker.run();  
 }

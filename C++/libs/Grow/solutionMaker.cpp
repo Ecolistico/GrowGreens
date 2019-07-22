@@ -34,7 +34,8 @@ solutionMaker::solutionMaker(
   uint8_t led6,
   uint8_t led7,
   uint8_t led8,
-  uint8_t tempSens
+  uint8_t tempSens,
+  uint8_t lcdButton
   ){
     // Define motors pins
     __DirS[0] = dirS1;
@@ -78,11 +79,6 @@ solutionMaker::solutionMaker(
     }
     __Work = false;
 
-    // LCD screen object
-    lcd = new LiquidCrystal_I2C(LCD_I2C_DIR, LCD_COLUMNS, LCD_ROWS);
-    __StatusLCD = false;
-    __LCDLightOn = false;
-
     // Define Led´s pin
     __Led[0] = led1;
     __Led[1] = led2;
@@ -93,16 +89,29 @@ solutionMaker::solutionMaker(
     __Led[6] = led7;
     __Led[7] = led8;
 
+    // Atlas Scientific Sensors
+    __pH = 0;
+    __eC = 0;
+    __ExportEzo = false;
+    __ImportEzo = false;
+    __SleepEzo = false;
+
+    phMeter = new EZO(EZO_PH);
+    ecMeter = new EZO(EZO_EC);
+
     // Define temperature tempSensor
     ourWire = new OneWire(tempSens);
     //tempSensor = new DallasTemperature(&ourWire);
     tempSensor = new DallasTemperature(ourWire);
     __Temp = 0;
 
-    // Atlas Scientific Sensors
-    __PHcode = 0;
-    __PHvalue;
+    // LCD screen object
+    __LCDButton = lcdButton;
+    lcd = new LiquidCrystal_I2C(LCD_I2C_DIR, LCD_COLUMNS, LCD_ROWS);
+    __StatusLCD = false;
+    __LCDLightOn = false;
 
+    // Filters
     __Filter = 0 ;
     __Alpha = 0 ; __Noise = 0 ; __Err = 0 ;
   }
@@ -134,6 +143,8 @@ void solutionMaker::begin(
           delay(250);
       }
 
+      pinMode(__LCDButton, INPUT_PULLUP); // Set button as input pullup
+
       __StepPerRev = steps_per_rev;
       __MicroSteps = microStep;
 
@@ -163,6 +174,10 @@ void solutionMaker::begin(
       analogWrite(__En[4], LOW);
       analogWrite(__En[5], LOW);
 
+      // Init Atlas Scientific Sensors
+      phMeter->init();
+      ecMeter->init();
+
       // Init temperature tempSensor
       tempSensor->begin();
       tempSensor->requestTemperatures();
@@ -178,9 +193,12 @@ void solutionMaker::begin(
       }
       delay(3000);
 
+      // Request phMeter and ecMeter readings
+      EZOReadRequest(__Temp);
+
       // Erase message in Screen and turn off.
       lcd->clear();
-      printLCD("T="+String(__Temp)+"C");
+      printLCD("T="+String(__Temp)+"C", String(__pH)+","+String(__eC));
       __LCDTemp = __Temp;
       __StatusLCD = false;
       __LCDLightOn = true;
@@ -361,6 +379,23 @@ void solutionMaker::printAction(String act, uint8_t actuator)
       Serial.println(act);
   }
 
+void solutionMaker::printEZOAction(String act, uint8_t sensorType)
+  {   Serial.print(F("Solution Maker (EZO "));
+      switch(sensorType){
+        case EZO_PH:
+          Serial.print(F("PH"));
+          break;
+        case EZO_EC:
+          Serial.print(F("EC"));
+          break;
+        default:
+          Serial.print(F("Unkwown"));
+          break;
+      }
+      Serial.print(F(" Sensor): "));
+      Serial.println(act);
+  }
+
 void solutionMaker::printLCD(String main, String subAction = "")
   { lcd->clear();
     if(!__StatusLCD){
@@ -370,6 +405,18 @@ void solutionMaker::printLCD(String main, String subAction = "")
     lcd->print(main);
     lcd->setCursor(0, 1);
     lcd->print(subAction);
+  }
+
+void solutionMaker::checkButtonLCD()
+  { if(!digitalRead(__LCDButton) && !__LCDLightOn){
+      __LCDLightOn = true;
+      // Erase message in Screen and rewrite.
+      printLCD("T="+String(__Temp)+"C", String(__pH)+","+String(__eC));
+      __StatusLCD = false;
+      __LCDTemp = __Temp;
+      __LCDTime = millis();
+      Serial.println(F("Solution Maker (LCD Screen): Button Pressed"));
+    }
   }
 
 float solutionMaker::filter(float val, float preVal)
@@ -409,15 +456,40 @@ float solutionMaker::kalman_filter(float t, float t_1)
     }
   }
 
-void solutionMaker::readTemperature()
+void solutionMaker::readTemp()
+  { tempSensor->requestTemperatures();
+    float temp= tempSensor->getTempCByIndex(0);
+    if(temp>0) __Temp = filter(temp, __Temp);
+  }
+
+void solutionMaker::EZOReadRequest(float temp, bool sleep = false)
+  { if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_EC)){
+      if(!__SleepEzo && !__ImportEzo){ // If sensors are not sleeping and are not importing cal.
+        phMeter->readWithTempCompensation(temp);
+        ecMeter->readWithTempCompensation(temp);
+      }
+      else if(sleep){ // If we want to force to awake the sensors
+        __SleepEzo = false;
+        phMeter->readWithTempCompensation(temp);
+        ecMeter->readWithTempCompensation(temp);
+      }
+    }
+    else{Serial.println(F("Solution Maker (EZO Sensors): They are not available"));}
+  }
+
+void solutionMaker::readRequest()
   { // Take temperature readings every 5 seconds
     if(millis()-__ReadTime>5000){
       __ReadTime = millis();
-      tempSensor->requestTemperatures();
-      float temp= tempSensor->getTempCByIndex(0);
-      if(temp>0) __Temp = filter(temp, __Temp);
+      __pH = phMeter->getValue(); // Save last read from phmeter
+      __eC = ecMeter->getValue(); // Save last read from ecMeter
+      readTemp(); // Read temp
+      EZOReadRequest(__Temp); // Request new read
     }
   }
+
+void solutionMaker::EZOexportFinished()
+  { if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_PH) && __ExportEzo) __ExportEzo = false;  }
 
 bool solutionMaker::dispense(long some_grams, uint8_t st)
   { if(st<MAX_SOLUTIONS_NUMBER){ // Check that stepper exist
@@ -576,6 +648,81 @@ void solutionMaker::printFilter()
     }
   }
 
+bool solutionMaker::EZOisEnable(byte sensorType)
+  { if(sensorType == EZO_PH){ return phMeter->isEnable(); }
+    else if(sensorType == EZO_EC){ return ecMeter->isEnable(); }
+    return false;
+  }
+
+void solutionMaker::EZOcalibration(byte sensorType, byte act, float value)
+  { if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
+      phMeter->calibration(act, value);
+    }
+    else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
+      ecMeter->calibration(act, value);
+    }
+    else{printEZOAction("Sensor does not match a type or is in another request", sensorType);}
+  }
+
+void solutionMaker::EZOexportCal(byte sensorType)
+  { if(!__ExportEzo){
+      if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
+        __ExportEzo = true;
+        phMeter->exportCal();
+      }
+      else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
+        __ExportEzo = true;
+        ecMeter->exportCal();
+      }
+      else{printEZOAction("Sensor does not match a type or is in another request", sensorType);}
+    }
+    else{printEZOAction("Another export is running", sensorType);}
+  }
+
+void solutionMaker::EZOimportCalibration(byte sensorType, String parameters)
+  { if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
+      phMeter->importCalibration(parameters);
+    }
+    else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
+      ecMeter->importCalibration(parameters);
+    }
+    else{printEZOAction("Sensor does not match a type or is in another request", sensorType);}
+  }
+
+void solutionMaker::EZOimport(bool start)
+  { if(start!=__ImportEzo){
+      __ImportEzo = start;
+      if(__ImportEzo) Serial.println(F("Solution Maker (EZO Sensors): Starting Calibration Import"));
+      else Serial.println(F("Solution Maker (EZO Sensors): Stopping Calibration Import"));
+    }
+    else{
+      if(start) Serial.println(F("Solution Maker (EZO Sensors): Calibration Import already started"));
+      else Serial.println(F("Solution Maker (EZO Sensors): Calibration Import already stopped"));
+    }
+  }
+
+void solutionMaker::EZOsleep()
+  { if(!__SleepEzo){
+      if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_EC)){
+        __SleepEzo = true;
+        phMeter->sleep();
+        ecMeter->sleep();
+      }
+      else{Serial.println(F("Solution Maker (EZO Sensors): They are in another request"));}
+    }
+    else{Serial.println(F("Solution Maker (EZO Sensors): They are already in sleep mode"));}
+  }
+
+void solutionMaker::EZOawake()
+  { if(__SleepEzo){
+      EZOReadRequest(__Temp, true); // Take a read to awake the sensors
+    }
+    else{Serial.println(F("Solution Maker (EZO Sensors): They are already awake"));}
+  }
+
+bool solutionMaker::EZOisSleep()
+  { return __SleepEzo; }
+
 void solutionMaker::eventLCD()
   { String Main = "";
     String subAct = "";
@@ -629,7 +776,11 @@ void solutionMaker::eventLCD()
   }
 
 void solutionMaker::run()
-  { readTemperature();
+  { readRequest(); // Request read of temperature, ph and ec
+    phMeter->run(); // Handle phMeter functions
+    ecMeter->run(); // Handle ecMeter functions
+    EZOexportFinished(); // Check when EZO sensors finished export cal.
+    checkButtonLCD(); // Check if LCD button is pressed
 
     if(!__Work && isWorking()){
       __Work = true;
@@ -644,23 +795,20 @@ void solutionMaker::run()
 
     if(!__Work && __StatusLCD){
       __LCDLightOn = true;
-      // Erase message in Screen and turn off.
-      lcd->clear();
-      printLCD("T="+String(__Temp)+"C");
+      // Erase message in Screen and rewrite.
+      printLCD("T="+String(__Temp)+"C", String(__pH)+","+String(__eC));
       __StatusLCD = false;
       __LCDTemp = __Temp;
       __LCDTime = millis();
     }
     else if(!__Work && !__StatusLCD && abs(__LCDTemp-__Temp)>0.5){
       __LCDLightOn = true;
-      // Erase message in Screen and turn off.
-      lcd->clear();
-      printLCD("T="+String(__Temp)+"C");
+      // Erase message in Screen and rewrite.
+      printLCD("T="+String(__Temp)+"C", String(__pH)+","+String(__eC));
       __StatusLCD = false;
       __LCDTemp = __Temp;
       __LCDTime = millis();
     }
-
     if(!__Work && millis()-__LCDTime>10000 && __LCDLightOn){
       __LCDLightOn = false;
       lcd->noBacklight();
@@ -686,4 +834,9 @@ void solutionMaker::run()
         eventLCD();
       }
     }
+  }
+
+void solutionMaker::prepareSolution(float liters, byte sol, float ph, float ec)
+  {
+    
   }
