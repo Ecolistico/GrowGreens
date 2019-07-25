@@ -17,10 +17,10 @@ void codification_Multiplexer(){
                  L2S1.getState(), L2S2.getState(), L2S3.getState(), L2S4.getState()};
   bool ID6[8] = {L3S1.getState(), L3S2.getState(), L3S3.getState(), L3S4.getState(),
                  L4S1.getState(), L4S2.getState(), L4S3.getState(), L4S4.getState()};
-  bool ID7[8] = {IFan1.getState(), OFan1.getState(), VFan1.getState(), humidityValve1.getState(), 
-                 IFan2.getState(), OFan2.getState(), VFan2.getState(), humidityValve2.getState()};
-  bool ID8[8] = {IFan3.getState(), OFan3.getState(), VFan3.getState(), humidityValve3.getState(), 
-                 IFan2.getState(), OFan4.getState(), VFan4.getState(), humidityValve4.getState()};               
+  bool ID7[8] = {IFan1.getState(), OFan1.getState(), VFan1.getState(), VHum1.getState(), 
+                 IFan2.getState(), OFan2.getState(), VFan2.getState(), VHum2.getState()};
+  bool ID8[8] = {IFan3.getState(), OFan3.getState(), VFan3.getState(), VHum3.getState(), 
+                 IFan2.getState(), OFan4.getState(), VFan4.getState(), VHum4.getState()};               
   bool ID9[8] = {HVAC.getHR_State(), HVAC.getCC_State(), HVAC.getFR_State(), HVAC.getCVC_State(), 
                  HVAC.getCVH_State(), HVAC.getWarn_State(), HVAC.getWork_State(), !LOW}; // An extra relay  // getWarn_State && getWork_State are for LED´s
   bool ID10[8] = {Recirculation.getState_In1(), Recirculation.getState_In2(), Recirculation.getState_In3(), Recirculation.getState_In4(), 

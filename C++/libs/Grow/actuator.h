@@ -35,44 +35,105 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #endif
 
 #define MAX_ACTUATORS           50 // Max number of Actuators or Solenoid Valves
+#define DEFAULT_TIME_ON         5 // 5 seconds
+#define DEFAULT_CYCLE_TIME      600 // 10 minutes = 600 seconds
+#define MAX_TYPES_ACTUATOR      4 // Right now we have just 4 types
 #define MAX_FLOOR               4 // Number of floors
 #define MAX_IRRIGATION_REGIONS  8 // Number of region in each floor
 #define flowSensor              2 // Define flowSensor pin
 
 // Class to manage an actuator with defined time cycles.
-/* Limitation Note: This class is limited by definition to 50
+/*
+Definitions
+  Types:
+    Input Fan = 0
+    Output Fan = 1
+    Vent Fan = 2
+    Humidity Valve = 3
+  Floor: RealFloor-1 [0-3]
+Limitation Note: This class is limited by definition to 50
   actuators this limitations can be changed but, you need to keep
-  in mind your procesator memory consumption */
+  in mind your procesator memory consumption
+*/
 class Actuator
  {  private:
-        bool __State , __Enable ;
-        unsigned long __TimeOn , __TimeOff, __Actual_time ;
+        bool __State , __Enable;
+        uint8_t __Type, __Floor; // What type of actuator and in what floor is it.
+        unsigned long __TimeOn , __CycleTime, __Actual_time;
 
-        void set_time( ) ;
-        void resetTime() ;
+        void set_time();
+        void resetTime();
+        void printAction(String act);
+        void turnOn();
+        void turnOff();
+        bool setTimeOn(unsigned long t_on); // Returns true if succesful
+        bool setCycleTime(unsigned long t_cycle); // Returns true if succesful
+        bool setTime(unsigned long t_on, unsigned long t_cycle); // Return true if succesful
+        unsigned long getTimeOn(); // Returns TimeOn
+        unsigned long getCycleTime(); // Returns TimeOff
+        unsigned long getTime(); // Returns the time into the cycle from [0,timeOff+timeOn].
+        void enable (bool en); // Enable the actuator
+        bool isEnable(); // Returns true if actuator is enable
+        bool isType(uint8_t type); // Return true if is the same type
+        bool isFloor(uint8_t floor); // Return true if is the same floor
+        void begin(); // Start the actuator
+        void run(); // Run the actuator
 
     public:
          static byte __TotalActuators;
-         static Actuator *ptr[MAX_ACTUATORS] ; // List of pointers to each object
+         static Actuator *ptr[MAX_ACTUATORS]; // List of pointers to each object
 
-         Actuator ( ) ; // Constructor
-         Actuator ( unsigned long t_on, unsigned long t_off ) ; // Constructor
-         Actuator ( bool _state, bool en, unsigned long t_on, unsigned long t_off ) ; // Constructor
+         Actuator( // Constructor
+           uint8_t type,
+           uint8_t floor,
+           unsigned long t_on,
+           unsigned long t_cycle
+         );
 
-         bool getState() ; // Returns Actuator State
-         void changeState() ; // Change the actual state of the cycle.
-         void turnOn() ;
-         void turnOff() ;
-         bool setTimeOn(unsigned long t_on) ; // Returns true if succesful
-         bool setTimeOff(unsigned long t_off) ; // Returns true if succesful
-         bool setTime(unsigned long t_on, unsigned long t_off) ; // Return true if succesful
-         unsigned long getTimeOn() ; // Returns TimeOn
-         unsigned long getTimeOff() ; // Returns TimeOff
-         unsigned long getTime() ; // Returns the time into the cycle from [0,timeOff+timeOn].
-         void enable (bool en) ; // Enable the actuator
-         bool isEnable() ; // Returns true if actuator is enable
-         bool begin();
-         bool run() ;
+         bool getState(); // Returns Actuator State
+
+         // Looks for the correct actuator and execute setTimeOn
+         static void setTimeOnAll(
+           uint8_t type,
+           uint8_t floor,
+           unsigned long timeOn
+         );
+         // Looks for the correct actuator and execute setCycleTime
+         static void setCycleTimeAll(
+           uint8_t type,
+           uint8_t floor,
+           unsigned long cycleTime
+         );
+         // Looks for the correct actuator and execute setTime
+         static void setTimeAll(
+           uint8_t type,
+           uint8_t floor,
+           unsigned long timeOn,
+           unsigned long cycleTime
+         );
+         // Looks for the correct actuator and execute setTimeOn
+         static unsigned long getTimeOnAll(
+           uint8_t type,
+           uint8_t floor
+         );
+         // Looks for the correct actuator and execute setCycleTime
+         static unsigned long getCycleTimeAll(
+           uint8_t type,
+           uint8_t floor
+         );
+         // Looks for the correct actuator and execute setTime
+         static unsigned long getTimeAll(
+           uint8_t type,
+           uint8_t floor
+         );
+         // Looks for the correct actuator and execute enable
+         static void enableAll(
+           uint8_t type,
+           uint8_t floor,
+           bool en
+         );
+         static void beginAll(); // Starts all the actuators
+         static void runAll(); // Run all the actuators
   } ;
 
 // Class to manage and synchronize multiples Solenoids Valves

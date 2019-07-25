@@ -4,153 +4,274 @@
 
 #include "actuator.h"
 
-
 /***   Actuator   ***/
 // Statics variables definitions
 byte Actuator::__TotalActuators = 0;
 Actuator *Actuator::ptr[MAX_ACTUATORS];
 
-Actuator::Actuator( ) // Constructor
+Actuator::Actuator( // Constructor
+    uint8_t type,
+    uint8_t floor,
+    unsigned long t_on,
+    unsigned long t_cycle
+  )
    { // Just the first time init pointers
      if(__TotalActuators<1){
        for (int i=0; i < MAX_ACTUATORS; i++) {
          ptr[i] = NULL; // All Pointers NULL
        }
      }
-     __State = LOW ;
-     __TimeOn = 10 ;
-     __TimeOff = 60000 ;
-     set_time();
-     __Enable = LOW ;
 
-     ptr[__TotalActuators] = this; // Set Static pointer to object
-     __TotalActuators++; // Add the new actuator to the total
-   }
+     __Type = type;
+     __Floor = floor;
 
-Actuator::Actuator( unsigned long t_on, unsigned long t_off ) // Constructor
-   { // Just the first time init pointers
-     if(__TotalActuators<1){
-       for (int i=0; i < MAX_ACTUATORS; i++) {
-         ptr[i] = NULL; // All Pointers NULL
-       }
+     // Default parameters
+     __State = LOW;
+     __Enable = false;
+
+     if(t_on<t_cycle){
+       __TimeOn = t_on*1000UL;
+       __CycleTime = t_cycle*1000UL;
      }
-     __State = LOW ;
-     __TimeOn = t_on*1000UL ;
-     __TimeOff = t_off*1000UL ;
-     set_time();
-     __Enable = LOW ;
+     else{
+       __TimeOn = DEFAULT_TIME_ON;
+       __CycleTime = DEFAULT_CYCLE_TIME;
+     }
 
      ptr[__TotalActuators] = this; // Set Static pointer to object
      __TotalActuators++; // Add the new actuator to the total
    }
 
-Actuator::Actuator( bool _state, bool en, unsigned long t_on, unsigned long t_off ) // Constructor
-   {// Just the first time init pointers
-    if(__TotalActuators<1){
-      for (int i=0; i < MAX_ACTUATORS; i++) {
-        ptr[i] = NULL; // All Pointers NULL
-      }
-    }
-
-    __State = _state ;
-    __TimeOn = t_on*1000UL ;
-    __TimeOff = t_off*1000UL ;
-    set_time();
-    __Enable = en ;
-
-    ptr[__TotalActuators] = this; // Set Static pointer to object
-    __TotalActuators++; // Add the new actuator to the total
-   }
-
-void Actuator::set_time( )
+void Actuator::set_time()
   { if(__State == HIGH)
     { resetTime(); }
-    else
-    { __Actual_time = millis() - __TimeOn; }
+    else{ __Actual_time = millis() - __TimeOn; }
   }
 
 void Actuator::resetTime()
-{  __Actual_time = millis() ; }
+  {  __Actual_time = millis(); }
 
-bool Actuator::getState()
-{ return __State; }
-
-void Actuator::changeState()
-{ __State = !__State;
-  set_time();
-}
+void Actuator::printAction(String act)
+  { Serial.print(F("Actuator ("));
+    switch(__Type){
+      case 0:
+        Serial.print(F("Input Fan-"));
+        break;
+      case 1:
+        Serial.print(F("Output Fan-"));
+        break;
+      case 2:
+        Serial.print(F("Vent Fan-"));
+        break;
+      case 3:
+        Serial.print(F("Humidity Valve-"));
+        break;
+      default:
+        break;
+    }
+    Serial.print(__Floor+1);
+    Serial.print(F("): "));
+    Serial.println(act);
+  }
 
 void Actuator::turnOn()
-{ __State = HIGH;
-  set_time();
-}
+  { __State = HIGH;
+    set_time();
+  }
 
 void Actuator::turnOff()
-{ __State = LOW;
-  set_time();
-}
+  { __State = LOW;
+    set_time();
+  }
 
 bool Actuator::setTimeOn(unsigned long t_on)
- { if(t_on*1000UL < __TimeOff){
+  { if(t_on*1000UL < __CycleTime){
      __TimeOn = t_on*1000UL;
+     printAction("TimeOn changed to " + String(t_on) + " seconds");
      return true;
    }
-   else{ return false; }
- }
+   else{
+     printAction("Cannot change TimeOn. Parameter has to be smaller than " +
+     String(float(__CycleTime)/1000) + " seconds");
+     return false;
+   }
+  }
 
-bool Actuator::setTimeOff(unsigned long t_off)
- { if(__TimeOn < t_off*1000UL){
-     __TimeOff = t_off*1000UL;
+bool Actuator::setCycleTime(unsigned long t_cycle)
+  { if(__CycleTime < t_cycle*1000UL){
+     __CycleTime = t_cycle*1000UL;
+     printAction("TimeOff changed to " + String(t_cycle) + " seconds");
      return true;
    }
-   else{ return false; }
- }
+   else{
+     printAction("Cannot change TimeOff. Parameter has to be bigger than " +
+     String(float(__TimeOn)/1000) + " seconds");
+     return false;
+   }
+  }
 
-bool Actuator::setTime(unsigned long t_on, unsigned long t_off)
- { if(t_on < t_off){
+bool Actuator::setTime(unsigned long t_on, unsigned long t_cycle)
+  { if(t_on < t_cycle){
      __TimeOn = t_on*1000UL;
-     __TimeOff = t_off*1000UL;
+     __CycleTime = t_cycle*1000UL;
+     printAction("TimeOn changed to " + String(t_on) + " seconds");
+     printAction("TimeOff changed to " + String(t_cycle) + " seconds");
      return true;
    }
-   else{return false; }
- }
+   else{
+     printAction("Cannot change Times. Parameter t_on has to be bigger than t_cycle");
+     return false;
+   }
+  }
 
 unsigned long Actuator::getTimeOn()
-{ return __TimeOn ; }
+  { return __TimeOn/1000; }
 
-unsigned long Actuator::getTimeOff()
-{ return __TimeOff ; }
+unsigned long Actuator::getCycleTime()
+  { return __CycleTime/1000; }
 
 unsigned long Actuator::getTime()
-{  return (millis() - __Actual_time) ; }
+  { return (millis()-__Actual_time)/1000; }
 
-void Actuator::enable (bool en)
-{  __Enable = en;    }
+void Actuator::enable(bool en)
+  { __Enable = en;
+    if(__Enable){ printAction("Enable"); }
+    else{ printAction("Disable"); }
+  }
 
 bool Actuator::isEnable()
-{  return (__Enable) ;   }
+  { return (__Enable);   }
 
-bool Actuator::begin()
-{ __Enable = HIGH;
-  resetTime();
-}
+bool Actuator::isType(uint8_t type)
+  { if(__Type == type){return true;}
+    else{ return false;}
+  }
 
-bool Actuator::run()
-{  if(__Enable == true){
-     if( millis() - __Actual_time < __TimeOn && __State == LOW){
-       __State = HIGH;
-     }
-     else if( millis() - __Actual_time >= __TimeOn && millis() - __Actual_time < __TimeOff && __State == HIGH){
-       __State = LOW;
-     }
-     else if( millis() - __Actual_time >= __TimeOff ){
-       resetTime();
-     }
+bool Actuator::isFloor(uint8_t floor)
+  { if(__Floor == floor){return true;}
+    else{ return false;}
+  }
 
-     return true;
-   }
-   else{ return false; }
-}
+void Actuator::begin()
+  { __Enable = true;
+    resetTime();
+  }
+
+void Actuator::run()
+  {  if(__Enable){
+       if( millis()-__Actual_time<__TimeOn && __State==LOW){
+         __State = HIGH;
+       }
+       else if(millis()-__Actual_time>=__TimeOn && millis()-__Actual_time<__CycleTime && __State==HIGH){
+         __State = LOW;
+       }
+       else if(millis()-__Actual_time>=__CycleTime){
+         resetTime();
+       }
+     }
+  }
+
+bool Actuator::getState()
+  { return __State; }
+
+void Actuator::setTimeOnAll(
+    uint8_t type,
+    uint8_t floor,
+    unsigned long timeOn
+  ){
+    for(int i=0; i < __TotalActuators; i++){
+      if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
+        ptr[i]->setTimeOn(timeOn);
+        break;
+      }
+    }
+  }
+
+void Actuator::setCycleTimeAll(
+    uint8_t type,
+    uint8_t floor,
+    unsigned long cycleTime
+  ){
+    for(int i=0; i < __TotalActuators; i++){
+      if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
+        ptr[i]->setCycleTime(cycleTime);
+        break;
+      }
+    }
+  }
+
+void Actuator::setTimeAll(
+    uint8_t type,
+    uint8_t floor,
+    unsigned long timeOn,
+    unsigned long cycleTime
+  ){
+    for(int i=0; i < __TotalActuators; i++){
+      if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
+        ptr[i]->setTimeOn(timeOn);
+        ptr[i]->setCycleTime(cycleTime);
+        break;
+      }
+    }
+  }
+
+unsigned long Actuator::getTimeOnAll(
+    uint8_t type,
+    uint8_t floor
+  ){
+    for(int i=0; i < __TotalActuators; i++){
+      if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
+        return ptr[i]->getTimeOn();
+      }
+    }
+  }
+
+unsigned long Actuator::getCycleTimeAll(
+    uint8_t type,
+    uint8_t floor
+  ){
+    for(int i=0; i < __TotalActuators; i++){
+      if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
+        return ptr[i]->getCycleTime();
+      }
+    }
+  }
+
+unsigned long Actuator::getTimeAll(
+    uint8_t type,
+    uint8_t floor
+  ){
+    for(int i=0; i < __TotalActuators; i++){
+      if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
+        return ptr[i]->getTime();
+      }
+    }
+  }
+
+void Actuator::enableAll(
+    uint8_t type,
+    uint8_t floor,
+    bool en
+  ){
+    for(int i=0; i < __TotalActuators; i++){
+      if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
+        ptr[i]->enable(en);
+        break;
+      }
+    }
+  }
+
+void Actuator::beginAll()
+  { for (int i = 0; i < __TotalActuators; i++){
+      (ptr[i]->begin());
+    }
+  }
+
+void Actuator::runAll()
+  { for (int i = 0; i < __TotalActuators; i++){
+      (ptr[i]->run());
+    }
+  }
 
 /***   solenoidValve   ***/
 // Statics variables definitions

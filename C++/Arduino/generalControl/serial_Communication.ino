@@ -12,7 +12,79 @@ void serialEvent() {                                  //if the hardware serial p
   input_string_complete = true;                       //set the flag used to tell if we have received a completed string from the PC
   
   if(input_string_complete==true){
+    String parameter[8];
+    int k = 0;
+    int l = 0;
+    // Split the parameters
+    for (int j = 0; j<inputstring.length(); j++){
+      if(inputstring[j] == ','){ // Looking for ','
+        parameter[k] = inputstring.substring(l,j);
+        k++;
+        l = j+1;
+      }
+      else if(j==inputstring.length()-1){
+        parameter[k] = inputstring.substring(l,j+1);
+      }
+    }
+    
+    if(parameter[0]=="actuator"){ // Functions executed in Actuator class
+      if(parameter[1]=="setTime"){ // Function setTime -> Form "actuator,setTime,type[0-3],floor[0-3],timeOn,cycleTime"
+        int Type = parameter[2].toInt();
+        int Floor = parameter[3].toInt();
+        int timeOn = parameter[4].toInt();
+        int cyceTime = parameter[5].toInt();
+        if(timeOn<cyceTime && Type>=0 && Floor>=0 && Type<MAX_TYPES_ACTUATOR && Floor<MAX_TYPES_ACTUATOR){
+          Actuator::setTimeAll(Type, Floor, timeOn, cyceTime);
+        }
+       else{Serial.println(F("Actuator Functions: Parameter[2-5] wrong"));}
+      }
+      else if(parameter[1]=="setTimeOn"){  // Function setTimeOn -> Form "actuator,setTimeOn,type[0-3],floor[0-3],timeOn"
+        int Type = parameter[2].toInt();
+        int Floor = parameter[3].toInt();
+        int timeOn = parameter[4].toInt();
+        if(Type>=0 && Floor>=0 && Type<MAX_TYPES_ACTUATOR && Floor<MAX_TYPES_ACTUATOR){
+          Actuator::setTimeOnAll(Type, Floor, timeOn);  
+        }
+        else{Serial.println(F("Actuator Functions: Parameter[2-3] wrong"));}
+      }
+      else if(parameter[1]=="setCycleTime"){ // Function setCycleTime -> Form "actuator,setCycleTime,type[0-3],floor[0-3],cycleTime"
+        int Type = parameter[2].toInt();
+        int Floor = parameter[3].toInt();
+        int cycleTime = parameter[4].toInt();
+        if(Type>=0 && Floor>=0 && Type<MAX_TYPES_ACTUATOR && Floor<MAX_TYPES_ACTUATOR){
+          Actuator::setCycleTimeAll(Type, Floor, cycleTime);
+        }
+        else{Serial.println(F("Actuator Functions: Parameter[2-3] wrong"));}
+      }
+      else if(parameter[1]=="getTime"){ // Function getTime -> Form "actuator,getTime,type[0-3],floor[0-3]"
+        int Type = parameter[2].toInt();
+        int Floor = parameter[3].toInt();
+        if(Type>=0 && Floor>=0 && Type<MAX_TYPES_ACTUATOR && Floor<MAX_TYPES_ACTUATOR){
+          Serial.println(Actuator::getTimeAll(Type, Floor));
+        }
+        else{Serial.println(F("Actuator Functions: Parameter[2-3] wrong"));}
+      }
+      else if(parameter[1]=="getTimeOn"){ // Function getTimeOn -> Form "actuator,getTimeOn,type[0-3],floor[0-3]"
+        int Type = parameter[2].toInt();
+        int Floor = parameter[3].toInt();
+        if(Type>=0 && Floor>=0 && Type<MAX_TYPES_ACTUATOR && Floor<MAX_TYPES_ACTUATOR){
+          Serial.println(Actuator::getTimeOnAll(Type, Floor));
+        }
+        else{Serial.println(F("Actuator Functions: Parameter[2-3] wrong"));}
+      }
+      else if(parameter[1]=="getCycleTime"){ // Function getCycleTime -> Form "actuator,getCycleTime,type[0-3],floor[0-3]"
+        int Type = parameter[2].toInt();
+        int Floor = parameter[3].toInt();
+        if(Type>=0 && Floor>=0 && Type<MAX_TYPES_ACTUATOR && Floor<MAX_TYPES_ACTUATOR){
+          Serial.println(Actuator::getCycleTimeAll(Type, Floor));
+        }
+        else{Serial.println(F("Actuator Functions: Parameter[2-3] wrong"));}
+      }
+      else{Serial.println(F("Actuator Functions: Parameter[1] unknown"));}
+    }
 
+    
+    /*
     if(inputstring.charAt(0)==zero_char){ // solenoidValve --> '0'
       if(inputstring.charAt(1)==zero_char){ // setCycleTime Function --> '0'
         float inputTime_minutes = inputstring.substring(2).toFloat(); // Form = 00Float
@@ -178,8 +250,9 @@ void serialEvent() {                                  //if the hardware serial p
         else{Serial.println(F("EEPROM: Key Confirmation is necesary to execute this action"));}
       }
     }
-
+    */
     /***** Pendiente de aquí para abajo *****/
+    /*
     // Revisar pendientes MultiDay
     else if(inputstring.charAt(0)==zero_char+3){ // MultiDay info --> '3'
       if(inputstring.charAt(1)==zero_char){ // redefine Function --> '0'
@@ -230,7 +303,7 @@ void serialEvent() {                                  //if the hardware serial p
         else{Serial.println(F("HVAC Controller: Fan Parameter Incorrect"));}
       }
     }
-    
+    */
   }
   input_string_complete = false;
 }
