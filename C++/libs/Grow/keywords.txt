@@ -138,6 +138,23 @@ continueSequence	KEYWORD2
 stopSequence	KEYWORD2
 sequence	KEYWORD2
 home	KEYWORD2
+dispense	KEYWORD2
+stepperCalibration	KEYWORD2
+dispenseAcid	KEYWORD2
+pumpCalibration	KEYWORD2
+setCalibrationParameter	KEYWORD2
+setCalibrationParameter1	KEYWORD2
+getMG	KEYWORD2
+EZOisEnable	KEYWORD2
+EZOcalibration	KEYWORD2
+EZOexportCal	KEYWORD2
+EZOimportCalibration	KEYWORD2
+EZOimport	KEYWORD2
+EZOsleep	KEYWORD2
+EZOawake	KEYWORD2
+EZOisSleep	KEYWORD2
+eventLCD	KEYWORD2
+prepareSolution	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -167,3 +184,5 @@ NAME_LEVEL_5	LITERAL1
 PIN_LEVEL_SWITCH	LITERAL1
 DEFAULT_MAX_X_DISTANCE_MM	LITERAL1
 DEFAULT_MAX_Y_DISTANCE_MM	LITERAL1
+MAX_SOLUTIONS_NUMBER	LITERAL1
+MAX_PUMPS_NUMBER	LITERAL1

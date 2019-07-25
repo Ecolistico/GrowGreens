@@ -1,10 +1,6 @@
 #include "solutionMaker.h"
 #include <EEPROM.h>
 
-/* Pendiente:
- *  - Motor licuadora (Relevador) hardware/software
- *  - Sensores phMetro, conductimetro guardar direcciones i2c en memoria eeprom además del resto de funciones
- */
 solutionMaker sMaker(
           47, // Dir1
           45, // Step1
