@@ -44,8 +44,8 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 
 #define MAX_SOLUTIONS_NUMBER 4 // The max number of motors that can dispense
 #define MAX_PUMPS_NUMBER 2 // The max number of peristaltic pumps
-#define MOTOR_SPEED 4000 // Maximum Steps Per Second
-#define MOTOR_ACCEL 1000 // Steps/second/Second of acceleration
+#define MOTOR_SPEED 250 // Maximum Steps Per Second
+#define MOTOR_ACCEL 250 // Steps/second/Second of acceleration
 #define DEFAULT_MICROSTEP 8 // By default we use configuration of 1/8 microSteps
 #define MOTOR_STEP_PER_REV 200 // By default we use motors of 200 steps/rev
 #define PUMP_VELOCITY 155 // Value pwm -> 255 = 100%, 155 = 60% of the maximun velocity.
@@ -53,17 +53,32 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define LCD_I2C_DIR 0x27 // Direction for screen
 #define LCD_COLUMNS 20 // Screen columns number
 #define LCD_ROWS 4 // Screen rows number
+#define RELAY_ACTION_TIME 15000 // 15 seconds by default
 
 // Class to control the Solution Maker
 /*
 Note: All the motors need same configuration and direction
+Some definitions:
+  Solution 1 = KNO3
+  Solution 2 = NH4H2PO04
+  Solution 3 = CA(NO3)2
+  Solution 4 = MGSO4 + Micros
+  Acid 1 = H3PO4
+  Acid 2 = HNO3
+
+  Sol 1 -> Acid 1
+  Sol 2 -> Acid 1
+  Sol 3 -> Acid 4
+  Sol 4 -> Acid 4
 */
+
 class solutionMaker
   {
     private:
         uint8_t        __DirS[MAX_SOLUTIONS_NUMBER], __StepS[MAX_SOLUTIONS_NUMBER]; // Pins required for all the motors
         uint8_t        __Motor[MAX_PUMPS_NUMBER*2]; // Pins to control all the peristaltic pumps
         uint8_t        __En[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER]; // Pin to enable all the motors and pumps
+        uint8_t        __Relay1; // Pin to control relay
         bool           __IsEnable[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER]; // Let´s know if the motor/pump isenable/disable
         bool           __Available[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER]; // Let´s know if the motor/pump available/unavailable
         uint8_t        __Calibration[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER]; // Calibration parameter for motor/pumps
@@ -76,7 +91,7 @@ class solutionMaker
         bool           __InvertPump; // Invert the direction of all the pumps
         unsigned long  __PumpTime[MAX_PUMPS_NUMBER]; // Time counter for pumps working
         unsigned long  __PumpOnTime[MAX_PUMPS_NUMBER]; // The time that the pumps will be working
-        unsigned long  __ReadTime, __LCDTime; // Auxiliars counter for tempReads and LCD turn off light
+        unsigned long  __ReadTime, __RelayTime, __LCDTime; // Auxiliars counter for sensorReads, relays ans LCD turn off light
         // One led for each solution, one for each acid and two for status
         uint8_t        __Led[MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER+2]; // Pins for LED´s
         uint8_t        __LCDButton; // Pin to read LCD button
@@ -84,6 +99,7 @@ class solutionMaker
         bool           __Work; // Variable to know if is working the Solution Maker
         bool           __StatusLCD; // Variable to know if the screen is on/off
         bool           __LCDLightOn; // Variable to turn off the LCD light
+        bool           __RelayState; // Variable to hold the state of the relay
 
         // Atlas Scientific Sensors variables
         float __pH, __eC; // Variables to hold the phMeter and ecMeter values
@@ -123,12 +139,16 @@ class solutionMaker
             By default use calibration param of the first pump assuming that all are equals
         */
         unsigned long MLToTime(float mililiters, uint8_t pump);
-        // Return the number of grams that equals the revs parameter in some stepper
-        long RevToGrams(long rev, uint8_t st);
-        // Return the number of revs that equals the grams parameter in some stepper
-        long GramsToRev(long grams, uint8_t st);
+        // Return the number of mg that equals the revs parameter in some stepper
+        long RevToMG(long rev, uint8_t st);
+        // Return the number of revs that equals the mg parameter in some stepper
+        long MGToRev(long mg, uint8_t st);
         long RevToSteps(long rev); // Returns the number of steps that are require to move one rev
         long StepsToRev(long st); // Returns the number of rev that are some steps
+        // Calculate how much mg of powder or liters of H2O do you need to balance conductivity
+        float balanceEC(float EC_init, float EC_final, float liters, uint8_t st);
+        // Calculate how much ml of acid or liters of H2O do you need to balance ph
+        float balancePH(float PH_init, float PH_final, float liters, uint8_t pump);
         void moveStepper(long steps, uint8_t st);
         void resetPosition(uint8_t st); // reset the position to zero of some stepper
         // Print in serial an action executed with the correct format
@@ -144,6 +164,7 @@ class solutionMaker
         void EZOReadRequest(float temp, bool sleep = false); // Request a single read in Atlas Scientific Sensors
         void readRequest(); // Request a single reading of the temperature, ph and ec
         void EZOexportFinished(); // When some export is finished set variable to ask for a new one
+        void relayControl(); // Control the actions of the relay
 
     public:
         // Constructor. Dir, Step and Enable Pins for all the motors
@@ -175,7 +196,8 @@ class solutionMaker
           uint8_t led7,
           uint8_t led8,
           uint8_t tempSens,
-          uint8_t lcdButton
+          uint8_t lcdButton,
+          uint8_t relay1
         );
 
          // Init the object with default configuration
@@ -186,20 +208,21 @@ class solutionMaker
           bool invertPump = false
         );
 
-        bool dispense(long some_grams, uint8_t st); // Move some stepper to dispense some_grams
+        bool dispense(long some_mg, uint8_t st); // Move some stepper to dispense some_mg
         /* Move some revs in any stepper.
-        It allows to measure the grams dispense to get the calibration parameter */
+        It allows to measure the mg dispense to get the calibration parameter */
         void stepperCalibration(long rev, uint8_t st);
         /* Move some miliseconds any pump.
-        It allows to measure the grams/ml dispense to get the calibration parameter */
+        It allows to measure the ml dispense to get the calibration parameter */
         bool dispenseAcid(float some_ml, uint8_t pump); // Add some ml of acid with a pump
         /* Turn on a pump.
         It allows to measure the ml dispense to get the calibration parameter */
         void pumpCalibration(float time1, uint8_t pump);
-        void setCalibrationParameter(uint8_t param, uint8_t actuator);
+        void setCalibrationParameter(uint8_t param, uint8_t actuator); // Set parameters for motors/pumps
+        void setCalibrationParameter1(uint8_t param, uint8_t actuator); // Set parameter for ph/ec equations
         bool isEnable(uint8_t actuator); // Returns true if actuator is enable, else false
         bool isAvailable(uint8_t actuator); // Returns true if actuator is available, else false
-        long getGrams(uint8_t st); // Returns the grams that were dispense
+        long getMG(uint8_t st); // Returns the mg that were dispense
         void stop(uint8_t st); // Stops some motor/pump
         void notFilter() ;
         void defaultFilter() ; // Set Kalman with Noise = 0.5

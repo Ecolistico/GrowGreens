@@ -17,8 +17,8 @@ void serialEvent() {                                  //if the hardware serial p
       if(inputstring.charAt(1)==zero_char){ // dispense() and dispenseAcid() -> Form '00ByteNumber' (Number can be int, long or float)
         if(inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER){ //dispense()
           byte act = inputstring.charAt(2)-zero_char;
-          long grams = inputstring.substring(3).toInt();
-          sMaker.dispense(grams, act);
+          float grams = inputstring.substring(3).toFloat();
+          sMaker.dispense(long(grams*1000), act);
           sMaker.eventLCD();
         }
         else if(inputstring.charAt(2)-zero_char>=MAX_SOLUTIONS_NUMBER && inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){ //dispenseAcid()
@@ -58,7 +58,7 @@ void serialEvent() {                                  //if the hardware serial p
         else{Serial.println(F("Parameter incorrect: Actuator does not exist"));}
       }
 
-      else if(inputstring.charAt(1)==zero_char+1){ // setCalibrationParameter() -> Form '11ByteByte'
+      else if(inputstring.charAt(1)==zero_char+1){ // setCalibrationParameter()-> Form '11ByteByte'
         if(inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
           byte act = inputstring.charAt(2)-zero_char;
           int param = inputstring.substring(3).toInt();
@@ -71,9 +71,23 @@ void serialEvent() {                                  //if the hardware serial p
         }
         else{Serial.println(F("Parameter incorrect: Actuator does not exist"));}
       }
+
+      else if(inputstring.charAt(1)==zero_char+2){ // setCalibrationParameter1()-> Form '12ByteByte'
+        if(inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
+          byte act = inputstring.charAt(2)-zero_char;
+          int param = inputstring.substring(3).toInt();
+          if(param>=0 && param<=255){
+            sMaker.setCalibrationParameter1(param, act);
+            sMaker.eventLCD();
+            write_EEPROM(act+MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, param);
+          }
+          else{Serial.println(F("Parameter incorrect: Parameter must be a byte [0-255]"));}
+        }
+        else{Serial.println(F("Parameter incorrect: Actuator does not exist"));}
+      }
     }
 
-    else if(inputstring.charAt(0)==zero_char+2){ // calibration(acid/condictivity functions) Functions --> '2'
+    else if(inputstring.charAt(0)==zero_char+2){ // Free Functions --> '2'
       
     }
     
@@ -158,6 +172,34 @@ void serialEvent() {                                  //if the hardware serial p
       }
       else if(inputstring.charAt(1)==zero_char+2 && inputstring.charAt(2)==zero_char+3){ // clean_EEPROM() -> Form '523'
         clean_EEPROM();
+      }
+    }
+
+    else if(inputstring.length()>6){
+      String parameter[5];
+      int k = 0;
+      int l = 0;
+      // Split the parameters
+      for (int j = 0; j<inputstring.length(); j++){
+        if(inputstring[j] == ','){ // Looking for ','
+          parameter[k] = inputstring.substring(l,j);
+          k++;
+          l = j+1;
+        }
+        else if(j==inputstring.length()-1){
+          parameter[k] = inputstring.substring(l,j+1);
+        }
+      }
+      
+      if(parameter[0]=="prepare"){
+        float liters = parameter[1].toFloat();
+        byte sol = parameter[2].toInt();
+        float ph = parameter[3].toFloat();
+        float ec = parameter[4].toFloat();
+        
+        //Serial.println("Preparing "+String(liters)+" liters of solution "+String(sol+1)+" with ph="+ String(ph)+",ec="+String(ec));
+        sMaker.prepareSolution(liters, sol, ph, ec);
+        sMaker.eventLCD();
       }
     }
   }

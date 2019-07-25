@@ -35,7 +35,8 @@ solutionMaker::solutionMaker(
   uint8_t led7,
   uint8_t led8,
   uint8_t tempSens,
-  uint8_t lcdButton
+  uint8_t lcdButton,
+  uint8_t relay1
   ){
     // Define motors pins
     __DirS[0] = dirS1;
@@ -71,11 +72,16 @@ solutionMaker::solutionMaker(
     __En[4] = en1;
     __En[5] = en2;
 
+    // Define relay pin
+    __Relay1 = relay1;
+    __RelayState = LOW;
+
     // Default parameters
     for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER;i++){
       __IsEnable[i] = false;
       __Available[i] = true;
       __Calibration[i] = 1;
+      __Calibration1[i] = 1;
     }
     __Work = false;
 
@@ -158,7 +164,15 @@ void solutionMaker::begin(
         stepperS[i]->setAcceleration(MOTOR_ACCEL);
         pinMode(__StepS[i], OUTPUT);
         pinMode(__DirS[i], OUTPUT);
+        // Check if we want this configuration of pinsInverted
+        /* setPinsInverted parameters:
+         1- bool directionInvert = false
+         2- bool 	stepInvert = false
+         2- bool 	enableInvert = false
+        */
+        stepperS[i]->setPinsInverted(true,false,false);
       }
+
       for(int i=0; i<MAX_PUMPS_NUMBER*2; i++){
         pinMode(__Motor[i], OUTPUT);
       }
@@ -173,6 +187,10 @@ void solutionMaker::begin(
       digitalWrite(__En[3], HIGH);
       analogWrite(__En[4], LOW);
       analogWrite(__En[5], LOW);
+
+      // By default off the relay when starts
+      pinMode(__Relay1, OUTPUT);
+      digitalWrite(__Relay1, !__RelayState);
 
       // Init Atlas Scientific Sensors
       phMeter->init();
@@ -204,6 +222,7 @@ void solutionMaker::begin(
       __LCDLightOn = true;
 
       __ReadTime = millis();
+      __RelayTime = millis();
       __LCDTime = millis();
       Serial.println(F("Solution Maker: Started Correctly"));
    }
@@ -308,16 +327,18 @@ unsigned long solutionMaker::MLToTime(float mililiters, uint8_t pump)
     return 0;
   }
 
-long solutionMaker::RevToGrams(long rev, uint8_t st)
+long solutionMaker::RevToMG(long rev, uint8_t st)
   { if(rev>0 && st<MAX_SOLUTIONS_NUMBER){
-      return (rev*__Calibration[st]);
+      float mgPerRev = float(__Calibration[st])*40; // mg/rev
+      return (rev*mgPerRev);
     }
     return -1;
   }
 
-long solutionMaker::GramsToRev(long grams, uint8_t st)
-  { if(grams>0 && st<MAX_SOLUTIONS_NUMBER){
-      float resp = float(grams)/__Calibration[st];
+long solutionMaker::MGToRev(long mg, uint8_t st)
+  { if(mg>0 && st<MAX_SOLUTIONS_NUMBER){
+      float mgPerRev = float(__Calibration[st])*40; // mg/rev
+      float resp = float(mg)/mgPerRev;
       uint16_t intResp = int(resp);
       if(resp-intResp>0.5){return intResp+1;}
       else{return intResp;}
@@ -330,6 +351,37 @@ long solutionMaker::RevToSteps(long rev)
 
 long solutionMaker::StepsToRev(long st)
   { return st/(__MicroSteps*__StepPerRev); }
+
+float solutionMaker::balanceEC(float EC_init, float EC_final, float liters, uint8_t st)
+  { float deltaEC = EC_final-EC_init;
+    if(deltaEC>=0){ // We need add solution powder
+      float slope = float(__Calibration1[st])*0.004; // Get the slope in (mg/l)/(uS/cm)
+      float mgPerLiter = deltaEC*slope; // Get mg/l needed
+      float mg = mgPerLiter*liters; // Get mg needed
+      return mg; // Return mg
+    }
+    else{ // We need add water
+      float percentageOfWater = 1-(EC_init/EC_final);
+      float litersToAdd = -liters*percentageOfWater;
+      // If we have to add more than 15% of total water return error
+      if(litersToAdd>liters*.15){
+        return -1; // -1 is an error key
+      }
+      return litersToAdd; // return liters to add
+    }
+  }
+
+float solutionMaker:: balancePH(float PH_init, float PH_final, float liters, uint8_t pump)
+  { if(PH_init-PH_final>=0.1){
+      float PH_acid = float(__Calibration1[pump+MAX_SOLUTIONS_NUMBER])*0.05; // Get the ph of the acid
+      float ml = (pow(10, -1*PH_init)-pow(10, -1*PH_final))/(pow(10, -1*PH_final)-pow(10, -1*PH_acid))*liters*1000;
+      return ml; // Returns the ml of the acid that are needed
+    }
+    else if(PH_init-PH_final>=0 && PH_init-PH_final<0.1){ // Do nothing
+      return 0;
+    }
+    else return -1; // Key Error: ph is already to low it is necessary to send an alarm
+  }
 
 void solutionMaker::moveStepper(long steps, uint8_t st)
   { // If disable then enable
@@ -481,34 +533,48 @@ void solutionMaker::readRequest()
   { // Take temperature readings every 5 seconds
     if(millis()-__ReadTime>5000){
       __ReadTime = millis();
-      __pH = phMeter->getValue(); // Save last read from phmeter
-      __eC = ecMeter->getValue(); // Save last read from ecMeter
-      readTemp(); // Read temp
-      EZOReadRequest(__Temp); // Request new read
+      if(!__Work){
+        __pH = phMeter->getValue(); // Save last read from phmeter
+        __eC = ecMeter->getValue(); // Save last read from ecMeter
+        readTemp(); // Read temp
+        EZOReadRequest(__Temp); // Request new read
+      }
     }
   }
 
 void solutionMaker::EZOexportFinished()
   { if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_PH) && __ExportEzo) __ExportEzo = false;  }
 
-bool solutionMaker::dispense(long some_grams, uint8_t st)
+void solutionMaker::relayControl()
+  { if(!digitalRead(__Relay1) && __RelayState && !__Work){
+      __RelayState = LOW;
+      __RelayTime = millis();
+      Serial.println(F("Solution Maker: 15 seconds to finish the solution"));
+    }
+    else if(!digitalRead(__Relay1) && !__RelayState && !__Work && millis()-__RelayTime>RELAY_ACTION_TIME){
+      digitalWrite(__Relay1, !__RelayState);
+      Serial.println("Solution Finished");
+    }
+  }
+
+bool solutionMaker::dispense(long some_mg, uint8_t st)
   { if(st<MAX_SOLUTIONS_NUMBER){ // Check that stepper exist
-      if(some_grams>0){ // Check that parameter is correct
-        long rev = GramsToRev(some_grams, st);
-        if(rev>0){
+      if(some_mg>0){ // Check that parameter is correct
+        long rev = MGToRev(some_mg, st);
+        if(rev>=0){
           long steps = RevToSteps(rev);
-          if(steps>0){
+          if(steps>=0){
             moveStepper(steps, st);
-            printAction("Dispensing " + String(some_grams) + " g", st);
+            printAction("Dispensing " + String(some_mg) + " mg", st);
             return true;
           }
           printAction("RevToSteps equation problem", st);
           return false;
         }
-        printAction("GramsToRev equation problem", st);
+        printAction("MGToRev equation problem", st);
         return false;
       }
-      printAction("Grams parameter incorrect", st);
+      printAction("mg parameter incorrect", st);
       return false;
     }
     printAction("Cannot dispense. Motor does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
@@ -519,7 +585,7 @@ void solutionMaker::stepperCalibration(long rev, uint8_t st)
   { if(st<MAX_SOLUTIONS_NUMBER){
       long steps = RevToSteps(abs(rev));
       moveStepper(steps, st);
-      printAction("Running " + String(rev) + "revolutions for calibration purpose", st);
+      printAction("Running " + String(rev) + " revolutions for calibration purpose", st);
       return;
     }
     printAction("Cannot run calibration. Motor does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
@@ -548,13 +614,22 @@ void solutionMaker::pumpCalibration(float time1, uint8_t pump)
   { if(pump<MAX_PUMPS_NUMBER){ // Check that the pump exists
       turnOnPump(abs(time1*1000), pump);
     }
-    printAction("Cannot run calibration. Pump does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    else{printAction("Cannot run calibration. Pump does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);}
   }
 
 void solutionMaker::setCalibrationParameter(uint8_t param, uint8_t actuator)
   { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
       __Calibration[actuator] = param;
-      printAction(String(param) + " is the new calibration param", actuator);
+      printAction(String(param) + " is the new calibration param (motors/pumps)", actuator);
+      return;
+    }
+      printAction("Cannot set calibration Param. Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+  }
+
+void solutionMaker::setCalibrationParameter1(uint8_t param, uint8_t actuator)
+  { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
+      __Calibration1[actuator] = param;
+      printAction(String(param) + " is the new calibration param (ph/ec equations)", actuator);
       return;
     }
       printAction("Cannot set calibration Param. Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
@@ -570,12 +645,12 @@ bool solutionMaker::isAvailable(uint8_t actuator)
     return false;
   }
 
-long solutionMaker::getGrams(uint8_t st)
+long solutionMaker::getMG(uint8_t st)
   { if(st<MAX_SOLUTIONS_NUMBER){
       long steps = stepperS[st]->currentPosition();
       long rev = StepsToRev(steps);
-      long gr = RevToGrams(rev, st);
-      return gr;
+      long mg = RevToMG(rev, st);
+      return mg;
     }
     else{return -1;}
   }
@@ -823,7 +898,7 @@ void solutionMaker::run()
         digitalWrite(__Led[i], LOW);
         disable(i);
         eventLCD();
-        printAction(String(getGrams(i)) + " grams were dispensed", i);
+        printAction(String(getMG(i)) + " mg were dispensed", i);
       }
     }
 
@@ -834,9 +909,60 @@ void solutionMaker::run()
         eventLCD();
       }
     }
+
+    // Control the relay
+    relayControl();
   }
 
 void solutionMaker::prepareSolution(float liters, byte sol, float ph, float ec)
-  {
-    
+  { if(!__Work){
+      if(liters>0 && ph>0 && ph<14 && ec>0){
+        float mgPowder = -1;
+        float mlAcid = -1;
+        bool success = true;
+
+        switch(sol){
+          case 0: // Solution 1
+            mgPowder = balanceEC(__eC, ec, liters, sol);
+            if(mgPowder!=-1 && mgPowder>0) dispense(long(mgPowder), sol);
+            mlAcid = balancePH(__pH, ph, liters, 0); // Solution 1 -> Acid 1
+            if(mlAcid!=-1 && mlAcid>0) dispenseAcid(mlAcid, 0);
+            break;
+          case 1: // Solution 2
+            mgPowder = balanceEC(__eC, ec, liters, sol);
+            if(mgPowder!=-1 && mgPowder>0) dispense(long(mgPowder), sol);
+            mlAcid = balancePH(__pH, ph, liters, 0); // Solution 2 -> Acid 1
+            if(mlAcid!=-1 && mlAcid>0) dispenseAcid(mlAcid, 0);
+            break;
+          case 2: // Solution 3
+            mgPowder = balanceEC(__eC, ec, liters, sol);
+            if(mgPowder!=-1 && mgPowder>0) dispense(long(mgPowder), sol);
+            mlAcid = balancePH(__pH, ph, liters, 1); // Solution 3 -> Acid 2
+            if(mlAcid!=-1 && mlAcid>0) dispenseAcid(mlAcid, 1);
+            break;
+          case 3: // Solution 4
+            mgPowder = balanceEC(__eC, ec, liters, sol);
+            if(mgPowder!=-1 && mgPowder>0) dispense(long(mgPowder), sol);
+            mlAcid = balancePH(__pH, ph, liters, 1); // Solution 4 -> Acid 2
+            if(mlAcid!=-1 && mlAcid>0) dispenseAcid(mlAcid, 0);
+            break;
+          default:
+            success = false;
+            Serial.println(F("Solution Maker: Solution Powder not defined"));
+            break;
+        }
+        if(mgPowder==-1 && success){Serial.println(F("Solution Maker: balanceEC function error"));}
+        else if(mlAcid==-1 && success){Serial.println(F("Solution Maker: balancePH function error"));}
+        if(success){
+          Serial.print(F("Solution Maker: mgPowder="));
+          Serial.print(mgPowder);
+          Serial.print(F(", mlAcid="));
+          Serial.println(mlAcid);
+          __RelayState = HIGH;
+          digitalWrite(__Relay1, !__RelayState);
+        }
+      }
+      else{Serial.println(F("Solution Maker: Parameter liters, ph or ec wrong"));}
+    }
+    else{Serial.println(F("Solution Maker: Working on another solution, please wait"));}
   }

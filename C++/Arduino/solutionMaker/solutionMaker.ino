@@ -33,7 +33,8 @@ solutionMaker sMaker(
           38, // LedReady
           40, // LedWorking
           22, // Temperature sensor
-          24  // LCD button 
+          24, // LCD button
+          9 // Relay (motor or actuator to get the solution disolve)
         );
 
 // Serial comunication
