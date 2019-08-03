@@ -38,39 +38,58 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 // Class to control the air compressor
 class compressorController
  {  private:
-        bool __State, __Enable;
-        bool __Valve_Compressor, __Valve_Nutrition, __Valve_Water;
-        bool __Compressor_invertedLogic;
-        bool __Nutrition_invertedLogic;
-        bool __Water_invertedLogic;
+        bool __State;
+        bool __Vnut; // Valve - nutrition kegs
+        bool __Vtank; // Valve - air tank
+        bool __Vh20; // Valve - H2O kegs
+        bool __Fnut; // Valve - free pressure nutrition kegs
+        bool __Fh2o; // Valve - free pressure H2O kegs
+        bool __nutInvertedLogic; // Logic for __Vnut
+        bool __tankInvertedLogic; // Logic for __Vtank
+        bool __h20InvertedLogic; // Logic for __Vh20
+        bool __KeepConnected; // Aux variable
+
+        uint8_t __Mode;
 
         void turnOn(); // Turn on the compressor
         void turnOff(); // Turn off the compressor
-        void doNothing(); // Turn off everything
-        void openCompressor(); // Settings to equal pressures in compressor kegs
-        void openNutrition(); // Settings to equal pressures in nutrition kegs
-        void openWater(); // Settings to equal pressures in water kegs
-        void openEverything(); // Settings to equal all pressures
-        void fillCompressor(); // Settings to fill the compressor kegs
-        void fillNutrition(); // Settings to fill the nutrition kegs
-        void fillWater(); // Settings to fill the water kegs
-        void fillEverything(); // Settings to fill everything
 
-        void turnOn_Valve(bool &state, bool inverted_logic);
-        void turnOff_Valve(bool &state, bool inverted_logic);
+        void doNothing(); // Set all LOW, logic does not matter
+        void turnOffAll(); // Set all LOW, using logic
+        void openTank(); // Setting pressure of the tank = compressor
+        void openNut(); // Setting pressure of the nutrition kegs = compressor
+        void openH2O(); // Setting pressure of the H2O kegs = compressor
+        void openAll(); // Setting all pressures equal
+        void fillTank(); // Settings to fill the tank
+        void fillNut(); // Settings to fill the nutrition kegs
+        void fillH2O(); // Settings to fill the H2O kegs
+        void fillAll(); // Settings to fill everything
+
+        void printAct(String act);
 
     public:
-         compressorController(bool comprLogic, bool nutrLogic, bool waterLogic); // Constructor
+         compressorController( // Constructor
+           bool nutLogic,
+           bool tankLogic,
+           bool h2oLogic
+         );
 
-         bool getState() ; // Returns Compressor State
-         bool getValveCompressorState(); // Return Valve Compressor State
-         bool getValveNutritionState(); // Return Valve Nutrition State
-         bool getValveWaterState(); // Return Valve Water State
-         void close_ValveNutrition(); // Close the Nutrition Valve (Usefull for free pressure)
-         void close_ValveWater(); // CLose the Water Valve (Usefull for free pressure)
-         void enable (bool en) ; // Enable the Compressor
-         bool isEnable() ; // Returns true if Compressor is enable
-         byte setMode(byte mode) ;
-  } ;
+         bool getState(); // Returns Compressor State
+         bool getValveTank(); // Return Valve Compressor State
+         bool getValveNut(); // Return Valve Nutrition State
+         bool getValveH2O(); // Return Valve Water State
+         bool getFreeValveNut(); // Returns Free Valve Nutrition state
+         bool getFValveH2O(); // Returns Free Valve H2O state
+
+         void openFreeNut(); // Free pressure of nutrition kegs
+         void closeFreeNut(); // Close free pressure valve nutrition kegs
+         void openFreeH2O(); // Free pressure of H2O kegs
+         void closeFreeH2O(); // Close free pressure valve H2O kegs
+
+         void keepConnected(bool con); // Do we have to keep connected nut with tank?
+
+         uint8_t getMode(); // Return the actual mode of operation
+         bool setMode(uint8_t mode); // Set the actual mode of operation
+  };
 
   #endif

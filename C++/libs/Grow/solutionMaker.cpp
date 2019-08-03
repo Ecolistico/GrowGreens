@@ -118,8 +118,8 @@ solutionMaker::solutionMaker(
     __LCDLightOn = false;
 
     // Filters
-    __Filter = 0 ;
-    __Alpha = 0 ; __Noise = 0 ; __Err = 0 ;
+    __Filter = 0;
+    __Alpha = 0; __Noise = 0; __Err = 0;
   }
 
 void solutionMaker::begin(
@@ -672,10 +672,10 @@ void solutionMaker::stop(uint8_t actuator)
   }
 
 void solutionMaker::notFilter()
-  { __Filter = 0 ; __Alpha = 0; __Noise = 0; __Err = 0; printFilter();}
+  { __Filter = 0; __Alpha = 0; __Noise = 0; __Err = 0; printFilter();}
 
 void solutionMaker::defaultFilter()
-  { __Filter = 1 ; __Alpha = 0.2 ; printFilter();}
+  { __Filter = 1; __Alpha = 0.2; printFilter();}
 
 bool solutionMaker::setExponentialFilter(float alpha = 0.5)
   { if(alpha>0 && alpha<1){
@@ -723,13 +723,13 @@ void solutionMaker::printFilter()
     }
   }
 
-bool solutionMaker::EZOisEnable(byte sensorType)
+bool solutionMaker::EZOisEnable(uint8_t sensorType)
   { if(sensorType == EZO_PH){ return phMeter->isEnable(); }
     else if(sensorType == EZO_EC){ return ecMeter->isEnable(); }
     return false;
   }
 
-void solutionMaker::EZOcalibration(byte sensorType, byte act, float value)
+void solutionMaker::EZOcalibration(uint8_t sensorType, uint8_t act, float value)
   { if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
       phMeter->calibration(act, value);
     }
@@ -739,7 +739,7 @@ void solutionMaker::EZOcalibration(byte sensorType, byte act, float value)
     else{printEZOAction("Sensor does not match a type or is in another request", sensorType);}
   }
 
-void solutionMaker::EZOexportCal(byte sensorType)
+void solutionMaker::EZOexportCal(uint8_t sensorType)
   { if(!__ExportEzo){
       if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
         __ExportEzo = true;
@@ -754,7 +754,7 @@ void solutionMaker::EZOexportCal(byte sensorType)
     else{printEZOAction("Another export is running", sensorType);}
   }
 
-void solutionMaker::EZOimportCalibration(byte sensorType, String parameters)
+void solutionMaker::EZOimportCalibration(uint8_t sensorType, String parameters)
   { if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
       phMeter->importCalibration(parameters);
     }
@@ -914,7 +914,7 @@ void solutionMaker::run()
     relayControl();
   }
 
-void solutionMaker::prepareSolution(float liters, byte sol, float ph, float ec)
+void solutionMaker::prepareSolution(float liters, uint8_t sol, float ph, float ec)
   { if(!__Work){
       if(liters>0 && ph>0 && ph<14 && ec>0){
         float mgPowder = -1;

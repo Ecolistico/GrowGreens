@@ -42,7 +42,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #include <EZO.h> // For Atlas Scientific sensors
 #include <math.h> // For ph/conductivity equations
 
-#define MAX_SOLUTIONS_NUMBER 4 // The max number of motors that can dispense
+#define MAX_SOLUTIONS_NUMBER 4 // The max number of motors that can be dispense
 #define MAX_PUMPS_NUMBER 2 // The max number of peristaltic pumps
 #define MOTOR_SPEED 250 // Maximum Steps Per Second
 #define MOTOR_ACCEL 250 // Steps/second/Second of acceleration
@@ -113,7 +113,7 @@ class solutionMaker
         float __LCDTemp; // Variable to change the Temp Value on LCD
 
         // Constants for the filters
-        byte __Filter ;
+        uint8_t __Filter;
         float __Alpha , __Noise , __Err;
         // Exponential Filter: __Alpha = smoothing variable
         // Kalman Filter: __Noise = Enviromental Noise, __Err = Error
@@ -224,16 +224,16 @@ class solutionMaker
         bool isAvailable(uint8_t actuator); // Returns true if actuator is available, else false
         long getMG(uint8_t st); // Returns the mg that were dispense
         void stop(uint8_t st); // Stops some motor/pump
-        void notFilter() ;
-        void defaultFilter() ; // Set Kalman with Noise = 0.5
-        bool setExponentialFilter(float alpha = 0.5) ;
-        bool setKalmanFilter(float noise) ;
+        void notFilter();
+        void defaultFilter(); // Set Kalman with Noise = 0.5
+        bool setExponentialFilter(float alpha = 0.5);
+        bool setKalmanFilter(float noise);
         void printFilter();
-        bool EZOisEnable(byte sensorType); // Ask to atlas Scientific Sensor if they are enable
-        void EZOcalibration(byte sensorType, byte act, float value);
-        void EZOexportCal(byte sensorType); // Run Export Calibration Sequence in Atlas Scientific Sensor
+        bool EZOisEnable(uint8_t sensorType); // Ask to atlas Scientific Sensor if they are enable
+        void EZOcalibration(uint8_t sensorType, uint8_t act, float value);
+        void EZOexportCal(uint8_t sensorType); // Run Export Calibration Sequence in Atlas Scientific Sensor
         // Import calibration parameter to Atlas Scientific Sensor
-        void EZOimportCalibration(byte sensorType, String parameters);
+        void EZOimportCalibration(uint8_t sensorType, String parameters);
         void EZOimport(bool start); // If start true (start import), else (stop import)
         void EZOsleep(); // Enter in low power mode the Atlas Scientific Sensor
         void EZOawake(); // Awake the Atlas Scientific Sensors if they are in sleep mode
@@ -241,11 +241,11 @@ class solutionMaker
         // Make all the maths and execute the actions to prepare a solution
         void eventLCD(); // Read Solution Maker Status and print it on the screen
         void run(); // Run all the actuator with conditions
-        void prepareSolution(float liters, byte sol, float ph, float ec);
+        void prepareSolution(float liters, uint8_t sol, float ph, float ec);
         // Not ready EZO functions
-        //void EZOread(byte sensorType) // Takes read for the Atlas Scientific Sensor
-        //void EZOreadWithTempCompensation(byte sensorType) // Takes read for the Atlas Scientific Sensor
-        // EZOtempCompensation(byte sensorType) // Set a new temperature to adjust new readings
+        //void EZOread(uint8_t sensorType) // Takes read for the Atlas Scientific Sensor
+        //void EZOreadWithTempCompensation(uint8_t sensorType) // Takes read for the Atlas Scientific Sensor
+        // EZOtempCompensation(uint8_t sensorType) // Set a new temperature to adjust new readings
   };
 
 #endif

@@ -23,11 +23,15 @@ void codification_Multiplexer(){
                  IFan2.getState(), OFan4.getState(), VFan4.getState(), VHum4.getState()};               
   bool ID9[8] = {HVAC.getHR_State(), HVAC.getCC_State(), HVAC.getFR_State(), HVAC.getCVC_State(), 
                  HVAC.getCVH_State(), HVAC.getWarn_State(), HVAC.getWork_State(), !LOW}; // An extra relay  // getWarn_State && getWork_State are for LED´s
-  bool ID10[8] = {Recirculation.getState_In1(), Recirculation.getState_In2(), Recirculation.getState_In3(), Recirculation.getState_In4(), 
-                 Recirculation.getState_In5(), Recirculation.getState_Out1(), Recirculation.getState_Out2(), Recirculation.getState_Out3()};
-  bool ID11[8] = {Recirculation.getState_Out4(), Recirculation.getState_Out5(), Recirculation.getState_InPump(), Recirculation.getState_OutPump(), 
-                 Compressor.getValveCompressorState(), Compressor.getValveNutritionState(), Compressor.getValveWaterState(), Compressor.getState()};
-                 
+  bool ID10[8] = {Recirculation.getInValve(0), Recirculation.getInValve(1), Recirculation.getInValve(2), Recirculation.getInValve(3), 
+                 Recirculation.getInValve(4), Recirculation.getOutValve(0), Recirculation.getOutValve(1), Recirculation.getOutValve(2)};
+  bool ID11[8] = {Recirculation.getOutValve(3), Recirculation.getOutValve(4), Recirculation.getInPump(), Recirculation.getOutPump(), 
+                 Compressor.getValveTank(), Compressor.getValveNut(), Compressor.getValveH2O(), Compressor.getState()};
+  /*
+   * bool ID12[8] = { WaterToKegsH2O.getState(), WaterToSolutionMaker.getState(), Compressor.getFreeValveNut(), Compressor.getFValveH2O(), 
+   *                  IrrigationKegsH2O.getState(), IrrigationKegsNutrition.getState(), KegsH2OToRecirculation.getState(), KegsNutritionToRecirculation.getState() };
+   * bool ID13[8] = { Recirculation.kegsH2O, Recirculation.kegsNutricion, Recirculation.solutionMaker }
+   */
                   
   int value_Multiplexer1 = 0; int value_Multiplexer2 = 0; int value_Multiplexer3 = 0; int value_Multiplexer4 = 0;
   int value_Multiplexer5 = 0; int value_Multiplexer6 = 0; int value_Multiplexer7 = 0; int value_Multiplexer8 = 0;
@@ -44,13 +48,12 @@ void codification_Multiplexer(){
   
   digitalWrite(stcp, LOW);
 
-  shiftOut(ds, shcp, MSBFIRST, value_Multiplexer2);
+  shiftOut(ds, shcp, MSBFIRST, value_Multiplexer1); shiftOut(ds, shcp, MSBFIRST, value_Multiplexer2);
   shiftOut(ds, shcp, MSBFIRST, value_Multiplexer3); shiftOut(ds, shcp, MSBFIRST, value_Multiplexer4);
   shiftOut(ds, shcp, MSBFIRST, value_Multiplexer5); shiftOut(ds, shcp, MSBFIRST, value_Multiplexer6);
   shiftOut(ds, shcp, MSBFIRST, value_Multiplexer7); shiftOut(ds, shcp, MSBFIRST, value_Multiplexer8);
   shiftOut(ds, shcp, MSBFIRST, value_Multiplexer9); shiftOut(ds, shcp, MSBFIRST, value_Multiplexer10);
   shiftOut(ds, shcp, MSBFIRST, value_Multiplexer11); 
-  shiftOut(ds, shcp, MSBFIRST, value_Multiplexer1);
   digitalWrite(stcp, HIGH); 
 
   if(value_Multiplexer1+value_Multiplexer2+value_Multiplexer3+value_Multiplexer4+value_Multiplexer5+value_Multiplexer6+value_Multiplexer7+value_Multiplexer8+value_Multiplexer9+value_Multiplexer10+value_Multiplexer11==255*11){

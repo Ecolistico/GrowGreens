@@ -59,30 +59,28 @@ Cables Wiring:
 
 class controllerHVAC
  {  private:
-        bool __W , __Y, __G, __O, __B ;
+        bool __W , __Y, __G, __O, __B;
         bool __Warn, __Work, __Fan;
-        byte __Mode, __PrevMode;
-        unsigned long __Actual_time ;
+        uint8_t __Mode, __PrevMode;
+        unsigned long __Actual_time;
 
-        void resetTime() ;
+        void resetTime();
 
     public:
-         controllerHVAC ( ) ; // Constructor
-         controllerHVAC ( byte Mode ) ; // Constructor
-         controllerHVAC ( byte Mode, bool fan ) ; // Constructor
+         controllerHVAC(uint8_t Mode, bool fan); // Constructor
 
-         bool getHR_State() ; // Returns Heat Relay State
-         bool getCC_State() ; // Returns Compressor Contactor State
-         bool getFR_State() ; // Returns Fan Relay State
-         bool getCVC_State() ; // Returns Changeover Valve Cooling State
-         bool getCVH_State() ; // Returns Changeover Valve Heating State
-         bool getWarn_State() ; // Returns Warn State. On when is preparing. This Output is for LED visualization
-         bool getWork_State() ; // Returns Work State. On when is working. This Output is for LED visualization
+         bool getHR_State(); // Returns Heat Relay State
+         bool getCC_State(); // Returns Compressor Contactor State
+         bool getFR_State(); // Returns Fan Relay State
+         bool getCVC_State(); // Returns Changeover Valve Cooling State
+         bool getCVH_State(); // Returns Changeover Valve Heating State
+         bool getWarn_State(); // Returns Warn State. On when is preparing. This Output is for LED visualization
+         bool getWork_State(); // Returns Work State. On when is working. This Output is for LED visualization
 
-         bool changeMode(byte Mode); // Change the operation mode. Returns true if succesful
+         bool changeMode(uint8_t Mode); // Change the operation mode. Returns true if succesful
          void changeFan(bool fan); // Change fan mode
 
-         void run() ;
-  } ;
+         void run();
+  };
 
   #endif

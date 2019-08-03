@@ -34,82 +34,64 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #include <wiring.h>
 #endif
 
-#define MAX_LEDS 32 // Max LEDs Objects
-
-
-// Class to manage day-night cycles
-class Day
-  {  private:
-         bool __isItDay ;
-         float __dayBeginHour, __nightBeginHour;
-
-     public:
-          Day ( ) ; // Constructor
-          Day ( float dayTime_Hour, float nightTime_Hour ) ; // Constructor
-          Day ( byte dayTime_Hour, byte nightTime_Hour, byte dayTime_Minute, byte nightTime_Minute) ; // Constructor
-          bool changeDayHour (float dayTime_Hour ); // Returns true if succesful
-          bool changeDayHour (byte dayTime_Hour, byte dayTime_Minute); // Returns true if succesful
-          bool changeNightHour (float nightTime_Hour); // Returns true if succesful
-          bool changeNightHour (byte nightTime_Hour, byte nightTime_Minute); // Returns true if succesful
-          bool changeHours (float dayTime_Hour, float nightTime_Hour ); // Returns true if succesful
-          bool changeHours ( byte dayTime_Hour, byte nightTime_Hour, byte dayTime_Minute, byte nightTime_Minute) ; // Returns true if succesful
-          bool run ( byte HOUR, byte MINUTE ); // Returns true if day and false if night
-   } ;
+#define MAX_LEDS    20 // Max LEDs Objects
+#define MAX_FLOOR   4 // Number of floors
+#define MAX_REGION  4 // Number of regions
 
 // Class to manage multiples day-night cycles in 24 hours
 class MultiDay
  {  private:
-        bool __isItDay ;
-        byte __daysPerDay, __initProblem ;
-        float __hoursDay, __hoursNight ;
-        float __beginHour[24] ; // Max 24 cycles per day
+        bool __isItDay;
+        uint8_t __daysPerDay;
+        float __hoursDay, __hoursNight;
+        float __beginHour[24]; // Max 24 cycles per day
 
     public:
-         MultiDay ( ) ; // Constructor by default 1 day with 16 hours of light starting at 6a.m.
-         MultiDay ( byte cyclesPerDay, float percentageLight, float initialHour ) ; // Constructor
+         MultiDay(); // Constructor by default 1 day with 16 hours of light starting at 6a.m.
+         MultiDay(uint8_t cyclesPerDay, float percentageLight, float initialHour); // Constructor
          bool getState(); // Returns __isItDay
-         bool redefine( byte cyclesPerDay, float percentageLight, float initialHour ) ; // Returns true if succesful
-         bool run ( byte HOUR, byte MINUTE ); // Returns true if day and false if night
-  } ;
+         uint8_t getProblem(); // Returns problem with init or redefine functions
+         void redefine(uint8_t cyclesPerDay, float percentageLight, float initialHour); // Returns true if succesful
+         bool isDay(uint8_t HOUR, uint8_t MINUTE); // Returns true if day and false if night
+  };
 
 
-// Class to control LED´s or actuators with large time cycles of work like day-night cycles
+// Class to control LED_Module´s or actuators with large time cycles of work like day-night cycles
 /*
 Definitions:
-  Floor. It can be a whole number from 1 to 4
-  Region. It can be a whole nuber from 1 to 4
+  Floor. It can be a whole number from 0 to MAX_FLOOR-1
+  Region. It can be a whole nuber from 1 to MAX_FLOOR-1
   In alpha version each region is:
-    * 1 = Germination
-    * 2 = Stage1
-    * 3 = Stage2
-    * 4 = Stage3
+    * 0 = Germination
+    * 1 = Stage1
+    * 2 = Stage2
+    * 3 = Stage3
 */
-class LED
+class LED_Mod
   {  private:
-         bool __State , __Enable ;
-         byte __Floor, __Zone;
+         bool __State, __Enable;
+         uint8_t __Floor, __Region;
          String __Name;
 
-         void printState();
+         void printAction(String act);
+         void setState(bool state);
 
      public:
-        static byte __TotalLeds;
-        static LED *ptr[MAX_LEDS] ; // List of pointers to each object
+        static uint8_t __TotalLeds;
+        static LED_Mod *ptr[MAX_LEDS]; // List of pointers to each object
 
-        LED ( String name, byte floor, byte zone ) ; // Constructor
-        LED ( bool state, String name, byte floor, byte zone ) ; // Constructor
-        void changeState() ;
-        void setState(bool state) ;
-        bool getState() ;
-        byte getFloor() ;
-        byte getZone() ;
-        void enable(bool en) ;
-        void enable(bool en, byte floor, byte region) ; // Returns true if succesful
-        bool isEnable() ;
-        void turnOn() ;
-        void turnOn(byte floor) ; // Turn on all the floor
-        void turnOff() ;
-        void turnOff(byte floor) ; // Turn off all the floor
-   } ;
+        LED_Mod (String name, uint8_t floor, uint8_t region); // Constructor
+        bool getState();
+        uint8_t getFloor();
+        uint8_t getRegion();
+        void enable(bool en);
+        bool isEnable();
+        void turnOn();
+        void turnOff();
+        static void turnOn(uint8_t floor); // Turn on all the floor
+        static void turnOff(uint8_t floor); // Turn off all the floor
+        // Enable/Disable regions minor than region parameter into a floor
+        static void enable(uint8_t floor, uint8_t region);
+   };
 
   #endif

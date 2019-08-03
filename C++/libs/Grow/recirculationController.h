@@ -36,80 +36,93 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <sensor.h>
 
-#define PIN_LEVEL_0 25
-#define PIN_LEVEL_1 26
-#define PIN_LEVEL_2 27
-#define PIN_LEVEL_3 28
-#define PIN_LEVEL_4 29
-#define PIN_LEVEL_5 30
-#define NAME_LEVEL_0 "Recirculation Level"
-#define NAME_LEVEL_1 "Solution A Level"
-#define NAME_LEVEL_2 "Solution B Level"
-#define NAME_LEVEL_3 "Solution C Level"
-#define NAME_LEVEL_4 "Solution D Level"
-#define NAME_LEVEL_5 "Solution E Level"
-#define MAX_NUMBER_US_SENSOR 6
-#define PIN_LEVEL_SWITCH 31
-#define RADIO_TANK 2.65 // Radio for solution Tank in dm (decimeters)
-#define WIDTH_TANK 4 // Width for recirculation Tank in dm (decimeters)
-#define LENGTH_TANK 4 // Length for recirculation Tank in dm (decimeters)
+#define MAX_NUMBER_US_SENSOR 7 // Number of UltraSonic sensors
+#define MAX_RECIRCULATION_TANK 5 // Number of tanks/recipients
+#define MAX_RECIRCULATION_DESTINATIONS 3 // Number of final tanks/recipients
+#define flowSensor1 3 // Define flowSensor pin
 
 // Class to control the recirculation of nutrient and water
 /*
 */
 class recirculationController
  {  private:
-        byte __In, __Out; // Solution coming in and coming out
-        bool __InPump, __OutPump; // Water Pumps
-        bool __In1, __In2, __In3, __In4, __In5; // Solenoids Valves
-        bool __Out1, __Out2, __Out3, __Out4, __Out5; // Solenoids Valves
-        bool __In_LogInv; // Solenoids Valves In ¿Logic Inverted)
-        bool __Out_LogInv; // Solenoids Valves Out ¿Logic Inverted)
-        byte __Switch_Pin; // Level switch Pin
-        bool __Switch_State; // Level Switch State
-        int __Switch_Counter; // Counter for Switch Level
-        UltraSonic *__Level[MAX_NUMBER_US_SENSOR]; // UltraSonic Sensors
+        /*** States ***/
+        bool __InPump, __OutPump, __SolPump; // Water Pumps
+        bool __InValve[MAX_RECIRCULATION_TANK];
+        bool __OutValve[MAX_RECIRCULATION_TANK];
+        bool __ReleaseValve;
+        bool __Go[MAX_RECIRCULATION_DESTINATIONS]; // Go(Transfer) Valves
+        bool __Fh2o, __FSol; // Valves to fill with water
+        bool __Rh2o, __RSol; // Release valve for the kegs
+
+        /*** Aux Variables ***/
+        uint8_t __In, __Out; // Solution coming in and coming out
+        float __VolKnut, __VolKh2o; // Volume in kegs (nutrition/H2O)
+        float __OutLiters, __ActualLiters, __FillLiters; // Aux Control moveOut()
+        /*** Sensors ***/
+        // Ultrasonic
+        UltraSonic *__Level[MAX_NUMBER_US_SENSOR];
+        // Flow meter
+        float __K; // flowSensor constant
+        static volatile long __NumPulses; // count flowSensorpulses
+        float __H2OVol; // Water that already enter
         unsigned long __ActualTime;
 
-        void turnOn(bool &state, bool inverted_logic = LOW);
-        void turnOff(bool &state, bool inverted_logic = LOW);
+        static void countPulses(); // Interrupt Caudalimeter
+        void getVolume(); // Returns volume since fill proccess starts
+        void printAction(float volume, String from, String to);
+        void printAction(String act);
 
     public:
-         recirculationController(); // Constructor (Not use logic inverted)
-         recirculationController(bool InInverted, bool OutInverted); // Constructor
+         recirculationController(); // Constructor
 
-         bool getState_In1() ; // Returns Solenoid In 1 State
-         bool getState_In2() ; // Returns Solenoid In 2 State
-         bool getState_In3() ; // Returns Solenoid In 3 State
-         bool getState_In4() ; // Returns Solenoid In 4 State
-         bool getState_In5() ; // Returns Solenoid In 5 State
-         bool getState_Out1() ; // Returns Solenoid Out 1 State
-         bool getState_Out2() ; // Returns Solenoid Out 2 State
-         bool getState_Out3() ; // Returns Solenoid Out 3 State
-         bool getState_Out4() ; // Returns Solenoid Out 4 State
-         bool getState_Out5() ; // Returns Solenoid Out 5 State
-         bool getState_InPump() ; // Returns In Pump State
-         bool getState_OutPump() ; // Returns Out Pump State
+         // Start level switch and assign UltraSonic ptrs
+         void begin(
+           UltraSonic &level0, // Recirculation tank
+           UltraSonic &level1, // Solution 1
+           UltraSonic &level2, // Solution 2
+           UltraSonic &level3, // Solution 3
+           UltraSonic &level4, // Solution 4
+           UltraSonic &level5, // Water
+           UltraSonic &level6  // Solution Maker
+          );
 
-         float getLiters(); // Returns the liters in recirculation Tank
-         float getLiters1(); // Returns the liters in Solution Tank 1
-         float getLiters2(); // Returns the liters in Solution Tank 2
-         float getLiters3(); // Returns the liters in Solution Tank 3
-         float getLiters4(); // Returns the liters in Solution Tank 4
-         float getLiters5(); // Returns the liters in Solution Tank 5
+         static void flowSensorBegin();
 
-         void setIn(byte nutrient); // Allow to save what nutrient is coming in
-         void setOut(byte nutrient); // Allow to save what nutrient is coming out
+         bool getInPump(); // Returns In Pump State
+         bool getOutPump(); // Returns Out Pump State
+         bool getSolPump(); // Returns Out Pump State
 
-         void turnOn_OutPump(byte valve); // Always turn On with some Output Valve
-         void turnOn_InPump(byte valve); // Always turn On with some Input Valve
+         bool getInValve(uint8_t valve); // Returns Valve In State
+         bool getOutValve(uint8_t valve); // Returns Valve Out State
+         bool getReleaseValve(); // Returns Release Valve State
+         bool getGoValve(uint8_t valve); // Returns Valve Go State
 
-         void read_LevelSwitch(); // Read what level switch is sensing
-          // Start level switch and assign UltraSonic ptrs
-         void begin(byte pin, UltraSonic &level0, UltraSonic &level1, UltraSonic &level2,
-           UltraSonic &level3, UltraSonic &level4, UltraSonic &level5);
-         void run(); // Get measurements and execute action
-  } ;
+         bool getFH2OValve(); // Returns Fill H2O Valve State
+         bool getFSolValve(); // Returns Fill Sol Valve State
 
+         bool getRH2OValve(); // Returns Release H2O Valve State
+         bool getRSolValve(); // Returns Release Sol Valve State
+         void releaseKegs(bool nut); // Free the solution into the kegs
+
+         bool setIn(uint8_t solution); // Solution coming in
+         bool setOut(uint8_t solution); // Solution coming out
+         uint8_t getIn(); // Returns actual solution coming in
+         uint8_t getOut(); // Returns actual solution coming out
+
+         bool addVolKnut(float liters); // Set the initial volume in nutrition kegs
+         bool addVolKh2o(float liters); // Set the initial volume in H2O kegs
+         float getVolKnut(); // Returns actual volume in nutrition kegs
+         float getVolKh2o(); // Returns actual volume in H2O kegs
+
+         void fillH2O(float liters); // Fills the water kegs with water
+         void fillSol(float liters); // Fills the solution maker with water
+
+         void moveIn(); // InPump move
+         bool moveOut(float liters, uint8_t to_Where); // OutPump move
+         void moveSol(); // SolPump move
+
+         void run(bool releaseState);
+  };
 
   #endif
