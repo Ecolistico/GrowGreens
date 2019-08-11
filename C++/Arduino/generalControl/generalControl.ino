@@ -1,7 +1,3 @@
-/* Por probar:
-
-*/
- 
 /*** Include Libraries ***/
 #include <Wire.h>
 #include <DHT.h>
@@ -42,8 +38,12 @@ UltraSonic US6(31, "Solution Maker Level");
 // waterSensor object(pin, name)
 waterSensor checkWaterIrrigation(32, "Water Irrigation Sensor");
 waterSensor checkWaterEvacuation(33, "Water Evacuation Sensor");
+bool checkRecirculation = true;
 
 /*** Auxiliar Variables ***/
+// To check change between solution/water irrigation for day/night floor according to routine
+uint8_t irrigationStage = 0; // Defautl state
+
 // To control pressure
 float max_pressure = 160; // Default Maximum Pressure in the system (psi)
 float min_pressure = 150; // Minimun Pressure in the system to start a new irrigation cycle (psi)
@@ -51,8 +51,10 @@ float critical_pressure = 90; // Default Critical Pressure in the system (psi)
 
 // To control Solution
 /* The next variables need to be register in raspberry in case that arduino turn off */
-uint8_t solutionIn = 0; // By default we supposed we are irrigating with water
-uint8_t lastSolutionTimesCharged = 0; // We have not charged anything
+float solutionConsumption = 50; // Default consumption in stage 1 of irrigation
+float h2oConsumption = 20; // Default consumption in stage 4 of irrigation
+// __VolKnut, __VolKh2o in recirculationControllerClass has to be init at boot
+/* The previous variables need to be register in raspberry in case that arduino turn off */
 
 // To control ReOrder when day/night change
 uint8_t night = 0;
@@ -74,6 +76,10 @@ unsigned long multiplexerTime;
 
 // To coordinate async functions
 uint8_t IPC = 0; // Irrigation Precondition Control
+uint8_t lastIPC = 0; // IPC control for retry some action
+unsigned long IPC_Time = 0; // IPC Time Control
+float IPC_Parameter = 0; // IPC auxiliars parameters
+uint8_t IPC_Central_Request = 0; // Request to the central computer
 
 /*** HVAC Controller object ***/
 // controllerHVAC object(Mode, Fan Mode)
@@ -154,6 +160,7 @@ void setup() {
   // Charge EEPROM parameters saved
   chargeMultidayParameters(); // For multiDay
   chargeLedRegion(); // For LED´s
+  chargeSolenoidRegion(); // For solenoidValves
   chargePressureParameter(); // For pressure control
 
   // Set initial state
@@ -165,6 +172,7 @@ void setup() {
   Serial.println(F("Device Ready"));
   
   // Testing settings 
+  //solenoidValve::enableGroup(true);
 }
 
 void loop() {
@@ -175,12 +183,12 @@ void loop() {
   /*** Air Conditioner ***/
   HVAC.run();
   /*** Recirculation System ***/
-  //Recirculation.run(checkWaterEvacuation.getState());
+  Recirculation.run(checkRecirculation, checkWaterEvacuation.getState());
   /*** Actuators ***/
   Actuator::runAll();
   /*** Irrigation Routine ***/
-  solenoidValve::runAll();
-  async(); // Check the states with asyn Functions
+  solenoidValverunAll();
+  async(); // Check the states with async Functions
   
   if(millis()-multiplexerTime>100){ // Send states to multiplexors 10 times/second
     multiplexerTime = millis();

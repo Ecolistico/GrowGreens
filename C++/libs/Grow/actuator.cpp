@@ -532,34 +532,13 @@ bool solenoidValve::run()
               getWasteH2O(false);
               restartAllH2O(false);
             }
-            // If valve is off and have not started water irrigation
-            if(__Number!=MAX_IRRIGATION_REGIONS*(MAX_FLOOR-1)){
-              turnOn(true);
-            }
-            // If valve is off and has to start water irrigation
-            else{
-              unsigned long controlTime = 0;
-              for(int i=0; i<__Number; i++){ controlTime+=ptr[i]->getTimeOn(); }
-              /* Condition to start:
-               * First counter>time that already happen (controlTime)+(3/4 of the total time_off)
-               */
-              if(ptr[0]->getTime()>controlTime+float(__CycleTime-__ActionTime)*0.75){
-                getWasteH2O(false);
-                turnOn(true);
-              }
-            }
+            turnOn(true);
           }
           // Turn off the solenoid when it is time
-          else if( (millis()-__Actual_time)>=__TimeOn && __State==HIGH){
+          else if(__State==HIGH && millis()-__Actual_time>=__TimeOn){
             turnOff(false);
             getConsumptionH2O();
             __ActualNumber++;
-            // If it is turn of the water irrigation disable the Group
-            if(__ActualNumber==MAX_IRRIGATION_REGIONS*(MAX_FLOOR-1)){ enableGroup(false); }
-            // The Group has to be enable when preconditions for water irrigation get ready
-            // If the last solenoid was turned off then disable the Group
-            else if(__ActualNumber==__TotalActuators){enableGroup(false); }
-            // The Group has to be enable when the preconditions get ready
           }
         }
         // Restart cycle
@@ -578,13 +557,8 @@ bool solenoidValve::run()
            }
            setTime();
            __ActualNumber++;
-           // If it is turn of the water irrigation disable the Group
-           if(__ActualNumber==MAX_IRRIGATION_REGIONS*(MAX_FLOOR-1)){ enableGroup(false); }
-           // The Group has to be enable when preconditions for water irrigation get ready
-           // If the last solenoid was turned off then disable the Group
-           else if(__ActualNumber==__TotalActuators){enableGroup(false); }
-           // The Group has to be enable when the preconditions get ready
        }
+       // Restart cycle
        else if(__ActualNumber>=__TotalActuators && (millis()-__Actual_time)>=__CycleTime){
          __ActualNumber = 0;
          groupPrint(F("Restarting cycle"));
@@ -593,7 +567,6 @@ bool solenoidValve::run()
       }
     }
     else{ // If the Group is disable
-      // Testing if(__State==HIGH){turnOff(false);}
       return false;
     }
   }
@@ -765,15 +738,23 @@ bool solenoidValve::defaultOrder(uint8_t night_floor)
   }
 
 void solenoidValve::enableGroup(bool en)
-  { __EnableGroup = en;
-    if(__EnableGroup){
-      ptr[__ActualNumber]->groupPrint(F("Enabled"));
-      ptr[__ActualNumber]->getWasteH2O(false);
-    }
-    else{
-      ptr[__ActualNumber]->groupPrint(F("Disabled"));
-      ptr[__ActualNumber]->getConsumptionH2O();
+  { if(__EnableGroup!=en){
+      __EnableGroup = en;
+      if(__EnableGroup){
+        ptr[0]->groupPrint(F("Enabled"));
+        if(__ActualNumber<__TotalActuators && __ActualNumber!=0){ ptr[0]->getWasteH2O(false); }
       }
+      else{
+        for(int i=0; i<__TotalActuators; i++){
+          if(ptr[i]->getOrder()==__ActualNumber){
+            if(ptr[i]->getState()){ ptr[i]->turnOff(false); }
+            ptr[i]->getConsumptionH2O();
+            break;
+          }
+        }
+        ptr[0]->groupPrint(F("Disabled"));
+      }
+    }
   }
 
 bool solenoidValve::isEnableGroup()
@@ -794,11 +775,6 @@ float solenoidValve::getWaterByFloor(uint8_t fl)
       if(ptr[i]->getFloor()==fl){h2o += ptr[i]->getH2O();}
     }
     return h2o;
-  }
-void solenoidValve::runAll()
-  { for (int i = 0; i < __TotalActuators; i++){
-      (ptr[i]->run());
-    }
   }
 
 /***   asyncActuator   ***/

@@ -220,8 +220,20 @@ void chargeMultidayParameters(){
 }
 
 void regionSave(int fl, int reg){
+  /* Region:
+   *  0 = All off
+   *  1 = Irrigation on Germination
+   *  2 = Irrigation and Ilumination on Germination
+   *  3 = Irrigation on Germination and Stage 1 and Ilumination on Germination
+   *  4 = Irrigation and Ilumination on Germination and Stage 1
+   *  5 = Irrigation in Germination, Stage 1 and 2 and Ilumination on Germination and Stage 1
+   *  6 = Irrigation and Ilumination in Germination, Stage 1 and 2
+   *  7 = Irrigation in Germination, Stage 1, 2 and 3 and Ilumination on Germination, Stage 1 and 2
+   *  8 = Irrigation and Ilumination in Germination, Stage 1, 2 and 3
+   *  
+   */
   if(fl>=0 && fl<MAX_FLOOR){
-    if(reg>=0 && reg<=MAX_REGION){
+    if(reg>=0 && reg<=MAX_REGION*2){
       int pos = solenoidValve::__TotalActuators*5+12;
       save_EEPROM(pos+1+fl, reg);
     }
@@ -238,10 +250,23 @@ void chargeLedRegion(){
   int reg_4f = EEPROM.read(pos+4);
 
   // Disable all the leds that has to be off
-  LED_Mod::enable(0, reg_1f);
-  LED_Mod::enable(1, reg_2f);
-  LED_Mod::enable(2, reg_3f);
-  LED_Mod::enable(3, reg_4f);
+  enableLED(0, reg_1f);
+  enableLED(1, reg_2f);
+  enableLED(2, reg_3f);
+  enableLED(3, reg_4f);
+}
+
+void chargeSolenoidRegion(){
+  int pos = solenoidValve::__TotalActuators*5+12;
+  int reg_1f = EEPROM.read(pos+1);
+  int reg_2f = EEPROM.read(pos+2);
+  int reg_3f = EEPROM.read(pos+3);
+  int reg_4f = EEPROM.read(pos+4);
+
+  enableSolenoid(0, reg_1f);
+  enableSolenoid(1, reg_2f);
+  enableSolenoid(2, reg_3f);
+  enableSolenoid(3, reg_4f);
 }
 
 void analogSaveFilter(int Type, int filt, float filterParam){
@@ -385,19 +410,19 @@ void chargePressureParameter(){
     EEPROM.get(256+sizeof(float), minPress);
     EEPROM.get(256+sizeof(float)*2, criticalPress);
 
-    if(max_pressure>0 && max_pressure!=maxPress && !isnan(maxPress)){
+    if(maxPress>0 && max_pressure!=maxPress && !isnan(maxPress)){
       max_pressure = maxPress;
       Serial.print(F("Max Pressure = "));
       Serial.print(max_pressure);
       Serial.println(F(" psi"));
     }
-    if(min_pressure>0 && min_pressure!=minPress && !isnan(minPress)){
+    if(minPress>0 && min_pressure!=minPress && !isnan(minPress)){
       min_pressure = minPress;
       Serial.print(F("Min Pressure = "));
       Serial.print(min_pressure);
       Serial.println(F(" psi"));
     }
-    if(critical_pressure>0 && critical_pressure!=criticalPress && !isnan(criticalPress)){
+    if(criticalPress>0 && critical_pressure!=criticalPress && !isnan(criticalPress)){
       critical_pressure = criticalPress;
       Serial.print(F("Critical Pressure = "));
       Serial.print(critical_pressure);

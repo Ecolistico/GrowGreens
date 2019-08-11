@@ -40,6 +40,9 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define MAX_RECIRCULATION_TANK 5 // Number of tanks/recipients
 #define MAX_RECIRCULATION_DESTINATIONS 3 // Number of final tanks/recipients
 #define flowSensor1 3 // Define flowSensor pin
+#define NUTRITION_KEGS 0
+#define WATER_KEGS 1
+#define SOLUTION_MAKER 2
 
 // Class to control the recirculation of nutrient and water
 /*
@@ -58,7 +61,10 @@ class recirculationController
         /*** Aux Variables ***/
         uint8_t __In, __Out; // Solution coming in and coming out
         float __VolKnut, __VolKh2o; // Volume in kegs (nutrition/H2O)
-        float __OutLiters, __ActualLiters, __FillLiters; // Aux Control moveOut()
+        float __OutLiters, __ActualLiters; // Aux Control moveOut()
+        float __FillLiters; // Aux Control in fillH2O() and fillNut()
+        float __SolLiters; // Aux Control in moveSol()
+
         /*** Sensors ***/
         // Ultrasonic
         UltraSonic *__Level[MAX_NUMBER_US_SENSOR];
@@ -119,10 +125,10 @@ class recirculationController
          void fillSol(float liters); // Fills the solution maker with water
 
          void moveIn(); // InPump move
-         bool moveOut(float liters, uint8_t to_Where); // OutPump move
+         byte moveOut(float liters, uint8_t to_Where); // OutPump move
          void moveSol(); // SolPump move
 
-         void run(bool releaseState);
+         void run(bool check, bool releaseState);
   };
 
   #endif

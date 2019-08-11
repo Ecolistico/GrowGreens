@@ -218,7 +218,6 @@ class solenoidValve
           static float getWaterAll(); // Returns the total of the water consumption
           // Returns the total of the water consumption by floor
           static float getWaterByFloor(uint8_t fl);
-          static void runAll();
    };
 
 // Class to control all the Actuators that are not synchronize or have predefine cycles.

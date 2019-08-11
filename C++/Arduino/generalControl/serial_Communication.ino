@@ -1,10 +1,5 @@
 /*****   Lecture on serial Events   *****/
-/*
- * The structure of the commands is specified on each function
- * 
- * Notes: Values of 1, 2, 3, 4, 5, 7, 9, etc... are char type, and its value is assigned according to the ASCII Table starting at char(48)="0"
- * For further information see ASCII Table
-*/
+
 const char zero_char = char(48);
 
 void serialEvent() {                                  //if the hardware serial port_0 receives a char
@@ -119,15 +114,19 @@ void serialEvent() {                                  //if the hardware serial p
       else{Serial.println(F("Multiday Functions: Parameter[1] unknown"));}
     }
 
-    else if(parameter[0]=="led"){ // Functions executed in LED_Mod class
-      if(parameter[1]=="enable"){ // Functions enable -> Form "led,enable,int[floor],int[region]"
+    else if(parameter[0]=="region"){ // Function to save in EEPROM the working stage by floor
+      // Auxiliar functions executed in LED_Mod and solenoidValve class
+      if(parameter[1]=="save"){ // Functions enable -> Form "region,save,int[floor],int[region]"
         if(firstHourUpdate){
           int fl = parameter[2].toInt();
           int reg = parameter[3].toInt();
           if(fl>=0 && fl<MAX_FLOOR){
-            if(reg>=0 && reg<=MAX_REGION){
-              regionSave(fl, reg); // Save parameters in EEPROM
-              LED_Mod::enable(fl, reg); // Enable modules
+            if(reg>=0 && reg<=MAX_REGION*2){
+              // Save parameters in EEPROM
+              regionSave(fl, reg); 
+              // Enable LED modules
+              enableLED(fl, reg);
+
               int nite = inWhatFloorIsNight();
               if(nite>0){
                 for(int i=0; i<MAX_FLOOR; i++){
@@ -136,6 +135,9 @@ void serialEvent() {                                  //if the hardware serial p
                   else{LED_Mod::turnOn(i);}
                 } 
               }
+
+              // Enable solenoidValves
+              enableSolenoid(fl, reg);
             }
             else{Serial.println(F("LED Enable Function: Parameter region incorrect"));}
           }
@@ -358,8 +360,14 @@ void serialEvent() {                                  //if the hardware serial p
     }
     
     else if(parameter[0]=="coordinate"){ // Functions to coordinate states/functions with central computer
-      if(parameter[1]=="solutionReady"){ // Warn that some solution is already prepare
-        float solReady = parameter[2].toFloat();
+      if(parameter[1]=="solutionMaker"){ // Coordinate action with solutionMaker
+        if(parameter[2]=="accept"){ // Computer informs that solutionMaker accepts the last request
+          IPC_Central_Request = 1;
+        }
+        else if(parameter[2]=="finished"){ // Computer informs that solutionMaker finished the last request
+          IPC_Central_Request = 2;
+        }
+        else{Serial.println(F("Coordinate Command: Parameter[2] unknown"));}
       }
       else{Serial.println(F("Coordinate Command: Parameter[1] unknown"));}
     }
@@ -372,6 +380,10 @@ void serialEvent() {                                  //if the hardware serial p
 
     else if(parameter[0]=="debug"){ // Functions to debug EEPROM memory
       if(parameter[1]=="print"){ Serial.println(US0.getDistance());}
+      else if(parameter[1]=="nextIrrigationStage"){ 
+        Serial.println(F("Passing to the next Irrigation Stage"));
+        irrigationStage++;
+      }
     }
     
     else{Serial.println(F("Serial Command Recieve: Command unknown"));}

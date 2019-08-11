@@ -1,8 +1,4 @@
 /*****   Send state values to Multiplexors   *****/
-/*
- * Falta:
- * Agregar tantos estados como haga falta
-*/
 
 void codification_Multiplexer(){
   bool ID1[8] = {EV1A1.getState(), EV1A2.getState(), EV1A3.getState(), EV1A4.getState(), 

@@ -56,14 +56,12 @@ class compressorController
 
         void doNothing(); // Set all LOW, logic does not matter
         void turnOffAll(); // Set all LOW, using logic
-        void openTank(); // Setting pressure of the tank = compressor
-        void openNut(); // Setting pressure of the nutrition kegs = compressor
-        void openH2O(); // Setting pressure of the H2O kegs = compressor
-        void openAll(); // Setting all pressures equal
         void fillTank(); // Settings to fill the tank
         void fillNut(); // Settings to fill the nutrition kegs
         void fillH2O(); // Settings to fill the H2O kegs
+        void fillTankAndH2O(); // Settings to fill the tank and H2O kegs
         void fillAll(); // Settings to fill everything
+        void setMode(uint8_t mode); // Set the actual mode of operation
 
         void printAct(String act);
 
@@ -81,15 +79,24 @@ class compressorController
          bool getFreeValveNut(); // Returns Free Valve Nutrition state
          bool getFValveH2O(); // Returns Free Valve H2O state
 
-         void openFreeNut(); // Free pressure of nutrition kegs
-         void closeFreeNut(); // Close free pressure valve nutrition kegs
+         // Check the actual state and if it is possible free pressure of nutrition kegs
+         void openFreeNut();
+         // Close free nutrition valve
+         void closeFreeNut();
+         // Check the actual state and if it is possible free pressure of water kegs
          void openFreeH2O(); // Free pressure of H2O kegs
-         void closeFreeH2O(); // Close free pressure valve H2O kegs
+         // Close free water valve
+         void closeFreeH2O();
+         // Check the actual state and if it is possible compress the air tank
+         void compressTank();
+         // Check the actual state and if it is possible compress the nutrition kegs
+         void compressNut();
+         // Check the actual state and if it is possible compress the water kegs
+         void compressH2O();
+         // Turn Off the compressor
+         void Off();
 
          void keepConnected(bool con); // Do we have to keep connected nut with tank?
-
-         uint8_t getMode(); // Return the actual mode of operation
-         bool setMode(uint8_t mode); // Set the actual mode of operation
   };
 
   #endif

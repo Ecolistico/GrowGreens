@@ -93,7 +93,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
     
     else if(inputstring.charAt(0)==zero_char+2){ // Enable/Disable functions --> '2'  
-      // disable() -> Form '20Byte'
+      // disable() -> Form '20'
       if(inputstring.charAt(1)==zero_char){ grower.disable(); }
       // enable() -> Form '21'
       else if(inputstring.charAt(1)==zero_char+1){ grower.enable(); }
