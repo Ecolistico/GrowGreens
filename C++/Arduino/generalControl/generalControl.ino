@@ -187,8 +187,8 @@ void loop() {
   /*** Actuators ***/
   Actuator::runAll();
   /*** Irrigation Routine ***/
-  solenoidValverunAll();
-  async(); // Check the states with async Functions
+  //solenoidValverunAll();
+  //async(); // Check the states with async Functions
   
   if(millis()-multiplexerTime>100){ // Send states to multiplexors 10 times/second
     multiplexerTime = millis();
