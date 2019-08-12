@@ -191,4 +191,3 @@ void irrigationEmergency(){
     solenoidValve::enableGroup(false); // Disable irrigation
     Compressor.setMode(7); // Get the correct pressure in water kegs
   }
-}
