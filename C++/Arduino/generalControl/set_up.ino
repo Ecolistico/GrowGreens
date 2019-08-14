@@ -168,7 +168,3 @@ float getWaterConsumptionNight(){
   h2o_consumption = solenoidValve::getWaterByFloor(nite);
   return h2o_consumption;
 }
-
-void mean(float a, float b){
-  
-}

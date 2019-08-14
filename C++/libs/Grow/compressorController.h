@@ -77,7 +77,7 @@ class compressorController
          bool getValveNut(); // Return Valve Nutrition State
          bool getValveH2O(); // Return Valve Water State
          bool getFreeValveNut(); // Returns Free Valve Nutrition state
-         bool getFValveH2O(); // Returns Free Valve H2O state
+         bool getFreeValveH2O(); // Returns Free Valve H2O state
 
          // Check the actual state and if it is possible free pressure of nutrition kegs
          void openFreeNut();

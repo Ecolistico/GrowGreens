@@ -2,7 +2,7 @@
 
 const char zero_char = char(48);
 
-void serialEvent() {                                  //if the hardware serial port_0 receives a char
+void serialEvent(){                                  //if the hardware serial port_0 receives a char
   inputstring = Serial.readStringUntil(13);           //read the string until we see a <CR>
   input_string_complete = true;                       //set the flag used to tell if we have received a completed string from the PC
   
@@ -336,36 +336,53 @@ void serialEvent() {                                  //if the hardware serial p
       else{ Serial.println(F("Set Pressure Functions: Parameter[2] pressure incorrect")); }
     }
 
-    else if(parameter[0]=="setup"){ // Functions to recieve variables when boot/rebooting
-      if(parameter[1]=="kegsVolume"){ // Function kegsVolume -> Form "setup,kegsVolume,float[volumenNut],float[volumeH2O]"
-        if(!updatedVolumenKegs){
-          float vnut = parameter[2].toFloat();
-          float vh2o = parameter[3].toFloat();
-          if(vnut>0 && vh2o>0){
-            updatedVolumenKegs = true;
-            Recirculation.addVolKnut(vnut);
-            Recirculation.addVolKh2o(vh2o);
-            Serial.print(F("Nutrition Kegs Volume Updated to "));
-            Serial.print(Recirculation.getVolKnut());
-            Serial.println(F(" liters"));
-            Serial.print(F("Water Kegs Volume Updated to "));
-            Serial.print(Recirculation.getVolKh2o());
-            Serial.println(F(" liters"));
-          }
-          else{ Serial.println(F("setKegsVolume Function: Parameter[2-3] volumes incorrect")); } 
+    else if(parameter[0]=="boot"){ // Functions to recieve variables when boot/rebooting
+      // Form "boot,int[lastSol],int[nextSol],float[volumenNut],float[volumeH2O],float[solConsumption],float[h2oConsumption]"
+      if(!bootParameters){
+        int lastSol = parameter[1].toInt();
+        int nextSol = parameter[2].toInt();
+        float vnut = parameter[3].toFloat();
+        float vh2o = parameter[4].toFloat();
+        float solCons = parameter[5].toFloat();
+        float h2oCons = parameter[6].toFloat();
+        // add solutionConsumption, h2oConsumption, nextSolution;
+        if(lastSol>=0 && lastSol<4 && nextSol>=0 && nextSol<4 && vnut>0 && vh2o>0 && solCons && h2oCons){
+          bootParameters = true;
+          lastSolution = lastSol;
+          nextSolution = nextSol;
+          Recirculation.addVolKnut(vnut);
+          Recirculation.addVolKh2o(vh2o);
+          solutionConsumption = solCons;
+          h2oConsumption = h2oCons;
+          Serial.print(F("Boot: Last Solution to be irrigated is: "));
+          Serial.println(lastSolution);
+          Serial.print(F("Boot: Next Solution to be irrigated is: "));
+          Serial.println(nextSolution);
+          Serial.print(F("Boot: Nutrition Kegs Volume Updated to "));
+          Serial.print(Recirculation.getVolKnut());
+          Serial.println(F(" liters"));
+          Serial.print(F("Boot: Water Kegs Volume Updated to "));
+          Serial.print(Recirculation.getVolKh2o());
+          Serial.println(F(" liters"));
+          Serial.print(F("Boot: Initial Nutrition Kegs Consumption updated to "));
+          Serial.print(solutionConsumption);
+          Serial.println(F(" liters"));
+          Serial.print(F("Boot: Initial Water Kegs Consumption updated to "));
+          Serial.print(h2oConsumption);
+          Serial.println(F(" liters"));
         }
-        else{ Serial.println(F("setKegsVolume Function: Volume already setted")); } 
+        else{ Serial.println(F("setKegsVolume Function: Parameter[1-6] incorrect")); } 
       }
-      else{ Serial.println(F("Setup Functions: Parameter[1] function unknown")); }
+      else{ Serial.println(F("Set Initial Parameters: Parameters already setted")); } 
     }
     
     else if(parameter[0]=="coordinate"){ // Functions to coordinate states/functions with central computer
       if(parameter[1]=="solutionMaker"){ // Coordinate action with solutionMaker
         if(parameter[2]=="accept"){ // Computer informs that solutionMaker accepts the last request
-          IPC_Central_Request = 1;
+          CC.state = 1;
         }
         else if(parameter[2]=="finished"){ // Computer informs that solutionMaker finished the last request
-          IPC_Central_Request = 2;
+          CC.state = 2;
         }
         else{Serial.println(F("Coordinate Command: Parameter[2] unknown"));}
       }

@@ -329,9 +329,6 @@ bool chargeAnalogParameters(int Type){
   }
 }
 
-
-/**/
-
 void ultrasonicSaveFilter(int Type, int filt, float filterParam){
   if(Type>=0 && Type<=6){
     if(filt>=0 && filt<=2){

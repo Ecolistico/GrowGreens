@@ -1,13 +1,33 @@
-/* Código esta mal falta corregir con el trabajo del fin de semana */
-
 void solenoidValverunAll(){
-  
+  for(int i=0; i<solenoidValve::__TotalActuators; i++){
+    // initialPreconditions() in async() pass irrigationStage from 0 to 1
+    finishInitialIrrigation(); // pass irrigationStage from 1 to 2
+    // wait4MiddleIrrigation() in async() pass irrigationStage from 2 to 3
+    // middlePreconditions() in async() pass irrigationStage from 3 to 4
+    finishMiddleIrrigation(); // pass irrigationStage from 4 to 0
+    solenoidValve::ptr[i]->run();
+  }
 }
 
 void async(){
-  asyncIrrigation(); // This functions check in what state has to be the solenoids of the kegs
-  irrigationPreconditions(); // Enable the Group of solenoids when they reached the preconditions
-  irrigationEmergency(); // The emergency situations that stop the irrigation and execute another action to fixed it
+  asyncIrrigation(); // This functions check in what state has to be the valves of both kegs
+
+  // If it is time check the initialPreconditions and if they pass startIrrigation
+  if(irrigationStage==0 && IPC.state==0 && bootParameters){
+    initialPreconditions(&startIrrigation); // pass irrigationStage from 0 to 1
+  }
+  // finishInitialIrrigation() in solenoidValverunAll() pass irrigationStage from 1 to 2
+  
+  wait4MiddleIrrigation(); // pass irrigationStage from 2 to 3
+  
+  // If it is time check the middlePreconditions and if they pass startMiddleIrrigation
+  if(irrigationStage==3 && MPC.state==0){
+    middlePreconditions(&startMiddleIrrigation); // pass irrigationStage from 3 to 4
+  }
+
+  // finishMiddleIrrigation() in solenoidValverunAll pass irrigationStage from 4 to 0
+  
+  irrigationEmergency(); // Check for emergency situations that stop the irrigation and execute a process to fixed it
 }
 
 void asyncIrrigation(){
@@ -34,160 +54,175 @@ void asyncIrrigation(){
   }
 }
 
+
+
 void initialPreconditions(void (*ptr2function)()){
+  int count = 0;
+  bool decition = false;
+  float p1 = pressureSensorNutrition.getValue();
   
+  if(!decition && lastSolution!=nextSolution){ // Is it time to change the solution?
+    decition = true;
+    uint8_t inSol = Recirculation.getIn();
+    Recirculation.setIn(WATER);
+    Recirculation.moveIn(); // Add bool to avoid recall the function before it finished
+    Recirculation.setIn(inSol);
+    if(IPC.state==1){IPC.setState(50);}
+    else{IPC.setState(30);}
+  } else{ count++; }
+  
+  // Else if it is not enough solution
+  /* // Check this line */
+  if(!decition && solutionConsumption>Recirculation.getVolKnut()){
+    decition = true;
+    Compressor.openFreeNut(); // Depressurize Nutrition Kegs
+    if(IPC.state==1){IPC.setState(40);}
+    else{IPC.setState(20);}
+  } else{ count++; }
+  
+  // Else if it is not enough pressure
+  /* // Check this line */
+  if(!decition && p1<min_pressure){
+    decition = true;
+    Compressor.compressNut(); // Compress Nutrition Kegs
+    IPC.setState(10);
+  } else{ count++; }
+
+  if(count>=3){ ptr2function(); } // Execute some function if all the preconditions are fulfilled
+}
+
+void startIrrigation(){
+  updateDay(); // Update day in LED modules
+  
+  /* Pendiente
+   *  Recircular agua del ciclo anterior, qué hacer en caso de que la bomba se ecnuentre ocupada
+  */
+   
+  uint8_t nite = inWhatFloorIsNight();
+  // If the day change in the floors reorder valves
+  if(night!=nite && nite>0){
+    night = nite;
+    Serial.println(F("Solenoid valves: Creating new routine"));
+    solenoidValve::defaultOrder(night-1); // Setting new order
+  }
+
+  Compressor.keepConnected(true); // Keep connected nutrition kegs with air tank
+  solenoidValve::enableGroup(true); // Enable Valves Group
+  irrigationStage = 1; // Pass to the next irrigation Stage
+}
+
+void finishInitialIrrigation(){
+  // If we are in irrigationStage 1 and the valve it is the 24 into de cycle
+  if(irrigationStage==1 && solenoidValve::getActualNumber()==MAX_IRRIGATION_REGIONS*(MAX_FLOOR-1)){
+    Compressor.keepConnected(false); // Disconnect nutrition kegs and air tank
+    
+    float p2 = pressureSensorTank.getValue();
+    if(p2<min_pressure){ // Check if pressure is low in air tank
+      IPC.setState(1);
+    }
+
+    // Substract water consumption from the nutrition kegs volume
+    initialPreconditions(&doNothing); // Check initialPreconditions again
+    
+    solenoidValve::enableGroup(false); // Disable Valves Group
+    irrigationStage = 2; // Pass to the next irrigation Stage
+  }
+}
+
+void wait4MiddleIrrigation(){
+  // // If we are in irrigationStage 2
+  if(irrigationStage==2){
+    unsigned long TimeOn = 0;
+    unsigned long TotalTimeOn = 0;
+    solenoidValve *pointer;
+    for(int i=0; i<solenoidValve::__TotalActuators; i++){
+      pointer = solenoidValve::ptr[i];
+      if(pointer->getOrder()<solenoidValve::getActualNumber() && pointer->isEnable()){ TimeOn += pointer->getTimeOn(); }
+      if(pointer->isEnable()){ TotalTimeOn += pointer->getTimeOn(); }
+    }
+
+    pointer = solenoidValve::ptr[0];
+    // If already pass 3/4 of the cycle time off since the stage 1 should had finished
+    if(pointer->getTime()>=TimeOn+(solenoidValve::getCycleTime()-TotalTimeOn)*0.75){
+      irrigationStage = 3; // Pass to the next irrigation Stage
+    }
+  }
 }
 
 void middlePreconditions(void (*ptr2function)()){
-  
+  int count = 0;
+  bool decition = false;
+  float p3 = pressureSensorWater.getValue();
+
+  // If there is not enough water
+  if(!decition && h2oConsumption>Recirculation.getVolKh2o()){
+    decition = true;
+    Compressor.openFreeH2O(); // Depressurize Water Kegs
+    MPC.setState(20);
+  } else{ count++; }
+
+  // If there is not enough pressure
+  if(!decition && p3<min_pressure){
+    decition = true;
+    Compressor.compressH2O(); // Compress Water Kegs
+  } else{ count++; }
+
+  if(count>=2){ ptr2function(); } // Execute some function if all the preconditions are fulfilled
+}
+
+void startMiddleIrrigation(){
+  /* Pendiente
+   *  Recircular agua del ciclo anterior, qué hacer en caso de que la bomba se ecnuentre ocupada
+  */
+  solenoidValve::enableGroup(true); // Enable Valves Group
+  irrigationStage = 4; // Pass to the next irrigation Stage
+}
+
+void finishMiddleIrrigation(){
+  // If we are in irrigationStage 4 and the following valve it does not exist then finished the cycle
+  if(irrigationStage==4 && solenoidValve::getActualNumber()>=solenoidValve::__TotalActuators){
+    // Substract water consumption from the water kegs volumen
+    middlePreconditions(&doNothing); // Check middlePreconditions again
+    
+    solenoidValve::enableGroup(false); // Disable Valves Group
+    irrigationStage = 0; // Restart irrigation Process
+  }
 }
 
 void doNothing(){} // Pass as it as reference parameter when initial or middle Preconditions are checked but not actions are expected
 
-void startIrrigation(){
-  
-}
-
-void startMiddleIrrigation(){
-  
-}
-
-void irrigationPreconditions(){
-  uint8_t acNumber = solenoidValve::getActualNumber();
-  uint8_t nite = inWhatFloorIsNight();
-  float h2o_consumption = 0; // Water consumption in the last stage
-  float p1 = pressureSensorNutrition.getValue(); // Pressure in kegs nutrition
-  float p2 = pressureSensorTank.getValue(); // Pressure in air tank
-  float p3 = pressureSensorWater.getValue(); // Pressure in kegs water
-  int count = 0; // Restart/continue cycle counter
-
-  // Start the cycle
-  if(acNumber>=solenoidValve::__TotalActuators && !solenoidValve::isEnableGroup() && IPC==0){
-    // Get the water consumption in day floors
-    for(int i=0; i<MAX_FLOOR; i++){
-      if(i!=nite){h2o_consumption += solenoidValve::getWaterByFloor(i);}
-    }
-
-    if(h2o_consumption>=(Recirculation.getVolKnut()/2) && IPC==0){ // Is there enough solution?
-      Serial.println(F("There is not enough solution to start irrigation"));
-
-      if(solutionIn!=0 && UltraSonic::ptr[solutionIn]->getVolume()>h2o_consumption*1.15){ // Is there enough solution to recirculate
-        Serial.println(F("Asking to recirculate"));
-        // recirculate(solutionIn, h2o_consumption*1.15) 
-      }
-      else{ // We have to prepare solution
-        Serial.println(F("Asking to prepare solution"));
-        // fillSolutionMaker(solutionIn, h2o_consumption*1.15);
-        // prepareSolution(solutionIn, UltraSonic::ptr[solutionIn]->getVolume())
-      }
-      IPC = 1; // Not enough solution
-    }
-    else{count++;}
-
-    if(p1<min_pressure && IPC==0){ // Do we have the correct pressure?
-      Serial.println("There is not enough pressure to start irrigation");
-      uint8_t compressorMode = Compressor.getMode();
-      if(compressorMode==7){
-        Serial.println(F("Compressor is already filling water kegs, opening valves to fill everything"));
-        Compressor.setMode(8); // Get the correct pressure in all the tanks
-      }
-      else if(compressorMode!=8 && compressorMode==6){
-        Serial.println(F("Using compressor to get the correct pressure in Water Kegs"));
-        Compressor.setMode(6); // Get the correct pressure in nutrition kegs  
-      }
-      else{Serial.println(F("Compressor is already in a process that correct the problem"));}
-
-      IPC = 2; // Not enough pressure in solution kegs
-    }
-    else{count++;}
-
-    /*** Check if this condition is really necessary ***/
-    if(abs(p1-p2)>0.05*p1 && IPC==0){ // Is pressure in kegs nutrition equal to pressure in air tank?
-      Serial.println("Pressure in nutrition kegs and air tank are different");
-      Compressor.setMode(2); // Equal pressure in kegs nutrition and air tank
-      IPC = 3; // Not same pressure in solution kegs and air tank
-    }
-    else{count++;} 
-    // If we reached all the pre-conditions then enable de Group
-    if(count>=3){
-      Serial.println("Preconditions for Nutrition Irrigation Reached");
-      updateDay(); // Update days and turn On/Off the LED modules
-      // If we change the solution then recharge the paramaters
-      if(lastSolutionTimesCharged != solutionIn){
-        lastSolutionTimesCharged = solutionIn;
-        Serial.println(F("Solenoid valves: Setting Parameters from EEPROM"));
-        chargeSolenoidParameters(solutionIn);
-      }
-      // If now is night in another floor
-      if(night!=nite && nite>0){
-        night = nite;
-        Serial.println(F("Solenoid valves: Creating new routine"));
-        solenoidValve::defaultOrder(night-1); // Setting new order
-      }
-      solenoidValve::enableGroup(true);
-    }
-  }
-
-   // Start the water irrigation
-   else if(acNumber==MAX_IRRIGATION_REGIONS*(MAX_FLOOR-1) && !solenoidValve::isEnableGroup() && IPC==0){
-    // Get the water consumption in night floor
-    h2o_consumption = solenoidValve::getWaterByFloor(nite);
-
-    if(h2o_consumption>(Recirculation.getVolKh2o()/2) && IPC==0){ // Is there enough water?
-      Serial.println(F("There is not enough water to start irrigation"));
-
-      if(UltraSonic::ptr[0]->getVolume()>h2o_consumption*1.15){ // Is there enough water to recirculate
-        Serial.println(F("Asking to recirculate"));
-        // recirculate(0, h2o_consumption*1.15) 
-      }
-      else{ // We have to fill kegs with water
-        Serial.println(F("Filling water kegs from pipe"));
-        // fillH2OKegs(h2o_consumption*1.15);
-      }
-      IPC = 4; // Not enough water in kegs water
-    }
-    else{count++;}
-    if(p3<min_pressure && IPC==0){ // Do we have the correct pressure?
-      Compressor.setMode(7); // Get the correct pressure in water kegs
-      IPC = 5; // Not enough pressure in kegs water
-    }
-    else{count++;}
-    // If we reached all the pre-conditions then enable de Group
-    if(count>=2){
-      Serial.println("Preconditions for Water Irrigation Reached");
-      solenoidValve::enableGroup(true); 
-    }
-  }
-
-}
-
 void irrigationEmergency(){
-  uint8_t acNumber = solenoidValve::getActualNumber();
-  float p1 = pressureSensorNutrition.getValue(); // Pressure in kegs nutrition
-  float p3 = pressureSensorWater.getValue(); // Pressure in kegs water
-
-  // 1) If there is air in the line, the solenoid is ON and the Group is enable
-  if(checkWaterIrrigation.getState() && solenoidValve::ptr[acNumber]->getState() && solenoidValve::isEnableGroup()){ 
-    Serial.println("Air in irrigation line");
-    solenoidValve::enableGroup(false); // Disable irrigation
-    if(isDayInThatSolenoid(acNumber)){
-      // Fill kegs nutrition  
+  // If we are in irrigationStage 1 and the system is supposed to be fine
+  if(irrigationStage==1 && IPC.state==0){
+    float p1 = pressureSensorNutrition.getValue();
+    // If we detect air in irrigation line
+    if(checkWaterIrrigation.getState()==AIR_STATE){
+      Serial.println(F("IPC Warning: Probably there is air in irrigation line"));
+      IPC.setState(70);
     }
-    else{
-      // Fill kegs water  
+    // If we detect low pressure
+    else if(p1<critical_pressure){
+      Serial.println(F("IPC Emergency: There is not enough pressure to continue irrigation process"));
+      solenoidValve::enableGroup(false); // Disable Valves Group
+      Compressor.compressNut(); // Compress Nutrition Kegs
+      IPC.setState(60);
     }
   }
 
-  // If p1<Pcrítica when Nutrition Irrigation
-  if(p1<critical_pressure && isDayInThatSolenoid(acNumber) && solenoidValve::isEnableGroup()){
-    Serial.println("Nutrition Pressure is under the critical value");
-    solenoidValve::enableGroup(false); // Disable irrigation
-    Compressor.setMode(6); // Get the correct pressure in nutrition kegs
+  // If we are in irrigationStage 4 and the system is supposed to be fine
+  else if(irrigationStage==4 && MPC.state==0){
+    float p3 = pressureSensorWater.getValue();
+    // If we detect air in irrigation line
+    if(checkWaterIrrigation.getState()==AIR_STATE){
+      Serial.println(F("MPC Warning: Probably there is air in irrigation line"));
+      MPC.setState(70);
+    }
+    // If we detect low pressure
+    else if(p3<critical_pressure){
+      Serial.println(F("MPC Emergency: There is not enough pressure to continue irrigation process"));
+      solenoidValve::enableGroup(false); // Disable Valves Group
+      Compressor.compressH2O(); // Compress Water Kegs
+      MPC.setState(60);
+    }
   }
-
-  // If p3<Pcrítica when Water Irrigation
-  else if(p3<critical_pressure && !isDayInThatSolenoid(acNumber) && solenoidValve::isEnableGroup()){
-    Serial.println("Water Pressure is under the critical value");
-    solenoidValve::enableGroup(false); // Disable irrigation
-    Compressor.setMode(7); // Get the correct pressure in water kegs
-  }
+}

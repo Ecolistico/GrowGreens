@@ -43,9 +43,20 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define NUTRITION_KEGS 0
 #define WATER_KEGS 1
 #define SOLUTION_MAKER 2
+#define SOL1 0
+#define SOL2 1
+#define SOL3 2
+#define SOL4 3
+#define WATER 4
 
 // Class to control the recirculation of nutrient and water
-/*
+/* Notes:
+ * Solution and valves Definition:
+ * Solution 1 = 0
+ * Solution 2 = 1
+ * Solution 3 = 2
+ * Solution 4 = 3
+ * Water      = 4
 */
 class recirculationController
  {  private:

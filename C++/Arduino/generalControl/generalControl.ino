@@ -8,6 +8,7 @@
 #include <sensor.h>
 #include <compressorController.h>
 #include <recirculationController.h>
+#include <processControl.h>
 
 /*** Temp-Hum Sensors(DHT-22) Definitions ***/ 
 // DHT object(pin, type)
@@ -39,47 +40,6 @@ UltraSonic US6(31, "Solution Maker Level");
 waterSensor checkWaterIrrigation(32, "Water Irrigation Sensor");
 waterSensor checkWaterEvacuation(33, "Water Evacuation Sensor");
 bool checkRecirculation = true;
-
-/*** Auxiliar Variables ***/
-// To check change between solution/water irrigation for day/night floor according to routine
-uint8_t irrigationStage = 0; // Defautl state
-
-// To control pressure
-float max_pressure = 160; // Default Maximum Pressure in the system (psi)
-float min_pressure = 150; // Minimun Pressure in the system to start a new irrigation cycle (psi)
-float critical_pressure = 90; // Default Critical Pressure in the system (psi)
-
-// To control Solution
-/* The next variables need to be register in raspberry in case that arduino turn off */
-float solutionConsumption = 50; // Default consumption in stage 1 of irrigation
-float h2oConsumption = 20; // Default consumption in stage 4 of irrigation
-// __VolKnut, __VolKh2o in recirculationControllerClass has to be init at boot
-/* The previous variables need to be register in raspberry in case that arduino turn off */
-
-// To control ReOrder when day/night change
-uint8_t night = 0;
-
-// To control action that have to be executed at least once when boot
-bool firstHourUpdate = false;
-bool updatedVolumenKegs = false;
-
-// Serial comunication
-String inputstring = "";
-bool input_string_complete = false;
-
-// DateTime Info
-uint8_t dateHour;
-uint8_t dateMinute;
-
-// Multiplexer timer
-unsigned long multiplexerTime;
-
-// To coordinate async functions
-uint8_t IPC = 0; // Irrigation Precondition Control
-uint8_t lastIPC = 0; // IPC control for retry some action
-unsigned long IPC_Time = 0; // IPC Time Control
-float IPC_Parameter = 0; // IPC auxiliars parameters
-uint8_t IPC_Central_Request = 0; // Request to the central computer
 
 /*** HVAC Controller object ***/
 // controllerHVAC object(Mode, Fan Mode)
@@ -138,6 +98,94 @@ MultiDay day2(3, 75, 2);
 MultiDay day3(3, 75, 4);
 MultiDay day4(3, 75, 6);
 
+/*** Process Control ***/
+processControl IPC; // Initial Preconditions Control
+processControl MPC; // Middle Preconditions Control
+processControl CC; // Comunication Control
+
+/*** Auxiliar Variables ***/
+// To check change between solution/water irrigation for day/night floor according to routine
+uint8_t irrigationStage = 0; // Defautl state
+
+// To control pressure
+float max_pressure = 160; // Default Maximum Pressure in the system (psi)
+float min_pressure = 150; // Minimun Pressure in the system to start a new irrigation cycle (psi)
+float critical_pressure = 90; // Default Critical Pressure in the system (psi)
+
+// To control Solution
+/* The next variables need to be register in raspberry in case that arduino turn off */
+uint8_t lastSolution = 250; // Last solution to be irrigated, by default value of 250 is setted but this value does not match with a solution
+uint8_t nextSolution = 250; // Next solution to be irrigated, by default value of 250 is setted but this value does not match with a solution
+float solutionConsumption = 50; // Default consumption in stage 1 of irrigation
+float h2oConsumption = 20; // Default consumption in stage 4 of irrigation
+// __VolKnut, __VolKh2o in recirculationControllerClass has to be init at boot
+/* The previous variables need to be register in raspberry in case that arduino turn off */
+
+// To control ReOrder when day/night change
+uint8_t night = 0;
+
+// To control action that have to be executed at least once when boot
+bool firstHourUpdate = false;
+bool bootParameters = false;
+
+// Serial comunication
+String inputstring = "";
+bool input_string_complete = false;
+
+// DateTime Info
+uint8_t dateHour;
+uint8_t dateMinute;
+
+// Multiplexer timer
+unsigned long multiplexerTime;
+
+/*** Name functions ***/
+// EEPROM
+void clean_EEPROM();
+void print_EEPROM();
+void save_EEPROM(int pos, int val);
+void save_EEPROM(int pos, float val);
+void solenoidSaveTimeOn(int fl, int reg, int sol, int val);
+void solenoidSaveCycleTime(int val);
+void chargeSolenoidParameters(int sol);
+void multidaySave(int fl, int cyclesNumber, float lightPercentage, float initHour);
+void chargeMultidayParameters();
+void regionSave(int fl, int reg);
+void chargeLedRegion();
+void chargeSolenoidRegion();
+void analogSaveFilter(int Type, int filt, float filterParam);
+void analogSaveModel(int Type, float a, float b, float c);
+bool chargeAnalogParameters(int Type);
+void ultrasonicSaveFilter(int Type, int filt, float filterParam);
+void ultrasonicSaveModel(int Type, int model, float modelParam, float height);
+bool chargeUltrasonicParameters(int Type);
+void pressureSave(int Type, float Press);
+void chargePressureParameter();
+// async
+void solenoidValverunAll();
+void async();
+void asyncIrrigation();
+void initialPreconditions(void (*ptr2function)());
+void middlePreconditions(void (*ptr2function)());
+void doNothing();
+void startIrrigation();
+void startMiddleIrrigation();
+void irrigationEmergency();
+// Multiplexers
+void codification_Multiplexer();
+// Serial Communication
+void serialEvent();
+// Setup
+void solenoid_setup();
+void sensors_setup();
+void enableSolenoid(int fl, int reg);
+void enableLED(int fl, int reg);
+bool isDayInThatSolenoid(uint8_t solenoid);
+uint8_t inWhatFloorIsNight();
+void updateDay();
+float getWaterConsumptionDay();
+float getWaterConsumptionNight();
+
 void setup() {
   // Initialize Serial
   Serial.begin(115200); Serial.println(F("Setting up Device..."));
@@ -187,8 +235,8 @@ void loop() {
   /*** Actuators ***/
   Actuator::runAll();
   /*** Irrigation Routine ***/
-  //solenoidValverunAll();
-  //async(); // Check the states with async Functions
+  solenoidValverunAll();
+  async(); // Check the states with async Functions
   
   if(millis()-multiplexerTime>100){ // Send states to multiplexors 10 times/second
     multiplexerTime = millis();

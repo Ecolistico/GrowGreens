@@ -149,7 +149,7 @@ bool compressorController::getValveH2O()
 bool compressorController::getFreeValveNut()
   { return __Fnut; }
 
-bool compressorController::getFValveH2O()
+bool compressorController::getFreeValveH2O()
   { return __Fh2o; }
 
 void compressorController::openFreeNut()
