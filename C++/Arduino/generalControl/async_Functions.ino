@@ -63,6 +63,8 @@ void initialPreconditions(void (*ptr2function)()){
   
   if(!decition && lastSolution!=nextSolution){ // Is it time to change the solution?
     decition = true;
+    lastSolution = nextSolution; // Update solution
+    
     uint8_t inSol = Recirculation.getIn();
     Recirculation.setIn(WATER);
     Recirculation.moveIn(); // Add bool to avoid recall the function before it finished
@@ -108,6 +110,7 @@ void startIrrigation(){
 
   Compressor.keepConnected(true); // Keep connected nutrition kegs with air tank
   solenoidValve::enableGroup(true); // Enable Valves Group
+  Serial.println(F("?newSolution")); // Request update the next solution parameter
   irrigationStage = 1; // Pass to the next irrigation Stage
 }
 

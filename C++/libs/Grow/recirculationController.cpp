@@ -22,6 +22,7 @@ recirculationController::recirculationController() // Constructor
 
     /*** Default Aux Variables ***/
     __In = 0; __Out = 0;
+    __LastOut = 0;
     __VolKnut = 0;
     __VolKh2o = 0;
     __OutLiters = 0;
@@ -206,7 +207,7 @@ void recirculationController::fillSol(float liters)
     else{ printAction(F("Cannot fill solution Maker because we are filling water kegs"));}
   }
 
-void recirculationController::moveIn()
+bool recirculationController::moveIn()
   { if(!__InPump){ // Pump has to be off
       float recirculationVol = __Level[0]->getVolume();
       float tankVol = __Level[__In+1]->getVolume();
@@ -222,14 +223,18 @@ void recirculationController::moveIn()
         __ReleaseValve = HIGH;
         printAction("Releasing water outside the system");
       }
+      return true;
     }
-    else{ printAction("Cannot execute moveIn, another solution is moving in"); }
+    printAction("Cannot execute moveIn, another solution is moving in");
+    return false;
   }
 
 byte recirculationController::moveOut(float liters, uint8_t to_Where)
   { if(!__OutPump){
       if(to_Where>=0 && to_Where<MAX_RECIRCULATION_DESTINATIONS){
         __ActualLiters = __Level[__Out+1]->getVolume();
+        __LastOut = __Out;
+
         if(__ActualLiters>liters){ // If there are enough solution
           __OutLiters = liters;
           __OutPump = HIGH;
@@ -279,7 +284,7 @@ byte recirculationController::moveOut(float liters, uint8_t to_Where)
     }
   }
 
-void recirculationController::moveSol()
+bool recirculationController::moveSol()
   { if(__Go[2]){ // If solution Maker Valve Open
       if(__Level[6]->getState()!=1){
         __SolLiters = __Level[6]->getVolume();
@@ -287,8 +292,12 @@ void recirculationController::moveSol()
         printAction("Emptying solution Maker");
       }
       else{ printAction("There is nothing to move in solution Maker");}
+      return true;
     }
-    else{ printAction("Cannot start moving solution because move out is not finished");}
+    else{
+      printAction("Cannot start moving solution because move out is not finished");
+      return false;
+    }
   }
 
 void recirculationController::run(bool check, bool releaseState)
@@ -307,8 +316,8 @@ void recirculationController::run(bool check, bool releaseState)
 
     // Stop Move Out when level in tank reach the volume require
     // or when tank level is low adn OutPump is ON
-    if( (__ActualLiters-__Level[__Out+1]->getVolume()>=__OutLiters ||
-        __Level[__Out+1]->getState()==1 ) && __OutPump){
+    if( (__ActualLiters-__Level[__LastOut+1]->getVolume()>=__OutLiters ||
+        __Level[__LastOut+1]->getState()==1 ) && __OutPump){
       String toWhere;
       __OutPump = LOW;
       for(int i=0; i<MAX_RECIRCULATION_TANK; i++){
@@ -324,8 +333,8 @@ void recirculationController::run(bool check, bool releaseState)
       }
       printAction("Move Out finished. " + String(__OutLiters) +
       " liters were move to " + toWhere);
-      if(__Out==NUTRITION_KEGS){addVolKnut(__ActualLiters-__Level[__Out+1]->getVolume());}
-      else if(__Out==WATER_KEGS){addVolKh2o(__ActualLiters-__Level[__Out+1]->getVolume());}
+      if(__Out==NUTRITION_KEGS){addVolKnut(__ActualLiters-__Level[__LastOut+1]->getVolume());}
+      else if(__Out==WATER_KEGS){addVolKh2o(__ActualLiters-__Level[___LastOut_Out+1]->getVolume());}
       __ActualLiters = 0;
       __OutLiters = 0;
     }

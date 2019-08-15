@@ -166,6 +166,16 @@ void serialEvent(){                                  //if the hardware serial po
       else{Serial.println(F("Update Function: Hour/Minute wrong"));}
     }
 
+    else if(parameter[0]=="updateSolution"){ // Function updateSolution -> Form "updateSolution,int[nextSolution]"
+      int nextSol = parameter[2].toInt();
+      if(nextSol>=0 && nextSol<4){
+        nextSolution = nextSol;
+        Serial.print(F("updateSolution: Next Solution to be irrigated is: "));
+        Serial.println(nextSolution);
+      }
+      else{ Serial.println(F("updateSolution Function: Parameter nextSolution incorrect")); } 
+    }
+
     else if(parameter[0]=="analog"){ // Functions executed in analogSensor class
       int sens = -1;
       if(parameter[1]=="nutrition"){sens = 0;}

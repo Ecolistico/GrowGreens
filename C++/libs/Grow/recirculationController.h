@@ -71,6 +71,7 @@ class recirculationController
 
         /*** Aux Variables ***/
         uint8_t __In, __Out; // Solution coming in and coming out
+        uint8_t __LastOut; // Solution in current process coming out
         float __VolKnut, __VolKh2o; // Volume in kegs (nutrition/H2O)
         float __OutLiters, __ActualLiters; // Aux Control moveOut()
         float __FillLiters; // Aux Control in fillH2O() and fillNut()
@@ -135,9 +136,9 @@ class recirculationController
          void fillH2O(float liters); // Fills the water kegs with water
          void fillSol(float liters); // Fills the solution maker with water
 
-         void moveIn(); // InPump move
+         bool moveIn(); // InPump move
          byte moveOut(float liters, uint8_t to_Where); // OutPump move
-         void moveSol(); // SolPump move
+         bool moveSol(); // SolPump move
 
          void run(bool check, bool releaseState);
   };
