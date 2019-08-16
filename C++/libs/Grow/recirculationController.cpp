@@ -229,7 +229,7 @@ bool recirculationController::moveIn()
     return false;
   }
 
-byte recirculationController::moveOut(float liters, uint8_t to_Where)
+uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
   { if(!__OutPump){
       if(to_Where>=0 && to_Where<MAX_RECIRCULATION_DESTINATIONS){
         __ActualLiters = __Level[__Out+1]->getVolume();
@@ -334,7 +334,7 @@ void recirculationController::run(bool check, bool releaseState)
       printAction("Move Out finished. " + String(__OutLiters) +
       " liters were move to " + toWhere);
       if(__Out==NUTRITION_KEGS){addVolKnut(__ActualLiters-__Level[__LastOut+1]->getVolume());}
-      else if(__Out==WATER_KEGS){addVolKh2o(__ActualLiters-__Level[___LastOut_Out+1]->getVolume());}
+      else if(__Out==WATER_KEGS){addVolKh2o(__ActualLiters-__Level[__LastOut+1]->getVolume());}
       __ActualLiters = 0;
       __OutLiters = 0;
     }

@@ -389,10 +389,10 @@ void serialEvent(){                                  //if the hardware serial po
     else if(parameter[0]=="coordinate"){ // Functions to coordinate states/functions with central computer
       if(parameter[1]=="solutionMaker"){ // Coordinate action with solutionMaker
         if(parameter[2]=="accept"){ // Computer informs that solutionMaker accepts the last request
-          CC.state = 1;
+          CC.setState(1);
         }
         else if(parameter[2]=="finished"){ // Computer informs that solutionMaker finished the last request
-          CC.state = 2;
+          CC.setState(2);
         }
         else{Serial.println(F("Coordinate Command: Parameter[2] unknown"));}
       }

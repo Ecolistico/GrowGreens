@@ -137,7 +137,7 @@ class recirculationController
          void fillSol(float liters); // Fills the solution maker with water
 
          bool moveIn(); // InPump move
-         byte moveOut(float liters, uint8_t to_Where); // OutPump move
+         uint8_t moveOut(float liters, uint8_t to_Where); // OutPump move
          bool moveSol(); // SolPump move
 
          void run(bool check, bool releaseState);

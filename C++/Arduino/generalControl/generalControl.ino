@@ -183,8 +183,8 @@ void enableLED(int fl, int reg);
 bool isDayInThatSolenoid(uint8_t solenoid);
 uint8_t inWhatFloorIsNight();
 void updateDay();
-float getWaterConsumptionDay();
-float getWaterConsumptionNight();
+void substractSolutionConsumption();
+void substractWaterConsumption();
 
 void setup() {
   // Initialize Serial

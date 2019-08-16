@@ -103,7 +103,7 @@ uint8_t inWhatFloorIsNight(){ // This function cannot be executed until the firs
   else if(!day2.getState()) { return 2; }
   else if(!day3.getState()) { return 3; }
   else if(!day4.getState()) { return 4; }
-  else{ return 0; }
+  else{ Serial.println(F("inWhatFloorIsNight(): Error time information not updated yet")); return 0; }
 }
 
 void updateDay(){ 
@@ -149,22 +149,38 @@ void updateDay(){
   }
 }
 
-float getWaterConsumptionDay(){
-  uint8_t nite = inWhatFloorIsNight();
-  float h2o_consumption = 0; // Water consumption in the last stage
+void substractSolutionConsumption(){
+  uint8_t nite = inWhatFloorIsNight()-1;
+  float consumption = 0; // Water consumption in the last stage
+  solenoidValve *pointer;
   
   // Get the water consumption in day floors
   for(int i=0; i<MAX_FLOOR; i++){
-    if(i!=nite){h2o_consumption += solenoidValve::getWaterByFloor(i);}
+    if(i!=nite){ consumption += solenoidValve::getWaterByFloor(i); }
   }
 
-  return h2o_consumption;
+  Recirculation.addVolKnut(-consumption); // Substract water consumption from the kegs
+  
+  // Erase the water consumption in that valves
+  for(int i=0; i<solenoidValve::__TotalActuators; i++){
+    pointer = solenoidValve::ptr[i];
+    if(pointer->getFloor()!=nite){ pointer->restartH2O(false); }
+  }
 }
 
-float getWaterConsumptionNight(){
-  uint8_t nite = inWhatFloorIsNight();
-  float h2o_consumption = 0;
+void substractWaterConsumption(){
+  uint8_t nite = inWhatFloorIsNight()-1;
+  float consumption = 0; // Water consumption in the last stage
+  solenoidValve *pointer;
+  
   // Get the water consumption in night floor
-  h2o_consumption = solenoidValve::getWaterByFloor(nite);
-  return h2o_consumption;
+  consumption = solenoidValve::getWaterByFloor(nite);
+  
+  Recirculation.addVolKh2o(-consumption); // Substract water consumption from the kegs
+  
+  // Erase the water consumption in that valves
+  for(int i=0; i<solenoidValve::__TotalActuators; i++){
+    pointer = solenoidValve::ptr[i];
+    if(pointer->getFloor()==nite){ pointer->restartH2O(false); }
+  }
 }
