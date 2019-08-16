@@ -219,6 +219,7 @@ void setup() {
 
   // Request boot info to raspberry
   Serial.println(F("?boot"));
+  
   // Testing settings 
   //solenoidValve::enableGroup(true);
 }
@@ -242,4 +243,6 @@ void loop() {
     multiplexerTime = millis();
     codification_Multiplexer();
   }
+
+  // Testing code
 }

@@ -589,7 +589,7 @@ void waterSensor::beginAll()
   }
 
 void waterSensor::readAll()
-  { if(millis()-__ActualTime>50){
+  { if(millis()-__ActualTime>100){
       __ActualTime = millis();
       for(int i = 0; i<__TotalSensors; i++){
         ptr[i]->read();
