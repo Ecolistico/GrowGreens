@@ -24,10 +24,6 @@ void solenoid_setup(){
 void sensors_setup(){
   Serial.println(F("Setting up sensors:"));
 
-  // DHT (Temp/Hum)
-  dht22_ext.begin();
-  Serial.println(F("DHT sensor started correctly"));
-
   // Pressure Sensors
   analogSensor::beginAll(); // Starts pressure sensors
   // Charge Parameters for all pressure sensors
@@ -149,7 +145,7 @@ void updateDay(){
   }
 }
 
-void substractSolutionConsumption(){
+void substractSolutionConsumption(bool updateConsumption = false){
   uint8_t nite = inWhatFloorIsNight()-1;
   float consumption = 0; // Water consumption in the last stage
   solenoidValve *pointer;
@@ -166,9 +162,14 @@ void substractSolutionConsumption(){
     pointer = solenoidValve::ptr[i];
     if(pointer->getFloor()!=nite){ pointer->restartH2O(false); }
   }
+
+  if(updateConsumption){ // Update solutionConsumption parameter
+    if(consumption>solutionConsumption){ solutionConsumption = consumption; }
+    else{ solutionConsumption = (solutionConsumption+consumption)/2; }
+  }
 }
 
-void substractWaterConsumption(){
+void substractWaterConsumption(bool updateConsumption = false){
   uint8_t nite = inWhatFloorIsNight()-1;
   float consumption = 0; // Water consumption in the last stage
   solenoidValve *pointer;
@@ -182,5 +183,10 @@ void substractWaterConsumption(){
   for(int i=0; i<solenoidValve::__TotalActuators; i++){
     pointer = solenoidValve::ptr[i];
     if(pointer->getFloor()==nite){ pointer->restartH2O(false); }
+  }
+
+  if(updateConsumption){ // Update h2oConsumption parameter
+    if(consumption>h2oConsumption){ h2oConsumption = consumption; }
+    else{ h2oConsumption = (h2oConsumption+consumption)/2; }
   }
 }

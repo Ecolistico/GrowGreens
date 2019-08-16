@@ -56,7 +56,7 @@ void recirculationController::getVolume()
 void recirculationController::printAction(float volume, String from, String to)
   { Serial.print(F("Recirculation: Moving "));
     Serial.print(volume);
-    Serial.print(F("liters from"));
+    Serial.print(F(" liters from "));
     Serial.print(from);
     Serial.print(F(" to "));
     Serial.println(to);
@@ -179,6 +179,12 @@ float recirculationController::getVolKnut()
 float recirculationController::getVolKh2o()
   { return __VolKh2o;}
 
+void recirculationController::resetVolKnut()
+  { __VolKnut = 0; }
+
+void recirculationController::resetVolKh2o()
+  { __VolKh2o = 0; }
+
 void recirculationController::fillH2O(float liters)
   { if(!__FSol){
       if(!__Fh2o){
@@ -300,7 +306,7 @@ bool recirculationController::moveSol()
     }
   }
 
-void recirculationController::run(bool check, bool releaseState)
+void recirculationController::run(bool check, bool sensorState)
   { // Move In when level in recirculation tank is High and Input Pump is off
     if(__Level[0]->getState()==2 && !__InPump){ moveIn(); }
 
@@ -369,12 +375,12 @@ void recirculationController::run(bool check, bool releaseState)
 
     if(check){
       // Stop release
-      if(__Rh2o && releaseState){
+      if(__Rh2o && sensorState){
         __Rh2o = LOW;
         __VolKh2o = 0;
         printAction("Water kegs was emptied");
       }
-      if(__RSol && releaseState){
+      if(__RSol && sensorState){
         __RSol = LOW;
         __VolKnut = 0;
         printAction("Nutrition kegs was emptied");

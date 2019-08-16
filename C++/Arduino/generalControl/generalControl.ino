@@ -1,6 +1,5 @@
 /*** Include Libraries ***/
 #include <Wire.h>
-#include <DHT.h>
 #include <EEPROM.h>
 #include <actuator.h>
 #include <day.h>
@@ -9,10 +8,6 @@
 #include <compressorController.h>
 #include <recirculationController.h>
 #include <processControl.h>
-
-/*** Temp-Hum Sensors(DHT-22) Definitions ***/ 
-// DHT object(pin, type)
-DHT dht22_ext(5, DHT22);
 
 /*** Multiplexor Definitions ***/
 const uint8_t ds = 22; // Data
@@ -104,27 +99,30 @@ processControl MPC; // Middle Preconditions Control
 processControl CC; // Comunication Control
 
 /*** Auxiliar Variables ***/
-// To check change between solution/water irrigation for day/night floor according to routine
+// Control irrigation process
 uint8_t irrigationStage = 0; // Defautl state
 
-// To control pressure
+// Control when update solutionConsumption and h2oConsumption
+bool emergency = false;
+
+// Control pressure
 float max_pressure = 160; // Default Maximum Pressure in the system (psi)
 float min_pressure = 150; // Minimun Pressure in the system to start a new irrigation cycle (psi)
 float critical_pressure = 90; // Default Critical Pressure in the system (psi)
 
-// To control Solution
+// Control Solution and refill process
 /* The next variables need to be register in raspberry in case that arduino turn off */
 uint8_t lastSolution = 250; // Last solution to be irrigated, by default value of 250 is setted but this value does not match with a solution
 uint8_t nextSolution = 250; // Next solution to be irrigated, by default value of 250 is setted but this value does not match with a solution
 float solutionConsumption = 50; // Default consumption in stage 1 of irrigation
-float h2oConsumption = 20; // Default consumption in stage 4 of irrigation
+float h2oConsumption = 50; // Default consumption in stage 4 of irrigation
 // __VolKnut, __VolKh2o in recirculationControllerClass has to be init at boot
 /* The previous variables need to be register in raspberry in case that arduino turn off */
 
-// To control ReOrder when day/night change
+// Control ReOrder when day/night change
 uint8_t night = 0;
 
-// To control action that have to be executed at least once when boot
+// Control action that has to be executed at least once when booting/rebooting
 bool firstHourUpdate = false;
 bool bootParameters = false;
 
@@ -183,8 +181,8 @@ void enableLED(int fl, int reg);
 bool isDayInThatSolenoid(uint8_t solenoid);
 uint8_t inWhatFloorIsNight();
 void updateDay();
-void substractSolutionConsumption();
-void substractWaterConsumption();
+void substractSolutionConsumption(bool updateConsumption = false);
+void substractWaterConsumption(bool updateConsumption = false);
 
 void setup() {
   // Initialize Serial
@@ -218,7 +216,9 @@ void setup() {
 
   // Finished
   Serial.println(F("Device Ready"));
-  
+
+  // Request boot info to raspberry
+  Serial.println(F("?boot"));
   // Testing settings 
   //solenoidValve::enableGroup(true);
 }

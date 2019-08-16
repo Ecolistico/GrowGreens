@@ -128,10 +128,12 @@ class recirculationController
          uint8_t getIn(); // Returns actual solution coming in
          uint8_t getOut(); // Returns actual solution coming out
 
-         bool addVolKnut(float liters); // Set the initial volume in nutrition kegs
-         bool addVolKh2o(float liters); // Set the initial volume in H2O kegs
+         bool addVolKnut(float liters); // Change the volume in nutrition kegs
+         bool addVolKh2o(float liters); // Change the volume in H2O kegs
          float getVolKnut(); // Returns actual volume in nutrition kegs
          float getVolKh2o(); // Returns actual volume in H2O kegs
+         void resetVolKnut(); // Set the volume in nutrition kegs in 0
+         void resetVolKh2o(); // Set the volume in H2O kegs in 0
 
          void fillH2O(float liters); // Fills the water kegs with water
          void fillSol(float liters); // Fills the solution maker with water
@@ -140,7 +142,7 @@ class recirculationController
          uint8_t moveOut(float liters, uint8_t to_Where); // OutPump move
          bool moveSol(); // SolPump move
 
-         void run(bool check, bool releaseState);
+         void run(bool check, bool sensorState);
   };
 
   #endif

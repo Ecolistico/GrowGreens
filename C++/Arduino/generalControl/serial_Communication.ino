@@ -166,16 +166,6 @@ void serialEvent(){                                  //if the hardware serial po
       else{Serial.println(F("Update Function: Hour/Minute wrong"));}
     }
 
-    else if(parameter[0]=="updateSolution"){ // Function updateSolution -> Form "updateSolution,int[nextSolution]"
-      int nextSol = parameter[2].toInt();
-      if(nextSol>=0 && nextSol<4){
-        nextSolution = nextSol;
-        Serial.print(F("updateSolution: Next Solution to be irrigated is: "));
-        Serial.println(nextSolution);
-      }
-      else{ Serial.println(F("updateSolution Function: Parameter nextSolution incorrect")); } 
-    }
-
     else if(parameter[0]=="analog"){ // Functions executed in analogSensor class
       int sens = -1;
       if(parameter[1]=="nutrition"){sens = 0;}
@@ -355,7 +345,6 @@ void serialEvent(){                                  //if the hardware serial po
         float vh2o = parameter[4].toFloat();
         float solCons = parameter[5].toFloat();
         float h2oCons = parameter[6].toFloat();
-        // add solutionConsumption, h2oConsumption, nextSolution;
         if(lastSol>=0 && lastSol<4 && nextSol>=0 && nextSol<4 && vnut>0 && vh2o>0 && solCons && h2oCons){
           bootParameters = true;
           lastSolution = lastSol;
@@ -364,9 +353,9 @@ void serialEvent(){                                  //if the hardware serial po
           Recirculation.addVolKh2o(vh2o);
           solutionConsumption = solCons;
           h2oConsumption = h2oCons;
-          Serial.print(F("Boot: Last Solution to be irrigated is: "));
+          Serial.print(F("Boot: Last Solution to be irrigated is "));
           Serial.println(lastSolution);
-          Serial.print(F("Boot: Next Solution to be irrigated is: "));
+          Serial.print(F("Boot: Next Solution to be irrigated is "));
           Serial.println(nextSolution);
           Serial.print(F("Boot: Nutrition Kegs Volume Updated to "));
           Serial.print(Recirculation.getVolKnut());
@@ -385,18 +374,27 @@ void serialEvent(){                                  //if the hardware serial po
       }
       else{ Serial.println(F("Set Initial Parameters: Parameters already setted")); } 
     }
-    
-    else if(parameter[0]=="coordinate"){ // Functions to coordinate states/functions with central computer
-      if(parameter[1]=="solutionMaker"){ // Coordinate action with solutionMaker
-        if(parameter[2]=="accept"){ // Computer informs that solutionMaker accepts the last request
+
+    else if(parameter[0]=="nextSolution"){ // Function updateSolution -> Form "updateSolution,int[nextSolution]"
+      int nextSol = parameter[2].toInt();
+      if(nextSol>=0 && nextSol<4){
+        if(nextSolution!=nextSol){
+          nextSolution = nextSol;
+          Serial.print(F("updateSolution: Next Solution to be irrigated is: "));
+          Serial.println(nextSolution); 
+        }
+      }
+      else{ Serial.println(F("updateSolution Function: Parameter nextSolution incorrect")); } 
+    }
+
+    else if(parameter[0]=="solutionMaker"){ // Coordinate action with solutionMaker
+      if(parameter[1]=="accept"){ // Computer informs that solutionMaker accepts the last request
           CC.setState(1);
         }
-        else if(parameter[2]=="finished"){ // Computer informs that solutionMaker finished the last request
+        else if(parameter[1]=="finished"){ // Computer informs that solutionMaker finished the last request
           CC.setState(2);
         }
         else{Serial.println(F("Coordinate Command: Parameter[2] unknown"));}
-      }
-      else{Serial.println(F("Coordinate Command: Parameter[1] unknown"));}
     }
     
     else if(parameter[0]=="eeprom"){ // Functions to manage EEPROM memory
