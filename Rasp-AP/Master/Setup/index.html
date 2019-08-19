@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>GrowGreens Setup</title>
+    <link rel="icon" href="img/GrowGreens-Web.png">
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href= "https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+
+  <body>
+      <div class="container">
+          <h1 class="header">¡Bienvenido a GrowGreens!</h1>
+          <ul class="steps">
+            <li class="is-active">Instrucciones</li>
+            <li>Ubicación</li>
+          </ul>
+          <form class="form-wrapper">
+            <fieldset class="section is-active">
+              <p align="left">A través de este portal usted podrá hacer la configuración inicial
+                 del sistema.</p>
+              <p align="left">Para poder hacerlo sólo debe conocer:</p>
+              <ul>
+                <li align="left">Su ubicación actual.</li>
+                <li align="left">El número consecutivo del sistema que esta configurando.</li>
+              </ul>
+              <p align="left"><b>Nota: </b>Es de vital importancia que
+                llene correctamente este formulario.<br></p>
+              <p align="left"><b>* En caso de no contar con el número consecutivo, por favor
+               contáctese con su supervisor de manera inmediata.</b></p>
+              <div class="button">Siguiente</div>
+            </fieldset>
+            <fieldset class="section">
+              <div class="custom-select">
+                  <label for="estado">Estado</label>
+                  <select id="estado" name="estado"></select>
+              </div>
+              <div class="custom-select">
+                  <label for="municipio">Municipio</label>
+                  <select id="municipio" name="municipio"></select>
+              </div>
+              <input type="number" min="1" max="999" name="num" id="num" placeholder="Número Consecutivo del contenedor">
+              <p class="warn" id="warn1"></p>
+              <div class="button1">Anterior</div>
+              <input class="submit button" type="submit" value="Configurar">
+            </fieldset>
+            <fieldset class="section">
+              <h3>Configuración terminada</h3>
+              <p align>Haga click en el botón "Terminar" y regrese a la ventana anterior para continuar.<br></p>
+              <div class="button1">Anterior</div>
+              <div class="button">Terminar</div>
+            </fieldset>
+          </form>
+        </div>
+      </div>
+
+    <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript" src="js/municipios.js"></script>
+    <script type="text/javascript" src="js/select_estados.js"></script>
+
+    </body>
+
+  </html>
