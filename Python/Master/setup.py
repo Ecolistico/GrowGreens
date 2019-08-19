@@ -5,24 +5,7 @@ import time
 import getpass
 import webbrowser
 sys.path.insert(0, './src/')
-from sysRasp import runShellCommand, isWiFi, getGatewayIPaddr
-
-# define our clear function 
-def clear(): 
-    # for windows 
-    if os.name == 'nt': 
-        _ = os.system('cls') 
-    # for mac and linux(here, os.name is 'posix') 
-    else: 
-        _ = os.system('clear')
-
-# define our ping function
-def ping():
-    if (os.name == 'nt'): # for windows
-        pg = "ping -n 1"
-    else : # for mac and linux(here, os.name is 'posix') 
-        pg = "ping -c 1"
-    return pg
+from sysRasp import runShellCommand, isWiFi, getGatewayIPaddr, clear, ping
     
 config = False
 reconfig = ""
@@ -50,7 +33,7 @@ if(WiFi or isWiFi()): # Check if previous configuration files exists
                 password = getpass.getpass()
                 if(password == "yomero"):
                     attemp = 10
-                    runShellCommand('sudo rm /var/www/growgreens-setup.com/public/data/config.json')
+                    runShellCommand('sudo rm config.json')
                     config = True
                 else:
                     attemp += 1
@@ -58,6 +41,7 @@ if(WiFi or isWiFi()): # Check if previous configuration files exists
         config = True
         
     if(config): # Open browser to config system
+        runShellCommand('sudo rm /var/www/growgreens-setup.com/public/data/config.json')
         print("A continuación, se abrirá una página web solicitando información acerca de su ubicación" +
               " actual. Por favor siga las indicaciones y después regrese a está ventana.")
         time.sleep(3.5)

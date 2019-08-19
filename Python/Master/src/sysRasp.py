@@ -2,6 +2,23 @@ import os
 import subprocess
 import urllib.request
 
+# define our clear function 
+def clear(): 
+    # for windows 
+    if os.name == 'nt': 
+        _ = os.system('cls') 
+    # for mac and linux(here, os.name is 'posix') 
+    else: 
+        _ = os.system('clear')
+
+# define our ping function
+def ping():
+    if (os.name == 'nt'): # for windows
+        pg = "ping -n 1"
+    else : # for mac and linux(here, os.name is 'posix') 
+        pg = "ping -c 1"
+    return pg
+
 def isWiFi():
     try:
         urllib.request.urlopen('http://216.58.192.142', timeout=1)
