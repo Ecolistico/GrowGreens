@@ -146,6 +146,7 @@ def on_message(client, userdata, msg):
     
     elif(message == "whatIsMyIP"):
         mssg = "IP={}".format(grower.whatIsMyIP())
+        print(mssg)
         publish.single(logTopic, mssg, hostname = brokerIP)
     
     elif(message.startswith("sendPhotos")):
@@ -157,6 +158,7 @@ def on_message(client, userdata, msg):
     elif(message == "cozirData"):
         hum, temp, co2 = grower.coz.getData()
         mssg = "{},{},{}".format(hum, temp, co2)
+        print(mssg)
         publish.single(logTopic, mssg, hostname = brokerIP)
     
     elif(message == "updateGrowerDate"):
