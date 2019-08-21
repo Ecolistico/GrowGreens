@@ -129,7 +129,7 @@ String inputstring = "";
 bool input_string_complete = false;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println(F("Setting up growers..."));
   grower1.begin(HIGH);
   grower2.begin(LOW); // Not send to home
