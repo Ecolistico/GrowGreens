@@ -6,161 +6,254 @@
 
 /***   compressorController   ***/
 // Statics variables definitions
-compressorController::compressorController(bool comprLogic, bool nutrLogic, bool waterLogic) // Constructor
-   { __State = LOW ;
-     __Enable = LOW ;
-     __Valve_Compressor = LOW ;
-     __Valve_Nutrition = LOW ;
-     __Valve_Water = LOW ;
-     __Compressor_invertedLogic = comprLogic;
-     __Nutrition_invertedLogic = nutrLogic;
-     __Water_invertedLogic = waterLogic;
-   }
+compressorController::compressorController( // Constructor
+  bool nutLogic,
+  bool tankLogic,
+  bool h2oLogic )
+  {  __State = LOW;
+     __Vnut = LOW;
+     __Vtank = LOW;
+     __Vh20 = LOW;
+     __Fnut = LOW;
+     __Fh2o = LOW;
+     __nutInvertedLogic = nutLogic;
+     __tankInvertedLogic = tankLogic;
+     __h20InvertedLogic = h2oLogic;
+     __KeepConnected = false;
+     __Mode = 0;
+ }
 
 void compressorController::turnOn()
- { __State = HIGH;
-   Serial.println(F("Compressor: Turn On"));
- }
+  { __State = HIGH; }
 
 void compressorController::turnOff()
- { __State = LOW;
-   Serial.println(F("Compressor: Turn Off"));
- }
+  { __State = LOW; }
 
 void compressorController::doNothing()
   { turnOff();
-    __Valve_Compressor = LOW;
-    __Valve_Nutrition = LOW;
-    __Valve_Water = LOW;
+    if(__nutInvertedLogic){__Vnut = HIGH;}
+    else{__Vnut = LOW;}
+    if(__tankInvertedLogic){__Vtank = HIGH;}
+    else{__Vtank = LOW;}
+    if(__h20InvertedLogic){__Vh20 = HIGH;}
+    else{__Vh20 = LOW;}
   }
 
-void compressorController::openCompressor()
+void compressorController::turnOffAll()
   { turnOff();
-    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
-    turnOff_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
-    turnOff_Valve(__Valve_Water, __Water_invertedLogic);
+    if(__KeepConnected){ __Vnut = HIGH; }
+    else{ __Vnut = LOW; }
+    __Vtank = LOW;
+    __Vh20 = LOW;
   }
 
-void compressorController::openNutrition()
-  { turnOff();
-    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
-    turnOn_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
-    turnOff_Valve(__Valve_Water, __Water_invertedLogic);
-  }
-
-void compressorController::openWater()
-  { turnOff();
-    turnOff_Valve(__Valve_Compressor, __Compressor_invertedLogic);
-    turnOff_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
-    turnOn_Valve(__Valve_Water, __Water_invertedLogic);
-  }
-
-void compressorController::openEverything()
-  { turnOff();
-    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
-    turnOn_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
-    turnOn_Valve(__Valve_Water, __Water_invertedLogic);
-  }
-
-void compressorController::fillCompressor()
+void compressorController::fillTank()
   { turnOn();
-    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
-    turnOff_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
-    turnOff_Valve(__Valve_Water, __Water_invertedLogic);
+    if(__KeepConnected){ __Vnut = HIGH; }
+    else{ __Vnut = LOW; }
+    __Vtank = HIGH;
+    __Vh20 = LOW;
   }
 
-void compressorController::fillNutrition()
+void compressorController::fillNut()
   { turnOn();
-    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
-    turnOn_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
-    turnOff_Valve(__Valve_Water, __Water_invertedLogic);
+    __Vtank = HIGH;
+    __Vnut = HIGH;
+    __Vh20 = LOW;
   }
 
-void compressorController::fillWater()
+void compressorController::fillH2O()
   { turnOn();
-    turnOff_Valve(__Valve_Compressor, __Compressor_invertedLogic);
-    turnOff_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
-    turnOn_Valve(__Valve_Water, __Water_invertedLogic);
+    if(__KeepConnected){ __Vnut = HIGH; }
+    else{ __Vnut = LOW; }
+    __Vtank = LOW;
+    __Vh20 = HIGH;
   }
 
-void compressorController::fillEverything()
+void compressorController::fillTankAndH2O()
   { turnOn();
-    turnOn_Valve(__Valve_Compressor, __Compressor_invertedLogic);
-    turnOn_Valve(__Valve_Nutrition, __Nutrition_invertedLogic);
-    turnOn_Valve(__Valve_Water, __Water_invertedLogic);
+    if(__KeepConnected){ __Vnut = HIGH; }
+    else{ __Vnut = LOW; }
+    __Vtank = HIGH;
+    __Vh20 = HIGH;
   }
 
-void compressorController::turnOn_Valve(bool &state, bool inverted_logic)
-  { if(inverted_logic){state = LOW;}
-    else{state = HIGH;}
+void compressorController::fillAll()
+  { turnOn();
+    __Vtank = HIGH;
+    __Vnut = HIGH;
+    __Vh20 = HIGH;
   }
 
-void compressorController::turnOff_Valve(bool &state, bool inverted_logic)
-  { if(inverted_logic){state = HIGH;}
-    else{state = LOW;}
+void compressorController::setMode(uint8_t mode)
+  { __Mode = mode;
+    switch(mode){
+      case 0: // Do nothing
+        doNothing();
+        printAct(F("Do nothing"));
+        break;
+      case 1: // Turn off all
+        turnOffAll();
+        printAct(F("Turn Off All"));
+        break;
+      case 2: // Fill the tank
+        fillTank();
+        printAct(F("Compressing air tank"));
+        break;
+      case 3: // Fill the nutrition kegs
+        fillNut();
+        printAct(F("Compressing nutrition kegs"));
+        break;
+      case 4: // Fill the H2O kegs
+        fillH2O();
+        printAct(F("Compressing water kegs"));
+        break;
+      case 5: // Fill the air Tank and H2O Kegs
+        fillTankAndH2O();
+        printAct(F("Compressing air tank and water kegs"));
+        break;
+      case 6: // Fill everything
+        fillAll();
+        printAct(F("Compressing all"));
+        break;
+      default: // Do nothing
+        doNothing();
+        printAct(F("Mode did not match. Do Nothing Instead"));
+        break;
+    }
+  }
+
+void compressorController::printAct(String act)
+  { Serial.print(F("Compressor: "));
+    Serial.println(act);
   }
 
 bool compressorController::getState() // Constructor
   { return __State; }
 
-bool compressorController::getValveCompressorState()
-  { return __Valve_Compressor; }
-
-bool compressorController::getValveNutritionState()
-  { return __Valve_Nutrition; }
-
-bool compressorController::getValveWaterState()
-  { return __Valve_Water; }
-
-void compressorController::close_ValveNutrition()
-  { turnOff_Valve(__Valve_Nutrition, __Nutrition_invertedLogic); }
-
-void compressorController::close_ValveWater()
-  { turnOff_Valve(__Valve_Water, __Water_invertedLogic); }
-
-void compressorController::enable(bool en)
-  { __Enable = en;
-    Serial.print(F("Compressor: "));
-    if(__Enable){Serial.println(F("Enabled"));}
-    else{Serial.println(F("Disabled"));}
+bool compressorController::getValveTank()
+  { if(__tankInvertedLogic){return !__Vtank;}
+    else{return __Vtank;}
   }
 
-bool compressorController::isEnable()
-  { return __Enable; }
+bool compressorController::getValveNut()
+  { if(__nutInvertedLogic){return !__Vnut;}
+    else{return __Vnut;}
+  }
 
-byte compressorController::setMode(byte mode)
-  { switch(mode){
-      case 0: // Do nothing
-        doNothing();
-        break;
-      case 1: // Equal pressures in compressor kegs
-        openCompressor();
-        break;
-      case 2: // Equal pressures in nutrition kegs
-        openNutrition();
-        break;
-      case 3: // Equal pressures in water kegs
-        openWater();
-        break;
-      case 4: // Equal all pressures
-        openEverything();
-        break;
-      case 5: // Fill just compressor kegs
-        fillCompressor();
-        break;
-      case 6: // Fill just nutrition kegs
-        fillNutrition();
-        break;
-      case 7: // Fill just water kegs
-        fillWater();
-        break;
-      case 8: // Fill everything
-        fillEverything();
-        break;
-      default: // Do nothing
-        doNothing();
-        break;
+bool compressorController::getValveH2O()
+  { if(__h20InvertedLogic){return !__Vh20;}
+    else{return __Vh20;}
+  }
+
+bool compressorController::getFreeValveNut()
+  { return __Fnut; }
+
+bool compressorController::getFreeValveH2O()
+  { return __Fh2o; }
+
+void compressorController::openFreeNut()
+  { if(!__Vnut){
+      if(!__Fnut){
+        __Fnut = HIGH;
+        printAct(F("Free Nutrition Valve open"));
       }
-      if(mode>=0 && mode<=8){return mode;}
-      else{return 0;}
+      else{ printAct(F("Free Nutrition Valve already open")); }
+    }
+    else{ printAct(F("Cannot Free Pressure in nutrition kegs because nutrition valve is open")); }
+  }
+
+void compressorController::closeFreeNut()
+  { if(__Fnut){
+      __Fnut = LOW;
+      printAct(F("Free Nutrition Valve close"));
+    }
+    else{ printAct(F("Free Nutrition Valve already close")); }
+  }
+
+void compressorController::openFreeH2O()
+  { if(!__Vh20){
+      if(!__Fh2o){
+        __Fh2o = HIGH;
+        printAct(F("Free Water Valve open"));
+      }
+      else{ printAct(F("Free Water Valve already open")); }
+    }
+    else{ printAct(F("Cannot Free Pressure in water kegs because water valve is open")); }
+  }
+
+void compressorController::closeFreeH2O()
+  { if(__Fh2o){
+      __Fh2o = LOW;
+      printAct(F("Free Water Valve close"));
+    }
+    else{ printAct(F("Free Water Valve already close")); }
+  }
+
+void compressorController::compressTank()
+  { if(!__Vnut){
+      if(__Mode==4){
+        printAct(F("Already filling water kegs, opening valves to fill also air tank"));
+        setMode(5);
+      }
+      else if(__Mode!=2 && __Mode!=3 && __Mode!=5 && __Mode!=6){
+        printAct(F("Getting the correct pressure in water kegs"));
+        setMode(2);
+      }
+      else{printAct(F("Already compressing air tank"));}
+    }
+    else{printAct(F("Cannot Compress air tank because nutrition valve is open"));}
+  }
+
+void compressorController::compressNut()
+  { if(!__Fnut){
+      if(__Mode==4 || __Mode==5){
+        printAct(F("Already filling water kegs, opening valves to fill nutrition kegs"));
+        setMode(6);
+      }
+      else if(__Mode!=3 && __Mode!=6){
+        printAct(F("Getting the correct pressure in nutrition kegs"));
+        setMode(3);
+      }
+      else{printAct(F("Already compressing nutrition kegs"));}
+    }
+    else{printAct(F("Cannot Compress nutrition kegs because Free Nutrition Valve is open"));}
+  }
+
+void compressorController::compressH2O()
+  { if(!__Fh2o){
+      if(__Mode==2){
+        printAct(F("Already filling air tank, opening valves to fill also water kegs"));
+        setMode(5);
+      }
+      else if(__Mode==3){
+        printAct(F("Already filling nutrition kegs, opening valves to fill also water kegs"));
+        setMode(6);
+      }
+      else if(__Mode!=4 && __Mode!=5 && __Mode!=6){
+        printAct(F("Getting the correct pressure in water kegs"));
+        setMode(4);
+      }
+      else{printAct(F("Already compressing water kegs"));}
+    }
+    else{printAct(F("Cannot Compress water kegs because Free Water Valve is open"));}
+  }
+
+void compressorController::Off()
+  { setMode(1); }
+
+void compressorController::keepConnected(bool con)
+  { if(__KeepConnected!=con){
+      __KeepConnected = con;
+      if(__KeepConnected){
+        printAct(F("Keeping connected nutrition kegs and air tank"));
+        if(!__Vnut){ __Vnut = HIGH; }
+      }
+      else if(!__KeepConnected){
+        printAct(F("Disconnecting nutrition kegs and air tank"));
+        if(__Vnut && __Mode!=3 && __Mode!=6){
+          __Vnut = LOW;
+        }
+      }
+    }
   }

@@ -8,37 +8,9 @@
 // Statics variables definitions
 
 void controllerHVAC::resetTime()
- {  __Actual_time = millis() ; }
+ {  __Actual_time = millis(); }
 
-controllerHVAC::controllerHVAC( ) // Constructor
-  { __W = LOW;
-    __Y = LOW;
-    __G = LOW;
-    __O = LOW;
-    __B = LOW;
-    __Warn = LOW;
-    __Work = LOW;
-    __Fan = LOW;
-    __Mode = 0;
-    __PrevMode = 0;
-    __Actual_time = millis();
-  }
-
-controllerHVAC::controllerHVAC( byte Mode ) // Constructor
-  { __W = LOW;
-    __Y = LOW;
-    __G = LOW;
-    __O = LOW;
-    __B = LOW;
-    __Warn = LOW;
-    __Work = LOW;
-    __Fan = LOW;
-    __Mode = Mode;
-    __PrevMode = 0;
-    __Actual_time = millis();
-  }
-
-controllerHVAC::controllerHVAC( byte Mode, bool fan ) // Constructor
+controllerHVAC::controllerHVAC(uint8_t Mode, bool fan) // Constructor
   { __W = LOW;
     __Y = LOW;
     __G = LOW;
@@ -48,8 +20,8 @@ controllerHVAC::controllerHVAC( byte Mode, bool fan ) // Constructor
     __Work = LOW;
     __Fan = fan;
     __Mode = Mode;
-    __PrevMode = 0;
-    __Actual_time = millis();
+    __PrevMode = OFF_MODE;
+    resetTime();
   }
 
 bool controllerHVAC::getHR_State()
@@ -73,7 +45,7 @@ bool controllerHVAC::getWarn_State()
 bool controllerHVAC::getWork_State()
   { return __Work; }
 
-bool controllerHVAC::changeMode(byte Mode)
+bool controllerHVAC::changeMode(uint8_t Mode)
   { if(Mode>=0 && Mode<3){
       __PrevMode = __Mode;
       __Mode = Mode;
@@ -128,7 +100,7 @@ void controllerHVAC::run()
         resetTime();
         __PrevMode = __Mode;
       }
-      if(millis()-__Actual_time<=WAIT_TIME){
+      else if(millis()-__Actual_time<=WAIT_TIME){
         __Work = LOW;
         __Warn = HIGH;
         __Y = LOW; // Compressor Contactor  Off
@@ -150,7 +122,7 @@ void controllerHVAC::run()
         resetTime();
         __PrevMode = __Mode;
       }
-      if(millis()-__Actual_time<=WAIT_TIME){
+      else if(millis()-__Actual_time<=WAIT_TIME){
         __Work = LOW;
         __Warn = HIGH;
         __W = LOW; // Heat Relay  Off

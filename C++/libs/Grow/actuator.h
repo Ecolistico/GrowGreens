@@ -35,45 +35,96 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #endif
 
 #define MAX_ACTUATORS           50 // Max number of Actuators or Solenoid Valves
+#define DEFAULT_TIME_ON         5 // 5 seconds
+#define DEFAULT_CYCLE_TIME      600 // 10 minutes = 600 seconds
+#define MAX_TYPES_ACTUATOR      4 // Right now we have just 4 types
 #define MAX_FLOOR               4 // Number of floors
 #define MAX_IRRIGATION_REGIONS  8 // Number of region in each floor
+#define SOLENOID_TIME_ON        5 // 5 seconds by default
+#define SOLENOID_CYCLE_TIME     10 // 10 minutes by default
+#define MAX_SOLUTIONS_NUMBER    4 // The max number of solution can be dispense
 #define flowSensor              2 // Define flowSensor pin
 
-// Class to manage an actuator with defined time cycles.
-/* Limitation Note: This class is limited by definition to 50
+// Class to control Actuators with defined time cycles.
+/*
+Definitions
+  Types:
+    Input Fan = 0
+    Output Fan = 1
+    Vent Fan = 2
+    Humidity Valve = 3
+  Floor: RealFloor-1 [0-3]
+Limitation Note: This class is limited by definition to 50
   actuators this limitations can be changed but, you need to keep
-  in mind your procesator memory consumption */
+  in mind your procesator memory consumption
+*/
 class Actuator
  {  private:
-        bool __State , __Enable ;
-        unsigned long __TimeOn , __TimeOff, __Actual_time ;
+        bool __State, __Enable;
+        uint8_t __Type, __Floor; // What type of actuator and in what floor is it.
+        unsigned long __TimeOn, __CycleTime, __Actual_time;
 
-        void set_time( ) ;
-        void resetTime() ;
+        void setTime();
+        void resetTime();
+        void printAction(String act);
+        void turnOn();
+        void turnOff();
+        bool setTimeOn(unsigned long t_on); // Returns true if succesful
+        bool setCycleTime(unsigned long t_cycle); // Returns true if succesful
+        bool setTime(unsigned long t_on, unsigned long t_cycle); // Return true if succesful
+        unsigned long getTimeOn(); // Returns TimeOn
+        unsigned long getCycleTime(); // Returns TimeOff
+        unsigned long getTime(); // Returns the time into the cycle from [0,timeOff+timeOn].
+        void enable (bool en); // Enable the actuator
+        bool isEnable(); // Returns true if actuator is enable
+        bool isType(uint8_t type); // Return true if is the same type
+        bool isFloor(uint8_t floor); // Return true if is the same floor
+        void begin(); // Start the actuator
+        void run(); // Run the actuator
 
     public:
-         static byte __TotalActuators;
-         static Actuator *ptr[MAX_ACTUATORS] ; // List of pointers to each object
+         static uint8_t __TotalActuators;
+         static Actuator *ptr[MAX_ACTUATORS]; // List of pointers to each object
 
-         Actuator ( ) ; // Constructor
-         Actuator ( unsigned long t_on, unsigned long t_off ) ; // Constructor
-         Actuator ( bool _state, bool en, unsigned long t_on, unsigned long t_off ) ; // Constructor
+         Actuator( // Constructor
+           uint8_t type,
+           uint8_t floor,
+           unsigned long t_on,
+           unsigned long t_cycle
+         );
 
-         bool getState() ; // Returns Actuator State
-         void changeState() ; // Change the actual state of the cycle.
-         void turnOn() ;
-         void turnOff() ;
-         bool setTimeOn(unsigned long t_on) ; // Returns true if succesful
-         bool setTimeOff(unsigned long t_off) ; // Returns true if succesful
-         bool setTime(unsigned long t_on, unsigned long t_off) ; // Return true if succesful
-         unsigned long getTimeOn() ; // Returns TimeOn
-         unsigned long getTimeOff() ; // Returns TimeOff
-         unsigned long getTime() ; // Returns the time into the cycle from [0,timeOff+timeOn].
-         void enable (bool en) ; // Enable the actuator
-         bool isEnable() ; // Returns true if actuator is enable
-         bool begin();
-         bool run() ;
-  } ;
+         bool getState(); // Returns Actuator State
+
+         // Looks for the correct actuator and execute setTimeOn
+         static void setTimeOnAll(
+           uint8_t type,
+           uint8_t floor,
+           unsigned long timeOn
+         );
+         // Looks for the correct actuator and execute setCycleTime
+         static void setCycleTimeAll(
+           uint8_t type,
+           uint8_t floor,
+           unsigned long cycleTime
+         );
+         // Looks for the correct actuator and execute setTime
+         static void setTimeAll(
+           uint8_t type,
+           uint8_t floor,
+           unsigned long timeOn,
+           unsigned long cycleTime
+         );
+         // Looks for the correct actuator and execute setTimeOn
+         static unsigned long getTimeOnAll(uint8_t type, uint8_t floor);
+         // Looks for the correct actuator and execute setCycleTime
+         static unsigned long getCycleTimeAll(uint8_t type, uint8_t floor);
+         // Looks for the correct actuator and execute setTime
+         static unsigned long getTimeAll(uint8_t type, uint8_t floor);
+         // Looks for the correct actuator and execute enable
+         static void enableAll(uint8_t type, uint8_t floor, bool en);
+         static void beginAll(); // Starts all the actuators
+         static void runAll(); // Run all the actuators
+  };
 
 // Class to manage and synchronize multiples Solenoids Valves
 /*
@@ -102,70 +153,89 @@ Others definitions:
 */
 class solenoidValve
   {  private:
+        static bool __EnableGroup; // Group Enable variable
+        static String __Group; // Group Name
+        static uint8_t __ActualNumber; // Actual Number working into the array
+        static unsigned long __CycleTime; // Cycle time
+        static unsigned long __ActionTime; // Effective action time
+        static float __K; // flowSensor constant
+        static volatile long __NumPulses; // count flowSensorpulses
+        static float __H2Ow; // Potential Water Wasted. Flow measure when no solenoids are active.
+
+        static void countPulses(); // Interrupt Caudalimeter
+
          bool __State, __Enable;// Actuator State and Enable for each solenoid
-         byte __Number , __Floor , __Region ; // Actuator place into array, floor and region
-         unsigned long __TimeOn , __Actual_time ;
+         uint8_t __Number, __Floor, __Region; // Actuator place into array, floor and region
+         unsigned long __TimeOn, __Actual_time;
          String __Name;
          float __H2OVolume; // Water consumption for each solenoidValve
 
-         static bool __Enable_group; // Group Enable variable
-         static String __Group ; // Group Name
-         static byte __ActualNumber ; // Actual Number working into the array
-         static unsigned long __CycleTime; // Cycle time
-         static unsigned long __ActionTime; // Effective action time
-         static float __K; // flowSensor constant
-         static volatile long __NumPulses ; // count flowSensorpulses
-         static void countPulses(); // Interrupt Caudalimeter
-         static float __H2Ow; // Potential Water Waster. Flow measure when no solenoids are active.
-
-         void set_time() ;
-         void resetTime() ;
-         bool changeOrderNumber(byte new_number); // Change the order number. Return 0 if succesful
-         void getWasteH2O(bool print = HIGH) ; // Get Water Consumption  when no solenoids are active
-         void getConsumptionH2O() ; // Get Water Consumption for each Region
+         void setTime();
+         void resetTime();
+         bool changeOrderNumber(uint8_t new_number); // Change the order number. Return 0 if succesful
+         void getWasteH2O(bool print = true); // Get Water Consumption  when no solenoids are active
+         void getConsumptionH2O(); // Get Water Consumption for each Region
+         void solenoidPrint(String act); // Print an action for the solenoid
+         void groupPrint(String act); // Print an action for the group
 
      public:
-          static byte __TotalActuators;
-          static solenoidValve *ptr[MAX_ACTUATORS] ; // List of pointers to each object
+          static uint8_t __TotalActuators;
+          static solenoidValve *ptr[MAX_ACTUATORS]; // List of pointers to each object
 
           static void flowSensorBegin();
 
-          solenoidValve (String name) ; // Constructor
-          unsigned long getTime() ; // Returns the time into the cycle for the particular actuator
-          // Variables of time in microseconds
-          bool setTimeOn ( unsigned long t_on ) ; // Return true if succesful
-          bool setCycleTime ( unsigned long t_cycle ) ; // Return true if succesful
-          unsigned long getTimeOn() ;
-          unsigned long getCycleTime() ;
-          bool getState() ; // Returns actuator state
-          void changeState() ; // Change actual actuator state
-          void turnOn( ) ;
-          void turnOff( ) ;
-          void changeState(bool rst_time) ; // Change State & RST Time
-          void turnOn(bool rst_time) ; // Turn Off State & RST Time
-          void turnOff(bool rst_time) ; // Turn On & RST Time
-          bool reOrder(byte number); // Return true if succesful
-          byte getOrder(); // Returns the order number into the group of the actuator
-          byte getActualNumber(); // Returns the actual actuator number active into the array
-          void enable (bool en) ; // Enable the actuator
-          bool isEnable() ; // Returns true if the array of the actuator is enable
-          static void enableGroup(bool en); // Enable the group
-          static bool isEnableGroup(); // Returns true if the array of the actuator is enable
-          byte getFloor(); // Returns the floor of the actuator
-          byte getRegion(); // Return the region of the actuator
-          bool reOrderAll(bool sequence, bool order); // True if succesful
-          bool reOrder_byFloor(byte fl); // Send to the last positions the
-          bool defaultOrder(byte night_floor); // Clarisa Favorite Order
-          void restartH2O(); // Set Volume in zero
-          void restartAllH2O(); // Set all Volumes in zero
+          solenoidValve (String name); // Constructor
+          unsigned long getTime(); // Returns the time into the cycle for the particular actuator
+          bool setTimeOn(unsigned long t_on); // Return true if succesful
+          unsigned long getTimeOn();
+          bool getState(); // Returns actuator state
+          uint8_t getOrder(); // Returns the order number into the group of the actuator
+          void turnOn(bool rst_time); // Turn Off State & RST Time
+          void turnOff(bool rst_time); // Turn On & RST Time
+          bool reOrder(uint8_t number); // Return true if succesful
+          void enable(bool en); // Enable the actuator
+          bool isEnable(); // Returns true if the array of the actuator is enable
+          uint8_t getFloor(); // Returns the floor of the actuator
+          uint8_t getRegion(); // Return the region of the actuator
+          String getName(); // Returns the name of the solenoid
+          bool reOrder_byFloor(uint8_t fl); // Send to the last positions the
+          void restartH2O(bool print); // Set Volume in zero
+          void restartAllH2O(bool print); // Set all Volumes in zero
           float getH2O(); // Return Volume of H2O
           void printH2O(); // Print on serial the acummulate water consumption
-          void printAllH2O(bool printAll = HIGH); // Print on serial all the acummulates of water
-          String getName(); // Returns the name of the solenoid
+          void printAllH2O(bool printAll = true); // Print on serial all the acummulates of water
           // Variables of time in seconds
-          byte begin( byte fl, byte reg, unsigned long t_on, unsigned long cycleTime ) ; // Return true if succesful
-          bool run() ;
-          static void runAll();
-   } ;
+          uint8_t begin(uint8_t fl, uint8_t reg); // Return true if succesful
+          bool run();
+          static unsigned long getActionTime();
+          static unsigned long getCycleTime();
+          static bool setCycleTime (unsigned long t_cycle); // Return true if succesful
+          static uint8_t getActualNumber(); // Returns the actual actuator number active into the array
+          static bool reOrderAll(bool sequence, bool order); // True if succesful
+          static bool defaultOrder(uint8_t night_floor); // Clarisa Favorite Order
+          static void enableGroup(bool en); // Enable the group
+          static bool isEnableGroup(); // Returns true if the array of the actuator is enable
+          static float getWaterAll(); // Returns the total of the water consumption
+          // Returns the total of the water consumption by floor
+          static float getWaterByFloor(uint8_t fl);
+   };
+
+// Class to control all the Actuators that are not synchronize or have predefine cycles.
+class asyncActuator
+  {  private:
+         bool __State, __Enable;
+         String __Name;
+
+         void printAction(String act);
+
+     public:
+         // Constructor
+         asyncActuator(String name);
+         void turnOn();
+         void turnOff();
+         bool getState(); // Returns asyncActuator State
+         void enable (bool en); // Enable the asyncActuator
+         bool isEnable(); // Returns true if asyncActuator is enable
+   };
 
   #endif
