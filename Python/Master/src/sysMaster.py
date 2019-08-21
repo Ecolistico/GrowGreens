@@ -1,8 +1,12 @@
 import os
+import select
 import subprocess
 import urllib.request
 
-# define our clear function 
+def GetLine(Block=False):
+  if Block or select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
+      return input()
+    
 def clear(): 
     # for windows 
     if os.name == 'nt': 
@@ -11,7 +15,6 @@ def clear():
     else: 
         _ = os.system('clear')
 
-# define our ping function
 def ping():
     if (os.name == 'nt'): # for windows
         pg = "ping -n 1"

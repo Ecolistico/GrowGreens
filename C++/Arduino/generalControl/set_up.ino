@@ -19,6 +19,8 @@ void solenoid_setup(){
     Serial.println(F("Routine created correctly"));
     }else{Serial.println(F("Routine cannot be configured correctly"));}
   }
+  // Delay to give time to pass all serial parameters
+  delay(1000);
 }
 
 void sensors_setup(){
@@ -39,6 +41,8 @@ void sensors_setup(){
   // Air/Water Sensors
   waterSensor::beginAll(); // Starts water sensors
   Serial.println(F("Water Sensors started"));
+  // Delay to give time to pass all serial parameters
+  delay(1000);
 }
 
 void enableSolenoid(int fl, int reg){

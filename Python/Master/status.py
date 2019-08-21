@@ -3,7 +3,7 @@ import sys
 import os
 import json
 sys.path.insert(0, './src/')
-from sysRasp import runShellCommand, clear
+from sysMaster import runShellCommand, clear
 import webbrowser
 from time import time
 

@@ -5,7 +5,7 @@ import time
 import getpass
 import webbrowser
 sys.path.insert(0, './src/')
-from sysRasp import runShellCommand, isWiFi, getGatewayIPaddr, clear, ping
+from sysMaster import runShellCommand, isWiFi, getGatewayIPaddr, clear, ping
     
 config = False
 reconfig = ""
