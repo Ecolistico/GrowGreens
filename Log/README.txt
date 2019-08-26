@@ -1,1 +1,0 @@
-En esta carpeta se almacenan todos los archivos .log.
