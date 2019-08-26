@@ -1,54 +1,44 @@
 #!/usr/bin/env python3
 
 # Import directories
-import os
 from serial import Serial
-from time import strftime, localtime
-
-# Define files paths
-actualDirectory = os.getcwd()
-if(actualDirectory.endswith('src')): logPath = "../log/"
-else: logPath = "./log/"
+        
+class serialController:
+    def __init__(self, loggerGC, loggerMG, loggerSM):
+        # Define microcontrolers
+        self.generalControl = Serial('/dev/generalControl', 115200, timeout=1)
+        self.generalControl.close()
+        self.motorsGrower = Serial('/dev/motorsGrower', 115200, timeout=1)
+        self.motorsGrower.close()
+        self.solutionMaker = Serial('/dev/solutionMaker', 115200, timeout=1)
+        self.solutionMaker.close()
+        # Define loggers
+        self.logGC = loggerGC
+        self.logMG = loggerMG
+        self.logSM = loggerSM
     
-# Define microcontrolers
-generalControl = Serial('/dev/generalControl', 115200, timeout=1)
-generalControl.close()
-motorsGrower = Serial('/dev/motorsGrower', 115200, timeout=1)
-motorsGrower.close()
-solutionMaker = Serial('/dev/solutionMaker', 115200, timeout=1)
-solutionMaker.close()
+    def open(self):
+        self.generalControl.open()
+        self.motorsGrower.open()
+        self.solutionMaker.open()
+    
+    def close(self):
+        self.generalControl.close()
+        self.motorsGrower.close()
+        self.solutionMaker.close()
+        
+    def loop(self):
+        # If bytes available in generalControl
+        while self.generalControl.inWaiting()>0:
+            line1 = str(self.generalControl.readline(), "utf-8")
+            self.logGC.info(line1[0:-1])
+            
+        # If bytes available in motorsGrower
+        while self.motorsGrower.inWaiting()>0:
+            line2 = str(self.motorsGrower.readline(), "utf-8")
+            self.logMG.info(line2[0:-1])
 
-def saveLog(device, line):
-    logP = logPath + device
-    logF = logP + "/{}.log".format(strftime("%Y-%m-%d", localtime()))
-    # Check if directory exists
-    if not os.path.exists(logP): os.makedirs(logP)
-    # Save log
-    with open(logF, "a+") as f:
-        f.write("\n{} - ".format(strftime("%H:%M:%S", localtime())) + line)
-        f.close()
-        
-def loop():
-    # If bytes available in generalControl
-    while generalControl.inWaiting()>0:
-        line1 = str(generalControl.readline(), "utf-8")
-        saveLog("generalControl", line1[0:-1])
-        
-        # Debug
-        #print("generalControl:", line1, end="")
-        
-    # If bytes available in motorsGrower
-    while motorsGrower.inWaiting()>0:
-        line2 = str(motorsGrower.readline(), "utf-8")
-        saveLog("motorsGrower", line2[0:-1])
-            
-        # Debug
-        #print("motorsGrower:", line2, end="")
-        
-    # If bytes available in solutionMaker
-    while solutionMaker.inWaiting()>0:
-        line3 = str(solutionMaker.readline(), "utf-8")
-        saveLog("solutionMaker", line3[0:-1])
-            
-        # Debug
-        #print("solutionMaker:", line, end="")
+        # If bytes available in solutionMaker
+        while self.solutionMaker.inWaiting()>0:
+            line3 = str(self.solutionMaker.readline(), "utf-8")
+            self.logSM.info(line3[0:-1])

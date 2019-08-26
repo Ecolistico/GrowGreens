@@ -1,9 +1,9 @@
-import numpy as np
+from numpy import isnan
 from datetime import datetime
 
 # def class to get ESP32 sensor data
 class dataESP32:
-    def __init__(self): # Constructor
+    def __init__(self, logger): # Constructor
         self.T1R = 0
         self.H1R = 0
         self.T1L = 0
@@ -21,6 +21,7 @@ class dataESP32:
         self.T4L = 0
         self.H4L = 0
         self.missingData = []
+        self.log = logger
     
     def append(self, data, key):
         if not key in data: data.append(key)
@@ -29,7 +30,7 @@ class dataESP32:
         if key in data: data.remove(key)
         
     def checkValue(self, val, variable, data, key):
-        if(np.isnan(val)):
+        if(isnan(val)):
             self.append(data, key)
             return variable
         else:
@@ -64,17 +65,18 @@ class dataESP32:
         else: return False
     
     def printMissingData(self):
-        print("The missing values are: ", end="")
+        mssg = "The missing values are: "
         for i,miss in enumerate(self.missingData):
-            if i<len(self.missingData)-1: print("{}, ".format(miss), end="")
-            else: print("{}".format(miss))
+            if i<len(self.missingData)-1: mssg += "{}, ".format(miss)
+            else: mssg += "{}".format(miss)
+        self.log.warning(mssg)
 
 # Define class for the 3 ESP
 class multiESP:
-    def __init__(self):
-        self.front = dataESP32()
-        self.center = dataESP32()
-        self.back = dataESP32()
+    def __init__(self, loggerFront, loggerCenter, loggerBack):
+        self.front = dataESP32(loggerFront)
+        self.center = dataESP32(loggerCenter)
+        self.back = dataESP32(loggerBack)
     
     def isDataComplete(self):
         if(self.front.isDataComplete() and self.center.isDataComplete() and self.back.isDataComplete()):
@@ -83,22 +85,13 @@ class multiESP:
     
     def printMissingData(self):
         if not self.front.isDataComplete():
-            print("The missing values from ESP-front are: ", end="")
-            for i,miss in enumerate(self.front.missingData):
-                if i<len(self.front.missingData)-1: print("{}, ".format(miss), end="")
-                else: print("{}".format(miss))
+            self.front.printMissingData()
                 
         if not self.center.isDataComplete():
-            print("The missing values from ESP-center are: ", end="")
-            for i,miss in enumerate(self.center.missingData):
-                if i<len(self.center.missingData)-1: print("{}, ".format(miss), end="")
-                else: print("{}".format(miss))
+            self.center.printMissingData()
                 
         if not self.back.isDataComplete():
-            print("The missing values from ESP-back are: ", end="")
-            for i,miss in enumerate(self.back.missingData):
-                if i<len(self.back.missingData)-1: print("{}, ".format(miss), end="")
-                else: print("{}".format(miss))
+            self.back.printMissingData()
         
     def upload2DB(self, dbConnector):
         # Create cursor

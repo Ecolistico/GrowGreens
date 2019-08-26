@@ -14,4 +14,3 @@ with open(file, "a+") as f:
     f.write('static ip_address={}/24\n'.format(deviceIP))
     f.write('static routers={}\n'.format(routerIP))
     f.write('static domain_name_servers={}\n'.format(routerIP))
-    f.close
