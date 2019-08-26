@@ -74,8 +74,9 @@ try: param = sys.argv[1]
 except: param = ""
 
 if(param==""):
-    print("\033[1;32;40m***** Welcome to GrowGreens *****\n")
-    print("\033[0;37;40mWith this window you can check and control your production system," +
+    print("\033[1;32;40m", end='')
+    print(" Welcome to GrowGreens ".center(80,'*'))
+    print("\033[0;37;40m\nWith this window you can check and control your production system," +
           " but before you must have completed your training. If you have not taked this" +
           " training could cause severe damage to yourself and to the system.")
     start = input("Do you want to continue? y/n\n")

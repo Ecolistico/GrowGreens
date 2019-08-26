@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Grow Greens
+Comment=Plant Factory System Control
+Icon=/home/pi/Documents/GrowGreens/Python/Master/img/GrowGreens_Web.png
+Exec=lxterminal -t "Grow Greens" --working-directory=/home/pi/Documents/GrowGreens/Python/Master/ --command="/bin/bash -c 'python ./growMaster.py'"
+Type=Application
+Encoding=UTF-8
+Terminal=false
+Categories=None
