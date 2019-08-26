@@ -14,6 +14,7 @@ import paho.mqtt.publish as publish
 sys.path.insert(0, './src/')
 import EnvControl
 from logger import logger
+from smtp import Mail
 from mqttCallback import mqttController
 from serialCallback import serialController
 
@@ -22,6 +23,9 @@ if not os.path.exists('temp/'): os.makedirs('temp/')
     
 # Charge logger parameters
 log = logger()
+
+# Define Mail object
+mail = Mail(log.logger, "direccion@sippys.com.mx") # Main logger, Team Ecolistico
 
 # Define database
 DataBase = './data/{}.db'.format(strftime("%Y-%m-%d", localtime()))
@@ -60,6 +64,14 @@ client.on_message = mqttControl.on_message  # Specify on_message callback
 client.on_disconnect = mqttControl.on_disconnect  # Specify on_publish callback
 client.connect(brokerIP, 1883, 60)  # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
 
+def mainClose():
+    # Close devices when finished
+    log.logger.info("Closing devices")
+    conn.close() # Database pointer
+    serialControl.close()
+    log.logger.info("GrowGreens Finished")
+    mail.sendMail("Error", "GrowGreens se detuvo")
+    
 # Setting up
 day = 0
 hour = 0
@@ -127,19 +139,11 @@ try:
             publish.single("{}/esp32back".format(ID), "sendData", hostname = brokerIP)
             # Send to generalControl new time info
             serialControl.generalControl.write(bytes("updateHour,{0},{1}".format(now.hour, now.minute),"utf-8"))
-
-    # Close devices when finished
-    log.logger.info("Closing devices")
-    conn.close() # Database pointer
-    serialControl.close()
-    log.logger.info("GrowGreens Finished")
+    
+    mainClose() # Finished th program
 
 except:
     log.logger.exception("Exception Raised")
     
 finally:
-    # Close devices when finished
-    log.logger.info("Closing devices")
-    conn.close() # Database pointer
-    serialControl.close()
-    log.logger.info("GrowGreens Finished")
+    mainClose() # Finished th program
