@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+# Import Directories
 import logging
 import logging.handlers
 
@@ -15,13 +18,16 @@ class logger:
         console.setLevel(logging.WARNING)
         
         # Set a format for console use
-        formatter = logging.Formatter('%(name)-15s: %(message)s')
+        formatter = logging.Formatter('%(name)-15s %(message)s')
         
         # Tell the handler to use this format
         console.setFormatter(formatter)
         
         # Add the handler to the root logger
         logging.getLogger('').addHandler(console)
+        
+        # Integrate the main logger with warning Module
+        logging.captureWarnings(True)
         
         # Define loggers for differents areas
         self.logger = logging.getLogger('master')

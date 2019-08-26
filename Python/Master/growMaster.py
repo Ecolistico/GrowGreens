@@ -90,46 +90,56 @@ else:
     log.logger.info("Permission to start GrowGreens refused")
     
 actualTime = time.time()
-# Main program
-while run:
-    serialControl.loop()
-    client.loop()
-    now = datetime.now()
-    
-    # When it is a new day
-    if day!=now.day:
-        # Update day
-        day = now.day
-        # Change database file
-        splitPath = DataBase.split("/")
-        DataBase = ""
-        for i,spl in enumerate(splitPath):
-            if i==len(splitPath)-1: DataBase += strftime("%Y-%m-%d", localtime()) + ".db"
-            else: DataBase += spl + "/"
-        conn.close()
-        conn = sqlite3.connect(DataBase)
-    
-    # When it is a new hour
-    if hour!=now.hour:
-        hour = now.hour
-    
-    # When it is a new minute
-    if minute!=now.minute:
-        # Update Minute
-        minute = now.minute
-        # Save last ESP32 info and request an update
-        if(boot): mqttControl.ESP32.upload2DB(conn)
-        else: boot = True
-        publish.single("{}/esp32front".format(ID), "sendData", hostname = brokerIP)
-        publish.single("{}/esp32center".format(ID), "sendData", hostname = brokerIP)
-        publish.single("{}/esp32back".format(ID), "sendData", hostname = brokerIP)
-        # Send to generalControl new time info
-        serialControl.generalControl.write(bytes("updateHour,{0},{1}".format(now.hour, now.minute),"utf-8"))
-        
-    # Testing codes
 
-# Close devices when finished
-log.logger.info("Closing devices")
-conn.close() # Database pointer
-serialControl.close()
-log.logger.info("GrowGreens Finished")
+try:
+    # Main program
+    while run:
+        serialControl.loop()
+        client.loop()
+        now = datetime.now()
+        
+        # When it is a new day
+        if day!=now.day:
+            # Update day
+            day = now.day
+            # Change database file
+            splitPath = DataBase.split("/")
+            DataBase = ""
+            for i,spl in enumerate(splitPath):
+                if i==len(splitPath)-1: DataBase += strftime("%Y-%m-%d", localtime()) + ".db"
+                else: DataBase += spl + "/"
+            conn.close()
+            conn = sqlite3.connect(DataBase)
+        
+        # When it is a new hour
+        if hour!=now.hour:
+            hour = now.hour
+        
+        # When it is a new minute
+        if minute!=now.minute:
+            # Update Minute
+            minute = now.minute
+            # Save last ESP32 info and request an update
+            if(boot): mqttControl.ESP32.upload2DB(conn)
+            else: boot = True
+            publish.single("{}/esp32front".format(ID), "sendData", hostname = brokerIP)
+            publish.single("{}/esp32center".format(ID), "sendData", hostname = brokerIP)
+            publish.single("{}/esp32back".format(ID), "sendData", hostname = brokerIP)
+            # Send to generalControl new time info
+            serialControl.generalControl.write(bytes("updateHour,{0},{1}".format(now.hour, now.minute),"utf-8"))
+
+    # Close devices when finished
+    log.logger.info("Closing devices")
+    conn.close() # Database pointer
+    serialControl.close()
+    log.logger.info("GrowGreens Finished")
+
+except:
+    log.logger.exception("Exception Raised")
+    
+finally:
+    # Close devices when finished
+    log.logger.info("Closing devices")
+    conn.close() # Database pointer
+    serialControl.close()
+    log.logger.info("GrowGreens Finished")
