@@ -12,196 +12,240 @@ void serialEvent() {                                  //if the hardware serial p
   input_string_complete = true;                       //set the flag used to tell if we have received a completed string from the PC
   
   if(input_string_complete==true){
-    if(inputstring.charAt(0)==zero_char){ // action Functions --> '0'
-      
-      if(inputstring.charAt(1)==zero_char){ // dispense() and dispenseAcid() -> Form '00ByteNumber' (Number can be int, long or float)
-        if(inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER){ //dispense()
-          byte act = inputstring.charAt(2)-zero_char;
-          float grams = inputstring.substring(3).toFloat();
-          sMaker.dispense(long(grams*1000), act);
-          sMaker.eventLCD();
-        }
-        else if(inputstring.charAt(2)-zero_char>=MAX_SOLUTIONS_NUMBER && inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){ //dispenseAcid()
-          byte act = inputstring.charAt(2)-MAX_SOLUTIONS_NUMBER-zero_char;
-          float mililiters = inputstring.substring(3).toFloat();
-          sMaker.dispenseAcid(mililiters, act);
-          sMaker.eventLCD();
-        }
-        else{Serial.println(F("Parameter incorrect: Actuator does not exist"));}
+    String parameter[5];
+    int k = 0;
+    int l = 0;
+    // Split the parameters
+    for (int j = 0; j<inputstring.length(); j++){
+      if(inputstring[j] == ','){ // Looking for ','
+        parameter[k] = inputstring.substring(l,j);
+        k++;
+        l = j+1;
       }
+      else if(j==inputstring.length()-1){
+        parameter[k] = inputstring.substring(l,j+1);
+      }
+    }
 
-      else if(inputstring.charAt(1)==zero_char+9){ // stop() -> Form '09Byte'
-        if(inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
-          byte act = inputstring.charAt(2)-zero_char;
+    // prepare()
+    // -> Form "prepare,float[liters],int[sol],float[ph],float[ec]"
+    if(parameter[0]=="prepare"){
+      float liters = parameter[1].toFloat();
+      byte sol = parameter[2].toInt();
+      float ph = parameter[3].toFloat();
+      float ec = parameter[4].toFloat();
+      if(liters>0){
+        if(sol>=0 && sol<4){
+          if(ph>0 && ph<14){
+            if(ec>0){
+              Serial.println(F("Request accepted"));
+              Serial.println("Preparing "+String(liters)+" liters of solution "+String(sol+1)+" with ph="+ String(ph)+",ec="+String(ec));
+              sMaker.prepareSolution(liters, sol, ph, ec);
+              sMaker.eventLCD();  
+            }
+            else {Serial.println(F("error,prepare() Error: ec has to be positive"));}
+          }
+          else {Serial.println(F("error,prepare() Error: ph out of range [0-14]"));}
+        }
+        else {Serial.println(F("error,prepare() Error: solution out of range [0-3]"));}
+      }
+      else {Serial.println(F("error,prepare() Error: liters has to be positive"));}
+    }
+    
+    // dispense() 
+    // -> Form "dispense,int[Motor],long[grams]"
+    else if(parameter[0]=="dispense"){
+      int act = parameter[1].toInt();
+      long grams = parameter[2].toFloat();
+      if(act>=0 && act<MAX_SOLUTIONS_NUMBER){
+        if(grams>0){
+          sMaker.dispense(long(grams*1000), act);
+          sMaker.eventLCD(); 
+        }
+        else{ Serial.println(F("error,dispense() Error: Grams has to be positive"));}
+      }
+      else{ Serial.println(F("error,dispense() Error: Motor out of range [0-3]"));}
+    }
+    
+    // dispenseAcid()
+    // -> Form "dispenseAcid,int[pump],float[mililiters]"
+    else if(parameter[0]=="dispenseAcid"){
+      int act = parameter[1].toInt();
+      float mililiters = parameter[2].toFloat();
+      if(act>=0 && act<MAX_PUMPS_NUMBER){
+        if(mililiters>0){
+          sMaker.dispenseAcid(mililiters, act);
+          sMaker.eventLCD(); 
+        }
+        else{ Serial.println(F("error,dispenseAcid() Error: Mililiters has to be positive"));}
+      }
+      else{ Serial.println(F("error,dispenseAcid() Error:  Pump out of range [0-1]"));}
+    }
+    
+    // stop()
+    else if(parameter[0]=="stop"){
+      int act = parameter[2].toInt();
+      
+      // -> Form "stop,motor,int[motor]"
+      if(parameter[1]=="motor"){ 
+        if(act>=0 && act<MAX_SOLUTIONS_NUMBER){
           sMaker.stop(act);
           sMaker.eventLCD();
         }
-        else{Serial.println(F("Parameter incorrect: Actuator does not exist"));}
-      }
-    }
-    
-    else if(inputstring.charAt(0)==zero_char+1){ // calibration(motors/Pumps) Functions --> '1'
-      
-      if(inputstring.charAt(1)==zero_char){ // stepperCalibration() and stepperCalibration() -> Form '10ByteNumber' (Number can be int, long or float)
-        if(inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER){ //stepperCalibration()
-          byte act = inputstring.charAt(2)-zero_char;
-          long rev = inputstring.substring(3).toInt();
-          sMaker.stepperCalibration(rev, act);
-          sMaker.eventLCD();
-        }
-        else if(inputstring.charAt(2)-zero_char>=MAX_SOLUTIONS_NUMBER && inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){ //pumpCalibration()
-          byte act = inputstring.charAt(2)-MAX_SOLUTIONS_NUMBER-zero_char;
-          float Time = inputstring.substring(3).toFloat();
-          sMaker.pumpCalibration(Time, act);
-          sMaker.eventLCD();
-        }
-        else{Serial.println(F("Parameter incorrect: Actuator does not exist"));}
+        else{ Serial.println(F("error,stop() Error: Motor out of range [0-3]"));}
       }
 
-      else if(inputstring.charAt(1)==zero_char+1){ // setCalibrationParameter()-> Form '11ByteByte'
-        if(inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
-          byte act = inputstring.charAt(2)-zero_char;
-          int param = inputstring.substring(3).toInt();
+      // -> Form "stop,pump,int[pump]"
+      else if(parameter[1]=="pump"){ 
+        if(act>=0 && act<MAX_PUMPS_NUMBER){
+          sMaker.stop(act+MAX_SOLUTIONS_NUMBER);
+          sMaker.eventLCD();
+        }
+        else{ Serial.println(F("error,stop() Error:  Pump out of range [0-1]"));}
+      }
+      else{Serial.println(F("error,stop() Error: Parameter[1] does not match a type]"));}
+    }
+
+    // calibration()
+    else if(parameter[0]=="calibration"){
+      
+      // -> Form "calibration,motor,int[motor],long[revolutions]"
+      if(parameter[1]=="motor"){
+        int act = parameter[2].toInt();
+        long rev = parameter[3].toInt();
+        if(act>=0 && act<MAX_SOLUTIONS_NUMBER){
+          if(rev>0){
+            sMaker.stepperCalibration(rev, act);
+            sMaker.eventLCD();
+          }
+          else{ Serial.println(F("error,calibration() Error: Revotutions has to be positive"));}
+        }
+        else{ Serial.println(F("error,calibration() Error:  Motor out of range [0-3]"));}
+      }
+      
+      // -> Form "calibration,pump,int[pump],long[Time]"
+      else if(parameter[1]=="pump"){
+        int act = parameter[2].toInt();
+        float Time = parameter[3].toFloat();
+        if(act>=0 && act<MAX_PUMPS_NUMBER){
+          if(Time>0){
+            sMaker.pumpCalibration(Time, act);
+            sMaker.eventLCD();
+          }
+          else{ Serial.println(F("error,calibration() Error: Time has to be positive"));}
+        }
+        else{ Serial.println(F("error,calibration() Error:  Pump out of range [0-1]"));}
+      }
+      
+      // Set parameters for motors/pumps
+      // -> Form "calibration,setCal,int[act],int[param]"
+      else if(parameter[1]=="setCal"){
+        int act = parameter[2].toInt();
+        int param = parameter[3].toInt();
+        if(act>=0 && act<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
           if(param>=0 && param<=255){
             sMaker.setCalibrationParameter(param, act);
             sMaker.eventLCD();
             write_EEPROM(act, param);
           }
-          else{Serial.println(F("Parameter incorrect: Parameter must be a byte [0-255]"));}
+          else{Serial.println(F("error,calibration() Error: Parameter must be a byte [0-255]"));}
         }
-        else{Serial.println(F("Parameter incorrect: Actuator does not exist"));}
+        else{Serial.println(F("error,calibration() Error: Actuator out of range [0-5]"));}
       }
-
-      else if(inputstring.charAt(1)==zero_char+2){ // setCalibrationParameter1()-> Form '12ByteByte'
-        if(inputstring.charAt(2)-zero_char<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
-          byte act = inputstring.charAt(2)-zero_char;
-          int param = inputstring.substring(3).toInt();
+      
+      // Set parameter for ph/ec equations
+      // -> Form "calibration,setCal1,int[act],int[param]"
+      else if(parameter[1]=="setCal1"){
+        int act = parameter[2].toInt();
+        int param = parameter[3].toInt();
+        if(act>=0 && act<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
           if(param>=0 && param<=255){
             sMaker.setCalibrationParameter1(param, act);
             sMaker.eventLCD();
             write_EEPROM(act+MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, param);
           }
-          else{Serial.println(F("Parameter incorrect: Parameter must be a byte [0-255]"));}
+          else{Serial.println(F("error,calibration() Error: Parameter must be a byte [0-255]"));}
         }
-        else{Serial.println(F("Parameter incorrect: Actuator does not exist"));}
+        else{Serial.println(F("error,calibration() Error: Actuator out of range [0-5]"));}
       }
+      else{Serial.println(F("error,calibration() Error: Parameter[1] does not match a type]"));}
     }
 
-    else if(inputstring.charAt(0)==zero_char+2){ // Free Functions --> '2'
-      
-    }
-    
-    else if(inputstring.charAt(0)==zero_char+3){ // EZOsensors(ph/ec) Functions --> '3'
-      
-      if(inputstring.charAt(1)==zero_char){ // EZOisEnable(sensorType) -> Form '30Byte'
-        byte sensorType = inputstring.charAt(2)-zero_char;
-        if(sensorType == EZO_PH){
-          if(sMaker.EZOisEnable(sensorType)) Serial.println(F("Solution Maker (phMeter): Enable"));
-          else Serial.println(F("Solution Maker (phMeter): Disable"));
+    // ezo()
+    else if(parameter[0]=="ezo"){
+      int sensorType = 10;
+      String sensorString = "";
+      if(parameter[1]=="ph"){
+        sensorType = EZO_PH;
+        sensorString = "phmeter";
+      }
+      else if(parameter[1]=="ec"){
+        sensorType = EZO_EC;
+        sensorString = "ecmeter";
+      }
+      if(sensorType==EZO_PH || sensorType==EZO_EC){
+        // -> Form "ezo,sensorType[ph/ex],isEnable"
+        if(parameter[2]=="isEnable"){
+          if(sMaker.EZOisEnable(sensorType)){
+            Serial.print(sensorString);
+            Serial.println(F(": Enable"));
+          }
+          else{
+            Serial.print(sensorString);
+            Serial.println(F(": Disable"));
+          }
         }
-        else if(sensorType == EZO_EC){
-          if(sMaker.EZOisEnable(sensorType)) Serial.println(F("Solution Maker (ecMeter): Enable"));
-          else Serial.println(F("Solution Maker (ecMeter): Disable"));
+        // -> Form "ezo,sensorType[ph/ex],calibration,int[action],float[val]"
+        else if(parameter[2]=="calibration"){
+          int action = parameter[3].toInt();
+          float val = parameter[4].toFloat();
+          sMaker.EZOcalibration(sensorType, action, val);
         }
-        else{Serial.println(F("Parameter incorrect: EZO sensor does not match a type"));}
-      }
-
-      else if(inputstring.charAt(1)==zero_char+1){ // EZOcalibration(sensorType, act, value) -> Form '31ByteByteFloat'
-        byte sensorType = inputstring.charAt(2)-zero_char;
-        byte act = inputstring.charAt(3)-zero_char;
-        float val = inputstring.substring(4).toFloat();
-        sMaker.EZOcalibration(sensorType, act, val);
-      }
-
-      else if(inputstring.charAt(1)==zero_char+2){ // EZOexportCal(sensorType) -> Form '32Byte'
-        byte sensorType = inputstring.charAt(2)-zero_char;
-        sMaker.EZOexportCal(sensorType);
-      }
-
-      else if(inputstring.charAt(1)==zero_char+3){ // EZOimport(start) -> Form '33Bool'
-        byte start = inputstring.charAt(2)-zero_char;
-        if(start == 0) sMaker.EZOimport(false);
-        else if(start == 1) sMaker.EZOimport(true);
-        else Serial.println(F("Parameter incorrect. It has to be 0/1"));
-        
-      }
-      
-      else if(inputstring.charAt(1)==zero_char+4){ // EZOimportCalibration(sensorType, parameters) -> Form '34ByteString'
-        byte sensorType = inputstring.charAt(2)-zero_char;
-        String parameters = inputstring.substring(3);
-        sMaker.EZOimportCalibration(sensorType, parameters);
-      }
-
-      else if(inputstring.charAt(1)==zero_char+5){ // EZOsleep() -> Form '35'
-        if(!sMaker.EZOisSleep()) Serial.println(F("Solution Maker (EZO Sensors): Enter into sleep mode"));
-        sMaker.EZOsleep();
-      }
-
-      else if(inputstring.charAt(1)==zero_char+6){ // EZOawake() -> Form '36'
-        if(sMaker.EZOisSleep()) Serial.println(F("Solution Maker (EZO Sensors): Awaking sensors"));
-        sMaker.EZOawake();
-      }
-    }
-    
-    else if(inputstring.charAt(0)==zero_char+4){ // Filters Functions --> '4'
-      if(inputstring.charAt(1)==zero_char){ // notFilter() -> Form '40'
-        sMaker.notFilter();
-      }
-      else if(inputstring.charAt(1)==zero_char+1){ // defaultFilter() -> Form '41'
-        sMaker.defaultFilter();
-      }
-      else if(inputstring.charAt(1)==zero_char+2){ // setExpontentialFilter() -> Form '42Float'
-        float alpha = inputstring.substring(2).toFloat();
-        sMaker.setExponentialFilter(alpha);
-      }
-      else if(inputstring.charAt(1)==zero_char+3){ // setKalmanFilter() -> Form '43Float'
-        float noise = inputstring.substring(2).toFloat();
-        sMaker.setKalmanFilter(noise);
-      }
-      else if(inputstring.charAt(1)==zero_char+4){ // printFilter() -> Form '44'
-        sMaker.printFilter();
-      }
-    }
-    
-    else if(inputstring.charAt(0)==zero_char+5){ // EEPROM Functions --> '5'
-      if(inputstring.charAt(1)==zero_char && inputstring.charAt(2)==zero_char+3){ // print_EEPROM() -> Form '503'
-        print_EEPROM();
-      }
-      else if(inputstring.charAt(1)==zero_char+1 && inputstring.charAt(2)==zero_char+3){ // read_EEPROM() -> Form '513'
-        read_EEPROM(HIGH);
-      }
-      else if(inputstring.charAt(1)==zero_char+2 && inputstring.charAt(2)==zero_char+3){ // clean_EEPROM() -> Form '523'
-        clean_EEPROM();
-      }
-    }
-
-    else if(inputstring.length()>6){
-      String parameter[5];
-      int k = 0;
-      int l = 0;
-      // Split the parameters
-      for (int j = 0; j<inputstring.length(); j++){
-        if(inputstring[j] == ','){ // Looking for ','
-          parameter[k] = inputstring.substring(l,j);
-          k++;
-          l = j+1;
+        else if(parameter[2]=="exportCal"){ sMaker.EZOexportCal(sensorType); } // -> Form "ezo,sensorType[ph/ex],exportCal"
+        else if(parameter[2]=="startImport"){ sMaker.EZOimport(true); } // -> Form "ezo,sensorType[ph/ex],startImport"
+        else if(parameter[2]=="stopImport"){ sMaker.EZOimport(false); } // -> Form "ezo,sensorType[ph/ex],stopImport"
+        else if(parameter[2]=="importCal"){ sMaker.EZOimportCalibration(sensorType, parameter[3]); } // -> Form "ezo,sensorType[ph/ex],importCal"
+        // -> Form "ezo,sensorType[ph/ex],sleep"
+        else if(parameter[2]=="sleep"){
+          if(!sMaker.EZOisSleep()) Serial.println(F("EZO Sensors: Enter into sleep mode"));
+          sMaker.EZOsleep();
         }
-        else if(j==inputstring.length()-1){
-          parameter[k] = inputstring.substring(l,j+1);
+        // -> Form "ezo,sensorType[ph/ex],awake"
+        else if(parameter[2]=="awake"){
+          if(sMaker.EZOisSleep()) Serial.println(F("EZO Sensors: Awaking sensors"));
+          sMaker.EZOawake();
         }
+        else{Serial.println(F("error,ezo() Error: Parameter[2] does not match a type]"));}
       }
-      
-      if(parameter[0]=="prepare"){
-        float liters = parameter[1].toFloat();
-        byte sol = parameter[2].toInt();
-        float ph = parameter[3].toFloat();
-        float ec = parameter[4].toFloat();
-        
-        //Serial.println("Preparing "+String(liters)+" liters of solution "+String(sol+1)+" with ph="+ String(ph)+",ec="+String(ec));
-        sMaker.prepareSolution(liters, sol, ph, ec);
-        sMaker.eventLCD();
-      }
+      else{Serial.println(F("error,ezo() Error: Parameter[1] does not match a type]"));}
     }
+
+    // filter()
+    else if(parameter[0]=="filter"){
+      if(parameter[1]=="notFilter"){ sMaker.notFilter(); } // -> Form "filter,notFilter"
+      else if(parameter[1]=="default"){ sMaker.defaultFilter(); } // -> Form "filter,defaultFilter"
+      else if(parameter[1]=="exponential"){ // -> Form "filter,exponential,float[alpha]"
+        float alpha = parameter[2].toFloat();
+        if(alpha>0 && alpha<1) sMaker.setExponentialFilter(alpha);
+        else Serial.println(F("error,filter() Error: alpha out of range [0-1]"));
+      }
+      else if(parameter[1]=="kalman"){ // -> Form "filter,exponential,kalman,float[noise]"
+        float noise = parameter[2].toFloat();
+        if(noise>0) sMaker.setKalmanFilter(noise);
+        else Serial.println(F("error,filter() Error: noise has to be positive"));
+      }
+      else if(parameter[1]=="print"){ sMaker.printFilter(); } // -> Form "filter,print"
+      else{Serial.println(F("error,filter() Error: Parameter[1] does not match a type]"));}
+    }
+
+    // eeprom()
+    else if(parameter[0]=="eeprom"){
+      if(parameter[1]=="print"){ print_EEPROM(); } // -> Form "eeprom,print"
+      else if(parameter[1]=="read"){ read_EEPROM(HIGH); } // -> Form "eeprom,read"
+      else if(parameter[1]=="clean"){ clean_EEPROM(); } // -> Form "eeprom,clean"
+    }
+
+    else{Serial.println(F("error,() Error: Parameter[0] does not match a type]"));}
   }
   input_string_complete = false;
 }
