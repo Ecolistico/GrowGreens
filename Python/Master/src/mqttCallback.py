@@ -35,6 +35,12 @@ class mqttController:
         self.brokerIP = brokerIP
         self.conn = connector
     
+    def Msg2Log(self, logger, mssg):
+        if(mssg.split(",")[1]=="debug"): logger.debug(mssg.split(",")[0])
+        elif(mssg.split(",")[1]=="info"): logger.info(mssg.split(",")[0])
+        elif(mssg.split(",")[1]=="warning"): logger.warning(mssg.split(",")[0])
+        elif(mssg.split(",")[1]=="error"): logger.error(mssg.split(",")[0])
+        
     # Callback fires when conected to MQTT broker.
     def on_connect(self, client, userdata, flags, rc):
         Topic = "{}/#".format(self.ID)
@@ -65,12 +71,18 @@ class mqttController:
         
         # Get MQTT logs from all the devices
         if(top.endswith("log")):
-            if(device == "Grower1"): self.logGr1.info(message)
-            elif(device == "Grower2"): self.logGr2.info(message)
-            elif(device == "Grower3"): self.logGr3.info(message)
-            elif(device == "Grower4"): self.logGr4.info(message)
-            elif(device == "esp32front"): self.logFront.info(message)
-            elif(device == "esp32center"): self.logCenter.info(message)
+            if(device == "Grower1"):
+                self.Msg2Log(self.logGr1, message)
+            elif(device == "Grower2"):
+                self.Msg2Log(selflogGr2, message)
+            elif(device == "Grower3"):
+                self.Msg2Log(self.logGr3, message)
+            elif(device == "Grower4"):
+                self.Msg2Log(self.logGr4, message)
+            elif(device == "esp32front"):
+                self.logFront.info(message)
+            elif(device == "esp32center"):
+                self.logCenter.info(message)
             elif(device == "esp32back"): self.logBack.info(message)
             else: self.logMain.warning("Unknown mqtt log recieve - device={}, message={}".format(device, message))
             
