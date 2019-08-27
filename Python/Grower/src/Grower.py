@@ -162,8 +162,9 @@ class Grower:
     def whatIsMyIP(self):
         return getIPaddr()
     
-    def photoPath(self):
-        return "data/photos_{}-{}-{}".format(self.day, self.month, self.year) # Return folder name
+    def photoPath(self, longPath = True):
+        if longPath: return "data/photos_{}-{}-{}".format(self.day, self.month, self.year) # Return long folder name
+        else: return "photos_{}-{}-{}".format(self.day, self.month, self.year) # Return short folder name
     
     def thermalPhoto(self, name):
         # Check if directory exist, if not create it
@@ -327,13 +328,13 @@ class Grower:
     def sendPhotos(self, host, name, pskw, floor = 0):
         try:
             with Connection(host, username=name, password=pskw) as sftp:
-                if(sftp.isdir('/home/pi/Documents/Master/photos')):
-                    sftp.chdir('/home/pi/Documents/Master/photos')
+                if(sftp.isdir('/home/pi/Documents/Master/data')):
+                    sftp.chdir('/home/pi/Documents/Master/data')
                     if not sftp.isdir("Grower{}".format(floor)):
                         sftp.makedirs("Grower{}".format(floor))
                     sftp.chdir("Grower{}".format(floor))
-                    sftp.makedirs(self.photoPath())
-                    sftp.put_r(self.photoPath(), '/home/pi/Documents/Master/photos/Grower{}/{}'.format(floor, self.photoPath()), preserve_mtime=False)
+                    sftp.makedirs(self.photoPath(False))
+                    sftp.put_r(self.photoPath(True), '/home/pi/Documents/Master/data/Grower{}/{}'.format(floor, self.photoPath(False)), preserve_mtime=False)
                     return True
                 else: return False
         except:

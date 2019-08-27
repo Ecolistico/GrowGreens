@@ -175,9 +175,12 @@ class mqttController:
             hostName = param[2]
             hostPassword = param[3]
             if(host!="" and hostName!="" and hostPassword!=""):
-                mssg = "Photos sended to {}@{}".format(hostName, host)
-                self.grower.sendPhotos(host, hostName, hostPassword, int(floor))
-                self.sendLog(mssg)
+                if self.grower.sendPhotos(host, hostName, hostPassword, int(self.floor)):
+                    mssg = "Photos sended to {}@{}".format(hostName, host)
+                    self.sendLog(mssg)
+                else:
+                    mssg = "Error in sendPhotos function: Cannot be executed"
+                    self.sendLog(mssg, 3)
             else:
                 mssg = "Error in sendPhotos function: Parameter incorrect"
                 self.sendLog(mssg, 3)
