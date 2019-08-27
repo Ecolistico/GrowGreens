@@ -24,9 +24,6 @@ if not os.path.exists('temp/'): os.makedirs('temp/')
 # Charge logger parameters
 log = logger()
 
-# Define Mail object
-mail = Mail(log.logger, "direccion@sippys.com.mx") # Main logger, Team Ecolistico
-
 # Define database
 DataBase = './data/{}.db'.format(strftime("%Y-%m-%d", localtime()))
 conn = sqlite3.connect(DataBase)
@@ -36,7 +33,12 @@ with open("config.json") as f:
     data = json.load(f)
     ID = data["ID"]
     brokerIP = data["staticIP"]
+    city = data["city"]
+    state = data["state"]
     
+# Define Mail object
+mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
+
 # Define variables imported form other files
 # From MQTT Callback
 mqttControl = mqttController(ID,

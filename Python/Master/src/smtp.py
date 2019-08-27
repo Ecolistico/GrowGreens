@@ -5,16 +5,24 @@ import smtplib
 from time import strftime, localtime
 
 class Mail:
-    def __init__(self, logger, loggerMail):
+    def __init__(self, logger, loggerMail, city, state, ID):
         self.log = logger
         self.logMail = loggerMail
+        self.city = city
+        self.state = state
+        self.ID = ID
         
     def sendMail(self, subject, mssg):
         infoMail = "info@sippys.com.mx"
-        message = "From: {}\nSubject:{}\n\n{} - {}".format(infoMail,
-                                                           subject,
-                                                           strftime("%Y-%m-%d %H:%M:%S",localtime()),
-                                                           mssg)
+        message = "From: {0}\nSubject:{1}\n\nUbicación: {2}, {3}\nContainer:{4}\n{5} - {6}".format(
+            "Ecolistico-info",
+            subject,
+            self.city,
+            self.state,
+            self.ID,
+            strftime("%Y-%m-%d %H:%M:%S", localtime()),
+            mssg)
+        message = message.encode("utf-8")
         try:
             server = smtplib.SMTP_SSL("smtp.yandex.com.tr", 465)
             server.login(infoMail, "Kale5elak.")
@@ -22,4 +30,4 @@ class Mail:
             server.close()
             self.log.info("Email sent to {}, Subject={}, Message={}".format(self.logMail, subject,mssg))
         except:
-            self.log.error("Email Error, cannot send the email")
+            self.log.exception("Email Error, cannot send the email")
