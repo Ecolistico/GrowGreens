@@ -1,9 +1,8 @@
 import sys
 import os
 actualDirectory = os.getcwd()
-if(actualDirectory.endswith('Grower')): sys.path.insert(0, '../sysRasp/')
-elif(actualDirectory.endswith('src')): sys.path.insert(0, '../../sysRasp/')
-from sysRasp import runShellCommand, existFile
+if not actualDirectory.endswith('src'): sys.path.insert(0, './src/')
+from sysGrower import runShellCommand, existFile
 
 # Stop hostapd
 if(runShellCommand('sudo systemctl stop hostapd')):

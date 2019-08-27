@@ -1,4 +1,4 @@
-import serial
+from serial import Serial
 
 """
 Functions resume:
@@ -50,9 +50,10 @@ class Cozir:
     act_OutMode = -1
     
     # Constructor
-    def __init__(self, port = "/dev/ttyS0", TIME = 1):
-        self.ser = serial.Serial(port, baudrate = 9600, timeout = TIME)
-    
+    def __init__(self, logger, port = "/dev/ttyS0", TIME = 1):
+        self.ser = Serial(port, baudrate = 9600, timeout = TIME)
+        self.log = logger
+        
     # Set Operation Mode
     def opMode(self, mode):
         if(mode>=0 and mode<=2):
@@ -66,7 +67,7 @@ class Cozir:
             else: return False
             
         else: # Parameter wrong
-            print("Cozir: Mode Parameter not recognized")
+            self.log.error("Cozir: Mode Parameter not recognized")
             return False
     
     # Request info
@@ -92,20 +93,20 @@ class Cozir:
             self.ser.write(bytes("@ {0}.0 {1}.0\r\n".format(a, b),'utf-8'))
             self.ser.flush()
             if(str(self.ser.readline(),'utf-8') == " @ {0}.0 {1}.0\r\n".format(a, b)):
-                print("Cozir: Autocalibration parameters saved")
+                self.log.info("Cozir: Autocalibration parameters saved")
                 return 2
             else:
-                print("Cozir: Cannot saved autocalibration parameters")
+                self.log.error("Cozir: Cannot saved autocalibration parameters")
                 return 0
         
         else:
             self.ser.write(bytes("@ 0\r\n",'utf-8'))
             self.ser.flush()
             if(str(self.ser.readline(),'utf-8') == " @ 0\r\n"):
-                print("Cozir: Disable Autocalibration")
+                self.log.info("Cozir: Disable Autocalibration")
                 return 1
             else:
-                print("Cozir: Cannot disable Autocalibration")
+                self.log.error("Cozir: Cannot disable Autocalibration")
                 return 0
     
     # Get Autocalibration setting
@@ -125,20 +126,20 @@ class Cozir:
         resp = int(resp[3:8])
         
         if(abs(code-resp)>10):
-            print("Cozir: Altitude difference is considerable recalibrating... ")
+            self.log.info("Cozir: Altitude difference is considerable recalibrating... ")
             self.ser.write(bytes("S {0}\r\n".format(code),'utf-8'))
             self.ser.flush()
             resp = str(self.ser.readline(),'utf-8')
             resp = int(resp[3:8])
             if(code == resp):
-                print("Cozir: Sensor is calibrated")
+                self.log.info("Cozir: Sensor is calibrated")
                 return True
             else:
-                print("Cozir: Sensor is not calibrated")
+                self.log.warning("Cozir: Sensor is not calibrated")
                 return False
             
         else:
-            print("Cozir: Altitude difference is not important")
+            self.log.info("Cozir: Altitude difference is not important")
             return True
     
     # Get Actual Altitude Parameter
@@ -157,10 +158,10 @@ class Cozir:
         resp = str(self.ser.readline(),'utf-8')
         resp = int(resp[3:8])
         if(resp == filt):
-            print("Cozir: Filter correctly setted")
+            self.log.info("Cozir: Filter correctly setted")
             return True
         else:
-            print("Cozir: Filter is not setted")
+            self.log.error("Cozir: Filter is not setted")
             return False
     
     # Get digital filter
@@ -202,7 +203,7 @@ class Cozir:
             resp = int(resp[3:8])
             return resp
         else:
-            print("Cozir: Parameter Incorrect")
+            self.log.error("Cozir: Parameter Incorrect")
             return None
     
     # Get Data Outputs setted
@@ -293,7 +294,7 @@ class Cozir:
             else: return False
             
         else:
-            print("Cozir: Some Parameter wrong")
+            self.log.error("Cozir: Some Parameter wrong")
             return False
     
     # Calibration when you know the value reported by the sensor and the actual correct value
@@ -302,10 +303,10 @@ class Cozir:
             self.ser.write(bytes("F {0} {1}\r\n".format(sens, real),'utf-8'))
             self.ser.flush()
             resp = str(self.ser.readline(),'utf-8')
-            print(resp)
+            self.log.debug(resp)
             if(resp[3] != "?" and resp.startswith(" F ")): return True
             else: return False
             
         else:
-            print("Cozir: Some Parameter wrong")
+            self.log.error("Cozir: Some Parameter wrong")
             return False

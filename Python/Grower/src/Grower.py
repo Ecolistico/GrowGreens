@@ -1,18 +1,15 @@
+#!/usr/bin/env python3
+
 import os
 from time import time
 from picamera import PiCamera
 from datetime import datetime
 from numpy import reshape, concatenate, savetxt
-from pysftp import Connection
 import RPi.GPIO as GPIO
 from Adafruit_AMG88xx import Adafruit_AMG88xx
+from pysftp import Connection
 import cozir
-import sys
-import os
-actualDirectory = os.getcwd()
-if(actualDirectory.endswith('Grower')): sys.path.insert(0, '../sysRasp/')
-elif(actualDirectory.endswith('src')): sys.path.insert(0, '../../sysRasp/')
-from sysRasp import runShellCommand, getOutput_ShellCommand, getIPaddr
+from sysGrower import runShellCommand, getOutput_ShellCommand, getIPaddr
 
 """
 Functions resume:
@@ -34,7 +31,9 @@ Functions resume:
     * close() - Cleanup the GPIO´s
 """
 class Grower:
-    def __init__(self, ir = 22, led = 23, xenon = 26, en1 = 4, en2 = 27, in1 = 24, in2 = 18, in3 = 17, in4 = 10, thermal1Addr = 0x69, thermal2Addr = 0x68, ircut = 0):
+    def __init__(self, logger, ir = 22, led = 23, xenon = 26, en1 = 4, en2 = 27, in1 = 24, in2 = 18, in3 = 17, in4 = 10, thermal1Addr = 0x69, thermal2Addr = 0x68, ircut = 0):
+        self.log = logger
+        
         self.day = 0
         self.month = 0
         self.year = 0
@@ -60,15 +59,17 @@ class Grower:
         self.thermalCam1 = Adafruit_AMG88xx(address=thermal1Addr) # Set thermalCam1 on its i2c addres
         self.thermalCam2 = Adafruit_AMG88xx(address=thermal2Addr) # Set thermalCam2 on its i2c addres
         # Set Cam Disable by Default
-        self.camEnable = 0
+        self.camEnable = False
+        # Set stream as false by default
+        self.stream = False
         # Setting Up Cozir
-        self.coz = cozir.Cozir()
+        self.coz = cozir.Cozir(self.log)
             # For now just stable in polling mode
         if(self.coz.opMode(self.coz.polling)):
-            print("Cozir: Set Mode = K{0}".format(self.coz.act_OpMode))
+            self.log.info("Cozir: Set Mode = K{0}".format(self.coz.act_OpMode))
             # Get hum, temp and co2_filter        
         if(self.coz.setData_output(self.coz.Hum + self.coz.Temp + self.coz.CO2_filt)):
-            print("Cozir: Data Mode = M{}".format(self.coz.act_OutMode))
+            self.log.info("Cozir: Data Mode = M{}".format(self.coz.act_OutMode))
     
         GPIO.setmode(GPIO.BCM)
 
@@ -138,16 +139,16 @@ class Grower:
         while(time()-actualTime<timeout): continue
         
     def checkDayDirectory(self):
-        if os.path.exists('photos_{}-{}-{}'.format(self.day, self.month, self.year)): return True
+        if os.path.exists('data/photos_{}-{}-{}'.format(self.day, self.month, self.year)): return True
         else: return False
         
     def createDayDirectory(self):
-        os.makedirs('photos_{}-{}-{}'.format(self.day, self.month, self.year))
-        os.makedirs('photos_{}-{}-{}/thermalPhotos'.format(self.day, self.month, self.year))
-        os.makedirs('photos_{}-{}-{}/led'.format(self.day, self.month, self.year))
-        os.makedirs('photos_{}-{}-{}/xenon'.format(self.day, self.month, self.year))
-        os.makedirs('photos_{}-{}-{}/ir'.format(self.day, self.month, self.year))
-        os.makedirs('photos_{}-{}-{}/manual'.format(self.day, self.month, self.year))
+        os.makedirs('data/photos_{}-{}-{}'.format(self.day, self.month, self.year))
+        os.makedirs('data/photos_{}-{}-{}/thermalPhotos'.format(self.day, self.month, self.year))
+        os.makedirs('data/photos_{}-{}-{}/led'.format(self.day, self.month, self.year))
+        os.makedirs('data/photos_{}-{}-{}/xenon'.format(self.day, self.month, self.year))
+        os.makedirs('data/photos_{}-{}-{}/ir'.format(self.day, self.month, self.year))
+        os.makedirs('data/photos_{}-{}-{}/manual'.format(self.day, self.month, self.year))
         
     
     def getDateFormat(self):
@@ -162,7 +163,7 @@ class Grower:
         return getIPaddr()
     
     def photoPath(self):
-        return "photos_{}-{}-{}".format(self.day, self.month, self.year) # Return folder name
+        return "data/photos_{}-{}-{}".format(self.day, self.month, self.year) # Return folder name
     
     def thermalPhoto(self, name):
         # Check if directory exist, if not create it
@@ -177,15 +178,15 @@ class Grower:
         thermalPixels2 = reshape(thermalPixels2, (8,8))
         thermalJoin = concatenate((thermalPixels1, thermalPixels2), axis=0)
         
-        savetxt("photos_{}-{}-{}/thermalPhotos/{}.csv".format(self.day, self.month, self.year, name), thermalJoin, fmt="%.2f", delimiter=",")
+        savetxt("data/photos_{}-{}-{}/thermalPhotos/{}.csv".format(self.day, self.month, self.year, name), thermalJoin, fmt="%.2f", delimiter=",")
     
     def cam_begin(self):
         self.cam = PiCamera()
-        self.camEnable = 1
+        self.camEnable = True
         
     def cam_stop(self):
         self.cam.close()
-        self.camEnable = 0
+        self.camEnable = False
         
     def takePicture(self, mode, name):
         # Check if directory exist, if not create it
@@ -197,8 +198,8 @@ class Grower:
             self.turnOn(self.IR)
             self.turnOff(self.LED)
             self.turnOff(self.XENON)
-            self.wait(0.45) # Wait 0.45 seconds
-            self.cam.capture("photos_{}-{}-{}/ir/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
+            self.wait(0.45) # Wait 0.45 seconcds
+            self.cam.capture("data/photos_{}-{}-{}/ir/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
             self.thermalPhoto("{}".format(name)) #get thermal cam readings
             self.wait(0.1) # Wait 100ms
             self.turnOff(self.IR)
@@ -212,7 +213,7 @@ class Grower:
             self.turnOff(self.IR)
             self.turnOff(self.XENON)   
             self.wait(0.45) # Wait 0.45 seconds
-            self.cam.capture("photos_{}-{}-{}/led/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
+            self.cam.capture("data/photos_{}-{}-{}/led/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
             self.wait(0.1) # Wait 100ms
             self.turnOff(self.LED)
             self.wait(0.05) # Wait 50ms
@@ -224,14 +225,14 @@ class Grower:
             self.turnOff(self.IR)
             self.turnOff(self.LED)
             self.wait(0.45) # Wait 0.45 seconds
-            self.cam.capture("photos_{}-{}-{}/xenon/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
+            self.cam.capture("data/photos_{}-{}-{}/xenon/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
             self.wait(0.1) # Wait 100ms
             self.turnOff(self.XENON)
             self.wait(0.05) # Wait 50ms
         
         elif(mode == 3):
             self.wait(0.45) # Wait 0.45 seconds
-            self.cam.capture("photos_{}-{}-{}/manual/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
+            self.cam.capture("data/photos_{}-{}-{}/manual/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
             self.wait(0.1) # Wait 100ms
             
     def photoSequence(self, name):
@@ -244,18 +245,18 @@ class Grower:
         self.turnOff(self.IR)
         self.turnOff(self.XENON)
         self.wait(0.45) # Wait 0.45 seconds
-        self.cam.capture("photos_{}-{}-{}/led/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
+        self.cam.capture("data/photos_{}-{}-{}/led/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
         self.wait(0.1) # Wait 100ms
         self.turnOff(self.LED)
         self.turnOn(self.XENON)
         self.wait(0.45) # Wait 0.45 seconds
-        self.cam.capture("photos_{}-{}-{}/xenon/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
+        self.cam.capture("data/photos_{}-{}-{}/xenon/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
         self.wait(0.1) # Wait 100ms
         self.turnOff(self.XENON)
         self.turnOn_IRCUT(self.IRCUT)
         self.turnOn(self.IR)
         self.wait(0.45) # Wait 0.45 seconds        
-        self.cam.capture("photos_{}-{}-{}/ir/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
+        self.cam.capture("data/photos_{}-{}-{}/ir/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
         self.thermalPhoto("{}".format(name)) #get thermal cam readings
         self.wait(0.1) # Wait 100ms
         self.turnOff(self.IR)
@@ -264,71 +265,75 @@ class Grower:
         #self.cam.stop_preview()
             
     def enableStreaming(self):
-        # Disconnecting cam from this program
-        if self.camEnable: self.cam_stop()
-        
-        # Create camera1 in motionEye
-        runShellCommand('sudo cp ../sysRasp/configFiles_MotionEye/camera-1.conf /etc/motioneye/camera-1.conf')
-        
-        # Change to python 2
-            # Check Alternatives
-        alt = getOutput_ShellCommand('update-alternatives --list python')    
-        if(alt == ''):
-            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
-            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
-            # Set Python Version
-        runShellCommand("sudo update-alternatives --set python /usr/bin/python2.7")
-        
-        # Restart motionEye
-        runShellCommand('sudo systemctl restart motioneye')
-        
-        # Change to python 3
-            # Check Alternatives
-        alt = getOutput_ShellCommand('update-alternatives --list python')    
-        if(alt == ''):
-            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
-            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
-            # Set Python Version
-        runShellCommand("sudo update-alternatives --set python /usr/bin/python3.5")
+        if not self.stream:
+            self.stream = True
+            # Disconnecting cam from this program
+            if self.camEnable: self.cam_stop()
+            
+            # Create camera1 in motionEye
+            runShellCommand('sudo cp ../sysRasp/configFiles_MotionEye/camera-1.conf /etc/motioneye/camera-1.conf')
+            
+            # Change to python 2
+                # Check Alternatives
+            alt = getOutput_ShellCommand('update-alternatives --list python')    
+            if(alt == ''):
+                runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
+                runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
+                # Set Python Version
+            runShellCommand("sudo update-alternatives --set python /usr/bin/python2.7")
+            
+            # Restart motionEye
+            runShellCommand('sudo systemctl restart motioneye')
+            
+            # Change to python 3
+                # Check Alternatives
+            alt = getOutput_ShellCommand('update-alternatives --list python')    
+            if(alt == ''):
+                runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
+                runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
+                # Set Python Version
+            runShellCommand("sudo update-alternatives --set python /usr/bin/python3.5")
         
     def disableStreaming(self):
-        # Remove camera1 in motionEye
-        runShellCommand('sudo rm /etc/motioneye/camera-1.conf')
-        
-        # Change to python 2
-            # Check Alternatives
-        alt = getOutput_ShellCommand('update-alternatives --list python')    
-        if(alt == ''):
-            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
-            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
-            # Set Python Version
-        runShellCommand("sudo update-alternatives --set python /usr/bin/python2.7")
-        
-        # Restart motionEye
-        runShellCommand('sudo systemctl restart motioneye')
-        
-        # Change to python 3
-            # Check Alternatives
-        alt = getOutput_ShellCommand('update-alternatives --list python')    
-        if(alt == ''):
-            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
-            runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
-            # Set Python Version
-        runShellCommand("sudo update-alternatives --set python /usr/bin/python3.5")
-        
-        # Connecting camara to this program
-        if not self.camEnable: self.cam_begin()
+        if self.stream:
+            self.stream = False
+            # Remove camera1 in motionEye
+            runShellCommand('sudo rm /etc/motioneye/camera-1.conf')
+            
+            # Change to python 2
+                # Check Alternatives
+            alt = getOutput_ShellCommand('update-alternatives --list python')    
+            if(alt == ''):
+                runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
+                runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
+                # Set Python Version
+            runShellCommand("sudo update-alternatives --set python /usr/bin/python2.7")
+            
+            # Restart motionEye
+            runShellCommand('sudo systemctl restart motioneye')
+            
+            # Change to python 3
+                # Check Alternatives
+            alt = getOutput_ShellCommand('update-alternatives --list python')    
+            if(alt == ''):
+                runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1")
+                runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
+                # Set Python Version
+            runShellCommand("sudo update-alternatives --set python /usr/bin/python3.5")
+            
+            # Connecting camara to this program
+            if not self.camEnable: self.cam_begin()
     
     def sendPhotos(self, host, name, pskw, floor = 0):
         try:
             with Connection(host, username=name, password=pskw) as sftp:
-                if(sftp.isdir('/home/pi/Documents/GrowGreens/Data/Photos')):
-                    sftp.chdir('/home/pi/Documents/GrowGreens/Data/Photos')
+                if(sftp.isdir('/home/pi/Documents/Master/photos')):
+                    sftp.chdir('/home/pi/Documents/Master/photos')
                     if not sftp.isdir("Grower{}".format(floor)):
                         sftp.makedirs("Grower{}".format(floor))
                     sftp.chdir("Grower{}".format(floor))
                     sftp.makedirs(self.photoPath())
-                    sftp.put_r(self.photoPath(), '/home/pi/Documents/GrowGreens/Data/Photos/Grower{}/{}'.format(floor, self.photoPath()), preserve_mtime=False)
+                    sftp.put_r(self.photoPath(), '/home/pi/Documents/Master/photos/Grower{}/{}'.format(floor, self.photoPath()), preserve_mtime=False)
                     return True
                 else: return False
         except:
@@ -336,3 +341,4 @@ class Grower:
         
     def close(self):
         GPIO.cleanup() # Clean GPIO
+        if self.camEnable: self.cam_stop() # Disconnecting cam from this program
