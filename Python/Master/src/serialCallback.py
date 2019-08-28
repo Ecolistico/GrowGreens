@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Import directories
+from time import time
 from serial import Serial
 from systemState import systemState
 
@@ -13,9 +14,10 @@ class serialController:
         self.motorsGrower.close()
         self.solutionMaker = Serial('/dev/solutionMaker', 115200, timeout=1)
         self.solutionMaker.close()
-        # Define response
+        # Define responses auxVariables
         self.resp = []
         self.respLine = []
+        self.respTime = time()
         # Define loggers
         self.logMain = loggerMain
         self.logGC = loggerGC
@@ -43,7 +45,8 @@ class serialController:
         else: logger.info(mssg)
     
     def response(self):
-        if(self.generalControl.inWaiting()==0 and
+        if(time()-self.respTime>1 and
+           self.generalControl.inWaiting()==0 and
            self.motorsGrower.inWaiting()==0 and
            self.solutionMaker.inWaiting()==0 and
            len(self.resp)>0):
@@ -128,29 +131,36 @@ class serialController:
             if(line1.startswith("?boot")):
                 self.resp.append("boot")
                 self.respLine.append(line1)
+                self.respTime = time()
             elif(line1.startswith("updateIrrigationState")):
                 self.resp.append("updateIrrigationState")
                 self.respLine.append(line1)
+                self.respTime = time()
             elif(line1.startswith("?solutionMaker")):
                 self.response.append("requestSolution")
                 self.respLine.append(line1)
+                self.respTime = time()
                     
         # If bytes available in motorsGrower
         while self.motorsGrower.inWaiting()>0:
             line2 = str(self.motorsGrower.readline(), "utf-8")[0:-1]
             self.Msg2Log(self.logMG, line2)
+            self.respTime = time()
                 
         # If bytes available in solutionMaker
         while self.solutionMaker.inWaiting()>0:
             line3 = str(self.solutionMaker.readline(), "utf-8")[0:-1]
             self.Msg2Log(self.logSM, line3)
+            self.respTime = time()
             
             if(line3.startswith("Request accepted")):
                 self.resp.append("requestAccepted")
                 self.respLine.append(line3)
+                self.respTime = time()
             elif(line3.startswith("Solution Finished")):
                 self.resp.append("solutionFinished")
                 self.respLine.append(line3)
+                self.respTime = time()
         
         # Send all responses
         self.response()
