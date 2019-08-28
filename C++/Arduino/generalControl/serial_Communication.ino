@@ -4,13 +4,26 @@ const char zero_char = char(48);
 
 void requestSolution(){ // Form -> "?solutionMaker,float[liters],int[sol],float[ph],int[ec]"
   Serial.print(F("?solutionMaker,"));
-  Serial.print(US6.getVolume());
+  Serial.print(US6.getVolume()); // Liters
   Serial.print(F(",")); 
-  Serial.print(Recirculation.getOut()); 
+  Serial.print(Recirculation.getOut()); // Solution 
   Serial.print(F(","));
-  Serial.print(Irrigation.getPH(Recirculation.getOut()));
+  Serial.print(Irrigation.getPH(Recirculation.getOut())); // ph
   Serial.print(F(",")); 
-  Serial.println(Irrigation.getEC(Recirculation.getOut()));
+  Serial.println(Irrigation.getEC(Recirculation.getOut())); // ec
+}
+
+void updateIrrigationState(){ // Form -> "updateIrrigationState,int[sol],float[volNut],float[volH],float[consNut],float[consH2O]"
+  Serial.print(F("updateIrrigationState,"));
+  Serial.print(Recirculation.getOut()); // Solution
+  Serial.print(F(",")); 
+  Serial.print(Recirculation.getVolKnut()); // volNut
+  Serial.print(F(","));
+  Serial.print(Recirculation.getVolKh2o()); // volH2O
+  Serial.print(F(","));
+  Serial.print(solutionConsumption); // consNut
+  Serial.print(F(",")); 
+  Serial.println(h2oConsumption); // consH2O
 }
 
 void serialEvent(){                                  //if the hardware serial port_0 receives a char
@@ -433,6 +446,7 @@ void serialEvent(){                                  //if the hardware serial po
         else if(parameter[2]=="getPH"){ Serial.println(Irrigation.getPH(parameter[3].toInt())); }
       }
       else if(parameter[1]=="requestSolution"){ requestSolution(); }
+      else if(parameter[1]=="updateIrrigationState"){ updateIrrigationState(); }
     }
     
     else{Serial.println(F("Serial Command Recieve: Command unknown"));}

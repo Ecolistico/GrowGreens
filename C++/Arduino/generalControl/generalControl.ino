@@ -179,8 +179,9 @@ void irrigationEmergency();
 // Multiplexers
 void codification_Multiplexer();
 // Serial Communication
-void serialEvent();
 void requestSolution();
+void updateIrrigationState();
+void serialEvent();
 // Setup
 void solenoid_setup();
 void sensors_setup();

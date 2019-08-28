@@ -158,8 +158,8 @@ void substractSolutionConsumption(bool updateConsumption = false){
   for(int i=0; i<MAX_FLOOR; i++){
     if(i!=nite){ consumption += solenoidValve::getWaterByFloor(i); }
   }
-
-  Recirculation.addVolKnut(-consumption); // Substract water consumption from the kegs
+  // Substract water consumption from the kegs
+  Recirculation.addVolKnut(-consumption);
   
   // Erase the water consumption in that valves
   for(int i=0; i<solenoidValve::__TotalActuators; i++){
@@ -170,6 +170,7 @@ void substractSolutionConsumption(bool updateConsumption = false){
   if(updateConsumption){ // Update solutionConsumption parameter
     if(consumption>solutionConsumption){ solutionConsumption = consumption; }
     else{ solutionConsumption = (solutionConsumption+consumption)/2; }
+    updateIrrigationState(); // Update irrigation state
   }
 }
 
@@ -180,8 +181,8 @@ void substractWaterConsumption(bool updateConsumption = false){
   
   // Get the water consumption in night floor
   consumption = solenoidValve::getWaterByFloor(nite);
-  
-  Recirculation.addVolKh2o(-consumption); // Substract water consumption from the kegs
+  // Substract water consumption from the kegs
+  Recirculation.addVolKh2o(-consumption);
   
   // Erase the water consumption in that valves
   for(int i=0; i<solenoidValve::__TotalActuators; i++){
@@ -192,5 +193,6 @@ void substractWaterConsumption(bool updateConsumption = false){
   if(updateConsumption){ // Update h2oConsumption parameter
     if(consumption>h2oConsumption){ h2oConsumption = consumption; }
     else{ h2oConsumption = (h2oConsumption+consumption)/2; }
+    updateIrrigationState(); // Update irrigation state
   }
 }
