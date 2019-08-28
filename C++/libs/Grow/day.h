@@ -37,6 +37,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define MAX_LEDS    20 // Max LEDs Objects
 #define MAX_FLOOR   4 // Number of floors
 #define MAX_REGION  4 // Number of regions
+#define MAX_SOLUTIONS_NUMBER 4 // The max number of solutions
 
 // Class to manage multiples day-night cycles in 24 hours
 class MultiDay
@@ -92,6 +93,56 @@ class LED_Mod
         static void turnOff(uint8_t floor); // Turn off all the floor
         // Enable/Disable regions minor than region parameter into a floor
         static void enable(uint8_t floor, uint8_t region);
+   };
+
+// Class to control irrigation routine
+/*
+Definitions:
+  Solution 1 = KNO3
+  Solution 2 = NH4H2PO04
+  Solution 3 = CA(NO3)2
+  Solution 4 = MGSO4 + Micros
+*/
+
+class irrigationController
+  { private:
+      uint8_t __solution;
+      uint8_t __actualCycle;
+      uint8_t __cyclesPerDay;
+      uint8_t __order[4];
+      uint8_t __percentage[4];
+      uint8_t __hoursPerCycle;
+      uint8_t __beginHour[24]; // Max 24 cycles per day
+
+    public:
+      // Constructor by default 1 irrigationCycle, order = 1,2,3,4 and 25% each solution
+      irrigationController();
+      // Constructor with complete flexibility
+      irrigationController(uint8_t cyclesPerDay,
+                        uint8_t initialHour,
+                        uint8_t ord1,
+                        uint8_t ord2,
+                        uint8_t ord3,
+                        uint8_t ord4,
+                        uint8_t per1,
+                        uint8_t per2,
+                        uint8_t per3,
+                        uint8_t per4 );
+      uint8_t getSolution(); // Returns __solution
+      uint8_t getCycle(); // Returns __actualCycle
+      // Returns true if succesful
+      void redefine(uint8_t cyclesPerDay,
+                    uint8_t initialHour,
+                    uint8_t ord1,
+                    uint8_t ord2,
+                    uint8_t ord3,
+                    uint8_t ord4,
+                    uint8_t per1,
+                    uint8_t per2,
+                    uint8_t per3,
+                    uint8_t per4 );
+      // Update and return the solution with the given hour
+      uint8_t whatSolution(uint8_t HOUR, uint8_t MINUTE);
    };
 
   #endif

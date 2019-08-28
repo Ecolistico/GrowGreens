@@ -15,6 +15,7 @@ controllerHVAC	KEYWORD1
 day	KEYWORD1
 MultiDay	KEYWORD1
 LED_Mod	KEYWORD1
+irrigationController	KEYWORD1
 growerStepper	KEYWORD1
 processControl	KEYWORD1
 recirculationController	KEYWORD1
@@ -71,6 +72,9 @@ enableGroup	KEYWORD2
 isEnableGroup	KEYWORD2
 getWaterAll	KEYWORD2
 getWaterByFloor	KEYWORD2
+getSolution	KEYWORD2
+getCycle	KEYWORD2
+whatSolution	KEYWORD2
 getValveTank	KEYWORD2
 getValveNut	KEYWORD2
 getValveH2O	KEYWORD2

@@ -147,6 +147,26 @@ void serialEvent(){                                  //if the hardware serial po
       }
       else{Serial.println(F("LED Functions: Parameter[1] unknown"));}
     }
+
+    else if(parameter[0]=="irrigation"){
+      if(parameter[1]=="save"){
+        if(parameter[2]=="general"){
+          int cyclesPerDay = parameter[3].toInt(); 
+          int initialHour = parameter[4].toInt();
+          irrigationSave(cyclesPerDay, initialHour);
+        }
+        else if(parameter[2]=="solution"){
+          int sol = parameter[3].toInt();
+          int order = parameter[4].toInt();
+          int percent = parameter[5].toInt();
+          solutionSave(sol, order, percent);
+        } 
+      }
+      else if(parameter[1]=="charge"){
+        chargeIrrigationParameters();
+      }
+      else{ Serial.println(F("Irrigation Functions: Parameter[1] unknown"));}
+    }
     
     else if(parameter[0]=="updateHour"){ // Function updateHour -> Form "updateHour,int[hour],int[minute]"
       int hr = parameter[1].toInt();
@@ -159,6 +179,7 @@ void serialEvent(){                                  //if the hardware serial po
           if(!firstHourUpdate){
             firstHourUpdate = true;
             updateDay();
+            Irrigation.whatSolution(dateHour, dateMinute); // Update the solution parameter
           }
         }
         else{Serial.println(F("Update Function: Hour is already updated"));}
@@ -337,26 +358,22 @@ void serialEvent(){                                  //if the hardware serial po
     }
 
     else if(parameter[0]=="boot"){ // Functions to recieve variables when boot/rebooting
-      // Form "boot,int[lastSol],int[nextSol],float[volumenNut],float[volumeH2O],float[solConsumption],float[h2oConsumption]"
+      // Form "boot,int[lastSol],float[volumenNut],float[volumeH2O],float[solConsumption],float[h2oConsumption]"
       if(!bootParameters){
         int lastSol = parameter[1].toInt();
-        int nextSol = parameter[2].toInt();
         float vnut = parameter[3].toFloat();
         float vh2o = parameter[4].toFloat();
         float solCons = parameter[5].toFloat();
         float h2oCons = parameter[6].toFloat();
-        if(lastSol>=0 && lastSol<4 && nextSol>=0 && nextSol<4 && vnut>0 && vh2o>0 && solCons && h2oCons){
+        if(lastSol>=0 && lastSol<4 && vnut>0 && vh2o>0 && solCons>0 && h2oCons>0){
           bootParameters = true;
           lastSolution = lastSol;
-          nextSolution = nextSol;
           Recirculation.addVolKnut(vnut);
           Recirculation.addVolKh2o(vh2o);
           solutionConsumption = solCons;
           h2oConsumption = h2oCons;
           Serial.print(F("Boot: Last Solution to be irrigated is "));
           Serial.println(lastSolution);
-          Serial.print(F("Boot: Next Solution to be irrigated is "));
-          Serial.println(nextSolution);
           Serial.print(F("Boot: Nutrition Kegs Volume Updated to "));
           Serial.print(Recirculation.getVolKnut());
           Serial.println(F(" liters"));
@@ -373,18 +390,6 @@ void serialEvent(){                                  //if the hardware serial po
         else{ Serial.println(F("setKegsVolume Function: Parameter[1-6] incorrect")); } 
       }
       else{ Serial.println(F("Set Initial Parameters: Parameters already setted")); } 
-    }
-
-    else if(parameter[0]=="nextSolution"){ // Function updateSolution -> Form "updateSolution,int[nextSolution]"
-      int nextSol = parameter[2].toInt();
-      if(nextSol>=0 && nextSol<4){
-        if(nextSolution!=nextSol){
-          nextSolution = nextSol;
-          Serial.print(F("updateSolution: Next Solution to be irrigated is: "));
-          Serial.println(nextSolution); 
-        }
-      }
-      else{ Serial.println(F("updateSolution Function: Parameter nextSolution incorrect")); } 
     }
 
     else if(parameter[0]=="solutionMaker"){ // Coordinate action with solutionMaker
@@ -408,6 +413,9 @@ void serialEvent(){                                  //if the hardware serial po
       else if(parameter[1]=="nextIrrigationStage"){ 
         Serial.println(F("Passing to the next Irrigation Stage"));
         irrigationStage++;
+      }
+      else if(parameter[1]=="irrigationControl"){
+        Serial.println(Irrigation.whatSolution(dateHour, dateMinute));
       }
     }
     

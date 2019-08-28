@@ -63,9 +63,9 @@ void initialPreconditions(bool before, void (*ptr2function)()){
   bool decition = false;
   float p1 = pressureSensorNutrition.getValue();
   
-  if(lastSolution!=nextSolution){ // Is it time to change the solution?
+  if(lastSolution!=Irrigation.getSolution()){ // Is it time to change the solution?
     decition = true;
-    lastSolution = nextSolution; // Update solution
+    lastSolution = Irrigation.getSolution(); // Update solution
 
     if(before){
       uint8_t inSol = Recirculation.getIn();
@@ -121,7 +121,7 @@ void startIrrigation(){
 
   Compressor.keepConnected(true); // Keep connected nutrition kegs with air tank
   solenoidValve::enableGroup(true); // Enable Valves Group
-  Serial.println(F("?nextSolution")); // Request update the next solution parameter
+  Irrigation.whatSolution(dateHour, dateMinute); // Update the solution parameter
   irrigationStage = 1; // Pass to the next irrigation Stage
 }
 
@@ -339,10 +339,10 @@ void runIPC(){
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
       else{ Serial.println(F("Recirculation moveIn(): pumpIn already working")); }
-      chargeSolenoidParameters(nextSolution); // Charge new solution irrigation parameters
+      chargeSolenoidParameters(Irrigation.getSolution()); // Update irrigation parameters
       // Update recirculation parameters
-      Recirculation.setIn(nextSolution); 
-      Recirculation.setOut(nextSolution);
+      Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
+      Recirculation.setOut(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
       IPC.setState(20); // Check IPC Process 20
     }
   }
@@ -472,10 +472,10 @@ void runIPC(){
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
       else{ Serial.println(F("Recirculation moveIn(): pumpIn already working")); }
-      chargeSolenoidParameters(nextSolution); // Charge new solution irrigation parameters
+      chargeSolenoidParameters(Irrigation.getSolution()); // Update irrigation parameters
       // Update recirculation parameters
-      Recirculation.setIn(nextSolution); 
-      Recirculation.setOut(nextSolution);
+      Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
+      Recirculation.setOut(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
       IPC.setState(40); // Check IPC Process 40
     }
   }

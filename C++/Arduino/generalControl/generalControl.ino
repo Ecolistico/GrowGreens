@@ -48,6 +48,10 @@ compressorController Compressor(LOW, LOW, LOW);
 /*** Recirculation Controller ***/
 recirculationController Recirculation;
 
+/*** Irrigation Controller ***/
+// irrigationController(uint8_t cyclesPerDay, uint8_t initialHour, uint8_t ord1, uint8_t ord2, uint8_t ord3, uint8_t ord4, uint8_t per1, uint8_t per2, uint8_t per3, uint8_t per4 )
+irrigationController Irrigation(4, 0, 0, 1, 2, 3, 25, 25, 25, 25);
+
 /*** Actuators ***/
 // solenoidValve object(name)
 // LED object(name, floor, section)
@@ -113,7 +117,6 @@ float critical_pressure = 90; // Default Critical Pressure in the system (psi)
 // Control Solution and refill process
 /* The next variables need to be register in raspberry in case that arduino turn off */
 uint8_t lastSolution = 250; // Last solution to be irrigated, by default value of 250 is setted but this value does not match with a solution
-uint8_t nextSolution = 250; // Next solution to be irrigated, by default value of 250 is setted but this value does not match with a solution
 float solutionConsumption = 50; // Default consumption in stage 1 of irrigation
 float h2oConsumption = 50; // Default consumption in stage 4 of irrigation
 // __VolKnut, __VolKh2o in recirculationControllerClass has to be init at boot
@@ -151,6 +154,9 @@ void chargeMultidayParameters();
 void regionSave(int fl, int reg);
 void chargeLedRegion();
 void chargeSolenoidRegion();
+void irrigationSave(int cyclesPerDay, int initialHour);
+void solutionSave(int sol, int order, int percent);
+void chargeIrrigationParameters();
 void analogSaveFilter(int Type, int filt, float filterParam);
 void analogSaveModel(int Type, float a, float b, float c);
 bool chargeAnalogParameters(int Type);
@@ -207,6 +213,7 @@ void setup() {
   chargeMultidayParameters(); // For multiDay
   chargeLedRegion(); // For LED´s
   chargeSolenoidRegion(); // For solenoidValves
+  chargeIrrigationParameters(); // For irrigation control
   chargePressureParameter(); // For pressure control
 
   // Set initial state
