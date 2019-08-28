@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Import directories
+from time import time
 import paho.mqtt.publish as publish
 import ESPdata
 
@@ -17,9 +18,11 @@ class mqttController:
                  loggerFront,
                  loggerCenter,
                  loggerBack):
+        # Define container parameters
         self.ID = ID
         self.brokerIP = brokerIP
         self.conn = connector
+        # Define loggers
         self.logMain = loggerMain
         self.logGr1 = loggerGr1
         self.logGr2 = loggerGr2
@@ -28,8 +31,16 @@ class mqttController:
         self.logFront = loggerFront
         self.logCenter = loggerCenter
         self.logBack = loggerBack
+        # Define ESP32´s object
         self.ESP32 = ESPdata.multiESP(self.logFront, self.logCenter, self.logBack)
-    
+        # Define aux variables
+        self.clientConnected = False
+        self.actualTime = time()
+        self.requestGr1 = False
+        self.requestGr2 = False
+        self.requestGr3 = False
+        self.requestGr4 = False
+        
     def update(self, ID, brokerIP, connector):
         self.ID = ID
         self.brokerIP = brokerIP
@@ -73,18 +84,27 @@ class mqttController:
         if(top.endswith("log")):
             if(device == "Grower1"):
                 self.Msg2Log(self.logGr1, message)
+                self.requestGr1 = False
             elif(device == "Grower2"):
                 self.Msg2Log(selflogGr2, message)
+                self.requestGr2 = False
             elif(device == "Grower3"):
                 self.Msg2Log(self.logGr3, message)
+                self.requestGr3 = False
             elif(device == "Grower4"):
                 self.Msg2Log(self.logGr4, message)
-            elif(device == "esp32front"):
-                self.logFront.info(message)
-            elif(device == "esp32center"):
-                self.logCenter.info(message)
+                self.requestGr4 = False
+            elif(device == "esp32front"): self.logFront.info(message)
+            elif(device == "esp32center"): self.logCenter.info(message)
             elif(device == "esp32back"): self.logBack.info(message)
             else: self.logMain.warning("Unknown mqtt log recieve - device={}, message={}".format(device, message))
+        
+        # Get MQTT errors from ESP32´s
+        elif(top.endswith("error")):
+            if(device == "esp32front"): self.logFront.error(message)
+            elif(device == "esp32center"): self.logCenter.error(message)
+            elif(device == "esp32back"): self.logBack.error(message)
+            else: self.logMain.error("Unknown mqtt log recieve - device={}, message={}".format(device, message))
             
         # Get data from ESP32 front, center and back
         elif(top.endswith("esp32front") and message!="sendData"):
@@ -102,3 +122,5 @@ class mqttController:
 
     def on_disconnect(client, userdata, rc):
         self.logMain.warning("Client MQTT Disconnected")
+        self.clientConnected = False
+        self.actualTime = time()
