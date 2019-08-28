@@ -387,10 +387,10 @@ void serialEvent(){                                  //if the hardware serial po
       // Form "boot,int[lastSol],float[volumenNut],float[volumeH2O],float[solConsumption],float[h2oConsumption]"
       if(!bootParameters){
         int lastSol = parameter[1].toInt();
-        float vnut = parameter[3].toFloat();
-        float vh2o = parameter[4].toFloat();
-        float solCons = parameter[5].toFloat();
-        float h2oCons = parameter[6].toFloat();
+        float vnut = parameter[2].toFloat();
+        float vh2o = parameter[3].toFloat();
+        float solCons = parameter[4].toFloat();
+        float h2oCons = parameter[5].toFloat();
         if(lastSol>=0 && lastSol<4 && vnut>0 && vh2o>0 && solCons>0 && h2oCons>0){
           bootParameters = true;
           lastSolution = lastSol;

@@ -293,7 +293,7 @@ void runIPC(){
       Serial.println(F("Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
       IPC.setState(24); // Check IPC Process 24
     }
-    else if(millis()-IPC.actualTime>=5000){
+    else if(millis()-IPC.actualTime>=10000){
       IPC.setState(22); // Check IPC Process 22
     }
   }
@@ -406,7 +406,7 @@ void runIPC(){
       Serial.println(F("Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
       IPC.setState(44); // Check IPC Process 44
     }
-    else if(millis()-IPC.actualTime>=5000){
+    else if(millis()-IPC.actualTime>=10000){
       IPC.setState(42); // Check IPC Process 42
     }
   }
@@ -547,7 +547,7 @@ void runIPC(){
       Serial.println(F("Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
       IPC.setState(75); // Check IPC Process 75
     }
-    else if(millis()-IPC.actualTime>=5000){
+    else if(millis()-IPC.actualTime>=10000){
       IPC.setState(73); // Check IPC Process 73
     }
   }
