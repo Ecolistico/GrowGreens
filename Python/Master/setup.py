@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# Import directories
 import os
 import sys
 import time
