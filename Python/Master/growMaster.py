@@ -93,6 +93,7 @@ log.logger.info("Devices ready")
 
 try: param = sys.argv[1]
 except: param = ""
+start = ""
 
 if(param==""):
     print("\033[1;32;40m", end='')
@@ -163,6 +164,7 @@ try:
             # Send to generalControl new time info
             serialControl.generalControl.write(bytes("updateHour,{0},{1}".format(now.hour, now.minute),"utf-8"))
             serialControl.generalControl.flush()
+            
     mainClose() # Finished th program
 
 except:

@@ -28,14 +28,14 @@ class serialController:
         else: self.logMain.error("Cannot charge Irrigation State because it does not exist")
         
     def open(self):
-        self.generalControl.open()
-        self.motorsGrower.open()
-        self.solutionMaker.open()
+        if not self.generalControl.is_open: self.generalControl.open()
+        if not self.motorsGrower.is_open: self.motorsGrower.open()
+        if not self.solutionMaker.is_open: self.solutionMaker.open()
     
     def close(self):
-        self.generalControl.close()
-        self.motorsGrower.close()
-        self.solutionMaker.close()
+        if self.generalControl.is_open: self.generalControl.close()
+        if self.motorsGrower.is_open: self.motorsGrower.close()
+        if self.solutionMaker.is_open:self.solutionMaker.close()
     
     def Msg2Log(self, logger, mssg):
         if(mssg.startswith("debug,")): logger.debug(mssg.split(",")[1])
@@ -46,9 +46,9 @@ class serialController:
     
     def response(self):
         if(time()-self.respTime>1 and
-           self.generalControl.inWaiting()==0 and
-           self.motorsGrower.inWaiting()==0 and
-           self.solutionMaker.inWaiting()==0 and
+           self.generalControl.in_waiting==0 and
+           self.motorsGrower.in_waiting==0 and
+           self.solutionMaker.in_waiting==0 and
            len(self.resp)>0):
             for i, resp in enumerate(self.resp):
                 self.logMain.warning("Sending response for request {}".format(resp))
@@ -124,7 +124,7 @@ class serialController:
             
     def loop(self):
         # If bytes available in generalControl
-        while self.generalControl.inWaiting()>0:
+        while self.generalControl.in_waiting>0:
             line1 = str(self.generalControl.readline(), "utf-8")[0:-1]
             self.Msg2Log(self.logGC, line1)
             
@@ -142,13 +142,13 @@ class serialController:
                 self.respTime = time()
                     
         # If bytes available in motorsGrower
-        while self.motorsGrower.inWaiting()>0:
+        while self.motorsGrower.in_waiting>0:
             line2 = str(self.motorsGrower.readline(), "utf-8")[0:-1]
             self.Msg2Log(self.logMG, line2)
             self.respTime = time()
                 
         # If bytes available in solutionMaker
-        while self.solutionMaker.inWaiting()>0:
+        while self.solutionMaker.in_waiting>0:
             line3 = str(self.solutionMaker.readline(), "utf-8")[0:-1]
             self.Msg2Log(self.logSM, line3)
             self.respTime = time()
