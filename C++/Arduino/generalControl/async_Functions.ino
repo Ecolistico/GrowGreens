@@ -283,11 +283,7 @@ void runIPC(){
 
   else if(IPC.state==22){ // PumpOut and FillNutValve working on fill solutionMaker
     if(!Recirculation.getOutPump() && !Recirculation.getFSolValve()){
-      // Asking central computer that solutionMaker as to prepare a solution with the next parameters
-      Serial.print(F("?solutionMaker,")); 
-      Serial.print(Recirculation.getOut()); 
-      Serial.print(F(",")); 
-      Serial.println(US6.getVolume());
+      requestSolution(); // Asking central computer that solutionMaker as to prepare a solution with the next parameters
       IPC.setState(23); // Check IPC Process 23
     }
   }
@@ -394,11 +390,7 @@ void runIPC(){
       IPC.setState(22); // Check IPC Process 22
     }
     else if(!Recirculation.getOutPump() && !Recirculation.getFSolValve()){
-      // Asking central computer that solutionMaker as to prepare a solution with the next parameters
-      Serial.print(F("?solutionMaker,")); 
-      Serial.print(Recirculation.getOut()); 
-      Serial.print(F(",")); 
-      Serial.println(US6.getVolume());
+      requestSolution(); // Asking central computer that solutionMaker as to prepare a solution with the next parameters
       IPC.setState(43); // Check IPC Process 43
     }
   }
@@ -545,11 +537,7 @@ void runIPC(){
 
   else if(IPC.state==73){ // Emergency: Air in line. PumpOut working on fill solutionMaker
     if(!Recirculation.getOutPump() && !Recirculation.getFSolValve()){
-      // Asking central computer that solutionMaker as to prepare a solution with the next parameters
-      Serial.print(F("?solutionMaker,")); 
-      Serial.print(Recirculation.getOut()); 
-      Serial.print(F(",")); 
-      Serial.println(US6.getVolume());
+      requestSolution(); // Asking central computer that solutionMaker as to prepare a solution with the next parameters
       IPC.setState(74); // Check IPC Process 74
     }
   }

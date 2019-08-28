@@ -2,6 +2,17 @@
 
 const char zero_char = char(48);
 
+void requestSolution(){ // Form -> "?solutionMaker,float[liters],int[sol],float[ph],int[ec]"
+  Serial.print(F("?solutionMaker,"));
+  Serial.print(US6.getVolume());
+  Serial.print(F(",")); 
+  Serial.print(Recirculation.getOut()); 
+  Serial.print(F(","));
+  Serial.print(Irrigation.getPH(Recirculation.getOut()));
+  Serial.print(F(",")); 
+  Serial.println(Irrigation.getEC(Recirculation.getOut()));
+}
+
 void serialEvent(){                                  //if the hardware serial port_0 receives a char
   inputstring = Serial.readStringUntil(13);           //read the string until we see a <CR>
   input_string_complete = true;                       //set the flag used to tell if we have received a completed string from the PC
@@ -159,7 +170,9 @@ void serialEvent(){                                  //if the hardware serial po
           int sol = parameter[3].toInt();
           int order = parameter[4].toInt();
           int percent = parameter[5].toInt();
-          solutionSave(sol, order, percent);
+          int ec =  parameter[6].toInt();
+          float ph = parameter[7].toFloat();
+          solutionSave(sol, order, percent, ec, ph);
         } 
       }
       else if(parameter[1]=="charge"){
@@ -414,9 +427,12 @@ void serialEvent(){                                  //if the hardware serial po
         Serial.println(F("Passing to the next Irrigation Stage"));
         irrigationStage++;
       }
-      else if(parameter[1]=="irrigationControl"){
-        Serial.println(Irrigation.whatSolution(dateHour, dateMinute));
+      else if(parameter[1]=="irrigation"){
+        if(parameter[2]=="whatSolution"){ Serial.println(Irrigation.whatSolution(dateHour, dateMinute)); }
+        else if(parameter[2]=="getEC"){ Serial.println(Irrigation.getEC(parameter[3].toInt())); }
+        else if(parameter[2]=="getPH"){ Serial.println(Irrigation.getPH(parameter[3].toInt())); }
       }
+      else if(parameter[1]=="requestSolution"){ requestSolution(); }
     }
     
     else{Serial.println(F("Serial Command Recieve: Command unknown"));}

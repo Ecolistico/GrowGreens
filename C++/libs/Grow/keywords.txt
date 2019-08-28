@@ -74,6 +74,10 @@ getWaterAll	KEYWORD2
 getWaterByFloor	KEYWORD2
 getSolution	KEYWORD2
 getCycle	KEYWORD2
+setEC	KEYWORD2
+setPH	KEYWORD2
+getEC	KEYWORD2
+getPH	KEYWORD2
 whatSolution	KEYWORD2
 getValveTank	KEYWORD2
 getValveNut	KEYWORD2

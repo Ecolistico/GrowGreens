@@ -1,6 +1,6 @@
 void clean_EEPROM(){
   Serial.println(F("EEPROM: Deleting Memory..."));
-  for(int i=0; i<solenoidValve::__TotalActuators*5+27; i++){
+  for(int i=0; i<solenoidValve::__TotalActuators*5+35; i++){
     EEPROM.update(i, 0);
   }
   for(int i=255; i<255+sizeof(float)*4+1; i++){
@@ -14,7 +14,7 @@ void clean_EEPROM(){
 
 void print_EEPROM(){
   Serial.println(F("EEPROM: Printing Memory Info"));
-  for(int i=0; i<solenoidValve::__TotalActuators*5+27; i++){
+  for(int i=0; i<solenoidValve::__TotalActuators*5+35; i++){
     Serial.print(i); Serial.print(F(": ")); Serial.println(EEPROM.read(i));
   }
   for(int i=255; i<255+sizeof(float)*4+1; i++){
@@ -281,13 +281,21 @@ void irrigationSave(int cyclesPerDay, int initialHour){
   else{ Serial.println(F("Irrigation Save General Parameter: cyclesPerDay incorrect")); }
 }
 
-void solutionSave(int sol, int order, int percent){
+void solutionSave(int sol, int order, int percent, int ec, float ph){
   if(sol>=0 && sol<4){
     if(order>=0 && order<4){
       if(percent>=0 && percent<=100){
-        int pos = solenoidValve::__TotalActuators*5+18+sol;
-        save_EEPROM(pos+1, order);
-        save_EEPROM(pos+5, percent); 
+        if(ec>0 && ec<5000){
+          if(ph>0 && ph<14){
+            int pos = solenoidValve::__TotalActuators*5+18+sol;
+            save_EEPROM(pos+1, order);
+            save_EEPROM(pos+5, percent);
+            save_EEPROM(pos+9, int(ec/20));
+            save_EEPROM(pos+13, int(ph*10));  
+          }
+          else{ Serial.println(F("Irrigation Save Solution Parameter: ph out of range [0-14]")); }
+        }
+        else{ Serial.println(F("Irrigation Save Solution Parameter: ec out of range [0-5000]")); }
       }
       else{ Serial.println(F("Irrigation Save Solution Parameter: percent out of range [0-100]")); }
     }
@@ -308,11 +316,29 @@ void chargeIrrigationParameters(){
   int per2 = EEPROM.read(pos+8);
   int per3 = EEPROM.read(pos+9);
   int per4 = EEPROM.read(pos+10);
+  int ec1 = EEPROM.read(pos+11)*20;
+  int ec2 = EEPROM.read(pos+12)*20;
+  int ec3 = EEPROM.read(pos+13)*20;
+  int ec4 = EEPROM.read(pos+14)*20;
+  float ph1 = float(EEPROM.read(pos+15))/10;
+  float ph2 = float(EEPROM.read(pos+16))/10;
+  float ph3 = float(EEPROM.read(pos+17))/10;
+  float ph4 = float(EEPROM.read(pos+18))/10;
+  
   if(cyclesPerDay>0 && ord1+ord2+ord3+ord4==6 && ord1!=ord2 && ord1!=ord3 && 
      ord1!=ord4 && ord2!=ord3 && ord2!=ord4 && ord3!=ord4 && per1+per2+per3+per4==100){
     Irrigation.redefine(cyclesPerDay, initialHour, ord1, ord2, ord3, ord4, per1, per2, per3, per4 );
   }
   else{ Serial.println(F("Charge Irrigation Parameters Error: Cannot charge parameters because they are incosistent")); }
+
+  if(ec1!=0 && ec1!=5100 && ec2!=0 && ec2!=5100 && ec3!=0 && ec3!=5100 && ec4!=0 && ec4!=5100){
+    Irrigation.setEC(ec1, ec2, ec3, ec4);
+  }
+  else{ Serial.println(F("Charge Irrigation Parameters Error: Cannot charge ec parameters because they are incosistent")); }
+  if(ph1!=0 && ph1!=25.5 && ph2!=0 && ph2!=25.5 && ph3!=0 && ph3!=25.5 && ph4!=0 && ph4!=25.5){
+    Irrigation.setPH(ph1, ph2, ph3, ph4);
+  }
+  else{ Serial.println(F("Charge Irrigation Parameters Error: Cannot charge ph parameters because they are incosistent")); }
 }
 
 void analogSaveFilter(int Type, int filt, float filterParam){

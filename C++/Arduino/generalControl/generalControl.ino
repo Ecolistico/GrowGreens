@@ -6,6 +6,7 @@
 #include <controllerHVAC.h>
 #include <sensor.h>
 #include <compressorController.h>
+#include <irrigationController.h>
 #include <recirculationController.h>
 #include <processControl.h>
 
@@ -179,6 +180,7 @@ void irrigationEmergency();
 void codification_Multiplexer();
 // Serial Communication
 void serialEvent();
+void requestSolution();
 // Setup
 void solenoid_setup();
 void sensors_setup();
