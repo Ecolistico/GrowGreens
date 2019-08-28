@@ -7,14 +7,14 @@ import csv
 import time
 import json
 import sqlite3
-from time import strftime, localtime
 from datetime import datetime
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
+from time import time, strftime, localtime
 sys.path.insert(0, './src/')
 import EnvControl
-from logger import logger
 from smtp import Mail
+from logger import logger
 from mqttCallback import mqttController
 from serialCallback import serialController
 
@@ -37,7 +37,8 @@ with open("config.json") as f:
     state = data["state"]
     
 # Define Mail object
-mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
+#mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
+mail = Mail(log.logger, "jmcasimar@sippys.com.mx", city, state, ID) # Main logger, just me
 
 # Define variables imported form other files
 # From MQTT Callback
@@ -54,17 +55,23 @@ mqttControl = mqttController(ID,
                              log.logger_esp32back)
 
 # From Serial Callback
-serialControl = serialController(log.logger_generalControl,
+serialControl = serialController(log.logger,
+                                 log.logger_generalControl,
                                  log.logger_motorsGrower,
-                                 log.logger_solutionMaker)
+                                 log.logger_solutionMaker,
+                                 "irrigation.json")
 
-# Define MQTT communication
-client = mqtt.Client()
-client.on_connect = mqttControl.on_connect  # Specify on_connect callback
-client.on_message = mqttControl.on_message  # Specify on_message callback
-#client.on_publish = mqttController.on_publish  # Specify on_publish callback
-client.on_disconnect = mqttControl.on_disconnect  # Specify on_publish callback
-client.connect(brokerIP, 1883, 60)  # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
+try:
+    # Define MQTT communication
+    client = mqtt.Client()
+    client.on_connect = mqttControl.on_connect  # Specify on_connect callback
+    client.on_message = mqttControl.on_message  # Specify on_message callback
+    #client.on_publish = mqttController.on_publish  # Specify on_publish callback
+    client.on_disconnect = mqttControl.on_disconnect  # Specify on_publish callback
+    # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
+    if(client.connect(brokerIP, 1883, 60)==0): mqttControl.clientConnected = True
+    else: log.logger.warning("Cannot connect with MQTT Broker")
+except: log.logger.warning("Cannot connect with MQTT Broker")
 
 def mainClose():
     # Close devices when finished
@@ -103,15 +110,29 @@ else:
     run = False
     log.logger.info("Permission to start GrowGreens refused")
     
-actualTime = time.time()
-
 try:
     # Main program
     while run:
         serialControl.loop()
-        client.loop()
         now = datetime.now()
         
+        # If mqtt connected check for messages
+        if mqttControl.clientConnected: client.loop()
+        # Else try to reconnect every 30s
+        elif(time()-mqttControl.actualTime):
+            mqttControl.actualTime = time()
+            try:
+                # Reconnect client
+                client = mqtt.Client()
+                client.on_connect = mqttControl.on_connect  # Specify on_connect callback
+                client.on_message = mqttControl.on_message  # Specify on_message callback
+                #client.on_publish = mqttController.on_publish  # Specify on_publish callback
+                client.on_disconnect = mqttControl.on_disconnect  # Specify on_publish callback
+                # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
+                if(client.connect(brokerIP, 1883, 60)==0): mqttControl.clientConnected = True
+                else: log.logger.warning("Cannot connect with MQTT Broker")
+            except: log.logger.warning("Cannot connect with MQTT Broker")
+            
         # When it is a new day
         if day!=now.day:
             # Update day
@@ -141,7 +162,7 @@ try:
             publish.single("{}/esp32back".format(ID), "sendData", hostname = brokerIP)
             # Send to generalControl new time info
             serialControl.generalControl.write(bytes("updateHour,{0},{1}".format(now.hour, now.minute),"utf-8"))
-    
+            serialControl.generalControl.flush()
     mainClose() # Finished th program
 
 except:
