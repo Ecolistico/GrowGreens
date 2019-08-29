@@ -149,7 +149,7 @@ void growerStepper::resetTime()
 
 bool growerStepper::isTimeToGoHome()
   { if(millis()-__ActualTime>WAIT_TIME_FOR_GO_HOME && !__IsAtHome){
-      printAction("Time without move exceed. It is time to go home");
+      printAction("Time without move exceed. It is time to go home", 2);
       return true;
     }
     else{return false;}
@@ -157,6 +157,17 @@ bool growerStepper::isTimeToGoHome()
 
 void growerStepper::printAction(String act)
   { Serial.print(F("Grower"));
+    Serial.print(__Floor);
+    Serial.print(F(": "));
+    Serial.println(act);
+  }
+
+void growerStepper::printAction(String act, uint8_t level)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    Serial.print(F("Grower"));
     Serial.print(__Floor);
     Serial.print(F(": "));
     Serial.println(act);
@@ -234,7 +245,7 @@ bool growerStepper::moveX(long some_mm, bool seq = false)
     if(__OutHomeX1 || __OutHomeX2){
       if( (actualPosition1<getMaxDistanceX()/2 && actualPosition2<getMaxDistanceX()/2 && some_mm<0) ||
       (actualPosition1>getMaxDistanceX()/2 && actualPosition2>getMaxDistanceX()/2 && some_mm>0) )
-      { printAction("Direction of movement not allowed");
+      { printAction("Direction of movement not allowed", 3);
         return false;
       }
     }
@@ -243,17 +254,17 @@ bool growerStepper::moveX(long some_mm, bool seq = false)
        actualPosition2+some_mm>getMaxDistanceX()-minDist ||
        actualPosition1+some_mm<minDist  ||
        actualPosition2+some_mm<minDist){
-        printAction("Movement not allowed because will exceed physical dimensions");
+        printAction("Movement not allowed because will exceed physical dimensions", 3);
         return false;
       }
     // Check available status
     if(!__Available){
-      printAction("Unavailable");
+      printAction("Unavailable", 3);
       return false;
     }
     // Check that is not a sequence running
     if(__Sequence!=0 && !seq){
-      printAction("Routine in progress");
+      printAction("Routine in progress", 3);
       return false;
     }
 
@@ -279,23 +290,23 @@ bool growerStepper::moveY(long some_mm, bool seq = false)
     // If outHome Help is activated then check that the movement is allowed
     if(__OutHomeY){
       if( (actualPosition<getMaxDistanceY()/2 && some_mm<0) || (actualPosition>getMaxDistanceY()/2 && some_mm>0) )
-      { printAction("Direction of movement not allowed");
+      { printAction("Direction of movement not allowed", 3);
         return false;
       }
     }
     // Check that movement not exceed the container phisical dimensions
     if(actualPosition+some_mm>getMaxDistanceY()-minDist || actualPosition+some_mm<minDist){
-      printAction("Movement not allowed because will exceed physical dimensions");
+      printAction("Movement not allowed because will exceed physical dimensions", 3);
       return false;
     }
     // Check available status
     if(!__Available){
-      printAction("Unavailable");
+      printAction("Unavailable", 3);
       return false;
     }
     // Check that is not a sequence running
     if(__Sequence!=0 && !seq){
-      printAction("Routine in progress");
+      printAction("Routine in progress", 3);
       return false;
     }
 
@@ -321,23 +332,23 @@ bool growerStepper::moveXTo(long some_mm, bool seq = false)
     if(__OutHomeX1 || __OutHomeX2){
       if( (actualPosition1<getMaxDistanceX()/2 && actualPosition2<getMaxDistanceX()/2 && some_mm<0) ||
       (actualPosition1>getMaxDistanceX()/2 && actualPosition2>getMaxDistanceX()/2 && some_mm>0) )
-      { printAction("Direction of movement not allowed");
+      { printAction("Direction of movement not allowed", 3);
         return false;
       }
     }
     // Check that movement not exceed the container phisical dimensions
     if(some_mm<minDist || some_mm>getMaxDistanceX()-minDist){
-      printAction("Movement not allowed because will exceed physical dimensions");
+      printAction("Movement not allowed because will exceed physical dimensions", 3);
       return false;
     }
     // Check available status
     if(!__Available){
-      printAction("Unavailable");
+      printAction("Unavailable", 3);
       return false;
     }
     // Check that is not a sequence running
     if(__Sequence!=0 && !seq){
-      printAction("Routine in progress");
+      printAction("Routine in progress", 3);
       return false;
     }
 
@@ -363,23 +374,23 @@ bool growerStepper::moveYTo(long some_mm, bool seq = false)
     // If outHome Help is activated then check that the movement is allowed
     if(__OutHomeY){
       if( (actualPosition<getMaxDistanceY()/2 && some_mm<0) || (actualPosition>getMaxDistanceY()/2 && some_mm>0) )
-      { printAction("Direction of movement not allowed");
+      { printAction("Direction of movement not allowed", 3);
         return false;
       }
     }
     // Check that movement not exceed the container phisical dimensions
     if(some_mm<minDist || some_mm>getMaxDistanceY()-minDist){
-      printAction("Movement not allowed because will exceed physical dimensions");
+      printAction("Movement not allowed because will exceed physical dimensions", 3);
       return false;
     }
     // Check available status
     if(!__Available){
-      printAction("Unavailable");
+      printAction("Unavailable", 3);
       return false;
     }
     // Check that is not a sequence running
     if(__Sequence!=0 && !seq){
-      printAction("Routine in progress");
+      printAction("Routine in progress", 3);
       return false;
     }
 
@@ -400,16 +411,16 @@ bool growerStepper::calibration()
   { if(__Available){
       if(__Sequence==0){
         __Calibration = 1; // First stage of the calibration is go home
-        printAction("Starting Calibration Sequence Stage 1");
+        printAction("Starting Calibration Sequence Stage 1", 2);
         if(!home()){
           __Home = true;
         }
         return true;
       }
-      printAction("Routine in progress");
+      printAction("Routine in progress", 3);
       return false;
     }
-    printAction("Unavailable");
+    printAction("Unavailable", 3);
     return false;
   }
 
@@ -429,8 +440,8 @@ bool growerStepper::isEnable()
   { return __IsEnable; }
 
 bool growerStepper::isAvailable()
-  { if(__Available){printAction("Available,true");}
-    else{printAction("Available,false");}
+  { if(__Available){printAction("Available", 2);}
+    else{printAction("Unavailable", 2);}
     return __Available;
   }
 
@@ -446,19 +457,19 @@ bool growerStepper::continueSequence()
         printAction("Continue routine");
         return true;
       }
-      printAction("Cannot continue routine because it has not started");
+      printAction("Cannot continue routine because it has not started", 3);
       return false;
     }
-    printAction("Unavailable");
+    printAction("Unavailable", 3);
     return false;
   }
 
 void growerStepper::stopSequence()
   { if(__Sequence>0){
       __Sequence = 0; // Stopping sequence
-      printAction("Routine Stopped");
+      printAction("Routine Stopped", 2);
     }
-    else{printAction("Cannot stop routine because it has not started");}
+    else{printAction("Cannot stop routine because it has not started", 3);}
   }
 
 bool growerStepper::sequence(long mm_X, long mm_Y)
@@ -477,19 +488,19 @@ bool growerStepper::sequence(long mm_X, long mm_Y)
           __SequenceYMoves = int(secureYDistance/__SequenceYmm);
           // Number of movements is all the points + home()
           __SequenceMovements = __SequenceXMoves*(__SequenceYMoves+1) + __SequenceYMoves + 1;
-          printAction("Starting Routine Stage "+ String(__Sequence));
+          printAction("Starting Routine Stage "+ String(__Sequence), 2);
           if(!home()){
             __Home = true;
           }
           return true;
         }
-        printAction("Imposible start that routine. Parameters are wrong");
+        printAction("Imposible start that routine. Parameters are wrong", 3);
         return false;
       }
-      printAction("Imposible start that routine. Grower is not ready");
+      printAction("Imposible start that routine. Grower is not ready", 3);
       return false;
     }
-    printAction("Unavailable");
+    printAction("Unavailable", 3);
     return false;
   }
 
@@ -514,16 +525,16 @@ bool growerStepper::home()
           __MoveY = true;
           __steppersRunning += 3;
           resetTime();
-          printAction("Moving to Home");
+          printAction("Moving to Home", 2);
           return true;
         }
-        printAction("Already at Home");
+        printAction("Already at Home", 1);
         return false;
       }
-      printAction("Routine in progress");
+      printAction("Routine in progress", 3);
       return false;
     }
-    printAction("Unavailable");
+    printAction("Unavailable", 3);
     return false;
   }
 
@@ -533,7 +544,7 @@ void growerStepper::stop()
       stepperX1->stop();
       __MoveX1 = false;
       __steppersRunning--;
-      printAction("Stepper X1 Stopped");
+      printAction("Stepper X1 Stopped", 2);
       if(!__Stop){
         __Stop = true;
       }
@@ -544,7 +555,7 @@ void growerStepper::stop()
       stepperX2->stop();
       __MoveX2 = false;
       __steppersRunning--;
-      printAction("Stepper X2 Stopped");
+      printAction("Stepper X2 Stopped", 2);
       if(!__Stop){
         __Stop = true;
       }
@@ -555,7 +566,7 @@ void growerStepper::stop()
       stepperY->stop();
       __MoveY = false;
       __steppersRunning--;
-      printAction("Stepper Y Stopped");
+      printAction("Stepper Y Stopped", 2);
       if(!__Stop){
         __Stop = true;
       }
@@ -569,21 +580,21 @@ void growerStepper::stop(uint8_t st)
         stepperX1->stop();
         __MoveX1 = false;
         __steppersRunning--;
-        printAction("Stepper X1 Stopped");
+        printAction("Stepper X1 Stopped", 2);
         break;
       case 1:
         setMaxAccel(1);
         stepperX2->stop();
         __MoveX2 = false;
         __steppersRunning--;
-        printAction("Stepper X2 Stopped");
+        printAction("Stepper X2 Stopped", 2);
         break;
       case 2:
         setMaxAccel(2);
         stepperY->stop();
         __MoveY = false;
         __steppersRunning--;
-        printAction("Stepper Y Stopped");
+        printAction("Stepper Y Stopped", 2);
         break;
     }
   }
@@ -659,7 +670,7 @@ void growerStepper::run()
         __Calibration = 3;
         decition = true;
         home();
-        printAction("Starting Calibration Sequence Stage 3");
+        printAction("Starting Calibration Sequence Stage 3", 2);
       }
 
       // If the grower is in routine (sequence value in range)
@@ -697,7 +708,7 @@ void growerStepper::run()
         }
         if(!__SequenceStop){
           __Sequence = 0;
-          printAction("Routine Finished");
+          printAction("Routine Finished", 2);
         }
       }
 
@@ -715,7 +726,7 @@ void growerStepper::run()
             stepperY->setCurrentPosition(0);
           }
           disable(); // Disable the motors when home reached
-          printAction("Home Reached");
+          printAction("Home Reached", 2);
 
           // If calibration is at stage 1 then starts stage 2
           if(__Calibration == 1){
@@ -733,7 +744,7 @@ void growerStepper::run()
             __Calibration = 2;
             decition = true;
             enable();
-            printAction("Starting Calibration Sequence Stage 2");
+            printAction("Starting Calibration Sequence Stage 2", 2);
           }
 
           // If calibration is at stage 3 then finish it and reset all the variables involves
@@ -745,7 +756,7 @@ void growerStepper::run()
             setMaxDistanceX((getMaxDistanceX()+x)/2);
             setMaxDistanceY((getMaxDistanceY()+y)/2);
             __Calibration = 0; // There finished the calibration
-            printAction("Calibration Finished");
+            printAction("Calibration Finished", 2);
 
             stepperX1->setCurrentPosition(0);
             stepperX2->setCurrentPosition(0);
