@@ -15,9 +15,20 @@ sys.path.insert(0, './src/')
 import EnvControl
 from smtp import Mail
 from logger import logger
+from inputHandler import inputHandler
 from mqttCallback import mqttController
 from serialCallback import serialController
 
+# Define functions
+# When program is finishing
+def mainClose():
+    # Close devices when finished
+    log.logger.info("Closing devices")
+    conn.close() # Database pointer
+    serialControl.close()
+    log.logger.info("GrowGreens Finished")
+    mail.sendMail("Error", "GrowGreens se detuvo")
+    
 # Check if temp dir exists, if not then create it
 if not os.path.exists('temp/'): os.makedirs('temp/')
     
@@ -60,6 +71,8 @@ serialControl = serialController(log.logger,
                                  log.logger_motorsGrower,
                                  log.logger_solutionMaker,
                                  "irrigation.json")
+# From inputHandler
+inputControl = inputHandler(log.logger, serialControl)
 
 try:
     # Define MQTT communication
@@ -73,14 +86,6 @@ try:
     else: log.logger.warning("Cannot connect with MQTT Broker")
 except: log.logger.warning("Cannot connect with MQTT Broker")
 
-def mainClose():
-    # Close devices when finished
-    log.logger.info("Closing devices")
-    conn.close() # Database pointer
-    serialControl.close()
-    log.logger.info("GrowGreens Finished")
-    mail.sendMail("Error", "GrowGreens se detuvo")
-    
 # Setting up
 day = 0
 hour = 0
@@ -115,6 +120,7 @@ try:
     # Main program
     while run:
         serialControl.loop()
+        inputControl.loop()
         now = datetime.now()
         
         # If mqtt connected check for messages
