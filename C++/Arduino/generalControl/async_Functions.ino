@@ -71,7 +71,7 @@ void initialPreconditions(bool before, void (*ptr2function)()){
       uint8_t inSol = Recirculation.getIn();
       Recirculation.setIn(WATER);
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
-      else{ Serial.println(F("Recirculation moveIn(): pumpIn already working")); }
+      else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
       Recirculation.setIn(inSol);
       
       IPC.setState(30); // Check IPC Process 30
@@ -108,14 +108,14 @@ void startIrrigation(){
   uint8_t inSol = Recirculation.getIn();
   Recirculation.setIn(WATER);
   if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
-  else{ Serial.println(F("Recirculation moveIn(): pumpIn already working")); }
+  else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
   Recirculation.setIn(inSol);
    
   uint8_t nite = inWhatFloorIsNight();
   // If the day change in the floors reorder valves
   if(night!=nite && nite>0){
     night = nite;
-    Serial.println(F("Solenoid valves: Creating new routine"));
+    Serial.println(F("warning,Solenoid valves: Creating new routine"));
     solenoidValve::defaultOrder(night-1); // Setting new order
   }
 
@@ -187,7 +187,7 @@ void middlePreconditions(void (*ptr2function)()){
 
 void startMiddleIrrigation(){
   if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
-  else{ Serial.println(F("Recirculation moveIn(): pumpIn already working")); }
+  else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
       
   solenoidValve::enableGroup(true); // Enable Valves Group
   irrigationStage = 4; // Pass to the next irrigation Stage
@@ -212,13 +212,13 @@ void irrigationEmergency(){
     float p1 = pressureSensorNutrition.getValue();
     // If we detect air in irrigation line
     if(checkWaterIrrigation.getState()==AIR_STATE){
-      Serial.println(F("IPC Warning: Probably there is air in irrigation line"));
+      Serial.println(F("warning,IPC Warning: Probably there is air in irrigation line"));
       IPC.setState(70); // Check IPC Process 70
     }
     // If we detect low pressure
     else if(p1<critical_pressure){
       emergency = true; // Set emergency state
-      Serial.println(F("IPC Emergency: There is not enough pressure to continue irrigation process"));
+      Serial.println(F("error,IPC Emergency: There is not enough pressure to continue irrigation process"));
       solenoidValve::enableGroup(false); // Disable Valves Group
       Compressor.compressNut(); // Compress Nutrition Kegs
       IPC.setState(60); // Check IPC Process 60
@@ -230,13 +230,13 @@ void irrigationEmergency(){
     float p3 = pressureSensorWater.getValue();
     // If we detect air in irrigation line
     if(checkWaterIrrigation.getState()==AIR_STATE){
-      Serial.println(F("MPC Warning: Probably there is air in irrigation line"));
+      Serial.println(F("warning,MPC Warning: Probably there is air in irrigation line"));
       MPC.setState(70); // Check MPC Process 70
     }
     // If we detect low pressure
     else if(p3<critical_pressure){
       emergency = true; // Set emergency state
-      Serial.println(F("MPC Emergency: There is not enough pressure to continue irrigation process"));
+      Serial.println(F("error,MPC Emergency: There is not enough pressure to continue irrigation process"));
       solenoidValve::enableGroup(false); // Disable Valves Group
       Compressor.compressH2O(); // Compress Water Kegs
       MPC.setState(60); // Check IPC Process 60
@@ -259,7 +259,7 @@ void runIPC(){
     if(p1<=10){
       uint8_t resp = Recirculation.moveOut(solutionConsumption*1.15, NUTRITION_KEGS);
       if(resp==0){
-        Serial.println(F("PumpOut is working on another process, please wait until it finished"));
+        Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
         IPC.setState(250); // Check IPC Process 250
       }
       else if(resp==1){
@@ -267,7 +267,7 @@ void runIPC(){
         IPC.setState(21); // Check IPC Process 21
       }
       else if(resp==2){
-        Serial.println(F("There is not enough solution to fill nutrition kegs, adding extra water in solutionMaker"));
+        Serial.println(F("warning,There is not enough solution to fill nutrition kegs, adding extra water in solutionMaker"));
         IPC.setState(22); // Check IPC Process 22
       }
     }
@@ -290,7 +290,7 @@ void runIPC(){
 
   else if(IPC.state==23){ // Waiting for central computer to confirm request
     if(CC.state==1){
-      Serial.println(F("Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
+      Serial.println(F("warning,Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
       IPC.setState(24); // Check IPC Process 24
     }
     else if(millis()-IPC.actualTime>=10000){
@@ -334,7 +334,7 @@ void runIPC(){
     if(!Recirculation.getRSolValve()){
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
-      else{ Serial.println(F("Recirculation moveIn(): pumpIn already working")); }
+      else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
       chargeSolenoidParameters(Irrigation.getSolution()); // Update irrigation parameters
       // Update recirculation parameters
       Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
@@ -354,7 +354,7 @@ void runIPC(){
     else if(p1<=10){
       uint8_t resp = Recirculation.moveOut(solutionConsumption*1.15, NUTRITION_KEGS);
       if(resp==0){
-        Serial.println(F("PumpOut is working on another process, please wait until it finished"));
+        Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
         IPC.setState(251); // Check IPC Process 251
       }
       else if(resp==1){
@@ -362,7 +362,7 @@ void runIPC(){
         IPC.setState(41); // Check IPC Process 41
       }
       else if(resp==2){
-        Serial.println(F("There is not enough solution to fill nutrition kegs, adding extra water in solutionMaker"));
+        Serial.println(F("warning,There is not enough solution to fill nutrition kegs, adding extra water in solutionMaker"));
         IPC.setState(42); // Check IPC Process 22
       }
     }
@@ -403,7 +403,7 @@ void runIPC(){
       IPC.setState(23); // Check IPC Process 23
     }
     else if(CC.state==1){
-      Serial.println(F("Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
+      Serial.println(F("warning,Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
       IPC.setState(44); // Check IPC Process 44
     }
     else if(millis()-IPC.actualTime>=10000){
@@ -463,7 +463,7 @@ void runIPC(){
     else if(!Recirculation.getRSolValve()){
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
-      else{ Serial.println(F("Recirculation moveIn(): pumpIn already working")); }
+      else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
       chargeSolenoidParameters(Irrigation.getSolution()); // Update irrigation parameters
       // Update recirculation parameters
       Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
@@ -487,7 +487,7 @@ void runIPC(){
       if(checkWaterIrrigation.getState()==AIR_STATE){
         if(irrigationStage==1){
           emergency = true; // Set emergency state
-          Serial.println(F("IPC Emergency: There is air in irrigation line"));
+          Serial.println(F("error,IPC Emergency: There is air in irrigation line"));
           solenoidValve::enableGroup(false); // Disable Valves Group
           Recirculation.resetVolKnut(); // Volumen in nutrition kegs is 0
           substractSolutionConsumption(false); // Erase flow measurements in day floors without update solutionConsumption
@@ -496,12 +496,12 @@ void runIPC(){
           IPC.setState(71); // Check IPC Process 71
         }
         else{
-          Serial.println(F("IPC React too slow: The irrigationStage finished before we can take some action"));
+          Serial.println(F("warning,IPC React too slow: The irrigationStage finished before we can take some action"));
           IPC.setState(0); // Return to normal state
         }
       }
       else{
-        Serial.println(F("IPC False Alarm: There is not air in irrigation line"));
+        Serial.println(F("warning,IPC False Alarm: There is not air in irrigation line"));
         IPC.setState(0); // Return to normal state
       }
     }
@@ -512,7 +512,7 @@ void runIPC(){
     if(p1<=10){
       uint8_t resp = Recirculation.moveOut(solutionConsumption*1.15, NUTRITION_KEGS);
       if(resp==0){
-        Serial.println(F("PumpOut is working on another process, please wait until it finished"));
+        Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
         IPC.setState(252); // Check IPC Process 252
       }
       else if(resp==1){
@@ -520,7 +520,7 @@ void runIPC(){
         IPC.setState(72); // Check IPC Process 72
       }
       else if(resp==2){
-        Serial.println(F("There is not enough solution to fill nutrition kegs, adding extra water in solutionMaker"));
+        Serial.println(F("warning,There is not enough solution to fill nutrition kegs, adding extra water in solutionMaker"));
         IPC.setState(73); // Check IPC Process 73
       }
     }
@@ -544,7 +544,7 @@ void runIPC(){
 
   else if(IPC.state==74){ // Emergency: Air in line. Waiting for central computer to confirm request
     if(CC.state==1){
-      Serial.println(F("Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
+      Serial.println(F("warning,Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
       IPC.setState(75); // Check IPC Process 75
     }
     else if(millis()-IPC.actualTime>=10000){
@@ -615,7 +615,7 @@ void runMPC(){
       uint8_t resp = Recirculation.moveOut(h2oConsumption*1.15, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
-        Serial.println(F("PumpOut is working on another process, please wait until it finished"));
+        Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
         MPC.setState(250); // Check MPC Process 250
       }
       else if(resp==1){
@@ -623,7 +623,7 @@ void runMPC(){
         MPC.setState(21); // Check MPC Process 21
       }
       else if(resp==2){
-        Serial.println(F("There is not enough solution to fill water kegs, adding extra water"));
+        Serial.println(F("warning,There is not enough solution to fill water kegs, adding extra water"));
         MPC.setState(22); // Check MPC Process 22
       }
     }
@@ -662,7 +662,7 @@ void runMPC(){
       if(checkWaterIrrigation.getState()==AIR_STATE){
         if(irrigationStage==4){
           emergency = true; // Set emergency state
-          Serial.println(F("MPC Emergency: There is air in irrigation line"));
+          Serial.println(F("error,MPC Emergency: There is air in irrigation line"));
           solenoidValve::enableGroup(false); // Disable Valves Group
           Recirculation.resetVolKh2o(); // Volumen in water kegs is 0
           substractWaterConsumption(false); // Erase flow measurements in night floor without update h2oConsumption
@@ -670,12 +670,12 @@ void runMPC(){
           MPC.setState(71); // Check MPC Process 71
         }
         else{
-          Serial.println(F("MPC React too slow: The irrigationStage finished before we can take some action"));
+          Serial.println(F("warning,MPC React too slow: The irrigationStage finished before we can take some action"));
           MPC.setState(0); // Return to normal state
         }
       }
       else{
-        Serial.println(F("MPC False Alarm: There is not air in irrigation line"));
+        Serial.println(F("warning,MPC False Alarm: There is not air in irrigation line"));
         MPC.setState(0); // Return to normal state
       }
     }
@@ -689,7 +689,7 @@ void runMPC(){
       uint8_t resp = Recirculation.moveOut(h2oConsumption*1.15, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
-        Serial.println(F("PumpOut is working on another process, please wait until it finished"));
+        Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
         MPC.setState(252); // Check MPC Process 252
       }
       else if(resp==1){
@@ -697,7 +697,7 @@ void runMPC(){
         MPC.setState(72); // Check MPC Process 72
       }
       else if(resp==2){
-        Serial.println(F("There is not enough solution to fill water kegs, adding extra water"));
+        Serial.println(F("warning,There is not enough solution to fill water kegs, adding extra water"));
         MPC.setState(73); // Check MPC Process 73
       }
     }

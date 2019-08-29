@@ -103,47 +103,47 @@ uint8_t inWhatFloorIsNight(){ // This function cannot be executed until the firs
   else if(!day2.getState()) { return 2; }
   else if(!day3.getState()) { return 3; }
   else if(!day4.getState()) { return 4; }
-  else{ Serial.println(F("inWhatFloorIsNight(): Error time information not updated yet")); return 0; }
+  else{ Serial.println(F("error,inWhatFloorIsNight(): Time information not updated yet")); return 0; }
 }
 
 void updateDay(){ 
   if(day1.getState()!=day1.isDay(dateHour, dateMinute)){
     if(day1.getState()){
-      Serial.println(F("Day Started in Floor 1"));
+      Serial.println(F("warning,Day Started in Floor 1"));
       LED_Mod::turnOn(0);
       }
     else{
-      Serial.println(F("Night Started in Floor 1"));
+      Serial.println(F("warning,Night Started in Floor 1"));
       LED_Mod::turnOff(0);
       }
   }
   if(day2.getState()!=day2.isDay(dateHour, dateMinute)){
     if(day2.getState()){
-      Serial.println(F("Day Started in Floor 2"));
+      Serial.println(F("warning,Day Started in Floor 2"));
       LED_Mod::turnOn(1);
       }
     else{
-      Serial.println(F("Night Started in Floor 2"));
+      Serial.println(F("warning,Night Started in Floor 2"));
       LED_Mod::turnOff(1);
       }
   }
   if(day3.getState()!=day3.isDay(dateHour, dateMinute)){
     if(
-      day3.getState()){Serial.println(F("Day Started in Floor 3"));
+      day3.getState()){Serial.println(F("warning,Day Started in Floor 3"));
       LED_Mod::turnOn(2);
       }
     else{
-      Serial.println(F("Night Started in Floor 3"));
+      Serial.println(F("warning,Night Started in Floor 3"));
       LED_Mod::turnOn(2);
       }
   }
   if(day4.getState()!=day4.isDay(dateHour, dateMinute)){
     if(day4.getState()){
-      Serial.println(F("Day Started in Floor 4"));
+      Serial.println(F("warning,Day Started in Floor 4"));
       LED_Mod::turnOn(3);
       }
     else{
-      Serial.println(F("Night Started in Floor 4"));
+      Serial.println(F("warning,Night Started in Floor 4"));
       LED_Mod::turnOn(3);
       }
   }

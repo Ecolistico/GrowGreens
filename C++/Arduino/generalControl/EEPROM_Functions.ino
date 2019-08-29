@@ -90,13 +90,13 @@ void solenoidSaveTimeOn(int fl, int reg, int sol, int val){
           int pos = fl*MAX_IRRIGATION_REGIONS + reg + sol*solenoidValve::__TotalActuators;
           save_EEPROM(pos, val);
         }
-        else{ Serial.println(F("Solenoid Save Time On (): value parameter incorrect")); }
+        else{ Serial.println(F("error,Solenoid Save Time On (): value parameter incorrect")); }
       }
-      else{ Serial.println(F("Solenoid Save Time On (): solution parameter incorrect")); }
+      else{ Serial.println(F("error,Solenoid Save Time On (): solution parameter incorrect")); }
     }
-    else{ Serial.println(F("Solenoid Save Time On (): region parameter incorrect")); }
+    else{ Serial.println(F("error,Solenoid Save Time On (): region parameter incorrect")); }
   }
-  else{ Serial.println(F("Solenoid Save Time On (): floor parameter incorrect")); }
+  else{ Serial.println(F("error,Solenoid Save Time On (): floor parameter incorrect")); }
 }
 
 void solenoidSaveCycleTime(int val){
@@ -104,7 +104,7 @@ void solenoidSaveCycleTime(int val){
     int pos = solenoidValve::__TotalActuators*5;
     save_EEPROM(pos, val);
   }
-  else{ Serial.println(F("Solenoid Save Cycle Time (): value parameter incorrect")); }
+  else{ Serial.println(F("error,Solenoid Save Cycle Time (): value parameter incorrect")); }
 }
 
 void chargeSolenoidParameters(int sol){
@@ -183,15 +183,15 @@ void multidaySave(int fl, int cyclesNumber, float lightPercentage, float initHou
             save_EEPROM(pos+12, inHour);
             break;
           default:
-            Serial.println(F("Multiday Save EEPROM Function: parameter floor incorrect"));
+            Serial.println(F("error,Multiday Save EEPROM Function: parameter floor incorrect"));
             break;
         }
       }
-      else{ Serial.println(F("Multiday Save EEPROM Function: parameter initial hour incorrect")); }
+      else{ Serial.println(F("error,Multiday Save EEPROM Function: parameter initial hour incorrect")); }
     }
-    else{ Serial.println(F("Multiday Save EEPROM Function: parameter light% incorrect")); }
+    else{ Serial.println(F("error,Multiday Save EEPROM Function: parameter light% incorrect")); }
   }
-  else{ Serial.println(F("Multiday Save EEPROM Function: parameter cycles incorrect")); }
+  else{ Serial.println(F("error,Multiday Save EEPROM Function: parameter cycles incorrect")); }
 }
 
 void chargeMultidayParameters(){
@@ -237,9 +237,9 @@ void regionSave(int fl, int reg){
       int pos = solenoidValve::__TotalActuators*5+12;
       save_EEPROM(pos+1+fl, reg);
     }
-    else{Serial.println(F("Region Save EEPROM Function: parameter region incorrect"));}
+    else{Serial.println(F("error,Region Save EEPROM Function: parameter region incorrect"));}
   }
-  else{Serial.println(F("Region Save EEPROM Function: parameter floor incorrect"));}
+  else{Serial.println(F("error,Region Save EEPROM Function: parameter floor incorrect"));}
 }
 
 void chargeLedRegion(){
@@ -276,9 +276,9 @@ void irrigationSave(int cyclesPerDay, int initialHour){
       save_EEPROM(pos+1, cyclesPerDay);
       save_EEPROM(pos+2, initialHour); 
     }
-    else{ Serial.println(F("Irrigation Save General Parameter: initialHour out of range [0-24]")); }
+    else{ Serial.println(F("error,Irrigation Save General Parameter: initialHour out of range [0-24]")); }
   }
-  else{ Serial.println(F("Irrigation Save General Parameter: cyclesPerDay incorrect")); }
+  else{ Serial.println(F("error,Irrigation Save General Parameter: cyclesPerDay incorrect")); }
 }
 
 void solutionSave(int sol, int order, int percent, int ec, float ph){
@@ -293,15 +293,15 @@ void solutionSave(int sol, int order, int percent, int ec, float ph){
             save_EEPROM(pos+9, int(ec/20));
             save_EEPROM(pos+13, int(ph*10));  
           }
-          else{ Serial.println(F("Irrigation Save Solution Parameter: ph out of range [0-14]")); }
+          else{ Serial.println(F("error,Irrigation Save Solution Parameter: ph out of range [0-14]")); }
         }
-        else{ Serial.println(F("Irrigation Save Solution Parameter: ec out of range [0-5000]")); }
+        else{ Serial.println(F("error,Irrigation Save Solution Parameter: ec out of range [0-5000]")); }
       }
-      else{ Serial.println(F("Irrigation Save Solution Parameter: percent out of range [0-100]")); }
+      else{ Serial.println(F("error,Irrigation Save Solution Parameter: percent out of range [0-100]")); }
     }
-    else{ Serial.println(F("Irrigation Save Solution Parameter: order out of range [0-3]")); }
+    else{ Serial.println(F("error,Irrigation Save Solution Parameter: order out of range [0-3]")); }
   }
-  else{ Serial.println(F("Irrigation Save Solution Parameter: solution out of range [0-3]")); }
+  else{ Serial.println(F("error,Irrigation Save Solution Parameter: solution out of range [0-3]")); }
 }
 
 void chargeIrrigationParameters(){
@@ -329,16 +329,16 @@ void chargeIrrigationParameters(){
      ord1!=ord4 && ord2!=ord3 && ord2!=ord4 && ord3!=ord4 && per1+per2+per3+per4==100){
     Irrigation.redefine(cyclesPerDay, initialHour, ord1, ord2, ord3, ord4, per1, per2, per3, per4 );
   }
-  else{ Serial.println(F("Charge Irrigation Parameters Error: Cannot charge parameters because they are incosistent")); }
+  else{ Serial.println(F("error,Charge Irrigation Parameters Error: Cannot charge parameters because they are incosistent")); }
 
   if(ec1!=0 && ec1!=5100 && ec2!=0 && ec2!=5100 && ec3!=0 && ec3!=5100 && ec4!=0 && ec4!=5100){
     Irrigation.setEC(ec1, ec2, ec3, ec4);
   }
-  else{ Serial.println(F("Charge Irrigation Parameters Error: Cannot charge ec parameters because they are incosistent")); }
+  else{ Serial.println(F("error,Charge Irrigation Parameters Error: Cannot charge ec parameters because they are incosistent")); }
   if(ph1!=0 && ph1!=25.5 && ph2!=0 && ph2!=25.5 && ph3!=0 && ph3!=25.5 && ph4!=0 && ph4!=25.5){
     Irrigation.setPH(ph1, ph2, ph3, ph4);
   }
-  else{ Serial.println(F("Charge Irrigation Parameters Error: Cannot charge ph parameters because they are incosistent")); }
+  else{ Serial.println(F("error,Charge Irrigation Parameters Error: Cannot charge ph parameters because they are incosistent")); }
 }
 
 void analogSaveFilter(int Type, int filt, float filterParam){
@@ -348,9 +348,9 @@ void analogSaveFilter(int Type, int filt, float filterParam){
       save_EEPROM(pos, filt); 
       save_EEPROM(pos+1, filterParam); 
     }
-    else{Serial.println(F("Analog Sensor Save Filter: Parameter filt incorrect"));}
+    else{Serial.println(F("error,Analog Sensor Save Filter: Parameter filt incorrect"));}
   }
-  else{Serial.println(F("Analog Sensor Save Filter: Parameter type incorrect"));}
+  else{Serial.println(F("error,Analog Sensor Save Filter: Parameter type incorrect"));}
 }
 
 void analogSaveModel(int Type, float a, float b, float c){
@@ -360,7 +360,7 @@ void analogSaveModel(int Type, float a, float b, float c){
     save_EEPROM(pos+sizeof(float), b);
     save_EEPROM(pos+sizeof(float)*2, c);
   }
-  else{Serial.println(F("Analog Sensor Save Mode: Parameter type incorrect"));}
+  else{Serial.println(F("error,Analog Sensor Save Mode: Parameter type incorrect"));}
 }
 
 bool chargeAnalogParameters(int Type){
@@ -396,7 +396,7 @@ bool chargeAnalogParameters(int Type){
     return true;
   }
   else{
-    Serial.println(F("Analog Sensor Charge Parameter: Parameter type incorrect"));
+    Serial.println(F("error,Analog Sensor Charge Parameter: Parameter type incorrect"));
     return false;
   }
 }
@@ -408,9 +408,9 @@ void ultrasonicSaveFilter(int Type, int filt, float filterParam){
       save_EEPROM(pos, filt);
       save_EEPROM(pos+1, filterParam); 
     }
-    else{Serial.println(F("Ultrasonic Sensor Save Filter: Parameter filt incorrect"));}
+    else{Serial.println(F("error,Ultrasonic Sensor Save Filter: Parameter filt incorrect"));}
   }
-  else{Serial.println(F("Ultrasonic Sensor Save Filter: Parameter type incorrect"));}
+  else{Serial.println(F("error,Ultrasonic Sensor Save Filter: Parameter type incorrect"));}
 }
 
 void ultrasonicSaveModel(int Type, int model, float modelParam, float height){
@@ -423,13 +423,13 @@ void ultrasonicSaveModel(int Type, int model, float modelParam, float height){
           save_EEPROM(pos+1, modelParam);
           save_EEPROM(pos+1+sizeof(float), height);
         }
-        else{Serial.println(F("Ultrasonic Sensor Save Mode: Parameter height incorrect"));}
+        else{Serial.println(F("error,Ultrasonic Sensor Save Mode: Parameter height incorrect"));}
       }
-      else{Serial.println(F("Ultrasonic Sensor Save Mode: Parameter modelParam incorrect"));}
+      else{Serial.println(F("error,Ultrasonic Sensor Save Mode: Parameter modelParam incorrect"));}
     }
-    else{Serial.println(F("Ultrasonic Sensor Save Mode: Parameter model incorrect"));}
+    else{Serial.println(F("error,Ultrasonic Sensor Save Mode: Parameter model incorrect"));}
   }
-  else{Serial.println(F("Ultrasonic Sensor Save Mode: Parameter type incorrect"));}
+  else{Serial.println(F("error,Ultrasonic Sensor Save Mode: Parameter type incorrect"));}
 }
 
 bool chargeUltrasonicParameters(int Type){
@@ -461,7 +461,7 @@ bool chargeUltrasonicParameters(int Type){
     return true;
   }
   else{
-    Serial.println(F("Ultrasonic Sensor Charge Parameter: Parameter type incorrect"));
+    Serial.println(F("error,Ultrasonic Sensor Charge Parameter: Parameter type incorrect"));
     return false;
   }
 }
