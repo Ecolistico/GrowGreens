@@ -99,7 +99,8 @@ class growerStepper
         long MMToSteps_Y(long dist_mm); // Return the number of steps that equals the mm  parameter in Y
         void resetTime(); // Reset the time since the last time the motors were used
         bool isTimeToGoHome(); // Return true when it´s been a while without moving the motors and it´s not at home
-        void printAction(String act); // Print in serial an action executed with the coorect format for each grower
+        void printAction(String act); // Print in serial an action executed with the correct format for each grower
+        void printAction(String act, uint8_t level); // Print an action with format and log level
         void setMaxAccel(uint8_t stepper); // Allows stop the motors to fast
         void setNormalAccel(); // Allows move normally the motors
 
