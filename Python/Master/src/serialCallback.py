@@ -61,7 +61,7 @@ class serialController:
 
     def write(self, serialObject, mssg):
         serialObject.write(bytes(mssg, "utf-8"))
-        #serialObject.flush()
+        serialObject.flush()
         
     def sendBootParams(self):
         self.write(self.generalControl, "boot,{0},{1},{2},{3},{4}".format(
@@ -122,7 +122,7 @@ class serialController:
            self.solutionMaker.in_waiting==0 and
            len(self.resp)>0):
             for i, resp in enumerate(self.resp):
-                self.logMain.warning("Sending response for request {}".format(resp))
+                self.logMain.debug("Sending response for request {}".format(resp))
                 
                 # generalControl is requesting the necessary booting parameters
                 if(resp == "boot"): self.sendBootParams()            

@@ -55,13 +55,11 @@ class mqttController:
     # Callback fires when conected to MQTT broker.
     def on_connect(self, client, userdata, flags, rc):
         Topic = "{}/#".format(self.ID)
-        logTopic = "{}/Master/log".format(self.ID)
         message = "MQTT"
         if(rc == 0):
             message += " Connection succesful"
             mssg = "Master connected"
             client.subscribe(Topic)
-            publish.single(logTopic, mssg, hostname = self.brokerIP)
             self.logMain.info(message)
             self.logMain.info("Subscribed topic= {}".format(Topic))
         else:
