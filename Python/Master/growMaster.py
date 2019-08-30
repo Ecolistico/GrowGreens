@@ -42,7 +42,8 @@ def mainClose(): # When program is finishing
     conn.close() # Database pointer
     serialControl.close()
     log.logger.info("GrowGreens Finished")
-    mail.sendMail("Error", "GrowGreens se detuvo")
+    if run: mail.sendMail("Ecolistico Alerta", "GrowGreens se detuvo")
+    else: mail.sendMail("Ecolistico Alerta", "GrowGreens fue detenido por el operador")
     
 # Aux Variables
 try: param = sys.argv[1]
@@ -74,7 +75,8 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
         
     # Define Mail object
     #mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
-    mail = Mail(log.logger, "jmcasimar@sippys.com.mx", city, state, ID) # Main logger, just me
+    # Main logger, me and @IFTTT
+    mail = Mail(log.logger, ["jmcasimar@sippys.com.mx", "trigger@applet.ifttt.com"], city, state, ID) 
 
     # Define variables imported form other files
     # From MQTT Callback
@@ -91,7 +93,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
                                  log.logger_esp32back)
 
     # From inputHandler
-    inputControl = inputHandler(log.logger, serialControl)
+    inputControl = inputHandler(log.logger, serialControl, mqttControl)
 
     try:
         # Define MQTT communication
@@ -175,10 +177,18 @@ try:
             publish.single("{}/esp32center".format(ID), "sendData", hostname = brokerIP)
             publish.single("{}/esp32back".format(ID), "sendData", hostname = brokerIP)
             
-    if run: mainClose() # Finished th program
-
+        if inputControl.exit:
+            ex = input("Are you sure? y/n\n")
+            if (ex.startswith("y") or start.startswith("Y")):
+                run = False
+                mainClose() # Finished th program
+                log.logger.info("Program finished by operator")
+            else:
+                inputControl.exit = False
+                log.logger.info("Exit aborted")
+                
 except:
-    if run: log.logger.exception("Exception Raised")
+    log.logger.exception("Exception Raised")
     
 finally:
     if run: mainClose() # Finished th program

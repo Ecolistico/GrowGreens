@@ -3,6 +3,7 @@
 # Import modules
 import smtplib
 from time import strftime, localtime
+from email.mime.text import MIMEText
 
 class Mail:
     def __init__(self, logger, loggerMail, city, state, ID):
@@ -14,19 +15,17 @@ class Mail:
         
     def sendMail(self, subject, mssg):
         infoMail = "info@sippys.com.mx"
-        message = "From: {0}\nSubject:{1}\n\nUbicación: {2}, {3}\nContainer:{4}\n{5} - {6}".format(
-            "Ecolistico-info",
-            subject,
-            self.city,
-            self.state,
-            self.ID,
-            strftime("%Y-%m-%d %H:%M:%S", localtime()),
-            mssg)
-        message = message.encode("utf-8")
+        msg = MIMEText("Ubicación: {0}, {1}\nContainer:{2}\n{3} - {4}".format(
+            self.city, self.state, self.ID,strftime("%Y-%m-%d %H:%M:%S", localtime()),
+            mssg))
+        recipients = self.logMail
+        msg['Subject'] = "#{} {}".format(self.ID, subject)
+        msg['From'] = infoMail
+        msg['To'] = ", ".join(recipients)
         try:
             server = smtplib.SMTP_SSL("smtp.yandex.com.tr", 465)
             server.login(infoMail, "Kale5elak.")
-            server.sendmail(infoMail, self.logMail, message)
+            server.sendmail(infoMail, recipients, msg.as_string())
             server.close()
             self.log.info("Email sent to {}, Subject={}, Message={}".format(self.logMail, subject,mssg))
         except:
