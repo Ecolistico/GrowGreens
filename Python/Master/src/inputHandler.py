@@ -6,11 +6,14 @@ import select
 import paho.mqtt.publish as publish
 
 class inputHandler:
-    def __init__(self, logger, serialController):
+    def __init__(self, logger, serialController, mqttController):
         # Define logger
         self.log = logger
         # Define communication controllers
         self.serialControl = serialController
+        self.mqttControl = mqttController
+        # Aux Variables
+        self.exit = False
         
     # Get an Input Line it consumes between 20-30% of the processor capacity
     def getLine(self, Block=False):
@@ -43,9 +46,15 @@ class inputHandler:
     def valLenList(self, myList, reqLen):
         if(len(myList)==reqLen): return True
         else:
-            self.log.error("inputHandler- {} has not the correct length".format(myList))
+            self.log.error("inputHandler- {} does not have the correct length".format(myList))
             return False
     
+    def valLenList1(self, myList, minLen):
+        if(len(myList)>=minLen): return True
+        else:
+            self.log.error("inputHandler- {} does not have the minimun length".format(myList))
+            return False
+        
     def valSplit(self, strLine):
         splitLine = strLine.split(",")
         if(len(splitLine)>1):
@@ -53,8 +62,31 @@ class inputHandler:
         else: self.log.error("inputHandler- {} needs more arguments".format(strLine))
             
     def handleInput(self, line):
-        if(line=="exit"):
-            self.log.warning("inputMode exit")
+        if(line.lower()=="exit"):
+            self.log.info("Exit command activated")
+            self.exit = True
+        elif(line.startswith("raw")):
+            param = self.valSplit(line)
+            if(param!=None):
+                if(param[1]=="generalControl" and self.valLenList1(param, 3)):
+                    cmd = ",".join(param[2:])
+                    self.writeGC(cmd)
+                    self.log.warning("inputHandler-[generalControl] Raw Command={}".format(cmd))          
+                elif(param[1]=="motorsGrower" and self.valLenList1(param, 3)):
+                    cmd = ",".join(param[2:])
+                    self.writeMG(cmd)
+                    self.log.warning("inputHandler-[motorsGrower] Raw Command={}".format(cmd)) 
+                elif(param[1]=="solutionMaker" and self.valLenList1(param, 3)):
+                    cmd = ",".join(param[2:])
+                    self.writeSM(cmd)
+                    self.log.warning("inputHandler-[solutionMaker] Raw Command={}".format(cmd))
+                elif( (param[1]=="esp32" or param[1]=="Grower") and self.valLenList1(param, 4)):
+                    cmd = ",".join(param[3:])
+                    topic = "{}/{}{}".format(self.mqttControl.ID, param[1], param[2])
+                    publish.single(topic, "{}".format(cmd), hostname = self.mqttControl.brokerIP)
+                    self.log.warning("inputHandler-[mqtt] Raw Command Topic={} Message={}".format(
+                        topic,cmd))
+                else: self.log.warning("inputHandler- {} Command Unknown".format(line))
         elif(line.startswith("irr")):
             param = self.valSplit(line)
             if(param!=None):
@@ -78,11 +110,12 @@ class inputHandler:
                         reg = int(param[3])
                         sol = int(param[4])
                         time_s = int(param[5])
-                        self.writeGC("solenoid,setTimeOn,{},{},{},{}".format(fl, reg, sol, time_s))
-                        self.log.warning("Irrigation- Solenoid of fl{}, reg{} change time to {}s with sol{}".format(
+                        self.writeGC("solenoid,setTimeOn,{},{},{},{}".format(fl-1, reg-1, sol, time_s))
+                        self.log.warning("Irrigation- Solenoid of fl {}, reg {} change time to {}s with sol {}".format(
                             fl, reg, time_s, sol))
-                else: self.log.warning("inputHandler- {} does not match a type".format(line))
-        if(line.startswith("debug")):
+                else: self.log.warning("inputHandler- {} Command Unknown".format(line))
+        
+        elif(line.startswith("debug")):
             param = self.valSplit(line)
             if(param!=None):
                 if(param[1].startswith("whatSol")):
@@ -91,7 +124,8 @@ class inputHandler:
                 elif(param[1].startswith("getEC")):
                     self.writeGC("debug,irrigation,getEC")
                     self.log.warning("Debug - Asking for the actual EC parameter")
-        else: self.log.warning("inputHandler- {} does not match a type".format(line))
+                else: self.log.warning("inputHandler- {} Command Unknown".format(line))
+        else: self.log.warning("inputHandler- {} Command Unknown".format(line))
             
     def loop(self):
         line = self.getLine()
