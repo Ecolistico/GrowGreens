@@ -10,6 +10,7 @@ class mqttController:
                  ID,
                  brokerIP,
                  connector,
+                 share,
                  loggerMain,
                  loggerGr1,
                  loggerGr2,
@@ -33,6 +34,8 @@ class mqttController:
         self.logBack = loggerBack
         # Define ESP32´s object
         self.ESP32 = ESPdata.multiESP(self.logFront, self.logCenter, self.logBack)
+        # Define share variables with serial module
+        self.share = share
         # Define aux variables
         self.clientConnected = False
         self.actualTime = time()
@@ -83,15 +86,31 @@ class mqttController:
             if(device == "Grower1"):
                 self.Msg2Log(self.logGr1, message)
                 self.requestGr1 = False
+                if(message.startswith("Photo Sequence taken")):
+                    self.share.Gr1.mqttReq("")
+                    self.share.Gr1.serialReq("available,1")
+                    self.share.Gr1.actualTime = time()-20
             elif(device == "Grower2"):
                 self.Msg2Log(selflogGr2, message)
                 self.requestGr2 = False
+                if(message.startswith("Photo Sequence taken")):
+                    self.share.Gr2.mqttReq("")
+                    self.share.Gr2.serialReq("available,2")
+                    self.share.Gr2.actualTime = time()-20
             elif(device == "Grower3"):
                 self.Msg2Log(self.logGr3, message)
                 self.requestGr3 = False
+                if(message.startswith("Photo Sequence taken")):
+                    self.share.Gr3.mqttReq("")
+                    self.share.Gr3.serialReq("available,3")
+                    self.share.Gr3.actualTime = time()-20
             elif(device == "Grower4"):
                 self.Msg2Log(self.logGr4, message)
                 self.requestGr4 = False
+                if(message.startswith("Photo Sequence taken")):
+                    self.share.Gr4.mqttReq("")
+                    self.share.Gr4.serialReq("available,4")
+                    self.share.Gr4.actualTime = time()-20
             elif(device == "esp32front"): self.logFront.info(message)
             elif(device == "esp32center"): self.logCenter.info(message)
             elif(device == "esp32back"): self.logBack.info(message)
