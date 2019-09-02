@@ -14,6 +14,7 @@ sys.path.insert(0, './src/')
 import EnvControl
 from smtp import Mail
 from logger import logger
+from sensor import BME680
 from inputHandler import inputHandler
 from mqttCallback import mqttController
 from serialCallback import serialController
@@ -108,6 +109,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     except: log.logger.warning("Cannot connect with MQTT Broker")
 
     # Setting up
+    bme = BME680() # Start bme680 sensor
     day = 0
     hour = 0
     minute = 0
@@ -167,15 +169,20 @@ try:
             minute = now.minute
             # Save last ESP32 info and request an update
             if(boot):
+                # Upload sensor data
                 mqttControl.ESP32.upload2DB(conn)
+                bme.upload2DB(conn)
                 # Send to generalControl new time info
                 serialControl.write(serialControl.generalControl, "updateHour,{0},{1}".format(
                     now.hour, now.minute))
             else: boot = True
-                
+            # Request ESP32 data
             publish.single("{}/esp32front".format(ID), "sendData", hostname = brokerIP)
             publish.single("{}/esp32center".format(ID), "sendData", hostname = brokerIP)
             publish.single("{}/esp32back".format(ID), "sendData", hostname = brokerIP)
+            # Request bme data
+            if bme.read(): log.logger.debug("BME680 reading succes")
+            else: log.logger.warning("BME680 sensor cannot take reading")
             
         if inputControl.exit:
             ex = input("Are you sure? y/n\n")
