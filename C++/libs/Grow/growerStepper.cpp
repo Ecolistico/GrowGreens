@@ -779,7 +779,7 @@ void growerStepper::run()
             __Sequence++;
             __SequenceStop = true;
             enable();
-            printAction("Starting Routine Stage "+ String(__Sequence));
+            printAction("Starting Routine Stage " + String(__Sequence));
           }
         }
       }
