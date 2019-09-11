@@ -9,10 +9,10 @@
 #define RST_PIN  9    // Pin 9 reset RC522
 #define SS_PIN  10   // Pin 10 SS (SPI) RC522
 #define red_led 8 // Pin 8 LED red RC522
-#define access_led A5 // Pin A5 LED green/Access
-#define error_led A4 // Pin A4 LED red/Error
-#define access A3 // Pin A3 open Access (solenoid)
-#define button A1 // Pin A1 Touch Button
+#define access_led A4 // Pin A4 LED green/Access
+#define error_led A5 // Pin A5 LED red/Error
+#define button A3 // Pin A3 Touch Button
+#define access A2 // Pin A2 open Access (solenoid)
 
 // Define objects
 MFRC522 mfrc522(SS_PIN, RST_PIN); //Creamos el objeto para el RC522
@@ -55,12 +55,13 @@ void blink_red_led(){
 }
 
 void detectButton(){
-  if(digitalRead(button) && button_state==LOW){
+  if(!digitalRead(button) && !button_state){
     Serial.println(F("Button pressed"));
     button_state = HIGH;
     button_time = millis();
+    delay(100);
   }
-  else if(digitalRead(button)==LOW && button_state){
+  else if(digitalRead(button) && button_state){
     button_state = LOW;
     if(access_state!=0 && millis()-button_time>1000){
       access_state = 0;
@@ -208,13 +209,20 @@ void setup() {
   pinMode(access_led, OUTPUT); 
   pinMode(error_led, OUTPUT); 
   pinMode(access, OUTPUT);
-  pinMode(button,INPUT);
+  pinMode(button,INPUT_PULLUP);
 
   Serial.println(F("Ecolistico Access Control.\nLocation: Valle de Bravo, Edo. de México"));
 
+  digitalWrite(access_led, HIGH);
+  digitalWrite(error_led, HIGH);
+  delay(1000);
+  digitalWrite(access_led, LOW);
+  digitalWrite(error_led, LOW);
+  
   /*** Debug ***/
   //printEEPROM();
-  //digitalWrite(access,HIGH);
+  //digitalWrite(access, HIGH);
+  
 }
 
 void loop() {
