@@ -41,7 +41,7 @@ byte container_ID_length = 10;
 
 /***** Sensors Definitions *****/
 byte dht_1R_pin = 13;
-byte dht_1L_pin = 12;
+byte dht_1L_pin = 21; // D12 cannot be used. Flash error
 byte dht_2R_pin = 14;
 byte dht_2L_pin = 27;
 byte dht_3R_pin = 26;
