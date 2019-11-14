@@ -103,7 +103,7 @@ class analogSensor
 
 class UltraSonic
   { private:
-        uint8_t __Pin, __State;
+        uint8_t __Pin1, __Pin2, __State;
         bool __FirstRead;
         String __Name;
         NewPing *__Sonar;
@@ -137,7 +137,8 @@ class UltraSonic
         static UltraSonic *ptr[MAX_ULTRASONIC]; // List of pointers to each sensor
         // Constructor
         UltraSonic(
-          uint8_t pin,
+          uint8_t pin1,
+          uint8_t pin2,
           String name,
           int minDist = MIN_SECUTIRY_DISTANCE,
           int maxDist = MAX_SECUTIRY_DISTANCE

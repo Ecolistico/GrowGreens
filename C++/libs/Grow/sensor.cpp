@@ -237,7 +237,8 @@ UltraSonic *UltraSonic::ptr[MAX_ULTRASONIC];
 unsigned long UltraSonic::__ActualTime = 0;
 
 UltraSonic::UltraSonic( // Constructor
-  uint8_t pin,
+  uint8_t pin1,
+  uint8_t pin2,
   String name,
   int minDist = MIN_SECUTIRY_DISTANCE,
   int maxDist = MAX_SECUTIRY_DISTANCE
@@ -248,9 +249,10 @@ UltraSonic::UltraSonic( // Constructor
        }
      }
 
-     __Pin = pin;
+     __Pin1 = pin1;
+     __Pin2 = pin2;
      __Name = name;
-     __Sonar = new NewPing(__Pin, __Pin, MAX_DISTANCE);
+     __Sonar = new NewPing(__Pin1, __Pin1, MAX_DISTANCE);
 
      if(minDist<maxDist){
        __minDist = minDist;
