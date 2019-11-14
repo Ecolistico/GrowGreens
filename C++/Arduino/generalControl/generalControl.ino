@@ -14,6 +14,15 @@
 const uint8_t ds = 22; // Data
 const uint8_t stcp = 23; // Latch
 const uint8_t shcp = 24; // Clock
+const uint8_t mR = 33; // Relay
+
+/*** Emergency Stop***/
+const uint8_t emergency = 35;
+bool emergencyState = false;
+bool emergencyButton = false;
+unsigned long buttonTime = millis();
+const unsigned long debounceTime = 1000;
+bool debounce = false;
 
 /*** Pressure sensors definitions ***/
 // analogSensor object(analogPin, name)
@@ -177,7 +186,9 @@ void startIrrigation();
 void startMiddleIrrigation();
 void irrigationEmergency();
 // Multiplexers
+void allMultiplexerOff();
 void codification_Multiplexer();
+void multiplexerRun();
 // Serial Communication
 void requestSolution();
 void updateIrrigationState();
@@ -192,6 +203,22 @@ uint8_t inWhatFloorIsNight();
 void updateDay();
 void substractSolutionConsumption(bool updateConsumption = false);
 void substractWaterConsumption(bool updateConsumption = false);
+// Emergency
+void emergencyStop() {
+  if(digitalRead(emergency)!=emergencyButton && !debounce) {
+    buttonTime = millis();
+    debounce = true;
+  }
+
+  if(millis()-buttonTime > debounceTime && debounce) {
+    buttonTime = millis();
+    debounce = false;
+    bool but = digitalRead(emergency);
+    if(but != emergencyButton) {
+      emergencyButton = but;
+    }
+  }
+}
 
 void setup() {
   // Initialize Serial
@@ -204,6 +231,10 @@ void setup() {
   pinMode(stcp, OUTPUT);
   pinMode(shcp, OUTPUT);
   pinMode(ds, OUTPUT);
+  pinMode(mR, OUTPUT);
+  pinMode(emergency, INPUT_PULLUP);
+  digitalWrite(mR, !LOW); // Turn off Relays
+  turnOffAll(); // Set multiplexors off
   
   // Initialize objects
   sensors_setup(); // Initialize sensors
@@ -229,12 +260,17 @@ void setup() {
 
   // Request boot info to raspberry
   Serial.println(F("?boot"));
+
+  // Enable Relays
+  digitalWrite(mR, !HIGH); // Turn on multiplexors
   
   // Testing settings 
   //solenoidValve::enableGroup(true);
 }
 
 void loop() {
+  /*** Emergency Conditions ***/
+  emergencyStop();
   /*** Sensors ***/
   analogSensor::readAll(); // Take reading from all the pressure sensors every 100ms
   UltraSonic::readAll(); // Take reading from all the ultrasonics sensors every 100ms
@@ -248,11 +284,8 @@ void loop() {
   /*** Irrigation Routine ***/
   solenoidValverunAll();
   async(); // Check the states with async Functions
+  /*** Multiplexers & Relays states ***/
+  multiplexerRun();
   
-  if(millis()-multiplexerTime>100){ // Send states to multiplexors 10 times/second
-    multiplexerTime = millis();
-    codification_Multiplexer();
-  }
-
   // Testing code
 }
