@@ -131,10 +131,17 @@ bool input_string_complete = false;
 void setup() {
   Serial.begin(115200);
   Serial.println(F("Setting up growers..."));
-  grower1.begin(HIGH);
-  grower2.begin(HIGH);
-  grower3.begin(HIGH);
-  grower4.begin(HIGH);
+  /* Going Home
+  grower1.begin();
+  grower2.begin();
+  grower3.begin();
+  grower4.begin();
+  */
+  /* Withouth Going Home*/
+  grower1.begin(LOW);
+  grower2.begin(LOW);
+  grower3.begin(LOW);
+  grower4.begin(LOW);
   read_EEPROM(HIGH); // Charge calibration parameters for each Grower
   EEPROM_timer = millis();
 }
