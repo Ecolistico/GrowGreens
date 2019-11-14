@@ -103,8 +103,10 @@ void growerStepper::begin(
      */
      /*
      stepperX1->setPinsInverted(true,false,false);
-     stepperX2->setPinsInverted(true,false,false);
      */
+     /* Invert X2 */
+     stepperX2->setPinsInverted(true,false,false);
+
      pinMode(__StepX1, OUTPUT);
      pinMode(__DirX1, OUTPUT);
      pinMode(__StepX2, OUTPUT);
