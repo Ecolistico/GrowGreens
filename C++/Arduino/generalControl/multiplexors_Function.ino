@@ -1,5 +1,18 @@
 /*****   Send state values to Multiplexors   *****/
 
+void allMultiplexerOff() {
+  bool ID[8] = {LOW, LOW, LOW, LOW, 
+                 LOW, LOW, LOW, LOW};
+  int value_Multiplexer = 0;
+  for(int i=0; i<8; i++){
+   value_Multiplexer |= ID[i] << i;
+  }
+  
+  digitalWrite(stcp, LOW);
+  for(int i=0; i<15; i++){shiftOut(ds, shcp, MSBFIRST, value_Multiplexer);}
+  digitalWrite(stcp, HIGH); 
+}
+
 void codification_Multiplexer(){
   bool ID1[8] = {EV1A1.getState(), EV1A2.getState(), EV1A3.getState(), EV1A4.getState(), 
                  EV1B1.getState(), EV1B2.getState(), EV1B3.getState(), EV1B4.getState()};
@@ -54,5 +67,26 @@ void codification_Multiplexer(){
 
   if(value_Multiplexer1+value_Multiplexer2+value_Multiplexer3+value_Multiplexer4+value_Multiplexer5+value_Multiplexer6+value_Multiplexer7+value_Multiplexer8+value_Multiplexer9+value_Multiplexer10+value_Multiplexer11==255*11){
   Serial.println(F("Multiplexers were turned off"));
+  }
+}
+
+void multiplexerRun() {
+  if(millis()-multiplexerTime>100){ // Send states to multiplexors 10 times/second 
+    multiplexerTime = millis();
+    if (emergencyButton){
+      if(!emergencyState){
+        digitalWrite(mR, !LOW); // Turn off multiplexors
+        emergencyState = true;
+        Serial.println("Emergency Stop"); 
+      }
+    }
+    else {
+      codification_Multiplexer();
+      if(emergencyState) {
+        digitalWrite(mR, !HIGH); // Turn on multiplexors
+        emergencyState = false;
+        Serial.println("Emergency finished");
+      }
+    }
   }
 }
