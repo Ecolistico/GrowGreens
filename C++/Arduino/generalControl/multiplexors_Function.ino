@@ -81,13 +81,13 @@ void codification_Multiplexer(){
   shiftOut(ds, shcp, MSBFIRST, value_Multiplexer15);
   digitalWrite(stcp, HIGH); 
 
+  /*
   if(value_Multiplexer1+value_Multiplexer2+value_Multiplexer3+value_Multiplexer4+
     value_Multiplexer5+value_Multiplexer6+value_Multiplexer7+value_Multiplexer8+
-    value_Multiplexer9+value_Multiplexer10+value_Multiplexer11+value_Multiplexer12
+    value_Multiplexer9+value_Multiplexer10+value_Multiplexer11+value_Multiplexer12+
     value_Multiplexer13+value_Multiplexer14+value_Multiplexer15+==255*15){
     Serial.println(F("Multiplexers were turned off"));
   }
-  /*
    if(value_Multiplexer1+value_Multiplexer2+value_Multiplexer3+value_Multiplexer4+
     value_Multiplexer5+value_Multiplexer6+value_Multiplexer7+value_Multiplexer8+
     value_Multiplexer9+value_Multiplexer10+value_Multiplexer11+value_Multiplexer12
@@ -104,7 +104,7 @@ void multiplexerRun() {
       if(!emergencyState){
         digitalWrite(mR, !LOW); // Turn off multiplexors
         emergencyState = true;
-        Serial.println("Emergency Stop"); 
+        Serial.println("warning,Emergency Stop"); 
       }
     }
     else {
@@ -112,7 +112,7 @@ void multiplexerRun() {
       if(emergencyState) {
         digitalWrite(mR, !HIGH); // Turn on multiplexors
         emergencyState = false;
-        Serial.println("Emergency finished");
+        Serial.println("warning,Emergency finished");
       }
     }
   }

@@ -391,7 +391,7 @@ bool chargeAnalogParameters(int Type){
     else if(a!=0){deg = 1;}
     else{deg = 0;}
     if(deg==0 || !analogSensor::ptr[Type]->setModel(deg, a, b, c)){
-      analogSensor::ptr[Type]->setModel(1, -21.17, 0.2117);
+      analogSensor::ptr[Type]->setModel(2, -21.17, 0.2117);
     }
     return true;
   }

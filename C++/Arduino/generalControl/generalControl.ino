@@ -32,12 +32,12 @@ analogSensor pressureSensorWater(A13, "Water Pressure");
 
 /*** UltraSonic Sensors ***/
 // UltraSonic object(pin, name)
-UltraSonic US0(24, 50, "Water Level");
+UltraSonic US0(34, 40, "Recirculation Level");
 UltraSonic US1(26, 48, "Solution 1 Level");
 UltraSonic US2(28, 46, "Solution 2 Level");
 UltraSonic US3(30, 44, "Solution 3 Level");
 UltraSonic US4(32, 42, "Solution 4 Level");
-UltraSonic US5(34, 40, "Recirculation Level");
+UltraSonic US5(24, 50, "Water Level");
 UltraSonic US6(36, 38, "Solution Maker Level");
 
 /*** Water Sensors ***/
@@ -120,7 +120,7 @@ uint8_t irrigationStage = 0; // Defautl state
 bool emergency = false;
 
 // Control pressure
-float max_pressure = 145; // Default Maximum Pressure in the system (psi)
+float max_pressure = 120; // Default Maximum Pressure in the system (psi)
 float min_pressure = 100; // Minimun Pressure in the system to start a new irrigation cycle (psi)
 float critical_pressure = 80; // Default Critical Pressure in the system (psi)
 

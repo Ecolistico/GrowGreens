@@ -429,24 +429,29 @@ void serialEvent(){                                  //if the hardware serial po
     }
     
     else if(parameter[0]=="eeprom"){ // Functions to manage EEPROM memory
-      if(parameter[1]=="clean"){ clean_EEPROM();}
-      else if(parameter[1]=="print\n"){ print_EEPROM();}
+      if(parameter[1]=="clean" || parameter[1]=="clean\n"){ clean_EEPROM();}
+      else if(parameter[1]=="print" || parameter[1]=="print\n"){ print_EEPROM();}
       else{Serial.println(F("warning,EEPROM(): Parameter[1] unknown"));}
     }
 
     else if(parameter[0]=="debug"){ // Functions to debug EEPROM memory
-      if(parameter[1]=="print"){ Serial.println(US0.getDistance());}
-      else if(parameter[1]=="nextIrrigationStage"){ 
+      if(parameter[1]=="print" || parameter[1]=="print\n"){ Serial.println(US0.getDistance());}
+      else if(parameter[1]=="nextIrrigationStage" || parameter[1]=="nextIrrigationStage\n"){ 
         Serial.println(F("warning,Debug(): Passing to the next Irrigation Stage"));
         irrigationStage++;
       }
       else if(parameter[1]=="irrigation"){
-        if(parameter[2]=="whatSolution"){ Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.whatSolution(dateHour, dateMinute)); }
-        else if(parameter[2]=="getEC"){ Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.getEC(parameter[3].toInt())); }
-        else if(parameter[2]=="getPH"){ Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.getPH(parameter[3].toInt())); }
+        if(parameter[2]=="whatSolution" || parameter[2]=="whatSolution\n")
+        { Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.whatSolution(dateHour, dateMinute)); }
+        else if(parameter[2]=="getEC" || parameter[2]=="getEC\n")
+        { Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.getEC(parameter[3].toInt())); }
+        else if(parameter[2]=="getPH" || parameter[2]=="getPH\n")
+        { Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.getPH(parameter[3].toInt())); }
       }
-      else if(parameter[1]=="requestSolution"){ requestSolution(); }
-      else if(parameter[1]=="updateIrrigationState"){ updateIrrigationState(); }
+      else if(parameter[1]=="requestSolution" || parameter[1]=="requestSolution\n")
+      { requestSolution(); }
+      else if(parameter[1]=="updateIrrigationState" || parameter[1]=="updateIrrigationState\n")
+      { updateIrrigationState(); }
     }
     
     else{Serial.println(F("warning, Serial Command Unknown"));}
