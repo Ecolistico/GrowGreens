@@ -299,11 +299,13 @@ float UltraSonic::model(float val)
 
 float UltraSonic::cilinder(float val)
   { float vol = (PI*__Param*__Param)*(val)/1000; // Volumen in liters
+    if(vol<0) {return vol;}
     return vol;
   }
 
 float UltraSonic::rectangularPrism(float val)
   { float vol = (__Param)*(val)/1000; // Volumen in liters
+    if(vol<0) {return vol;}
     return vol;
   }
 
