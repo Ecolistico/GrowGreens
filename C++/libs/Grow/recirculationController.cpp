@@ -245,14 +245,20 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
         __ActualLiters = __Level[__Out+1]->getVolume();
         __LastOut = __Out;
 
+        if(to_Where==NUTRITION_KEGS){ addVolKnut(liters); }
+        else if(to_Where==WATER_KEGS){ addVolKh2o(liters); }
+
         if(__ActualLiters>liters){ // If there are enough solution
           __OutLiters = liters;
           __OutPump = HIGH;
           __OutValve[__Out] = HIGH;
           __Go[to_Where] = HIGH;
           String toWhere;
-          if(to_Where==NUTRITION_KEGS){toWhere = "nutrition kegs";}
-          else if(to_Where==WATER_KEGS){toWhere = "water kegs";}
+          if(__Out==NUTRITION_KEGS){}
+          else if(__Out==WATER_KEGS){}
+
+          if(to_Where==NUTRITION_KEGS){ toWhere = "nutrition kegs"; }
+          else if(to_Where==WATER_KEGS){ toWhere = "water kegs"; }
           else if(to_Where==SOLUTION_MAKER){toWhere = "solution maker";}
           printAction(__OutLiters, "solution"+String(__Out+1), toWhere);
           return 1;
@@ -347,8 +353,6 @@ void recirculationController::run(bool check, bool sensorState)
       }
       printAction("Move Out finished. " + String(__OutLiters) +
       " liters were move to " + toWhere);
-      if(__Out==NUTRITION_KEGS){addVolKnut(__ActualLiters-__Level[__LastOut+1]->getVolume());}
-      else if(__Out==WATER_KEGS){addVolKh2o(__ActualLiters-__Level[__LastOut+1]->getVolume());}
       __ActualLiters = 0;
       __OutLiters = 0;
     }
@@ -368,13 +372,11 @@ void recirculationController::run(bool check, bool sensorState)
           __Fh2o = LOW;
           printAction("Fill water kegs finished. " + String(__FillLiters) +
           " liters were move to water kegs");
-          addVolKh2o(__H2OVol);
         }
         else if(__FSol){
           __FSol = LOW;
           printAction("Fill solution Maker finished. " + String(__FillLiters) +
           " liters were move to solution maker");
-          addVolKnut(__H2OVol);
         }
         __FillLiters = 0;
         __H2OVol = 0;
