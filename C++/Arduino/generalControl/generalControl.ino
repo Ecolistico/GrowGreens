@@ -11,13 +11,13 @@
 #include <processControl.h>
 
 /*** Multiplexor Definitions ***/
-const uint8_t ds = 22; // Data
-const uint8_t stcp = 23; // Latch
-const uint8_t shcp = 24; // Clock
+const uint8_t ds = 31; // Data
+const uint8_t stcp = 29; // Latch
+const uint8_t shcp = 27; // Clock
 const uint8_t mR = 33; // Relay
 
 /*** Emergency Stop***/
-const uint8_t emergency = 35;
+const uint8_t emergencyUser = 35;
 bool emergencyState = false;
 bool emergencyButton = false;
 unsigned long buttonTime = millis();
@@ -26,24 +26,24 @@ bool debounce = false;
 
 /*** Pressure sensors definitions ***/
 // analogSensor object(analogPin, name)
-analogSensor pressureSensorNutrition(A0, "Nutrition Pressure");
-analogSensor pressureSensorTank(A1, "Tank Pressure");
-analogSensor pressureSensorWater(A2, "Water Pressure");
+analogSensor pressureSensorNutrition(A15, "Nutrition Pressure");
+analogSensor pressureSensorTank(A14, "Tank Pressure");
+analogSensor pressureSensorWater(A13, "Water Pressure");
 
 /*** UltraSonic Sensors ***/
 // UltraSonic object(pin, name)
-UltraSonic US0(25, "Water Level");
-UltraSonic US1(26, "Solution 1 Level");
-UltraSonic US2(27, "Solution 2 Level");
-UltraSonic US3(28, "Solution 3 Level");
-UltraSonic US4(29, "Solution 4 Level");
-UltraSonic US5(30, "Recirculation Level");
-UltraSonic US6(31, "Solution Maker Level");
+UltraSonic US0(24, 50, "Water Level");
+UltraSonic US1(26, 48, "Solution 1 Level");
+UltraSonic US2(28, 46, "Solution 2 Level");
+UltraSonic US3(30, 44, "Solution 3 Level");
+UltraSonic US4(32, 42, "Solution 4 Level");
+UltraSonic US5(34, 40, "Recirculation Level");
+UltraSonic US6(36, 38, "Solution Maker Level");
 
 /*** Water Sensors ***/
 // waterSensor object(pin, name)
-waterSensor checkWaterIrrigation(32, "Water Irrigation Sensor");
-waterSensor checkWaterEvacuation(33, "Water Evacuation Sensor");
+waterSensor checkWaterIrrigation(23, "Water Irrigation Sensor");
+waterSensor checkWaterEvacuation(25, "Water Evacuation Sensor");
 bool checkRecirculation = true;
 
 /*** HVAC Controller object ***/
@@ -120,9 +120,9 @@ uint8_t irrigationStage = 0; // Defautl state
 bool emergency = false;
 
 // Control pressure
-float max_pressure = 160; // Default Maximum Pressure in the system (psi)
-float min_pressure = 150; // Minimun Pressure in the system to start a new irrigation cycle (psi)
-float critical_pressure = 90; // Default Critical Pressure in the system (psi)
+float max_pressure = 145; // Default Maximum Pressure in the system (psi)
+float min_pressure = 100; // Minimun Pressure in the system to start a new irrigation cycle (psi)
+float critical_pressure = 80; // Default Critical Pressure in the system (psi)
 
 // Control Solution and refill process
 /* The next variables need to be register in raspberry in case that arduino turn off */
@@ -205,7 +205,7 @@ void substractSolutionConsumption(bool updateConsumption = false);
 void substractWaterConsumption(bool updateConsumption = false);
 // Emergency
 void emergencyStop() {
-  if(digitalRead(emergency)!=emergencyButton && !debounce) {
+  if(digitalRead(emergencyUser)!=emergencyButton && !debounce) {
     buttonTime = millis();
     debounce = true;
   }
@@ -213,7 +213,7 @@ void emergencyStop() {
   if(millis()-buttonTime > debounceTime && debounce) {
     buttonTime = millis();
     debounce = false;
-    bool but = digitalRead(emergency);
+    bool but = digitalRead(emergencyUser);
     if(but != emergencyButton) {
       emergencyButton = but;
     }
@@ -232,9 +232,9 @@ void setup() {
   pinMode(shcp, OUTPUT);
   pinMode(ds, OUTPUT);
   pinMode(mR, OUTPUT);
-  pinMode(emergency, INPUT_PULLUP);
+  pinMode(emergencyUser, INPUT_PULLUP);
   digitalWrite(mR, !LOW); // Turn off Relays
-  turnOffAll(); // Set multiplexors off
+  allMultiplexerOff(); // Set multiplexors off
   
   // Initialize objects
   sensors_setup(); // Initialize sensors

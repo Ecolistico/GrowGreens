@@ -430,7 +430,7 @@ void serialEvent(){                                  //if the hardware serial po
     
     else if(parameter[0]=="eeprom"){ // Functions to manage EEPROM memory
       if(parameter[1]=="clean"){ clean_EEPROM();}
-      else if(parameter[1]=="print"){ print_EEPROM();}
+      else if(parameter[1]=="print\n"){ print_EEPROM();}
       else{Serial.println(F("warning,EEPROM(): Parameter[1] unknown"));}
     }
 
