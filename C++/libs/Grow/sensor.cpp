@@ -252,7 +252,7 @@ UltraSonic::UltraSonic( // Constructor
      __Pin1 = pin1;
      __Pin2 = pin2;
      __Name = name;
-     __Sonar = new NewPing(__Pin1, __Pin1, MAX_DISTANCE);
+     __Sonar = new NewPing(__Pin1, __Pin2, MAX_DISTANCE);
 
      if(minDist<maxDist){
        __minDist = minDist;
