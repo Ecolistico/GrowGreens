@@ -159,7 +159,6 @@ void serialEvent(){                                  //if the hardware serial po
                   else{LED_Mod::turnOn(i);}
                 } 
               }
-
               // Enable solenoidValves
               enableSolenoid(fl, reg);
             }
@@ -188,7 +187,7 @@ void serialEvent(){                                  //if the hardware serial po
           solutionSave(sol, order, percent, ec, ph);
         } 
       }
-      else if(parameter[1]=="charge"){
+      else if(parameter[1]=="charge" || parameter[1]=="charge\n"){
         chargeIrrigationParameters();
       }
       else{ Serial.println(F("warning,Irrigation(): Parameter[1] unknown"));}
@@ -419,10 +418,10 @@ void serialEvent(){                                  //if the hardware serial po
     }
 
     else if(parameter[0]=="solutionMaker"){ // Coordinate action with solutionMaker
-      if(parameter[1]=="accept"){ // Computer informs that solutionMaker accepts the last request
+      if(parameter[1]=="accept" || parameter[1]=="accept\n"){ // Computer informs that solutionMaker accepts the last request
           CC.setState(1);
         }
-        else if(parameter[1]=="finished"){ // Computer informs that solutionMaker finished the last request
+        else if(parameter[1]=="finished" || parameter[1]=="finished\n"){ // Computer informs that solutionMaker finished the last request
           CC.setState(2);
         }
         else{Serial.println(F("warning,solutionMaker(): Parameter[2] unknown"));}
