@@ -219,14 +219,18 @@ bool recirculationController::moveIn()
       float tankVol = __Level[__In+1]->getVolume();
       float maxVolume = __Level[__In+1]->getMaxVolume();
 
-      if(recirculationVol+tankVol<maxVolume){ // Transfering water
+      if(__Level[0]->getDistance() < __Level[0]->getMinDist()){
+        printAction("Level is too low to turn on the pump");
+      }
+      else if(recirculationVol+tankVol<maxVolume){ // Transfering water
         __InPump = HIGH;
         __InValve[__In] = HIGH;
         printAction(recirculationVol, "recirculation tank", "solution "+String(__In));
       }
       else{ // Releasing water
-        __InPump = HIGH;
-        __ReleaseValve = HIGH;
+        // There is not release valve installed yet, not use rigth now
+        // __InPump = HIGH;
+        // __ReleaseValve = HIGH;
         printAction("Releasing water outside the system");
       }
       return true;
@@ -258,11 +262,15 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
 
           if(to_Where==0 || to_Where==2){ // Nutrition Kegs || Solution Maker
             // Move to Solution Maker
-            __OutLiters = __ActualLiters;
-            __OutPump = HIGH;
-            __OutValve[__Out] = HIGH;
-            __Go[2] = HIGH;
-            printAction(__OutLiters, "solution"+String(__Out+1), "solution maker");
+
+            if(__Level[__Out+1]->getDistance() > __Level[__Out+1]->getMinDist()){
+              __OutLiters = __ActualLiters;
+              __OutPump = HIGH;
+              __OutValve[__Out] = HIGH;
+              __Go[2] = HIGH;
+              printAction(__OutLiters, "solution"+String(__Out+1), "solution maker");
+            }
+
             fillSol(liters-__ActualLiters); // Fill solution maker with the rest
             printAction(liters-__ActualLiters, "water line", "solution maker");
           }
@@ -321,7 +329,7 @@ void recirculationController::run(bool check, bool sensorState)
     }
 
     // Stop Move Out when level in tank reach the volume require
-    // or when tank level is low adn OutPump is ON
+    // or when tank level is low and OutPump is ON
     if( (__ActualLiters-__Level[__LastOut+1]->getVolume()>=__OutLiters ||
         __Level[__LastOut+1]->getState()==1 ) && __OutPump){
       String toWhere;
