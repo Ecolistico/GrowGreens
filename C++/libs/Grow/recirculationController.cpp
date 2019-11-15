@@ -218,8 +218,8 @@ bool recirculationController::moveIn()
       float recirculationVol = __Level[0]->getVolume();
       float tankVol = __Level[__In+1]->getVolume();
       float maxVolume = __Level[__In+1]->getMaxVolume();
-
-      if(__Level[0]->getDistance() < __Level[0]->getMinDist()){
+      
+      if(__Level[0]->getDistance() > __Level[0]->getMaxDist()){
         printAction("Level is too low to turn on the pump");
       }
       else if(recirculationVol+tankVol<maxVolume){ // Transfering water
@@ -244,21 +244,18 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
       if(to_Where>=0 && to_Where<MAX_RECIRCULATION_DESTINATIONS){
         __ActualLiters = __Level[__Out+1]->getVolume();
         __LastOut = __Out;
-
-        if(to_Where==NUTRITION_KEGS){ addVolKnut(liters); }
-        else if(to_Where==WATER_KEGS){ addVolKh2o(liters); }
-
+        
+        if(to_Where==NUTRITION_KEGS){addVolKnut(liters);}
+        else if(to_Where==WATER_KEGS){addVolH2O(liters);}
+          
         if(__ActualLiters>liters){ // If there are enough solution
           __OutLiters = liters;
           __OutPump = HIGH;
           __OutValve[__Out] = HIGH;
           __Go[to_Where] = HIGH;
           String toWhere;
-          if(__Out==NUTRITION_KEGS){}
-          else if(__Out==WATER_KEGS){}
-
-          if(to_Where==NUTRITION_KEGS){ toWhere = "nutrition kegs"; }
-          else if(to_Where==WATER_KEGS){ toWhere = "water kegs"; }
+          if(to_Where==NUTRITION_KEGS){toWhere = "nutrition kegs";}
+          else if(to_Where==WATER_KEGS){toWhere = "water kegs";}
           else if(to_Where==SOLUTION_MAKER){toWhere = "solution maker";}
           printAction(__OutLiters, "solution"+String(__Out+1), toWhere);
           return 1;
@@ -269,7 +266,7 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
           if(to_Where==0 || to_Where==2){ // Nutrition Kegs || Solution Maker
             // Move to Solution Maker
 
-            if(__Level[__Out+1]->getDistance() > __Level[__Out+1]->getMinDist()){
+            if(__Level[__Out+1]->getDistance() < __Level[__Out+1]->getMaxDist()){
               __OutLiters = __ActualLiters;
               __OutPump = HIGH;
               __OutValve[__Out] = HIGH;
@@ -372,11 +369,13 @@ void recirculationController::run(bool check, bool sensorState)
           __Fh2o = LOW;
           printAction("Fill water kegs finished. " + String(__FillLiters) +
           " liters were move to water kegs");
+          addVolKh2o(__H2OVol);
         }
         else if(__FSol){
           __FSol = LOW;
           printAction("Fill solution Maker finished. " + String(__FillLiters) +
           " liters were move to solution maker");
+          addVolKnut(__H2OVol);
         }
         __FillLiters = 0;
         __H2OVol = 0;
