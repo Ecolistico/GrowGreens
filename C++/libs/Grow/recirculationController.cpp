@@ -30,7 +30,7 @@ recirculationController::recirculationController() // Constructor
     __FillLiters = 0;
     __SolLiters = 0;
     // Flow meter
-    __K = 6.781; // flowSensor constant
+    __K = 13.562; // flowSensor constant
     __H2OVol = 0;
 
     // Set null the UltrSonic pointers until begin function
@@ -218,7 +218,7 @@ bool recirculationController::moveIn()
       float recirculationVol = __Level[0]->getVolume();
       float tankVol = __Level[__In+1]->getVolume();
       float maxVolume = __Level[__In+1]->getMaxVolume();
-      
+
       if(__Level[0]->getDistance() > __Level[0]->getMaxDist()){
         printAction("Level is too low to turn on the pump");
       }
@@ -244,10 +244,10 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
       if(to_Where>=0 && to_Where<MAX_RECIRCULATION_DESTINATIONS){
         __ActualLiters = __Level[__Out+1]->getVolume();
         __LastOut = __Out;
-        
+
         if(to_Where==NUTRITION_KEGS){addVolKnut(liters);}
         else if(to_Where==WATER_KEGS){addVolH2O(liters);}
-          
+
         if(__ActualLiters>liters){ // If there are enough solution
           __OutLiters = liters;
           __OutPump = HIGH;
