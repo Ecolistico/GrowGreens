@@ -211,7 +211,8 @@ void irrigationEmergency(){
   if(irrigationStage==1 && IPC.state==0){
     float p1 = pressureSensorNutrition.getValue();
     // If we detect air in irrigation line
-    if(checkWaterIrrigation.getState()==AIR_STATE){
+    //if(checkWaterIrrigation.getState()==AIR_STATE){
+    if(WATER_STATE==AIR_STATE){
       Serial.println(F("warning,IPC Warning: Probably there is air in irrigation line"));
       IPC.setState(70); // Check IPC Process 70
     }
@@ -229,7 +230,8 @@ void irrigationEmergency(){
   else if(irrigationStage==4 && MPC.state==0){
     float p3 = pressureSensorWater.getValue();
     // If we detect air in irrigation line
-    if(checkWaterIrrigation.getState()==AIR_STATE){
+    //if(checkWaterIrrigation.getState()==AIR_STATE){
+    if(WATER_STATE==AIR_STATE){
       Serial.println(F("warning,MPC Warning: Probably there is air in irrigation line"));
       MPC.setState(70); // Check MPC Process 70
     }
@@ -257,7 +259,7 @@ void runIPC(){
   else if(IPC.state==20){ // Depressurize nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
-      uint8_t resp = Recirculation.moveOut(solutionConsumption*1.15, NUTRITION_KEGS);
+      uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
       if(resp==0){
         Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
         IPC.setState(250); // Check IPC Process 250
@@ -352,7 +354,7 @@ void runIPC(){
       IPC.setState(20); // Check IPC Process 20
     }
     else if(p1<=10){
-      uint8_t resp = Recirculation.moveOut(solutionConsumption*1.15, NUTRITION_KEGS);
+      uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
       if(resp==0){
         Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
         IPC.setState(251); // Check IPC Process 251
@@ -483,7 +485,7 @@ void runIPC(){
   }
 
   else if(IPC.state==70){ // Warning: Possible air in line
-    if(millis()-IPC.actualTime>=5000){
+    if(millis()-IPC.actualTime>=10000){
       if(checkWaterIrrigation.getState()==AIR_STATE){
         if(irrigationStage==1){
           emergency = true; // Set emergency state
@@ -658,7 +660,7 @@ void runMPC(){
   }
 
   else if(MPC.state==70){ // Warning: Possible air in line
-    if(millis()-MPC.actualTime>=5000){
+    if(millis()-MPC.actualTime>=10000){
       if(checkWaterIrrigation.getState()==AIR_STATE){
         if(irrigationStage==4){
           emergency = true; // Set emergency state

@@ -20,7 +20,7 @@ const uint8_t mR = 33; // Relay
 const uint8_t emergencyUser = 35;
 bool emergencyState = false;
 bool emergencyButton = false;
-unsigned long buttonTime = millis();
+unsigned long buttonTime;
 const unsigned long debounceTime = 1000;
 bool debounce = false;
 
@@ -73,28 +73,28 @@ solenoidValve EV1A1("1A1"); solenoidValve EV1A2("1A2"); solenoidValve EV1A3("1A3
 solenoidValve EV1B1("1B1"); solenoidValve EV1B2("1B2"); solenoidValve EV1B3("1B3"); solenoidValve EV1B4("1B4");
 LED_Mod L1S1("L1S1", 0, 0); LED_Mod L1S2("L1S2", 0, 1); LED_Mod L1S3("L1S3", 0, 2); LED_Mod L1S4("L1S4", 0, 3);
 Actuator IFan1 (0, 0, 30, 150); Actuator OFan1 (1, 0, 30, 150); Actuator VFan1 (2, 0, 30, 150);
-Actuator VHum1 (3, 0, 1, 300);
+Actuator VHum1 (3, 0, 2, 300);
 
 // 2nd floor
 solenoidValve EV2A1("2A1"); solenoidValve EV2A2("2A2"); solenoidValve EV2A3("2A3"); solenoidValve EV2A4("2A4");
 solenoidValve EV2B1("2B1"); solenoidValve EV2B2("2B2"); solenoidValve EV2B3("2B3"); solenoidValve EV2B4("2B4");
 LED_Mod L2S1("L2S1", 1, 0); LED_Mod L2S2("L2S2", 1, 1); LED_Mod L2S3("L2S3", 1, 2); LED_Mod L2S4("L2S4", 1, 3);
 Actuator IFan2 (0, 1, 30, 150); Actuator OFan2 (1, 1, 30, 150); Actuator VFan2 (2, 1, 30, 150);
-Actuator VHum2 (3, 1, 1, 300);
+Actuator VHum2 (3, 1, 2, 300);
 
 // 3rd floor
 solenoidValve EV3A1("3A1"); solenoidValve EV3A2("3A2"); solenoidValve EV3A3("3A3"); solenoidValve EV3A4("3A4");
 solenoidValve EV3B1("3B1"); solenoidValve EV3B2("3B2"); solenoidValve EV3B3("3B3"); solenoidValve EV3B4("3B4");
 LED_Mod L3S1("L3S1", 2, 0); LED_Mod L3S2("L3S2", 2, 1); LED_Mod L3S3("L3S3", 2, 2); LED_Mod L3S4("L3S4", 2, 3);
 Actuator IFan3 (0, 2, 30, 150); Actuator OFan3 (1, 2, 30, 150); Actuator VFan3 (2, 2, 30, 150);
-Actuator VHum3 (3, 2, 1, 300);
+Actuator VHum3 (3, 2, 2, 300);
 
 // 4th floor
 solenoidValve EV4A1("4A1"); solenoidValve EV4A2("4A2"); solenoidValve EV4A3("4A3"); solenoidValve EV4A4("4A4");
 solenoidValve EV4B1("4B1"); solenoidValve EV4B2("4B2"); solenoidValve EV4B3("4B3"); solenoidValve EV4B4("4B4");
 LED_Mod L4S1("L4S1", 3, 0); LED_Mod L4S2("L4S2", 3, 1); LED_Mod L4S3("L4S3", 3, 2); LED_Mod L4S4("L4S4", 3, 3);
 Actuator IFan4 (0, 3, 30, 150); Actuator OFan4 (1, 3, 30, 150); Actuator VFan4 (2, 3, 30, 150);
-Actuator VHum4 (3, 3, 1, 300);
+Actuator VHum4 (3, 3, 2, 300);
 
 // asyncActuator
 asyncActuator IrrigationKegsH2O("EV-KegsH2O"); // eV to irrigate H2O
@@ -120,9 +120,9 @@ uint8_t irrigationStage = 0; // Defautl state
 bool emergency = false;
 
 // Control pressure
-float max_pressure = 120; // Default Maximum Pressure in the system (psi)
-float min_pressure = 100; // Minimun Pressure in the system to start a new irrigation cycle (psi)
-float critical_pressure = 80; // Default Critical Pressure in the system (psi)
+float max_pressure = 100; // Default Maximum Pressure in the system (psi)
+float min_pressure = 80; // Minimun Pressure in the system to start a new irrigation cycle (psi)
+float critical_pressure = 60; // Default Critical Pressure in the system (psi)
 
 // Control Solution and refill process
 /* The next variables need to be register in raspberry in case that arduino turn off */
@@ -149,6 +149,9 @@ uint8_t dateMinute;
 
 // Multiplexer timer
 unsigned long multiplexerTime;
+
+// logSens timer
+unsigned long logSensTime;
 
 /*** Name functions ***/
 // EEPROM
@@ -203,22 +206,9 @@ uint8_t inWhatFloorIsNight();
 void updateDay();
 void substractSolutionConsumption(bool updateConsumption = false);
 void substractWaterConsumption(bool updateConsumption = false);
-// Emergency
-void emergencyStop() {
-  if(digitalRead(emergencyUser)!=emergencyButton && !debounce) {
-    buttonTime = millis();
-    debounce = true;
-  }
-
-  if(millis()-buttonTime > debounceTime && debounce) {
-    buttonTime = millis();
-    debounce = false;
-    bool but = digitalRead(emergencyUser);
-    if(but != emergencyButton) {
-      emergencyButton = but;
-    }
-  }
-}
+// Aux Functions
+void emergencyStop();
+void logSens();
 
 void setup() {
   // Initialize Serial
@@ -253,8 +243,11 @@ void setup() {
   // Set initial state
   inputstring.reserve(30); // Reserve 30 bytes for serial strings
   codification_Multiplexer(); // Initialize Multiplexers
-  multiplexerTime = millis(); // Initialize counters
-
+  // Initialize counters
+  multiplexerTime = millis();
+  logSensTime = millis();
+  buttonTime = millis();
+  
   // Finished
   Serial.println(F("Device Ready"));
 
@@ -286,6 +279,8 @@ void loop() {
   async(); // Check the states with async Functions
   /*** Multiplexers & Relays states ***/
   multiplexerRun();
+  /*** log&debug***/
+  logSens();
   
   // Testing code
 }
