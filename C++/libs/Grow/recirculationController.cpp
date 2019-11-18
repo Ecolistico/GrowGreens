@@ -30,7 +30,8 @@ recirculationController::recirculationController() // Constructor
     __FillLiters = 0;
     __SolLiters = 0;
     // Flow meter
-    __K = 13.562; // flowSensor constant
+    //__K = 13.562; // flowSensor constant
+    __K = 6.781; // flowSensor constant
     __H2OVol = 0;
 
     // Set null the UltrSonic pointers until begin function
@@ -225,7 +226,7 @@ bool recirculationController::moveIn()
       else if(recirculationVol+tankVol<maxVolume){ // Transfering water
         __InPump = HIGH;
         __InValve[__In] = HIGH;
-        printAction(recirculationVol, "recirculation tank", "solution "+String(__In));
+        printAction(recirculationVol, "recirculation tank", "solution "+String(__In+1));
       }
       else{ // Releasing water
         // There is not release valve installed yet, not use rigth now
@@ -257,7 +258,7 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
           if(to_Where==NUTRITION_KEGS){toWhere = "nutrition kegs";}
           else if(to_Where==WATER_KEGS){toWhere = "water kegs";}
           else if(to_Where==SOLUTION_MAKER){toWhere = "solution maker";}
-          printAction(__OutLiters, "solution"+String(__Out+1), toWhere);
+          printAction(__OutLiters, "solution "+String(__Out+1), toWhere);
           return 1;
         }
         else{

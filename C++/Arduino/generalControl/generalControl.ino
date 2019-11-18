@@ -108,9 +108,9 @@ MultiDay day3(3, 75, 4);
 MultiDay day4(3, 75, 6);
 
 /*** Process Control ***/
-processControl IPC; // Initial Preconditions Control
-processControl MPC; // Middle Preconditions Control
-processControl CC; // Comunication Control
+processControl IPC("IPC"); // Initial Preconditions Control
+processControl MPC("MPC"); // Middle Preconditions Control
+processControl CC("CC"); // Comunication Control
 
 /*** Auxiliar Variables ***/
 // Control irrigation process

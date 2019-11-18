@@ -60,12 +60,17 @@ void logSens() {
     if(Recirculation.getSolPump()){
       Serial.print("warning,Level SMaker: "); Serial.print(US6.getVolume()); Serial.println(" liters");
     }
+    if(IrrigationKegsNutrition.getState() || Compressor.getValveNut()){
+      Serial.print("warning,Pressure Kegs_nut: "); Serial.print(pressureSensorNutrition.getValue()); Serial.println(" psi");
+    }
+    /*
     if(IrrigationKegsNutrition.getState() || Compressor.getValveNut() || Compressor.getFreeValveNut()){
       Serial.print("warning,Pressure Kegs_nut: "); Serial.print(pressureSensorNutrition.getValue()); Serial.println(" psi");
     }
     if(Compressor.getValveTank()){
       Serial.print("warning,Pressure air_Tank: "); Serial.print(pressureSensorTank.getValue()); Serial.println(" psi");
     }
+    */
     if(IrrigationKegsH2O.getState() || Compressor.getValveH2O() || Compressor.getFreeValveH2O()){
       Serial.print("warning,Pressure Kegs_h20: "); Serial.print(pressureSensorWater.getValue()); Serial.println(" psi");
     }
