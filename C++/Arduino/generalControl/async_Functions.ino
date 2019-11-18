@@ -259,7 +259,8 @@ void runIPC(){
   else if(IPC.state==20){ // Depressurize nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
-      uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
+      //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
+      uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
         Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
         IPC.setState(250); // Check IPC Process 250
@@ -354,7 +355,8 @@ void runIPC(){
       IPC.setState(20); // Check IPC Process 20
     }
     else if(p1<=10){
-      uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
+      //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
+      uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
         Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
         IPC.setState(251); // Check IPC Process 251
@@ -512,7 +514,8 @@ void runIPC(){
   else if(IPC.state==71){ // Emergency: Air in line. Depressurize Water Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
-      uint8_t resp = Recirculation.moveOut(solutionConsumption*1.15, NUTRITION_KEGS);
+      //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
+      uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
         Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
         IPC.setState(252); // Check IPC Process 252
@@ -614,7 +617,8 @@ void runMPC(){
     if(p3<=10){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
-      uint8_t resp = Recirculation.moveOut(h2oConsumption*1.15, WATER_KEGS);
+      //uint8_t resp = Recirculation.moveOut(h2oConsumption*2.5, WATER_KEGS);
+      uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
         Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
@@ -688,7 +692,8 @@ void runMPC(){
     if(p3<=10){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
-      uint8_t resp = Recirculation.moveOut(h2oConsumption*1.15, WATER_KEGS);
+      //uint8_t resp = Recirculation.moveOut(h2oConsumption*2.5, WATER_KEGS);
+      uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
         Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));

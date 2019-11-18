@@ -19,7 +19,7 @@ void emergencyStop() {
 void logSens() {
   if(millis()-logSensTime>5000){
     logSensTime = millis();
-    if(Recirculation.getOutPump()){
+    if(Recirculation.getInPump()){
       Serial.print("warning,Level Recirculation Tank: "); Serial.print(US0.getVolume()); Serial.println(" liters");
       if(Recirculation.getOutValve(0)){
         Serial.print("warning,Level Water: "); Serial.print(US5.getVolume()); Serial.println(" liters");  
@@ -37,7 +37,7 @@ void logSens() {
         Serial.print("warning,Level Solution4: "); Serial.print(US4.getVolume()); Serial.println(" liters");
       }
     }
-    if(Recirculation.getInPump()){
+    if(Recirculation.getOutPump()){
       if(Recirculation.getOutValve(0)){
         Serial.print("warning,Level Water: "); Serial.print(US5.getVolume()); Serial.println(" liters");  
       }

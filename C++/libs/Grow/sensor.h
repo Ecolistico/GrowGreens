@@ -42,7 +42,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define MAX_DISTANCE          300 // Maximum distance(cm) we want to ping
 #define MIN_SECUTIRY_DISTANCE 10 // Minimum distance(cm) expected
 #define MAX_SECUTIRY_DISTANCE 85 // Maximum distance(cm) expected
-#define PI 3.1416
+//#define PI 3.1416
 #define MAX_WATER_SENSOR      3 // Max number of water sensors
 #define AIR_STATE             HIGH // Air state = HIGH
 #define WATER_STATE           LOW // Water State = LOW

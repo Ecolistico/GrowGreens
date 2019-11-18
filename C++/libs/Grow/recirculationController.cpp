@@ -244,9 +244,9 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
       if(to_Where>=0 && to_Where<MAX_RECIRCULATION_DESTINATIONS){
         __ActualLiters = __Level[__Out+1]->getVolume();
         __LastOut = __Out;
-
+  
         if(to_Where==NUTRITION_KEGS){addVolKnut(liters);}
-        else if(to_Where==WATER_KEGS){addVolH2O(liters);}
+        else if(to_Where==WATER_KEGS){addVolKh2o(liters);}
 
         if(__ActualLiters>liters){ // If there are enough solution
           __OutLiters = liters;
