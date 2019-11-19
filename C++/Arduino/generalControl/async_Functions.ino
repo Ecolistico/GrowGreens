@@ -68,8 +68,8 @@ void initialPreconditions(bool before, void (*ptr2function)()){
     if(before){
       uint8_t inSol = Recirculation.getIn();
       Recirculation.setIn(WATER);
-      if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
-      else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
+      if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(WATER): request succes")); }
+      else{ Serial.println(F("warning,Recirculation moveIn(WATER): pumpIn already working")); }
       Recirculation.setIn(inSol);
       IPC.setState(30); // Check IPC Process 30
     }
@@ -110,8 +110,8 @@ void startIrrigation(){
 
   uint8_t inSol = Recirculation.getIn();
   Recirculation.setIn(WATER);
-  if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
-  else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
+  if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(WATER): request succes")); }
+  else{ Serial.println(F("warning,Recirculation moveIn(WATER): pumpIn already working")); }
   Recirculation.setIn(inSol);
    
   uint8_t nite = inWhatFloorIsNight();

@@ -279,6 +279,7 @@ uint8_t solenoidValve::__ActualNumber = 0;
 unsigned long solenoidValve::__CycleTime = 600000;
 unsigned long solenoidValve::__ActionTime = 0;
 float solenoidValve::__K = 13.562; // flowSensor constant
+//float solenoidValve::__K = 7.5; // flowSensor constant
 volatile long solenoidValve::__NumPulses = 0;
 float solenoidValve::__H2Ow = 0;
 uint8_t solenoidValve::__TotalActuators = 0;

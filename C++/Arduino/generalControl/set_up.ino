@@ -134,7 +134,7 @@ void updateDay(){
       }
     else{
       Serial.println(F("warning,Night Started in Floor 3"));
-      LED_Mod::turnOn(2);
+      LED_Mod::turnOff(2);
       }
   }
   if(day4.getState()!=day4.isDay(dateHour, dateMinute)){
@@ -144,7 +144,7 @@ void updateDay(){
       }
     else{
       Serial.println(F("warning,Night Started in Floor 4"));
-      LED_Mod::turnOn(3);
+      LED_Mod::turnOff(3);
       }
   }
 }

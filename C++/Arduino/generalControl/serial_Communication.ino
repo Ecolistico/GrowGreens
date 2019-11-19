@@ -234,12 +234,12 @@ void serialEvent(){                                  //if the hardware serial po
           else{analogSaveModel(sens, a, b, c);}
         }
         
-        else if(parameter[2]=="notFilter"){ // Function notFilter -> Form "analog,type,notFilter"
+        else if(parameter[2]=="notFilter" || parameter[2]=="notFilter\n"){ // Function notFilter -> Form "analog,type,notFilter"
           analogSensor::ptr[sens]->notFilter();
           analogSaveFilter(sens, 0, 0);
         }
         
-        else if(parameter[2]=="defaultFilter"){ // Function defaultFilter -> Form "analog,type,defaultFilter"
+        else if(parameter[2]=="defaultFilter" || parameter[2]=="defaultFilter\n"){ // Function defaultFilter -> Form "analog,type,defaultFilter"
           analogSensor::ptr[sens]->defaultFilter();
           analogSaveFilter(sens, 1, 0.25);
         }
@@ -302,12 +302,12 @@ void serialEvent(){                                  //if the hardware serial po
           else{Serial.println(F("error,Ultrasonic setModel(): Parameter model incorrect"));}
         }
         
-        else if(parameter[2]=="notFilter"){ // Function notFilter -> Form "ultrasonic,type,notFilter"
+        else if(parameter[2]=="notFilter" || parameter[2]=="notFilter\n"){ // Function notFilter -> Form "ultrasonic,type,notFilter"
           UltraSonic::ptr[sens]->notFilter();
           ultrasonicSaveFilter(sens, 0, 0);
         }
         
-        else if(parameter[2]=="defaultFilter"){ // Function defaultFilter -> Form "ultrasonic,type,defaultFilter"
+        else if(parameter[2]=="defaultFilter" || parameter[2]=="defaultFilter\n"){ // Function defaultFilter -> Form "ultrasonic,type,defaultFilter"
           UltraSonic::ptr[sens]->defaultFilter();
           ultrasonicSaveFilter(sens, 1, 0.25);
         }
@@ -340,14 +340,14 @@ void serialEvent(){                                  //if the hardware serial po
 
     else if(parameter[0]=="hvac"){ // Functions executed in controllerHVAC class
       if(parameter[1]=="changeMode"){ // Function changeMode -> Form "hvac,changeMode,Mode[off/cool/heat]"
-        if(parameter[2]=="off"){ HVAC.changeMode(OFF_MODE); }
-        else if(parameter[2]=="cool"){ HVAC.changeMode(COOL_MODE); }
-        else if(parameter[2]=="heat"){ HVAC.changeMode(HEAT_MODE); }
+        if(parameter[2]=="off" || parameter[2]=="off\n"){ HVAC.changeMode(OFF_MODE); }
+        else if(parameter[2]=="cool" || parameter[2]=="cool\n"){ HVAC.changeMode(COOL_MODE); }
+        else if(parameter[2]=="heat" || parameter[2]=="heat\n"){ HVAC.changeMode(HEAT_MODE); }
         else{Serial.println(F("warning,HVAC changeMode Function: Parameter[2] mode unknown"));}
       }
       else if(parameter[1]=="changeFan"){ // Function changeMode -> Form "hvac,changeMode,Mode[auto/on]"
-        if(parameter[2]=="auto"){ HVAC.changeFan(AUTO_FAN); }
-        else if(parameter[2]=="on"){ HVAC.changeFan(ON_FAN); }
+        if(parameter[2]=="auto" || parameter[2]=="auto\n"){ HVAC.changeFan(AUTO_FAN); }
+        else if(parameter[2]=="on" || parameter[2]=="on\n"){ HVAC.changeFan(ON_FAN); }
         else{Serial.println(F("warning,HVAC changeFan Function: Parameter[1] unknown"));}
       }
       else{Serial.println(F("warning,HVAC Functions: Parameter[1] function unknown"));}
