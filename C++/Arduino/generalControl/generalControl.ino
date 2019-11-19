@@ -255,8 +255,9 @@ void setup() {
   // Request boot info to raspberry
   Serial.println(F("?boot"));
 
-  // Enable Relays
-  digitalWrite(mR, !HIGH); // Turn on multiplexors
+  if(!digitalRead(emergencyUser)){ // Enable Relays
+    digitalWrite(mR, !HIGH); // Turn on multiplexors
+  }
   
   // Testing settings 
   //solenoidValve::enableGroup(true); delete
