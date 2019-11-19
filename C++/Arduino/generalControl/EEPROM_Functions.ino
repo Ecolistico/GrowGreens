@@ -138,9 +138,15 @@ void chargeSolenoidParameters(int sol){
   int reg_3f = EEPROM.read(pos+3);
   int reg_4f = EEPROM.read(pos+4);
 
+  enableSolenoid(0, reg_1f);
+  enableSolenoid(1, reg_2f);
+  enableSolenoid(2, reg_3f);
+  enableSolenoid(3, reg_4f);
+  /* delete
   for(int i=0; i<solenoidValve::__TotalActuators; i++){
     uint8_t fl = solenoidValve::ptr[i]->getFloor();
-    uint8_t rg = solenoidValve::ptr[i]->getRegion(); 
+    uint8_t rg = (solenoidValve::ptr[i]->getRegion());
+    
     if(rg>=MAX_FLOOR){ rg -= MAX_FLOOR; } // Set rg in range [0-3]
     if(fl==0 && rg<reg_1f){ solenoidValve::ptr[i]->enable(true); } // Enable solenoid
     else if(fl==1 && rg<reg_2f){ solenoidValve::ptr[i]->enable(true); } // Enable solenoid
@@ -148,6 +154,7 @@ void chargeSolenoidParameters(int sol){
     else if(fl==3 && rg<reg_4f){ solenoidValve::ptr[i]->enable(true); } // Enable solenoid
     else{ solenoidValve::ptr[i]->enable(false); } // Disable
   }
+  */
 }
 
 void multidaySave(int fl, int cyclesNumber, float lightPercentage, float initHour){

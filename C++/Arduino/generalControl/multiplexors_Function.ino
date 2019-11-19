@@ -81,7 +81,7 @@ void codification_Multiplexer(){
   shiftOut(ds, shcp, MSBFIRST, value_Multiplexer15);
   digitalWrite(stcp, HIGH); 
 
-  /*
+  /* delete
   if(value_Multiplexer1+value_Multiplexer2+value_Multiplexer3+value_Multiplexer4+
     value_Multiplexer5+value_Multiplexer6+value_Multiplexer7+value_Multiplexer8+
     value_Multiplexer9+value_Multiplexer10+value_Multiplexer11+value_Multiplexer12+
@@ -100,19 +100,20 @@ void codification_Multiplexer(){
 void multiplexerRun() {
   if(millis()-multiplexerTime>100){ // Send states to multiplexors 10 times/second 
     multiplexerTime = millis();
+    codification_Multiplexer();
     if (emergencyButton){
       if(!emergencyState){
         digitalWrite(mR, !LOW); // Turn off multiplexors
         emergencyState = true;
-        Serial.println("warning,Emergency Stop"); 
+        Serial.println(F("warning,Emergency Stop")); 
       }
     }
     else {
-      codification_Multiplexer();
+      //codification_Multiplexer();
       if(emergencyState) {
         digitalWrite(mR, !HIGH); // Turn on multiplexors
         emergencyState = false;
-        Serial.println("warning,Emergency finished");
+        Serial.println(F("warning,Emergency finished"));
       }
     }
   }

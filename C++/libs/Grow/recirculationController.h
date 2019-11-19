@@ -122,7 +122,8 @@ class recirculationController
          bool getRH2OValve(); // Returns Release H2O Valve State
          bool getRSolValve(); // Returns Release Sol Valve State
          void releaseKegs(bool nut); // Free the solution into the kegs
-
+         void recirculationController::finishRelease(bool nut); // Close release valve
+         
          bool setIn(uint8_t solution); // Solution coming in
          bool setOut(uint8_t solution); // Solution coming out
          uint8_t getIn(); // Returns actual solution coming in

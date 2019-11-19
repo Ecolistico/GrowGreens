@@ -56,8 +56,6 @@ void asyncIrrigation(){
   }
 }
 
-
-
 void initialPreconditions(bool before, void (*ptr2function)()){
   int count = 0;
   bool decition = false;
@@ -73,14 +71,19 @@ void initialPreconditions(bool before, void (*ptr2function)()){
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
       else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
       Recirculation.setIn(inSol);
-      
       IPC.setState(30); // Check IPC Process 30
     }
     else{
       Recirculation.releaseKegs(true); // Get out the solution from nutrition kegs
       checkRecirculation = false; // Disable the air/water sensor
-      if(IPC.state==1){IPC.setState(51);} // Check IPC Process 51
-      else{IPC.setState(31);} // Check IPC Process 31
+      if(enableWaterSensor){ // If waterSensor enable
+        if(IPC.state==1){IPC.setState(51);} // Check IPC Process 51
+        else{IPC.setState(31);} // Check IPC Process 31  
+      }
+      else{
+        if(IPC.state==1){IPC.setState(55);} // Check IPC Process 55
+        else{IPC.setState(35);} // Check IPC Process 35
+      }
     }
   } else{ count++; }
   
@@ -211,7 +214,7 @@ void irrigationEmergency(){
   if(irrigationStage==1 && IPC.state==0){
     float p1 = pressureSensorNutrition.getValue();
     // If we detect air in irrigation line
-    //if(checkWaterIrrigation.getState()==AIR_STATE){
+    //if(checkWaterIrrigation.getState()==AIR_STATE){ debug: use water/air sensor in irrigation line
     if(WATER_STATE==AIR_STATE){
       Serial.println(F("warning,IPC Warning: Probably there is air in irrigation line"));
       IPC.setState(70); // Check IPC Process 70
@@ -230,7 +233,7 @@ void irrigationEmergency(){
   else if(irrigationStage==4 && MPC.state==0){
     float p3 = pressureSensorWater.getValue();
     // If we detect air in irrigation line
-    //if(checkWaterIrrigation.getState()==AIR_STATE){
+    //if(checkWaterIrrigation.getState()==AIR_STATE){ debug: use water/air sensor in irrigation line
     if(WATER_STATE==AIR_STATE){
       Serial.println(F("warning,MPC Warning: Probably there is air in irrigation line"));
       MPC.setState(70); // Check MPC Process 70
@@ -259,7 +262,7 @@ void runIPC(){
   else if(IPC.state==20){ // Depressurize nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
-      //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
+      //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS); delete
       uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
         Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
@@ -321,7 +324,12 @@ void runIPC(){
     if(!Recirculation.getInPump()){
       Recirculation.releaseKegs(true); // Get out the solution from nutrition kegs
       checkRecirculation = false; // Disable the air/water sensor
-      IPC.setState(31); // Check IPC Process 31
+      if(enableWaterSensor){ // If waterSensor enable
+        IPC.setState(31); // Check IPC Process 31
+      }
+      else{
+        IPC.setState(35); // Check IPC Process 35
+      }
     }
   }
 
@@ -335,6 +343,24 @@ void runIPC(){
   else if(IPC.state==32){ // Getting out solution from nutrition kegs to recirculation
     // In theory, Recirculation.run closes the valve when the sensor detect air in line
     if(!Recirculation.getRSolValve()){
+      Recirculation.resetVolKnut(); // Volumen in nutrition kegs is 0
+      Compressor.openFreeNut(); // Depressurize Nutrition Kegs
+      if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
+      else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
+      chargeSolenoidParameters(Irrigation.getSolution()); // Update irrigation parameters
+      // Update recirculation parameters
+      Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
+      Recirculation.setOut(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
+      IPC.setState(20); // Check IPC Process 20
+    }
+  }
+
+  else if(IPC.state==35){ // Getting out solution from nutrition kegs to recirculation
+    // the sensor is desactivated, we are going to wait until the pressure goes down
+    float p1 = pressureSensorNutrition.getValue();
+    if(p1<5){ // Pressure low then
+      Recirculation.resetVolKnut(); // Volumen in nutrition kegs is 0
+      Recirculation.finishRelease(true); // Get out the solution from nutrition kegs
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
       else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
@@ -355,7 +381,7 @@ void runIPC(){
       IPC.setState(20); // Check IPC Process 20
     }
     else if(p1<=10){
-      //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
+      //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS); delete
       uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
         Serial.println(F("warning,PumpOut is working on another process, please wait until it finished"));
@@ -465,6 +491,7 @@ void runIPC(){
     }
     // In theory, Recirculation.run closes the valve when the sensor detect air in line
     else if(!Recirculation.getRSolValve()){
+      Recirculation.resetVolKnut(); // Volumen in nutrition kegs is 0
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
       else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
@@ -476,6 +503,29 @@ void runIPC(){
     }
   }
 
+  else if(IPC.state==55){ // Getting out solution from nutrition kegs to recirculation
+    float p1 = pressureSensorNutrition.getValue();
+    float p2 = pressureSensorTank.getValue();
+    if(p2>=max_pressure){
+      if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
+      else{ Compressor.Off(); } // Turn off the compressor
+      IPC.setState(35); // Check IPC Process 35
+    }
+    // the sensor is desactivated, we are going to wait until the pressure goes down
+    else if(p1<5){
+      Recirculation.resetVolKnut(); // Volumen in nutrition kegs is 0
+      Recirculation.finishRelease(true); // Get out the solution from nutrition kegs
+      Compressor.openFreeNut(); // Depressurize Nutrition Kegs
+      if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request succes")); }
+      else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
+      chargeSolenoidParameters(Irrigation.getSolution()); // Update irrigation parameters
+      // Update recirculation parameters
+      Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
+      Recirculation.setOut(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
+      IPC.setState(40); // Check IPC Process 40
+    }
+  }
+  
   else if(IPC.state==60){ // Emergency: Low Pressure
     float p1 = pressureSensorNutrition.getValue();
     if(p1>=min_pressure){
@@ -606,7 +656,7 @@ void runMPC(){
     if(p3>=max_pressure){
       if(IPC.state==10 || IPC.state==60){  Compressor.Off(); Compressor.compressNut(); } // Compress nutrition kegs
       else if(IPC.state==40 || IPC.state==41 || IPC.state==42 || IPC.state==43 || IPC.state==44 || 
-      IPC.state==45 || IPC.state==51 || IPC.state==52 || IPC.state==251){  Compressor.Off(); Compressor.compressTank(); } // Compress just air tank
+      IPC.state==45 || IPC.state==51 || IPC.state==52 || IPC.state==55 || IPC.state==251){  Compressor.Off(); Compressor.compressTank(); } // Compress just air tank
       else{ Compressor.Off(); } // Turn off the compressor
       MPC.setState(0); // Return to normal state
     }
@@ -617,7 +667,7 @@ void runMPC(){
     if(p3<=10){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
-      //uint8_t resp = Recirculation.moveOut(h2oConsumption*2.5, WATER_KEGS);
+      //uint8_t resp = Recirculation.moveOut(h2oConsumption*2.5, WATER_KEGS); delete
       uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
@@ -656,7 +706,7 @@ void runMPC(){
     if(p3>=min_pressure){
       if(IPC.state==10 || IPC.state==60){  Compressor.Off(); Compressor.compressNut(); } // Compress nutrition kegs
       else if(IPC.state==40 || IPC.state==41 || IPC.state==42 || IPC.state==43 || IPC.state==44 || 
-      IPC.state==45 || IPC.state==51 || IPC.state==52 || IPC.state==251){  Compressor.Off(); Compressor.compressTank(); } // Compress just air tank
+      IPC.state==45 || IPC.state==51 || IPC.state==52 || IPC.state==55 || IPC.state==251){  Compressor.Off(); Compressor.compressTank(); } // Compress just air tank
       else{ Compressor.Off(); } // Turn off the compressor
       solenoidValve::enableGroup(true); // Enable Valves Group
       MPC.setState(0); // Return to normal state
@@ -692,7 +742,7 @@ void runMPC(){
     if(p3<=10){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
-      //uint8_t resp = Recirculation.moveOut(h2oConsumption*2.5, WATER_KEGS);
+      //uint8_t resp = Recirculation.moveOut(h2oConsumption*2.5, WATER_KEGS); delete
       uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){

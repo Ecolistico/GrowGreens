@@ -137,6 +137,7 @@ getFSolValve	KEYWORD2
 getRH2OValve	KEYWORD2
 getRSolValve	KEYWORD2
 releaseKegs	KEYWORD2
+finishRelease	KEYWORD2
 setIn	KEYWORD2
 setOut	KEYWORD2
 getIn	KEYWORD2

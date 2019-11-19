@@ -129,7 +129,12 @@ void recirculationController::releaseKegs(bool nut)
   { if(nut){ __RSol = HIGH; }
     else{ __Rh2o = HIGH; }
   }
-
+  
+void recirculationController::finishRelease(bool nut)
+  { if(nut){ __RSol = LOW; }
+    else{ __Rh2o = LOW; }
+  }
+  
 bool recirculationController::setIn(uint8_t solution)
   { if(solution>=0 && solution<MAX_RECIRCULATION_TANK){
       __In = solution;

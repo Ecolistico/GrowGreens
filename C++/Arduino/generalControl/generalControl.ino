@@ -45,6 +45,7 @@ UltraSonic US6(36, 38, "Solution Maker Level");
 waterSensor checkWaterIrrigation(23, "Water Irrigation Sensor");
 waterSensor checkWaterEvacuation(25, "Water Evacuation Sensor");
 bool checkRecirculation = true;
+bool enableWaterSensor = false;
 
 /*** HVAC Controller object ***/
 // controllerHVAC object(Mode, Fan Mode)
@@ -258,7 +259,7 @@ void setup() {
   digitalWrite(mR, !HIGH); // Turn on multiplexors
   
   // Testing settings 
-  //solenoidValve::enableGroup(true);
+  //solenoidValve::enableGroup(true); delete
 }
 
 void loop() {
