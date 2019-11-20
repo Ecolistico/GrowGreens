@@ -40,8 +40,13 @@ void serialEvent() {                                  //if the hardware serial p
             if(ec>0){
               Serial.println(F("Request accepted"));
               Serial.println("warning,Preparing "+String(liters)+" liters of solution "+String(sol+1)+" with ph="+ String(ph)+",ec="+String(ec));
-              sMaker.prepareSolution(liters, sol, ph, ec);
-              sMaker.eventLCD();  
+              if(show){
+                 delay(10000);
+                 Serial.println(F("Solution Finished"));
+              } else {
+                sMaker.prepareSolution(liters, sol, ph, ec);
+                sMaker.eventLCD();  
+              }
             }
             else {Serial.println(F("error,prepare(): ec has to be positive"));}
           }
