@@ -393,6 +393,8 @@ void serialEvent(){                                  //if the hardware serial po
         if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>0 && h2oCons>0){
           bootParameters = true;
           lastSolution = lastSol+1;
+          Recirculation.setIn(lastSol);
+          Recirculation.setOut(lastSol);
           Recirculation.addVolKnut(vnut);
           Recirculation.addVolKh2o(vh2o);
           solutionConsumption = solCons;

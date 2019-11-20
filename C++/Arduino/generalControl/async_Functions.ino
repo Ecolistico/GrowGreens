@@ -1,6 +1,7 @@
 void solenoidValverunAll(){
   for(int i=0; i<solenoidValve::__TotalActuators; i++){
     // initialPreconditions() in async() pass irrigationStage from 0 to 1
+    recirculateWater(); // When the 1st valve HIGH then recirculate WATER
     finishInitialIrrigation(); // pass irrigationStage from 1 to 2
     // wait4MiddleIrrigation() in async() pass irrigationStage from 2 to 3
     // middlePreconditions() in async() pass irrigationStage from 3 to 4
@@ -107,12 +108,6 @@ void initialPreconditions(bool before, void (*ptr2function)()){
 
 void startIrrigation(){
   updateDay(); // Update day in LED modules
-
-  uint8_t inSol = Recirculation.getIn();
-  Recirculation.setIn(WATER);
-  if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(WATER): request succes")); }
-  else{ Serial.println(F("warning,Recirculation moveIn(WATER): pumpIn already working")); }
-  Recirculation.setIn(inSol);
    
   uint8_t nite = inWhatFloorIsNight();
   // If the day change in the floors reorder valves
@@ -128,9 +123,24 @@ void startIrrigation(){
   irrigationStage = 1; // Pass to the next irrigation Stage
 }
 
+void recirculateWater() {
+  // If we are in irrigationStage 1 and it is the first valve
+  if(irrigationStage==1 && solenoidValve::getActualNumber()==0 && firstValve){
+    firstValve = LOW; // Activate until irrigationStage 1 finished
+    
+    uint8_t inSol = Recirculation.getIn();
+    Recirculation.setIn(WATER);
+    if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(WATER): request succes")); }
+    else{ Serial.println(F("warning,Recirculation moveIn(WATER): pumpIn already working")); }
+    Recirculation.setIn(inSol);
+  }
+}
+
 void finishInitialIrrigation(){
+  
   // If we are in irrigationStage 1 and the valve it is the 24 into de cycle
   if(irrigationStage==1 && solenoidValve::getActualNumber()==MAX_IRRIGATION_REGIONS*(MAX_FLOOR-1)){
+    firstValve = HIGH; // Unable until we restart the cycle with the first valve
     Compressor.keepConnected(false); // Disconnect nutrition kegs and air tank
     substractSolutionConsumption(!emergency); // Substract water consumption from the nutrition kegs volume and set consumption in zero
     float p2 = pressureSensorTank.getValue();

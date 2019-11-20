@@ -133,6 +133,9 @@ float h2oConsumption = 50; // Default consumption in stage 4 of irrigation
 // __VolKnut, __VolKh2o in recirculationControllerClass has to be init at boot
 /* The previous variables need to be register in raspberry in case that arduino turn off */
 
+// Control Actions that has to be taken the first time an irrigation valve is activated
+bool firstValve = HIGH;
+
 // Control ReOrder when day/night change
 uint8_t night = 0;
 
