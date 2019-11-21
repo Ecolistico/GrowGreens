@@ -40,8 +40,8 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define MAX_EQUATION_DEGREE   3 // Max degree of equation for calibration
 #define MAX_ULTRASONIC        8 // Max number of ultrasonic sensors
 #define MAX_DISTANCE          300 // Maximum distance(cm) we want to ping
-#define MIN_SECUTIRY_DISTANCE 10 // Minimum distance(cm) expected
-#define MAX_SECUTIRY_DISTANCE 85 // Maximum distance(cm) expected
+#define MIN_SECURITY_DISTANCE 10 // Minimum distance(cm) expected
+#define MAX_SECURITY_DISTANCE 85 // Maximum distance(cm) expected
 //#define PI 3.1416
 #define MAX_WATER_SENSOR      3 // Max number of water sensors
 #define AIR_STATE             HIGH // Air state = HIGH
@@ -140,8 +140,8 @@ class UltraSonic
           uint8_t pin1,
           uint8_t pin2,
           String name,
-          int minDist = MIN_SECUTIRY_DISTANCE,
-          int maxDist = MAX_SECUTIRY_DISTANCE
+          int minDist = MIN_SECURITY_DISTANCE,
+          int maxDist = MAX_SECURITY_DISTANCE
         );
 
         bool setModel(uint8_t model, float param, float height);

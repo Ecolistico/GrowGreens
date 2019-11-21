@@ -463,7 +463,7 @@ bool chargeUltrasonicParameters(int Type){
     }
 
     if(model<0 || model>2 || paramModel<=0 || height<UltraSonic::ptr[Type]->getMaxDist() || !UltraSonic::ptr[Type]->setModel(model, paramModel, height)){
-      UltraSonic::ptr[Type]->setModel(1, 26.5, 88);
+      UltraSonic::ptr[Type]->setModel(1, 27, 88);
     }    
     return true;
   }

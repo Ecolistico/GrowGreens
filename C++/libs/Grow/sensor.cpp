@@ -240,8 +240,8 @@ UltraSonic::UltraSonic( // Constructor
   uint8_t pin1,
   uint8_t pin2,
   String name,
-  int minDist = MIN_SECUTIRY_DISTANCE,
-  int maxDist = MAX_SECUTIRY_DISTANCE
+  int minDist = MIN_SECURITY_DISTANCE,
+  int maxDist = MAX_SECURITY_DISTANCE
 ){  // Just the first time init pointers
      if(__TotalSensors<1){
        for (int i=0; i < MAX_ULTRASONIC; i++) {
@@ -259,8 +259,8 @@ UltraSonic::UltraSonic( // Constructor
        __maxDist = maxDist;
      }
      else{
-       __minDist = MIN_SECUTIRY_DISTANCE;
-       __maxDist = MAX_SECUTIRY_DISTANCE;
+       __minDist = MIN_SECURITY_DISTANCE;
+       __maxDist = MAX_SECURITY_DISTANCE;
      }
 
      // Default parameters
@@ -495,13 +495,13 @@ float UltraSonic::getVolume()
   { return model(__Height-__Distance);}
 
 float UltraSonic::getMaxVolume()
-  { return model(__Height);}
+  { return model(__Height-__minDist);}
 
 uint8_t UltraSonic::getState()
   { return __State; }
 
 bool UltraSonic::changeMinDist(int minDist)
-  { if(minDist<__maxDist && minDist>=MIN_SECUTIRY_DISTANCE){
+  { if(minDist<__maxDist && minDist>=MIN_SECURITY_DISTANCE){
       __minDist = minDist;
       return true;
     }
@@ -509,7 +509,7 @@ bool UltraSonic::changeMinDist(int minDist)
   }
 
 bool UltraSonic::changeMaxDist(int maxDist)
-  { if(maxDist>__minDist && maxDist<=MAX_SECUTIRY_DISTANCE){
+  { if(maxDist>__minDist && maxDist<=MAX_SECURITY_DISTANCE){
       __maxDist = maxDist;
       return true;
     }

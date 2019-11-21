@@ -275,7 +275,7 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
         else{
           printAction(F("There are not enough solution"));
 
-          if(to_Where==0 || to_Where==2){ // Nutrition Kegs || Solution Maker
+          if(to_Where==NUTRITION_KEGS || to_Where==SOLUTION_MAKER){ // Nutrition Kegs || Solution Maker
             // Move to Solution Maker
 
             if(__Level[__Out+1]->getDistance() < __Level[__Out+1]->getMaxDist()){
@@ -289,7 +289,7 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
             fillSol(liters-__ActualLiters); // Fill solution maker with the rest
             printAction(liters-__ActualLiters, "water line", "solution maker");
           }
-          else if(to_Where==1){ // Water Kegs
+          else if(to_Where==WATER_KEGS){ // Water Kegs
             // Move to water kegs
             __OutLiters = __ActualLiters;
             __OutPump = HIGH;
