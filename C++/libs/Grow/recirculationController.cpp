@@ -30,6 +30,8 @@ recirculationController::recirculationController() // Constructor
     __ActualLiters = 0;
     __FillLiters = 0;
     __SolLiters = 0;
+    __Wait4Fill = 0;
+    __WaitLiters = 0;
     // Flow meter
     //__K = 13.562; // flowSensor constant
     __K = 6.781; // flowSensor constant
@@ -285,9 +287,8 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
               __Go[2] = HIGH;
               printAction(__OutLiters, "solution"+String(__Out+1), "solution maker");
             }
-
-            fillSol(liters-__ActualLiters); // Fill solution maker with the rest
-            printAction(liters-__ActualLiters, "water line", "solution maker");
+            __Wait4Fill = 1; // Wait for fill sMaker
+            __WaitLiters = liters-__ActualLiters; // Liters to move when await finished
           }
           else if(to_Where==WATER_KEGS){ // Water Kegs
             // Move to water kegs
@@ -296,8 +297,8 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
             __OutValve[__Out] = HIGH;
             __Go[1] = HIGH;
             printAction(__OutLiters, "solution"+String(__Out+1), "water kegs");
-            fillH2O(liters-__ActualLiters); // Fill water kegs with the rest
-            printAction(liters-__ActualLiters, "water line", "water kegs");
+            __Wait4Fill = 2; // Wait for fill kegs_nut
+            __WaitLiters = liters-__ActualLiters;  // Liters to move when await finished
           }
           return 2;
         }
@@ -364,6 +365,19 @@ void recirculationController::run(bool check, bool sensorState)
       " liters were move to " + toWhere);
       __ActualLiters = 0;
       __OutLiters = 0;
+      
+      if(__Wait4Fill==1){ // Now fill sMaker
+        fillSol(__WaitLiters); // Fill solution maker with the rest
+        printAction(__WaitLiters, "water line", "solution maker");
+        __Wait4Fill = 0;
+        __WaitLiters = 0;
+      }
+      else if(__Wait4Fill==2){ // Now fill kegs_h2o
+        fillH2O(__WaitLiters); // Fill water kegs with the rest
+        printAction(__WaitLiters, "water line", "water kegs");
+        __Wait4Fill = 0;
+        __WaitLiters = 0;
+      }
     }
 
     // Stop moving from solutionMaker to nutrition kegs when there is nothing

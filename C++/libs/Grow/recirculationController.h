@@ -77,6 +77,8 @@ class recirculationController
         float __OutLiters, __ActualLiters; // Aux Control moveOut()
         float __FillLiters; // Aux Control in fillH2O() and fillNut()
         float __SolLiters; // Aux Control in moveSol()
+        uint8_t __Wait4Fill; // Aux Control when we need get water from municipal line
+        float __WaitLiters; // Aux Control to save how much liters we needs from municipal line
 
         /*** Sensors ***/
         // Ultrasonic
