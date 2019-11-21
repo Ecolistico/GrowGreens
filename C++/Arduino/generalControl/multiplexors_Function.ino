@@ -39,7 +39,7 @@ void codification_Multiplexer(){
   bool ID11[8] = {Recirculation.getRH2OValve(), IrrigationKegsNutrition.getState(), IrrigationKegsH2O.getState(), Compressor.getValveNut(), 
                  Compressor.getValveTank(), Compressor.getValveH2O(), Compressor.getFreeValveNut(), Compressor.getFreeValveH2O()};      
   bool ID12[8] = {VHum1.getState(), VHum2.getState(), VHum3.getState(), VHum4.getState(), 
-                 LOW, LOW, LOW, LOW};
+                 LOW, LOW, Recirculation.getFPump(), LOW};
   bool ID13[8] = {LOW, LOW, LOW, LOW, 
                  LOW, LOW, LOW, LOW};
   bool ID14[8] = {LOW, LOW, LOW, LOW, 

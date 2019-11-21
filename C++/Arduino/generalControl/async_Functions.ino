@@ -213,6 +213,7 @@ void finishMiddleIrrigation(){
     middlePreconditions(&doNothing); // Check middlePreconditions again
     solenoidValve::enableGroup(false); // Disable Valves Group
     emergency = false; // Restart emergency variable
+    chargeSolenoidParameters(Recirculation.getOut()+1); // Update irrigationparameters
     irrigationStage = 0; // Restart irrigation Process
   }
 }

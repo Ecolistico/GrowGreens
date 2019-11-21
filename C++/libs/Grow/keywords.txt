@@ -134,6 +134,7 @@ getReleaseValve	KEYWORD2
 getGoValve	KEYWORD2
 getFH2OValve	KEYWORD2
 getFSolValve	KEYWORD2
+getFPump	KEYWORD2
 getRH2OValve	KEYWORD2
 getRSolValve	KEYWORD2
 releaseKegs	KEYWORD2

@@ -18,8 +18,9 @@ recirculationController::recirculationController() // Constructor
       __Go[i] = LOW;
     }
     __Fh2o = LOW; __FSol = LOW;
+    __FPump = LOW;
     __Rh2o = LOW; __RSol = LOW;
-
+    
     /*** Default Aux Variables ***/
     __In = 0; __Out = 0;
     __LastOut = 0;
@@ -119,6 +120,9 @@ bool recirculationController::getFH2OValve()
 bool recirculationController::getFSolValve()
   { return __FSol; }
 
+bool recirculationController::getFPump()
+  { return __FPump; }
+  
 bool recirculationController::getRH2OValve()
   { return __Rh2o; }
 
@@ -197,6 +201,7 @@ void recirculationController::fillH2O(float liters)
         if(liters>0){
           __FillLiters = liters;
           __Fh2o = HIGH;
+          __FPump = HIGH;
         }
         else{ printAction("Cannot execute fillH2O, parameter liters incorrect"); }
       }
@@ -211,6 +216,7 @@ void recirculationController::fillSol(float liters)
         if(liters>0){
           __FillLiters = liters;
           __FSol = HIGH;
+          __FPump = HIGH;
         }
         else{ printAction("Cannot execute fillSol, parameter liters incorrect"); }
       }
@@ -373,12 +379,14 @@ void recirculationController::run(bool check, bool sensorState)
       if(__H2OVol>=__FillLiters){
         if(__Fh2o){
           __Fh2o = LOW;
+          __FPump = LOW;
           printAction("Fill water kegs finished. " + String(__FillLiters) +
           " liters were move to water kegs");
           addVolKh2o(__H2OVol);
         }
         else if(__FSol){
           __FSol = LOW;
+          __FPump = LOW;
           printAction("Fill solution Maker finished. " + String(__FillLiters) +
           " liters were move to solution maker");
           addVolKnut(__H2OVol);

@@ -67,8 +67,9 @@ class recirculationController
         bool __ReleaseValve;
         bool __Go[MAX_RECIRCULATION_DESTINATIONS]; // Go(Transfer) Valves
         bool __Fh2o, __FSol; // Valves to fill with water
+        bool __FPump; // Fill Pump in municipal line
         bool __Rh2o, __RSol; // Release valve for the kegs
-
+        
         /*** Aux Variables ***/
         uint8_t __In, __Out; // Solution coming in and coming out
         uint8_t __LastOut; // Solution in current process coming out
@@ -118,7 +119,8 @@ class recirculationController
 
          bool getFH2OValve(); // Returns Fill H2O Valve State
          bool getFSolValve(); // Returns Fill Sol Valve State
-
+         bool getFPump(); // Return Fill Pump State
+         
          bool getRH2OValve(); // Returns Release H2O Valve State
          bool getRSolValve(); // Returns Release Sol Valve State
          void releaseKegs(bool nut); // Free the solution into the kegs

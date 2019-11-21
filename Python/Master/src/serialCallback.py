@@ -90,6 +90,7 @@ class serialController:
         
     def updateIrrigationState(self, index):
         param = self.respLine[index].split(",")
+        self.logMain.debug('looking for error:' + param)
         if(self.irrigation.update("solution", int(param[1]))):
             self.logMain.info("Irrigation Solution Updated")
         else: self.logMain.error("Cannot Update Solution State")
@@ -372,7 +373,6 @@ class serialController:
             line3 = str(self.solutionMaker.readline(), "utf-8")[0:-1]
             self.Msg2Log(self.logSM, line3)
             self.respTime = time()
-            
             if(line3.startswith("Request accepted")):
                 self.concatResp("requestAccepted", line3)
             elif(line3.startswith("Solution Finished")):

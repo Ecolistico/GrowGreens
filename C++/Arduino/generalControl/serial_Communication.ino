@@ -124,6 +124,11 @@ void serialEvent(){                                  //if the hardware serial po
         solenoidSaveTimeOn(fl, reg, sol, inputTime_seconds);
       }
 
+      else if(parameter[1]=="charge" || parameter[1]=="charge\n"){
+        chargeSolenoidParameters(Recirculation.getOut()+1); // Update irrigationparameters
+        Serial.println(F("info,Irrigation Parameters charged"));
+      }
+      
       else{Serial.println(F("warning,Solenoid(): Parameter[1] unknown"));}
     }
 
@@ -188,7 +193,8 @@ void serialEvent(){                                  //if the hardware serial po
         } 
       }
       else if(parameter[1]=="charge" || parameter[1]=="charge\n"){
-        chargeIrrigationParameters();
+        chargeSolenoidParameters(Recirculation.getOut()+1); // Update irrigationparameters
+        Serial.println(F("info,Irrigation Parameters charged"));
       }
       else{ Serial.println(F("warning,Irrigation(): Parameter[1] unknown"));}
     }
@@ -201,7 +207,7 @@ void serialEvent(){                                  //if the hardware serial po
           dateHour = hr;
           dateMinute = mn;
           Serial.println(F("Hour updated"));
-          if(!firstHourUpdate){
+ c         if(!firstHourUpdate){
             firstHourUpdate = true;
             updateDay();
             Irrigation.whatSolution(dateHour, dateMinute); // Update the solution parameter
@@ -391,12 +397,16 @@ void serialEvent(){                                  //if the hardware serial po
         float solCons = parameter[4].toFloat();
         float h2oCons = parameter[5].toFloat();
         if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>0 && h2oCons>0){
-          bootParameters = true;
-          lastSolution = lastSol+1;
+          bootParameters = true; // Set bootParameters as true
+          lastSolution = lastSol+1; // solution using for irrigation class
+          // Update Recirculation class parameters
           Recirculation.setIn(lastSol);
           Recirculation.setOut(lastSol);
+          chargeSolenoidParameters(lastSolution); // Update irrigationparameters
+          // Update Recirculation parameters
           Recirculation.addVolKnut(vnut);
           Recirculation.addVolKh2o(vh2o);
+          // Update consumption variables
           solutionConsumption = solCons;
           h2oConsumption = h2oCons;
           Serial.print(F("Boot: Last Solution to be irrigated is "));
@@ -448,6 +458,7 @@ void serialEvent(){                                  //if the hardware serial po
         { Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.getEC(parameter[3].toInt())); }
         else if(parameter[2]=="getPH" || parameter[2]=="getPH\n")
         { Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.getPH(parameter[3].toInt())); }
+        
       }
       else if(parameter[1]=="requestSolution" || parameter[1]=="requestSolution\n")
       { requestSolution(); }

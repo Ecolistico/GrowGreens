@@ -14,11 +14,11 @@ class growerStatus:
     
     def serialReq(self, req):
         self.serialRequest = ""
-        self.self.actualTime = time()
+        self.actualTime = time()
         
     def mqttReq(self, req):
         self.mqttRequest = ""
-        self.self.actualTime = time()
+        self.actualTime = time()
         
 class share:
     def __init__(self):
