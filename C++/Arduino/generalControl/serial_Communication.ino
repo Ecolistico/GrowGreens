@@ -193,8 +193,7 @@ void serialEvent(){                                  //if the hardware serial po
         } 
       }
       else if(parameter[1]=="charge" || parameter[1]=="charge\n"){
-        chargeSolenoidParameters(Recirculation.getOut()+1); // Update irrigationparameters
-        Serial.println(F("info,Irrigation Parameters charged"));
+        chargeIrrigationParameters();
       }
       else{ Serial.println(F("warning,Irrigation(): Parameter[1] unknown"));}
     }
@@ -207,7 +206,7 @@ void serialEvent(){                                  //if the hardware serial po
           dateHour = hr;
           dateMinute = mn;
           Serial.println(F("Hour updated"));
- c         if(!firstHourUpdate){
+          if(!firstHourUpdate){
             firstHourUpdate = true;
             updateDay();
             Irrigation.whatSolution(dateHour, dateMinute); // Update the solution parameter
@@ -458,7 +457,6 @@ void serialEvent(){                                  //if the hardware serial po
         { Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.getEC(parameter[3].toInt())); }
         else if(parameter[2]=="getPH" || parameter[2]=="getPH\n")
         { Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.getPH(parameter[3].toInt())); }
-        
       }
       else if(parameter[1]=="requestSolution" || parameter[1]=="requestSolution\n")
       { requestSolution(); }
