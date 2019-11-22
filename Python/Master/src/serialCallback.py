@@ -67,7 +67,7 @@ class serialController:
         
     def cleanLine(self, line):
         resp = line.split(",")
-        if len(resp>1): return resp[1]
+        if len(resp)>1: return resp[1]
         else: return resp
     
     def detectGrower(self, line):

@@ -125,16 +125,13 @@ class mqttController:
             
         # Get data from ESP32 front, center and back
         elif(top.endswith("esp32front") and message!="sendData"):
-            self.logMain.debug('looking for error:' + message)
             self.ESP32.front.str2array(message)
             # Ask again for the data if not complete
         elif(top.endswith("esp32center") and message!="sendData"):
-            self.logMain.debug('looking for error:' + message)
-            selfESP32.center.str2array(message)
+            self.ESP32.center.str2array(message)
             # Ask again for the data if not complete
         elif(top.endswith("esp32back") and message!="sendData"):
-            self.logMain.debug('looking for error:' + message)
-            selfESP32.back.str2array(message)
+            self.ESP32.back.str2array(message)
             # Ask again for the data if not complete
 
     def on_publish(client, userdata, mid):
