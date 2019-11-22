@@ -90,7 +90,7 @@ class serialController:
         
     def updateIrrigationState(self, index):
         param = self.respLine[index].split(",")
-        self.logMain.debug('looking for error:' + param)
+        self.logMain.warning('looking for error: {}'.format(self.respLine[index]))
         if(self.irrigation.update("solution", int(param[1]))):
             self.logMain.info("Irrigation Solution Updated")
         else: self.logMain.error("Cannot Update Solution State")
@@ -114,6 +114,8 @@ class serialController:
         solution = int(param[2])
         ph = float(param[3])
         ec = int(param[4])
+        self.logMain.warning("Prepare Solution line: {}".format(self.respLine[index]))
+        self.logMain.warning("Prepare Solution parameters: {0},{1},{2},{3}".format(liters, solution, ph, ec))
         # Check parameters
         if(liters>0):
             if(solution>=0 and solution<4):
@@ -141,19 +143,20 @@ class serialController:
            self.solutionMaker.in_waiting==0 and
            len(self.resp)>0):
             for i, resp in enumerate(self.resp):
-                self.logMain.debug("Sending response for request {}".format(resp))
-                
+                self.logMain.warning("Sending response for request {}".format(resp))
                 # generalControl is requesting the necessary booting parameters
                 if(resp == "boot"): self.sendBootParams()            
                 # Update irrigation state
-                elif(self.resp == "updateIrrigationState"): self.updateIrrigationState(i)
+                elif(resp == "updateIrrigationState"): self.updateIrrigationState(i)
                 # generalControl is requesting to prepare a solution
-                elif(self.resp == "requestSolution"): self.requestSolution(i)
+                elif(resp == "requestSolution"):
+                    self.logMain.warning("Processing: {}".format(resp))
+                    self.requestSolution(i)
                 # solutionMaker accepts to prepare a new solution
-                elif(self.resp == "requestAccepted"):
+                elif(resp == "requestAccepted"):
                     self.write(self.generalControl, "solutionMaker,accept")
                 # solutionMaker finished to prepare the solution
-                elif(self.resp == "solutionFinished"):
+                elif(resp == "solutionFinished"):
                     self.write(self.generalControl, "solutionMaker,finished")
                     
                 self.logMain.warning("Request {} was answered".format(resp))

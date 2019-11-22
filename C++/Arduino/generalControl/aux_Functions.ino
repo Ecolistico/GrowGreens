@@ -19,7 +19,7 @@ void emergencyStop() {
 void logSens() {
   if(millis()-logSensTime>5000){
     logSensTime = millis();
-    if(Recirculation.getInPump()){
+    if(Recirculation.getInPump() || Recirculation.getRSolValve() || Recirculation.getRH2OValve()){
       Serial.print(F("debug,Level Recirculation Tank: ")); Serial.print(US0.getVolume()); Serial.println(F(" liters"));
       if(Recirculation.getInValve(0)){
         Serial.print(F("debug,Level Solution1: ")); Serial.print(US1.getVolume()); Serial.println(F(" liters"));
@@ -57,17 +57,19 @@ void logSens() {
         Serial.print(F("debug,Level SMaker: ")); Serial.print(US6.getVolume()); Serial.println(F(" liters"));
       }
     }
-    if(Recirculation.getSolPump()){
+    if(Recirculation.getSolPump() || Recirculation.getFSolValve()){
       Serial.print(F("debug,Level SMaker: ")); Serial.print(US6.getVolume()); Serial.println(F(" liters"));
     }
-    if(IrrigationKegsNutrition.getState() || (Compressor.getValveNut() && Compressor.getState()) || Compressor.getFreeValveNut()){
+    if(IrrigationKegsNutrition.getState() || 
+    (Compressor.getValveNut() && Compressor.getState()) || 
+    Compressor.getFreeValveNut() || 
+    Recirculation.getRSolValve()){
       Serial.print(F("debug,Pressure Kegs_nut: ")); Serial.print(pressureSensorNutrition.getValue()); Serial.println(F(" psi"));
     }
     if(IrrigationKegsH2O.getState() || (Compressor.getValveH2O() && Compressor.getState()) || Compressor.getFreeValveH2O()){
       Serial.print(F("debug,Pressure Kegs_h20: ")); Serial.print(pressureSensorWater.getValue()); Serial.println(F(" psi"));
     }
-
-    /* debug
+    /*
     if(Recirculation.getRSolValve() || Recirculation.getRH2OValve()){
       Serial.print(F("debug,Air/Water Recirculation Sensor: "));
       if(checkWaterEvacuation.getState()==WATER_STATE){ Serial.println(F("WATER")); } 

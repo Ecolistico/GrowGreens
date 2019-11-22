@@ -14,6 +14,8 @@ void allMultiplexerOff() {
 }
 
 void codification_Multiplexer(){
+  const bool busy = LOW;
+  
   bool ID1[8] = {L1S1.getState(), L1S2.getState(), L1S3.getState(), L1S4.getState(),
                  L2S1.getState(), L2S2.getState(), L2S3.getState(), L2S4.getState()};
   bool ID2[8] = {L3S1.getState(), L3S2.getState(), L3S3.getState(), L3S4.getState(),
@@ -39,7 +41,7 @@ void codification_Multiplexer(){
   bool ID11[8] = {Recirculation.getRH2OValve(), IrrigationKegsNutrition.getState(), IrrigationKegsH2O.getState(), Compressor.getValveNut(), 
                  Compressor.getValveTank(), Compressor.getValveH2O(), Compressor.getFreeValveNut(), Compressor.getFreeValveH2O()};      
   bool ID12[8] = {VHum1.getState(), VHum2.getState(), VHum3.getState(), VHum4.getState(), 
-                 LOW, LOW, Recirculation.getFPump(), LOW};
+                 busy, busy, Recirculation.getFPump(), LOW};
   bool ID13[8] = {LOW, LOW, LOW, LOW, 
                  LOW, LOW, LOW, LOW};
   bool ID14[8] = {LOW, LOW, LOW, LOW, 

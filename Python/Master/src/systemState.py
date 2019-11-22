@@ -29,7 +29,7 @@ class systemState:
     
     def update(self, key, val):
         save = False
-        if(key.startswith("s") and val>0 and val<=4):
+        if(key.startswith("s") and val>=0 and val<4):
             self.state["solution"] = val
             save = True
         else:

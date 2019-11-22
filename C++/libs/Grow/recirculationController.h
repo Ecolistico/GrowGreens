@@ -122,6 +122,7 @@ class recirculationController
          bool getFH2OValve(); // Returns Fill H2O Valve State
          bool getFSolValve(); // Returns Fill Sol Valve State
          bool getFPump(); // Return Fill Pump State
+         uint8_t getWait4Fill(); // Return Wait4Fill
          
          bool getRH2OValve(); // Returns Release H2O Valve State
          bool getRSolValve(); // Returns Release Sol Valve State

@@ -125,6 +125,9 @@ bool recirculationController::getFSolValve()
 bool recirculationController::getFPump()
   { return __FPump; }
   
+uint8_t recirculationController::getWait4Fill()
+  { return __Wait4Fill; }
+  
 bool recirculationController::getRH2OValve()
   { return __Rh2o; }
 
@@ -259,17 +262,20 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
         __ActualLiters = __Level[__Out+1]->getVolume();
         __LastOut = __Out;
   
-        if(to_Where==NUTRITION_KEGS){addVolKnut(liters);}
-        else if(to_Where==WATER_KEGS){addVolKh2o(liters);}
-
         if(__ActualLiters>liters){ // If there are enough solution
           __OutLiters = liters;
           __OutPump = HIGH;
           __OutValve[__Out] = HIGH;
           __Go[to_Where] = HIGH;
           String toWhere;
-          if(to_Where==NUTRITION_KEGS){toWhere = "nutrition kegs";}
-          else if(to_Where==WATER_KEGS){toWhere = "water kegs";}
+          if(to_Where==NUTRITION_KEGS){
+            toWhere = "nutrition kegs";
+            addVolKnut(__OutLiters);
+          }
+          else if(to_Where==WATER_KEGS){
+            toWhere = "water kegs";
+            addVolKh2o(__OutLiters);
+          }
           else if(to_Where==SOLUTION_MAKER){toWhere = "solution maker";}
           printAction(__OutLiters, "solution "+String(__Out+1), toWhere);
           return 1;
@@ -279,14 +285,20 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
 
           if(to_Where==NUTRITION_KEGS || to_Where==SOLUTION_MAKER){ // Nutrition Kegs || Solution Maker
             // Move to Solution Maker
-
+            /* DEBUG
             if(__Level[__Out+1]->getDistance() < __Level[__Out+1]->getMaxDist()){
               __OutLiters = __ActualLiters;
               __OutPump = HIGH;
               __OutValve[__Out] = HIGH;
               __Go[2] = HIGH;
               printAction(__OutLiters, "solution"+String(__Out+1), "solution maker");
-            }
+            }*/
+            __OutLiters = __ActualLiters;
+            __OutPump = HIGH;
+            __OutValve[__Out] = HIGH;
+            __Go[2] = HIGH;
+            addVolKh2o(__OutLiters);
+            printAction(__OutLiters, "solution"+String(__Out+1), "solution maker");
             __Wait4Fill = 1; // Wait for fill sMaker
             __WaitLiters = liters-__ActualLiters; // Liters to move when await finished
           }
@@ -315,19 +327,14 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
   }
 
 bool recirculationController::moveSol()
-  { if(__Go[2]){ // If solution Maker Valve Open
-      if(__Level[6]->getState()!=1){
-        __SolLiters = __Level[6]->getVolume();
-        __SolPump = HIGH;
-        printAction("Emptying solution Maker");
-      }
-      else{ printAction("There is nothing to move in solution Maker");}
-      return true;
+  { // If there is enough level in sMaker
+    if(__Level[6]->getState()!=1){
+      __SolLiters = __Level[6]->getVolume();
+      __SolPump = HIGH;
+      printAction("Emptying solution Maker");
     }
-    else{
-      printAction("Cannot start moving solution because move out is not finished");
-      return false;
-    }
+    else{ printAction("There is nothing to move in solution Maker");}
+    return true;
   }
 
 void recirculationController::run(bool check, bool sensorState)
@@ -363,8 +370,8 @@ void recirculationController::run(bool check, bool sensorState)
       }
       printAction("Move Out finished. " + String(__OutLiters) +
       " liters were move to " + toWhere);
-      __ActualLiters = 0;
-      __OutLiters = 0;
+      //__ActualLiters = 0;
+      //__OutLiters = 0;
       
       if(__Wait4Fill==1){ // Now fill sMaker
         fillSol(__WaitLiters); // Fill solution maker with the rest
@@ -390,7 +397,7 @@ void recirculationController::run(bool check, bool sensorState)
     // Stop filling with water when
     if(__Fh2o || __FSol){
       getVolume();
-      if(__H2OVol>=__FillLiters){
+      if(__H2OVol>=__FillLiters || __Level[6]->getVolume()>=__FillLiters+__OutLiters){
         if(__Fh2o){
           __Fh2o = LOW;
           __FPump = LOW;
@@ -403,7 +410,6 @@ void recirculationController::run(bool check, bool sensorState)
           __FPump = LOW;
           printAction("Fill solution Maker finished. " + String(__FillLiters) +
           " liters were move to solution maker");
-          addVolKnut(__H2OVol);
         }
         __FillLiters = 0;
         __H2OVol = 0;
