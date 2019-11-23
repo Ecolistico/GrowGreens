@@ -68,7 +68,7 @@ class serialController:
     def cleanLine(self, line):
         resp = line.split(",")
         if len(resp)>1: return resp[1]
-        else: return resp
+        else: return resp[0]
     
     def detectGrower(self, line):
         if(line.startswith("Grower1")): return 1
@@ -90,7 +90,6 @@ class serialController:
         
     def updateIrrigationState(self, index):
         param = self.respLine[index].split(",")
-        self.logMain.warning('looking for error: {}'.format(self.respLine[index]))
         if(self.irrigation.update("solution", int(param[1]))):
             self.logMain.info("Irrigation Solution Updated")
         else: self.logMain.error("Cannot Update Solution State")

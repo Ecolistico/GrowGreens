@@ -78,6 +78,11 @@ class multiESP:
         self.center = dataESP32(loggerCenter)
         self.back = dataESP32(loggerBack)
     
+    def logData(self):
+        t1 = t2 = t3 = t4 = 0 
+        h1 = h2 = h3 = h4 = 0
+        #self.front.log.info("Tem")
+        
     def isDataComplete(self):
         if(self.front.isDataComplete() and self.center.isDataComplete() and self.back.isDataComplete()):
             return True

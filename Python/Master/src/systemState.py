@@ -34,7 +34,6 @@ class systemState:
             save = True
         else:
             keySplit = key.lower().split(",")
-            print(keySplit)
             if(keySplit[0].startswith("v") and keySplit[1].startswith("n") and val>=0):
                 self.state["volumenNut"] = val
                 save = True
