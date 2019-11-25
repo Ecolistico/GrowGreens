@@ -297,7 +297,7 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
             __OutPump = HIGH;
             __OutValve[__Out] = HIGH;
             __Go[2] = HIGH;
-            addVolKh2o(__OutLiters);
+            addVolKnut(__OutLiters);
             printAction(__OutLiters, "solution"+String(__Out+1), "solution maker");
             __Wait4Fill = 1; // Wait for fill sMaker
             __WaitLiters = liters-__ActualLiters; // Liters to move when await finished
@@ -308,6 +308,7 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
             __OutPump = HIGH;
             __OutValve[__Out] = HIGH;
             __Go[1] = HIGH;
+            addVolKh2o(__OutLiters);
             printAction(__OutLiters, "solution"+String(__Out+1), "water kegs");
             __Wait4Fill = 2; // Wait for fill kegs_nut
             __WaitLiters = liters-__ActualLiters;  // Liters to move when await finished

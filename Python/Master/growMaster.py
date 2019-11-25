@@ -124,6 +124,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     log.logger.info("Setting up devices...")
     serialControl.open()
     log.logger.info("Devices ready")
+    mail.sendMail("Ecolistico Alerta", "GrowGreens acaba de iniciar")
 
 else:
     run = False

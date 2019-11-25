@@ -142,21 +142,17 @@ class serialController:
            self.solutionMaker.in_waiting==0 and
            len(self.resp)>0):
             for i, resp in enumerate(self.resp):
-                self.logMain.warning("Sending response for request {}".format(resp))
                 # generalControl is requesting the necessary booting parameters
                 if(resp == "boot"): self.sendBootParams()            
                 # Update irrigation state
                 elif(resp == "updateIrrigationState"): self.updateIrrigationState(i)
                 # generalControl is requesting to prepare a solution
-                elif(resp == "requestSolution"):
-                    self.logMain.warning("Processing: {}".format(resp))
-                    self.requestSolution(i)
+                elif(resp == "requestSolution"): self.requestSolution(i)
                 # solutionMaker accepts to prepare a new solution
                 elif(resp == "requestAccepted"):
                     self.write(self.generalControl, "solutionMaker,accept")
                 # solutionMaker finished to prepare the solution
-                elif(resp == "solutionFinished"):
-                    self.write(self.generalControl, "solutionMaker,finished")
+                elif(resp == "solutionFinished"): self.write(self.generalControl, "solutionMaker,finished")
                     
                 self.logMain.warning("Request {} was answered".format(resp))
               
