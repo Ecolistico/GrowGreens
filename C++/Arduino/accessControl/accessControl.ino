@@ -12,6 +12,7 @@
 #define access_led A4 // Pin A4 LED green/Access
 #define error_led A5 // Pin A5 LED red/Error
 #define button A3 // Pin A3 Touch Button
+#define access_button A0 // Pin A0 Access Button
 #define access A2 // Pin A2 open Access (solenoid)
 
 // Define objects
@@ -28,6 +29,7 @@ bool red_led_state = false;
 unsigned long led_time = millis();
 // Button
 bool button_state = LOW;
+bool access_st = false;
 unsigned long button_time = millis();
 // ID control
 uint8_t actualID[4];
@@ -174,6 +176,7 @@ void saveID(uint8_t id[4]){
 void check_Access(uint8_t id[4]){
   int numID = EEPROM.read(0);
   bool ac = false;
+
   for(int i=0; i<numID; i++){
     int byte1 = EEPROM.read(1+i*4);
     int byte2 = EEPROM.read(2+i*4);
@@ -190,6 +193,7 @@ void check_Access(uint8_t id[4]){
     Serial.println("Access Granted");
     delay(3000);
     digitalWrite(access_led, LOW);
+    delay(7000);
     digitalWrite(access,LOW);
   }
   else{
@@ -210,6 +214,7 @@ void setup() {
   pinMode(error_led, OUTPUT); 
   pinMode(access, OUTPUT);
   pinMode(button,INPUT_PULLUP);
+  pinMode(access_button,INPUT_PULLUP);
 
   Serial.println(F("Ecolistico Access Control.\nLocation: Valle de Bravo, Edo. de México"));
 
@@ -229,6 +234,33 @@ void loop() {
   blink_red_led();
   detectButton();
   reset_count();
+  
+  bool ac = false;
+  if(digitalRead(access_button)==LOW){
+      ac = true;
+   }
+   if(ac){
+    access_st=true;
+    digitalWrite(access_led, HIGH);
+    digitalWrite(access,HIGH);
+    Serial.println("Access Granted");
+    delay(3000);
+    digitalWrite(access_led, LOW);
+    delay(2000);
+    digitalWrite(access,LOW);
+  }
+  else{
+    if (access_st == true){
+      //digitalWrite(error_led,HIGH);
+      digitalWrite(access,LOW);
+      Serial.println("Access Denied");
+      delay(3000);
+      digitalWrite(error_led,LOW);
+      access_st=false;
+    }
+
+  }
+    
   
   // Check for new RFID cards
   if(mfrc522.PICC_IsNewCardPresent()) {  
