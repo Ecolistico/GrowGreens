@@ -494,6 +494,9 @@ float UltraSonic::getPreDistance()
 float UltraSonic::getVolume()
   { return model(__Height-__Distance);}
 
+float UltraSonic::getMinVolume()
+  { return model(__Height-__maxDist);}
+  
 float UltraSonic::getMaxVolume()
   { return model(__Height-__minDist);}
 

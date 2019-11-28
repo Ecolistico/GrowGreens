@@ -43,6 +43,7 @@ beginAll	KEYWORD2
 runAll	KEYWORD2
 flowSensorBegin	KEYWORD2
 getTime	KEYWORD2
+getCurrentTime	KEYWORD2
 setTimeOn	KEYWORD2
 getTimeOn	KEYWORD2
 getOrder	KEYWORD2
@@ -165,6 +166,7 @@ getMaxDist	KEYWORD2
 getDistance	KEYWORD2
 getPreDistance	KEYWORD2
 getVolume	KEYWORD2
+getMinVolume	KEYWORD2
 getMaxVolume	KEYWORD2
 changeMinDist	KEYWORD2
 changeMaxDist	KEYWORD2

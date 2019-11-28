@@ -232,11 +232,11 @@ void recirculationController::fillSol(float liters)
 
 bool recirculationController::moveIn()
   { if(!__InPump){ // Pump has to be off
-      float recirculationVol = __Level[0]->getVolume();
+      float recirculationVol = __Level[0]->getVolume()-__Level[0]->getMinVolume();
       float tankVol = __Level[__In+1]->getVolume();
       float maxVolume = __Level[__In+1]->getMaxVolume();
 
-      if(__Level[0]->getDistance() > __Level[0]->getMaxDist()){
+      if(recirculationVol <= 0){
         printAction("Level is too low to turn on the pump");
       }
       else if(recirculationVol+tankVol<maxVolume){ // Transfering water
@@ -259,7 +259,7 @@ bool recirculationController::moveIn()
 uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
   { if(!__OutPump){
       if(to_Where>=0 && to_Where<MAX_RECIRCULATION_DESTINATIONS){
-        __ActualLiters = __Level[__Out+1]->getVolume();
+        __ActualLiters = __Level[__Out+1]->getVolume()-__Level[__Out+1]->getMinVolume();
         __LastOut = __Out;
   
         if(__ActualLiters>liters){ // If there are enough solution
@@ -297,10 +297,9 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
             __OutPump = HIGH;
             __OutValve[__Out] = HIGH;
             __Go[2] = HIGH;
-            addVolKnut(__OutLiters);
             printAction(__OutLiters, "solution"+String(__Out+1), "solution maker");
             __Wait4Fill = 1; // Wait for fill sMaker
-            __WaitLiters = liters-__ActualLiters; // Liters to move when await finished
+            __WaitLiters = liters-__OutLiters; // Liters to move when await finished
           }
           else if(to_Where==WATER_KEGS){ // Water Kegs
             // Move to water kegs
@@ -311,7 +310,7 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
             addVolKh2o(__OutLiters);
             printAction(__OutLiters, "solution"+String(__Out+1), "water kegs");
             __Wait4Fill = 2; // Wait for fill kegs_nut
-            __WaitLiters = liters-__ActualLiters;  // Liters to move when await finished
+            __WaitLiters = liters-__OutLiters;  // Liters to move when await finished
           }
           return 2;
         }

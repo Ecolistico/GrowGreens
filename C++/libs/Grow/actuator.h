@@ -185,7 +185,8 @@ class solenoidValve
           static void flowSensorBegin();
 
           solenoidValve (String name); // Constructor
-          unsigned long getTime(); // Returns the time into the cycle for the particular actuator
+          unsigned long getTime(); // Get the time into the complete cycle
+          unsigned long getCurrentTime(); // Returns the time into the cycle for the particular actuator
           bool setTimeOn(unsigned long t_on); // Return true if succesful
           unsigned long getTimeOn();
           bool getState(); // Returns actuator state

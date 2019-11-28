@@ -365,6 +365,14 @@ void solenoidValve::groupPrint(String act)
   }
 
 unsigned long solenoidValve::getTime()
+  { for(int i = 0; i<__TotalActuators; i++){
+      if(ptr[i]->getOrder()==0){
+        return ptr[i]->getCurrentTime();
+      }
+    }
+  }
+
+unsigned long solenoidValve::getCurrentTime()
   { return (millis() - __Actual_time); }
 
 bool solenoidValve::setTimeOn(unsigned long t_on)
@@ -543,7 +551,7 @@ bool solenoidValve::run()
           }
         }
         // Restart cycle
-        else if(__ActualNumber>=__TotalActuators && (millis()-__Actual_time)>=__CycleTime){
+        else if(__ActualNumber>=__TotalActuators && getTime()>=__CycleTime){
           __ActualNumber = 0;
           groupPrint(F("Restarting cycle"));
         }
@@ -560,7 +568,7 @@ bool solenoidValve::run()
            __ActualNumber++;
        }
        // Restart cycle
-       else if(__ActualNumber>=__TotalActuators && (millis()-__Actual_time)>=__CycleTime){
+       else if(__ActualNumber>=__TotalActuators && getTime()>=__CycleTime){
          __ActualNumber = 0;
          groupPrint(F("Restarting cycle"));
        }

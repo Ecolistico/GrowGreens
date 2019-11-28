@@ -154,6 +154,7 @@ class UltraSonic
         float getDistance(); // Returns more actual distance measurement
         float getPreDistance(); // Returns previous distance measurement
         float getVolume(); // Returns volumen measure
+        float getMinVolume(); // Returns min volumen with the model saved
         float getMaxVolume(); // Returns max volumen with the model saved
         uint8_t getState(); // Returns state (High/Ok/Low)
         bool changeMinDist(int minDist);
