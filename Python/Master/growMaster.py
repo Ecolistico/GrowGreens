@@ -16,13 +16,16 @@ import EnvControl
 from smtp import Mail
 from logger import logger
 from sensor import BME680
+from asciiART import asciiArt
 from communication import share
 from inputHandler import inputHandler
 from mqttCallback import mqttController
 from serialCallback import serialController
 
+art = asciiArt()
 print("\033[1;32;40m", end='')
 print(" Welcome to GrowGreens ".center(80,'*'))
+art.img_print('./img/GrowGreens1_Web.png')
 print("\033[0;37;40m")
     
 # Check if temp dir exists, if not then create it
