@@ -397,7 +397,7 @@ void recirculationController::run(bool check, bool sensorState)
     // Stop filling with water when
     if(__Fh2o || __FSol){
       getVolume();
-      if(__H2OVol>=__FillLiters || __Level[6]->getVolume()>=__FillLiters+__OutLiters){
+      if(__H2OVol>=__FillLiters || __Level[6]->getVolume()-__Level[6]->getMinVolume()>=__FillLiters+__OutLiters){
         if(__Fh2o){
           __Fh2o = LOW;
           __FPump = LOW;
