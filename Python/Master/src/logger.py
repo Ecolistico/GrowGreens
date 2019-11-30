@@ -18,7 +18,7 @@ class logger:
         console.setLevel(logging.WARNING)
         
         # Set a format for console use
-        formatter = logging.Formatter('%(name)-15s %(message)s')
+        formatter = logging.Formatter('%(asctime)s %(name)-15s %(message)s', '%Y-%m-%d %H:%M:%S')
         
         # Tell the handler to use this format
         console.setFormatter(formatter)

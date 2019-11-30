@@ -61,7 +61,7 @@ void callback(char* topic, byte* message, unsigned int length) {
     if (messageTemp == "sendData") { // Send sensor data to Broker
       sendData();
       Serial.println(F("Sending sensor data to MQTT Broker"));
-      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Sensor data sended");
+      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Sensor data sent");
     }
   
     else if(messageTemp == "hardReset"){ // Erase WiFi Credentials and reboot ESP32

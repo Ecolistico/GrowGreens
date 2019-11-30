@@ -108,7 +108,7 @@ void serialEvent() {                                  //if the hardware serial p
         }
         else{ Serial.println(F("error,stop(): Pump out of range [0-1]"));}
       }
-      else{Serial.println(F("warning,stop(): Parameter[1] does not match a type"));}
+      else{Serial.println(F("error,stop(): Parameter[1] does not match a type"));}
     }
 
     // calibration()
