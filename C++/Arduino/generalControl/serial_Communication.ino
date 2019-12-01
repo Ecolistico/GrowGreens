@@ -435,7 +435,7 @@ void serialEvent(){                                  //if the hardware serial po
         else if(parameter[1]=="finished" || parameter[1]=="finished\n"){ // Computer informs that solutionMaker finished the last request
           CC.setState(2);
         }
-        else{Serial.println(F("warning,solutionMaker(): Parameter[2] unknown"));}
+        else{Serial.println(F("warning,solutionMaker(): Parameter[1] unknown"));}
     }
     
     else if(parameter[0]=="eeprom"){ // Functions to manage EEPROM memory
