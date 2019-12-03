@@ -54,7 +54,6 @@ enable	KEYWORD2
 isEnable	KEYWORD2
 getFloor	KEYWORD2
 getRegion	KEYWORD2
-getName	KEYWORD2
 reOrder_byFloor	KEYWORD2
 restartH2O	KEYWORD2
 restartAllH2O	KEYWORD2

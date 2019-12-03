@@ -137,7 +137,7 @@ void solutionMaker::begin(
       __StatusLCD = true;
 
       // Show message in Screen.
-      printLCD("Preparando");
+      printLCD(F("Preparando"));
       for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER+2;i++){
           pinMode(__Led[i], OUTPUT);
           digitalWrite(__Led[i], HIGH);
@@ -203,7 +203,7 @@ void solutionMaker::begin(
       defaultFilter(); // Set by default exponential filter with alpha=0.2
 
       // Show message in Screen.
-      printLCD("Preparado");
+      printLCD(F("Preparado"));
 
       // Turn off led´s
       for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER+2;i++){
@@ -244,13 +244,13 @@ void solutionMaker::enable(uint8_t actuator)
           analogWrite(__En[actuator], __PumpVelocity);
         }
         __IsEnable[actuator] = true;
-        printAction("Enable", actuator);
+        printAction(F("Enable"), actuator);
         return;
       }
-      printAction("Already enable", actuator);
+      printAction(F("Already enable"), actuator);
       return;
     }
-    printAction("Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
     return;
   }
 
@@ -264,13 +264,13 @@ void solutionMaker::disable(uint8_t actuator)
           analogWrite(__En[actuator], LOW);
         }
         __IsEnable[actuator] = false;
-        printAction("Disable", actuator);
+        printAction(F("Disable"), actuator);
         return;
       }
-      printAction("Already disable", actuator);
+      printAction(F("Already disable"), actuator);
       return;
     }
-    printAction("Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
     return;
   }
 
@@ -291,10 +291,10 @@ void solutionMaker::turnOnPump(unsigned long time1, uint8_t pump)
       __Available[pump+MAX_SOLUTIONS_NUMBER] = false;
       __PumpOnTime[pump] = time1;
       __PumpTime[pump] = millis();
-      printAction("Turn On", MAX_SOLUTIONS_NUMBER+pump);
+      printAction(F("Turn On"), MAX_SOLUTIONS_NUMBER+pump);
       return;
     }
-    printAction("Pump does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
     return;
   }
 
@@ -305,10 +305,10 @@ void solutionMaker::turnOffPump(uint8_t pump)
       disable(MAX_SOLUTIONS_NUMBER+pump);
       digitalWrite(__Led[pump+MAX_SOLUTIONS_NUMBER], LOW);
       __Available[pump+MAX_SOLUTIONS_NUMBER] = true;
-      printAction("Turn Off", MAX_SOLUTIONS_NUMBER+pump);
+      printAction(F("Turn Off"), MAX_SOLUTIONS_NUMBER+pump);
       return;
     }
-    printAction("Pump does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
     return;
   }
 
@@ -395,10 +395,10 @@ void solutionMaker::moveStepper(long steps, uint8_t st)
 void solutionMaker::resetPosition(uint8_t st)
   { if(st<MAX_SOLUTIONS_NUMBER){
       stepperS[st]->setCurrentPosition(0);
-      printAction("Reset Position", st);
+      printAction(F("Reset Position"), st);
       return;
     }
-    printAction("Cannot reset position. Motor does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Cannot reset position. Motor does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
     return;
   }
 
@@ -553,7 +553,7 @@ void solutionMaker::relayControl()
     }
     else if(!digitalRead(__Relay1) && !__RelayState && !__Work && millis()-__RelayTime>RELAY_ACTION_TIME){
       digitalWrite(__Relay1, !__RelayState);
-      Serial.println("Solution Finished");
+      Serial.println(F("Solution Finished"));
     }
   }
 
@@ -568,16 +568,16 @@ bool solutionMaker::dispense(long some_mg, uint8_t st)
             printAction("Dispensing " + String(some_mg) + " mg", st);
             return true;
           }
-          printAction("RevToSteps equation problem", st);
+          printAction(F("RevToSteps equation problem"), st);
           return false;
         }
-        printAction("MGToRev equation problem", st);
+        printAction(F("MGToRev equation problem"), st);
         return false;
       }
-      printAction("mg parameter incorrect", st);
+      printAction(F("mg parameter incorrect"), st);
       return false;
     }
-    printAction("Cannot dispense. Motor does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Cannot dispense. Motor does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
     return false;
   }
 
@@ -588,7 +588,7 @@ void solutionMaker::stepperCalibration(long rev, uint8_t st)
       printAction("Running " + String(rev) + " revolutions for calibration purpose", st);
       return;
     }
-    printAction("Cannot run calibration. Motor does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Cannot run calibration. Motor does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
   }
 
 bool solutionMaker::dispenseAcid(float some_ml, uint8_t pump)
@@ -600,13 +600,13 @@ bool solutionMaker::dispenseAcid(float some_ml, uint8_t pump)
           printAction("Dispensing " + String(some_ml) + " ml", pump+MAX_SOLUTIONS_NUMBER);
           return true;
         }
-        printAction("MLToTime equation problem", pump+MAX_SOLUTIONS_NUMBER);
+        printAction(F("MLToTime equation problem"), pump+MAX_SOLUTIONS_NUMBER);
         return false;
       }
-      printAction("Mililiters parameter incorrect", pump+MAX_SOLUTIONS_NUMBER);
+      printAction(F("Mililiters parameter incorrect"), pump+MAX_SOLUTIONS_NUMBER);
       return false;
     }
-    printAction("Cannot dispense. Pump does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Cannot dispense. Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
     return false;
   }
 
@@ -614,7 +614,7 @@ void solutionMaker::pumpCalibration(float time1, uint8_t pump)
   { if(pump<MAX_PUMPS_NUMBER){ // Check that the pump exists
       turnOnPump(abs(time1*1000), pump);
     }
-    else{printAction("Cannot run calibration. Pump does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);}
+    else{printAction(F("Cannot run calibration. Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);}
   }
 
 void solutionMaker::setCalibrationParameter(uint8_t param, uint8_t actuator)
@@ -623,7 +623,7 @@ void solutionMaker::setCalibrationParameter(uint8_t param, uint8_t actuator)
       printAction(String(param) + " is the new calibration param (motors/pumps)", actuator);
       return;
     }
-      printAction("Cannot set calibration Param. Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+      printAction(F("Cannot set calibration Param. Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
   }
 
 void solutionMaker::setCalibrationParameter1(uint8_t param, uint8_t actuator)
@@ -632,7 +632,7 @@ void solutionMaker::setCalibrationParameter1(uint8_t param, uint8_t actuator)
       printAction(String(param) + " is the new calibration param (ph/ec equations)", actuator);
       return;
     }
-      printAction("Cannot set calibration Param. Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+      printAction(F("Cannot set calibration Param. Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
   }
 
 bool solutionMaker::isEnable(uint8_t actuator)
@@ -664,10 +664,10 @@ void solutionMaker::stop(uint8_t actuator)
         stepperS[actuator]->stop();
       }
       else{turnOffPump(actuator-MAX_SOLUTIONS_NUMBER);}
-      printAction("Stopped", actuator);
+      printAction(F("Stopped"), actuator);
       return;
     }
-    printAction("Cannot stop. Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Cannot stop. Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
     return;
   }
 
@@ -736,7 +736,7 @@ void solutionMaker::EZOcalibration(uint8_t sensorType, uint8_t act, float value)
     else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
       ecMeter->calibration(act, value);
     }
-    else{printEZOAction("Sensor does not match a type or is in another request", sensorType);}
+    else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType);}
   }
 
 void solutionMaker::EZOexportCal(uint8_t sensorType)
@@ -749,9 +749,9 @@ void solutionMaker::EZOexportCal(uint8_t sensorType)
         __ExportEzo = true;
         ecMeter->exportCal();
       }
-      else{printEZOAction("Sensor does not match a type or is in another request", sensorType);}
+      else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType);}
     }
-    else{printEZOAction("Another export is running", sensorType);}
+    else{printEZOAction(F("Another export is running"), sensorType);}
   }
 
 void solutionMaker::EZOimportCalibration(uint8_t sensorType, String parameters)
@@ -761,7 +761,7 @@ void solutionMaker::EZOimportCalibration(uint8_t sensorType, String parameters)
     else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
       ecMeter->importCalibration(parameters);
     }
-    else{printEZOAction("Sensor does not match a type or is in another request", sensorType);}
+    else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType);}
   }
 
 void solutionMaker::EZOimport(bool start)

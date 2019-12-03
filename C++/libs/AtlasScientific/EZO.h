@@ -58,7 +58,6 @@ class EZO
     private:
         uint8_t __Type; // Variable for the type of sensor
         uint8_t __I2CAddress; // The I2C address for each sensor
-        String __Name; // Name of the sensor
         float __Value; // The value readed
         char __SendData[LARGEST_STRING]; // Variable to send data to the sensor
         char __RecieveData[LARGEST_STRING]; // Variable to read the incoming data from the sensor

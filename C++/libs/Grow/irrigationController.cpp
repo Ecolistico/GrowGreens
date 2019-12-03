@@ -141,7 +141,7 @@ void irrigationController::setEC(uint8_t sol, uint16_t ec)
       }
       else{ Serial.println(F("set EC failed: ec out of range [0-5000]")); }
     }
-    else{ Serial.println("set EC failed: solution out of range [0-3]"); }
+    else{ Serial.println(F("set EC failed: solution out of range [0-3]")); }
   }
 
 void irrigationController::setEC(uint16_t ec1, uint16_t ec2, uint16_t ec3, uint16_t ec4)
@@ -158,7 +158,7 @@ void irrigationController::setPH(uint8_t sol, float ph)
       }
       else{ Serial.println(F("set PH failed: ph out of range [0-5000]")); }
     }
-    else{ Serial.println("set PH failed: solution out of range [0-3]"); }
+    else{ Serial.println(F("set PH failed: solution out of range [0-3]")); }
 
   }
 

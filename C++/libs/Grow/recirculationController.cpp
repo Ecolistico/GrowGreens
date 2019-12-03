@@ -66,10 +66,18 @@ void recirculationController::printAction(float volume, String from, String to)
     Serial.println(to);
   }
 
-  void recirculationController::printAction(String act)
-    { Serial.print(F("Recirculation: "));
-      Serial.println(act);
-    }
+void recirculationController::printAction(String act)
+  { Serial.print(F("Recirculation: "));
+    Serial.println(act);
+  }
+
+void recirculationController::printAction(String act1, String act2, String act3, String act4)
+  { Serial.print(F("Recirculation: "));
+    Serial.print(act1);
+    Serial.print(act2);
+    Serial.print(act3);
+    Serial.println(act4);
+  }
 
 void recirculationController::begin(
   UltraSonic &level0,
@@ -208,7 +216,7 @@ void recirculationController::fillH2O(float liters)
           __Fh2o = HIGH;
           __FPump = HIGH;
         }
-        else{ printAction("Cannot execute fillH2O, parameter liters incorrect"); }
+        else{ printAction(F("Cannot execute fillH2O, parameter liters incorrect")); }
       }
       else{ printAction(F("Water kegs is already filling")); }
     }
@@ -223,7 +231,7 @@ void recirculationController::fillSol(float liters)
           __FSol = HIGH;
           __FPump = HIGH;
         }
-        else{ printAction("Cannot execute fillSol, parameter liters incorrect"); }
+        else{ printAction(F("Cannot execute fillSol, parameter liters incorrect")); }
       }
       else{ printAction(F("Solution Maker is already filling")); }
     }
@@ -237,22 +245,22 @@ bool recirculationController::moveIn()
       float maxVolume = __Level[__In+1]->getMaxVolume();
 
       if(recirculationVol <= 0){
-        printAction("Level is too low to turn on the pump");
+        printAction(F("Level is too low to turn on the pump"));
       }
       else if(recirculationVol+tankVol<maxVolume){ // Transfering water
         __InPump = HIGH;
         __InValve[__In] = HIGH;
-        printAction(recirculationVol, "recirculation tank", "solution "+String(__In+1));
+        printAction(recirculationVol, F("recirculation tank"), "solution "+String(__In+1));
       }
       else{ // Releasing water
         // There is not release valve installed yet, not use rigth now
         // __InPump = HIGH;
         // __ReleaseValve = HIGH;
-        printAction("Releasing water outside the system");
+        printAction(F("Releasing water outside the system"));
       }
       return true;
     }
-    printAction("Cannot execute moveIn, another solution is moving in");
+    printAction(F("Cannot execute moveIn, another solution is moving in"));
     return false;
   }
 
@@ -297,7 +305,7 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
             __OutPump = HIGH;
             __OutValve[__Out] = HIGH;
             __Go[2] = HIGH;
-            printAction(__OutLiters, "solution"+String(__Out+1), "solution maker");
+            printAction(__OutLiters, "solution"+String(__Out+1), F("solution maker"));
             __Wait4Fill = 1; // Wait for fill sMaker
             __WaitLiters = liters-__OutLiters; // Liters to move when await finished
           }
@@ -308,7 +316,7 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
             __OutValve[__Out] = HIGH;
             __Go[1] = HIGH;
             addVolKh2o(__OutLiters);
-            printAction(__OutLiters, "solution"+String(__Out+1), "water kegs");
+            printAction(__OutLiters, "solution"+String(__Out+1), F("water kegs"));
             __Wait4Fill = 2; // Wait for fill kegs_nut
             __WaitLiters = liters-__OutLiters;  // Liters to move when await finished
           }
@@ -316,12 +324,12 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
         }
       }
       else{
-        printAction("Cannot execute moveOut, parameter toWhere incorrect");
+        printAction(F("Cannot execute moveOut, parameter toWhere incorrect"));
         return 0;
       }
     }
     else{
-      printAction("Cannot execute moveOut, another solution is moving out");
+      printAction(F("Cannot execute moveOut, another solution is moving out"));
       return 0;
     }
   }
@@ -331,9 +339,9 @@ bool recirculationController::moveSol()
     if(__Level[6]->getState()!=1){
       __SolLiters = __Level[6]->getVolume();
       __SolPump = HIGH;
-      printAction("Emptying solution Maker");
+      printAction(F("Emptying solution Maker"));
     }
-    else{ printAction("There is nothing to move in solution Maker");}
+    else{ printAction(F("There is nothing to move in solution Maker"));}
     return true;
   }
 
@@ -368,20 +376,20 @@ void recirculationController::run(bool check, bool sensorState)
           else if(i==SOLUTION_MAKER){toWhere = "solution Maker";}
         }
       }
-      printAction("Move Out finished. " + String(__OutLiters) +
-      " liters were move to " + toWhere);
+      printAction(F("Move Out finished. "), String(__OutLiters), 
+      F(" liters were move to "), toWhere);
       //__ActualLiters = 0;
       //__OutLiters = 0;
       
       if(__Wait4Fill==1){ // Now fill sMaker
         fillSol(__WaitLiters); // Fill solution maker with the rest
-        printAction(__WaitLiters, "water line", "solution maker");
+        printAction(__WaitLiters, F("water line"), F("solution maker"));
         __Wait4Fill = 0;
         __WaitLiters = 0;
       }
       else if(__Wait4Fill==2){ // Now fill kegs_h2o
         fillH2O(__WaitLiters); // Fill water kegs with the rest
-        printAction(__WaitLiters, "water line", "water kegs");
+        printAction(__WaitLiters, F("water line"), F("water kegs"));
         __Wait4Fill = 0;
         __WaitLiters = 0;
       }
@@ -391,7 +399,7 @@ void recirculationController::run(bool check, bool sensorState)
     if(__SolPump && __Level[6]->getState()==1){
       __SolPump = LOW;
       addVolKnut(__SolLiters-__Level[6]->getVolume());
-      printAction("Solution Maker emptied");
+      printAction(F("Solution Maker emptied"));
     }
 
     // Stop filling with water when
@@ -401,15 +409,15 @@ void recirculationController::run(bool check, bool sensorState)
         if(__Fh2o){
           __Fh2o = LOW;
           __FPump = LOW;
-          printAction("Fill water kegs finished. " + String(__FillLiters) +
-          " liters were move to water kegs");
+          printAction(F("Fill water kegs finished. "), String(__FillLiters),
+          F(" liters were move to water kegs"), F(""));
           addVolKh2o(__H2OVol);
         }
         else if(__FSol){
           __FSol = LOW;
           __FPump = LOW;
-          printAction("Fill solution Maker finished. " + String(__FillLiters) +
-          " liters were move to solution maker");
+          printAction(F("Fill solution Maker finished. "), String(__FillLiters),
+          F(" liters were move to solution maker"), F(""));
         }
         __FillLiters = 0;
         __H2OVol = 0;
@@ -421,12 +429,12 @@ void recirculationController::run(bool check, bool sensorState)
       if(__Rh2o && sensorState){
         __Rh2o = LOW;
         __VolKh2o = 0;
-        printAction("Water kegs was emptied");
+        printAction(F("Water kegs was emptied"));
       }
       if(__RSol && sensorState){
         __RSol = LOW;
         __VolKnut = 0;
-        printAction("Nutrition kegs was emptied");
+        printAction(F("Nutrition kegs was emptied"));
       }
     }
 

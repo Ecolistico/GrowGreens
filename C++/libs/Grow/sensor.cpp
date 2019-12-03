@@ -10,7 +10,7 @@ uint8_t analogSensor::__TotalSensors = 0;
 analogSensor *analogSensor::ptr[MAX_ANALOG_SENSOR];
 unsigned long analogSensor::__ActualTime = 0;
 
-analogSensor::analogSensor(uint8_t pin, String name) // Constructor
+analogSensor::analogSensor(uint8_t pin, uint8_t type=250) // Constructor
   { // Just the first time init pointers
     if(__TotalSensors<1){
       for (int i=0; i < MAX_ANALOG_SENSOR; i++) {
@@ -19,7 +19,7 @@ analogSensor::analogSensor(uint8_t pin, String name) // Constructor
     }
 
      __Pin = pin;
-     __Name = name;
+     __Type = type;
      // Default parameters
      __FirstRead = false;
      __Degree = 0;
@@ -94,7 +94,11 @@ float analogSensor::kalman_filter(float t, float t_1)
   }
 
 void analogSensor::printModel()
-  { Serial.print(__Name); Serial.print(F(" Sensor: "));
+  { if (__Type==0){Serial.print(F("Nutrition Pressure"));}
+    else if (__Type==1){Serial.print(F("Tank Pressure"));}
+    else if(__Type==2){Serial.print(F("Water Pressure"));}
+    else{Serial.print(F("Undefined"));}
+    Serial.print(F(" Sensor: "));
     if(__Degree == 0 ){
       Serial.println(F("You are not using any model yet..."));
     }
@@ -106,7 +110,11 @@ void analogSensor::printModel()
   }
 
 void analogSensor::printFilter()
-  { Serial.print(__Name); Serial.print(F(" Sensor: "));
+  { if (__Type==0){Serial.print(F("Nutrition Pressure"));}
+    else if (__Type==1){Serial.print(F("Tank Pressure"));}
+    else if(__Type==2){Serial.print(F("Water Pressure"));}
+    else{Serial.print(F("Undefined"));}
+    Serial.print(F(" Sensor: "));
     switch(__Filter){
       case 0:
       Serial.println(F("You are not using any filter..."));
@@ -138,7 +146,10 @@ void analogSensor::read()
       __FirstRead = true;
       __PreValue = model(val);
       __Value = __PreValue;
-      Serial.print(String(__Name));
+      if (__Type==0){Serial.print(F("Nutrition Pressure"));}
+      else if (__Type==1){Serial.print(F("Tank Pressure"));}
+      else if(__Type==2){Serial.print(F("Water Pressure"));}
+      else{Serial.print(F("Undefined"));}
       Serial.print(F("Sensor: Initial value="));
       Serial.println(__Value);
     }
@@ -239,7 +250,7 @@ unsigned long UltraSonic::__ActualTime = 0;
 UltraSonic::UltraSonic( // Constructor
   uint8_t pin1,
   uint8_t pin2,
-  String name,
+  uint8_t type=250,
   int minDist = MIN_SECURITY_DISTANCE,
   int maxDist = MAX_SECURITY_DISTANCE
 ){  // Just the first time init pointers
@@ -251,7 +262,7 @@ UltraSonic::UltraSonic( // Constructor
 
      __Pin1 = pin1;
      __Pin2 = pin2;
-     __Name = name;
+     __Type = type;
      __Sonar = new NewPing(__Pin1, __Pin2, MAX_DISTANCE);
 
      if(minDist<maxDist){
@@ -362,7 +373,15 @@ float UltraSonic::read()
   }
 
 void UltraSonic::printModel()
-  { Serial.print(__Name); Serial.print(F(" Sensor: "));
+  { if (__Type==0){Serial.print(F("Recirculation Level"));}
+    else if (__Type==1){Serial.print(F("Solution 1 Level"));}
+    else if(__Type==2){Serial.print(F("Solution 2 Level"));}
+    else if(__Type==3){Serial.print(F("Solution 3 Level"));}
+    else if(__Type==4){Serial.print(F("Solution 4 Level"));}
+    else if(__Type==5){Serial.print(F("Water Level"));}
+    else if(__Type==6){Serial.print(F("Solution Maker Level"));}
+    else{Serial.print(F("Undefined"));}
+    Serial.print(F(" Sensor: "));
     if(__Model == 0){
       Serial.println(F("You are not using any model yet..."));
     }
@@ -383,7 +402,15 @@ void UltraSonic::printModel()
   }
 
 void UltraSonic::printFilter()
-  { Serial.print(__Name); Serial.print(F(" Sensor: "));
+  { if (__Type==0){Serial.print(F("Recirculation Level"));}
+    else if (__Type==1){Serial.print(F("Solution 1 Level"));}
+    else if(__Type==2){Serial.print(F("Solution 2 Level"));}
+    else if(__Type==3){Serial.print(F("Solution 3 Level"));}
+    else if(__Type==4){Serial.print(F("Solution 4 Level"));}
+    else if(__Type==5){Serial.print(F("Water Level"));}
+    else if(__Type==6){Serial.print(F("Solution Maker Level"));}
+    else{Serial.print(F("Undefined"));}
+    Serial.print(F(" Sensor: "));
     switch(__Filter){
       case 0:
       Serial.println(F("You are not using any filter..."));
@@ -426,7 +453,14 @@ uint8_t UltraSonic::updateState()
 
     if(!__FirstRead){
       __FirstRead = true;
-      Serial.print(String(__Name));
+      if (__Type==0){Serial.print(F("Recirculation Level"));}
+      else if (__Type==1){Serial.print(F("Solution 1 Level"));}
+      else if(__Type==2){Serial.print(F("Solution 2 Level"));}
+      else if(__Type==3){Serial.print(F("Solution 3 Level"));}
+      else if(__Type==4){Serial.print(F("Solution 4 Level"));}
+      else if(__Type==5){Serial.print(F("Water Level"));}
+      else if(__Type==6){Serial.print(F("Solution Maker Level"));}
+      else{Serial.print(F("Undefined"));}
       Serial.print(F("Sensor: Initial value="));
       Serial.print(model(__Height-__Distance));
       Serial.println(F("liters"));
@@ -522,7 +556,16 @@ bool UltraSonic::changeMaxDist(int maxDist)
 void UltraSonic::readAndPrint()
   { for(int i = 0; i<__TotalSensors; i++){
       uint8_t state = ptr[i]->updateState();
-      Serial.print(ptr[i]->__Name); Serial.print(F(" Sensor: "));
+      uint8_t type = ptr[i]->__Type;
+      if (type==0){Serial.print(F("Recirculation Level"));}
+      else if (type==1){Serial.print(F("Solution 1 Level"));}
+      else if(type==2){Serial.print(F("Solution 2 Level"));}
+      else if(type==3){Serial.print(F("Solution 3 Level"));}
+      else if(type==4){Serial.print(F("Solution 4 Level"));}
+      else if(type==5){Serial.print(F("Water Level"));}
+      else if(type==6){Serial.print(F("Solution Maker Level"));}
+      else{Serial.print(F("Undefined"));}
+      Serial.print(F(" Sensor: "));
       Serial.println(ptr[i]->__Distance);
     }
   }
@@ -545,7 +588,7 @@ uint8_t waterSensor::__TotalSensors = 0;
 waterSensor *waterSensor::ptr[MAX_WATER_SENSOR];
 unsigned long waterSensor::__ActualTime = 0;
 
-waterSensor::waterSensor(uint8_t pin, String name) // Constructor
+waterSensor::waterSensor(uint8_t pin, uint8_t type=250) // Constructor
   { // Just the first time init pointers
     if(__TotalSensors<1){
       for (int i=0; i < MAX_WATER_SENSOR; i++) {
@@ -553,7 +596,7 @@ waterSensor::waterSensor(uint8_t pin, String name) // Constructor
       }
     }
      __Pin = pin;
-     __Name = name;
+     __Type = type;
      // Default parameters
      __FirstRead = false;
      __State = LOW;
@@ -578,7 +621,9 @@ void waterSensor::read()
 
     if(!__FirstRead){
       __FirstRead = true;
-      Serial.print(String(__Name));
+      if (__Type==0){Serial.print(F("Water Irrigation Sensor"));}
+      else if (__Type==1){Serial.print(F("Water Evacuation Sensor"));}
+      else{Serial.print(F("Undefined"));}
       Serial.print(F("Sensor: Initial state = "));
       if(__State==AIR_STATE){Serial.println(F("air in line"));}
       else if(__State==WATER_STATE){Serial.println(F("water in line"));}

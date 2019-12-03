@@ -67,11 +67,38 @@ void Actuator::printAction(String act)
         Serial.print(F("Humidity Valve-"));
         break;
       default:
+        Serial.print(F("Undefined-"));
         break;
     }
     Serial.print(__Floor+1);
     Serial.print(F("): "));
     Serial.println(act);
+  }
+
+void Actuator::printAction(String act1, String act2, String act3)
+  { Serial.print(F("Actuator ("));
+    switch(__Type){
+      case 0:
+        Serial.print(F("Input Fan-"));
+        break;
+      case 1:
+        Serial.print(F("Output Fan-"));
+        break;
+      case 2:
+        Serial.print(F("Vent Fan-"));
+        break;
+      case 3:
+        Serial.print(F("Humidity Valve-"));
+        break;
+      default:
+        Serial.print(F("Undefined-"));
+        break;
+    }
+    Serial.print(__Floor+1);
+    Serial.print(F("): "));
+    Serial.print(act1);
+    Serial.print(act2);
+    Serial.println(act3);
   }
 
 void Actuator::turnOn()
@@ -87,12 +114,12 @@ void Actuator::turnOff()
 bool Actuator::setTimeOn(unsigned long t_on)
   { if(t_on*1000UL < __CycleTime){
      __TimeOn = t_on*1000UL;
-     printAction("TimeOn changed to " + String(t_on) + " seconds");
+     printAction(F("TimeOn changed to "), String(t_on), F(" seconds"));
      return true;
    }
    else{
-     printAction("Cannot change TimeOn. Parameter has to be smaller than " +
-     String(float(__CycleTime)/1000) + " seconds");
+     printAction(F("Cannot change TimeOn. Parameter has to be smaller than "),
+     String(float(__CycleTime)/1000), F(" seconds"));
      return false;
    }
   }
@@ -100,12 +127,12 @@ bool Actuator::setTimeOn(unsigned long t_on)
 bool Actuator::setCycleTime(unsigned long t_cycle)
   { if(__TimeOn < t_cycle*1000UL){
      __CycleTime = t_cycle*1000UL;
-     printAction("TimeOff changed to " + String(t_cycle) + " seconds");
+     printAction(F("TimeOff changed to "), String(t_cycle), F(" seconds"));
      return true;
    }
    else{
-     printAction("Cannot change TimeOff. Parameter has to be bigger than " +
-     String(float(__TimeOn)/1000) + " seconds");
+     printAction(F("Cannot change TimeOff. Parameter has to be bigger than "),
+     String(float(__TimeOn)/1000), F(" seconds"));
      return false;
    }
   }
@@ -114,8 +141,8 @@ bool Actuator::setTime(unsigned long t_on, unsigned long t_cycle)
   { if(t_on < t_cycle){
      __TimeOn = t_on*1000UL;
      __CycleTime = t_cycle*1000UL;
-     printAction("TimeOn changed to " + String(t_on) + " seconds");
-     printAction("TimeOff changed to " + String(t_cycle) + " seconds");
+     printAction(F("TimeOn changed to "), String(t_on), F(" seconds"));
+     printAction(F("TimeOff changed to "), String(t_cycle), F(" seconds"));
      return true;
    }
    else{
@@ -163,9 +190,11 @@ void Actuator::run()
   {  if(__Enable){
        if( millis()-__Actual_time<__TimeOn && __State==LOW){
          __State = HIGH;
+         printAction(F("Turn On"));
        }
        else if(millis()-__Actual_time>=__TimeOn && millis()-__Actual_time<__CycleTime && __State==HIGH){
          __State = LOW;
+         printAction(F("Turn Off"));
        }
        else if(millis()-__Actual_time>=__CycleTime){
          resetTime();
@@ -221,7 +250,7 @@ unsigned long Actuator::getTimeOnAll(uint8_t type, uint8_t floor)
   { for(int i=0; i < __TotalActuators; i++){
       if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
         unsigned long timeOn = ptr[i]->getTimeOn();
-        ptr[i]->printAction("Time On " + String(timeOn) + " seconds");
+        ptr[i]->printAction(F("Time On "), String(timeOn), F(" seconds"));
         return timeOn;
       }
     }
@@ -232,7 +261,7 @@ unsigned long Actuator::getCycleTimeAll(uint8_t type, uint8_t floor)
   { for(int i=0; i < __TotalActuators; i++){
       if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
         unsigned long cycleTime = ptr[i]->getCycleTime();
-        ptr[i]->printAction("Cycle time " + String(cycleTime) + " seconds");
+        ptr[i]->printAction(F("Cycle time "), String(cycleTime), F(" seconds"));
         return cycleTime;
       }
     }
@@ -243,7 +272,7 @@ unsigned long Actuator::getTimeAll(uint8_t type, uint8_t floor)
   { for(int i=0; i < __TotalActuators; i++){
       if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
         unsigned long acTime = ptr[i]->getTime();
-        ptr[i]->printAction("Time since cycle started " + String(acTime) + " seconds");
+        ptr[i]->printAction(F("Time since cycle started "), String(acTime), F(" seconds"));
         return acTime;
       }
     }
@@ -293,7 +322,7 @@ void solenoidValve::flowSensorBegin()
     attachInterrupt(digitalPinToInterrupt(flowSensor), countPulses, RISING);
   }
 
-solenoidValve::solenoidValve(String name) // Constructor
+solenoidValve::solenoidValve() // Constructor
    {  // Just the first time init arrays
       if(__TotalActuators<1){
         __EnableGroup = false;
@@ -305,7 +334,6 @@ solenoidValve::solenoidValve(String name) // Constructor
      __Region = 0; // Default region
      __TimeOn = 10; // Default time
      setTime();
-     __Name = name;
      __H2OVolume = 0;
 
      ptr[__TotalActuators] = this; // Set Static pointer to object
@@ -344,7 +372,7 @@ void solenoidValve::getConsumptionH2O()
     float newVolume = __NumPulses/(60*__K);
     if(newVolume>0){
       __H2OVolume= newVolume +__H2OVolume;
-      solenoidPrint("Water Consumption = " + String(newVolume) + " liters");
+      solenoidPrint(F("Water Consumption = "), String(newVolume), F(" liters"));
     }
     __NumPulses = 0;
     interrupts();   // Enable Interrupts
@@ -352,9 +380,34 @@ void solenoidValve::getConsumptionH2O()
 
 void solenoidValve::solenoidPrint(String act)
   { Serial.print(F("Solenoid Valve "));
-    Serial.print(__Name);
+    Serial.print(__Floor+1);
+    if(__Region<MAX_IRRIGATION_REGIONS/2){
+      Serial.print(F("A"));
+      Serial.print(__Region+1);
+    } 
+    else {
+      Serial.print(F("B"));
+      Serial.print(__Region-3);
+    }
     Serial.print(F(": "));
     Serial.println(act);
+  }
+
+void solenoidValve::solenoidPrint(String act1, String act2, String act3)
+  { Serial.print(F("Solenoid Valve "));
+    Serial.print(__Floor+1);
+    if(__Region<MAX_IRRIGATION_REGIONS/2){
+      Serial.print(F("A"));
+      Serial.print(__Region+1);
+    } 
+    else {
+      Serial.print(F("B"));
+      Serial.print(__Region-3);
+    }
+    Serial.print(F(": "));
+    Serial.print(act1);
+    Serial.print(act2);
+    Serial.println(act3);
   }
 
 void solenoidValve::groupPrint(String act)
@@ -362,6 +415,15 @@ void solenoidValve::groupPrint(String act)
     Serial.print(__Group);
     Serial.print(F(": "));
     Serial.println(act);
+  }
+
+void solenoidValve::groupPrint(String act1, String act2, String act3)
+  { Serial.print(F("Solenoid Group "));
+    Serial.print(__Group);
+    Serial.print(F(": "));
+    Serial.print(act1);
+    Serial.print(act2);
+    Serial.println(act3);
   }
 
 unsigned long solenoidValve::getTime()
@@ -381,13 +443,13 @@ bool solenoidValve::setTimeOn(unsigned long t_on)
       __ActionTime -= __TimeOn;
       __TimeOn = t_on;
       __ActionTime += __TimeOn;
-      solenoidPrint("Time On changed to " + String(seconds) + " seconds");
+      solenoidPrint(F("Time On changed to "), String(seconds), F(" seconds"));
       return true; // Succesful
     }
     else{ // Not enough time
       float seconds = float(__CycleTime)/1000;
-      solenoidPrint("Time On cannot be changed. Total solenoids turn-on time has to be smaller than " +
-      String(seconds) + " seconds");
+      solenoidPrint(F("Time On cannot be changed. Total solenoids turn-on time has to be smaller than "),
+      String(seconds), F(" seconds"));
       return false;
     }
   }
@@ -430,8 +492,8 @@ bool solenoidValve::reOrder(uint8_t number)
     }
     else{finished = false; } // Incorrect number proposition
 
-    if(finished){ solenoidPrint("Reorder Succesful. New Number = " + String(__Number)); }
-    else{ solenoidPrint("Reorder Failed. Number order has to be smaller than " + String(__TotalActuators)); }
+    if(finished){ solenoidPrint(F("Reorder Succesful. New Number = "), String(__Number), F("")); }
+    else{ solenoidPrint(F("Reorder Failed. Number order has to be smaller than "), String(__TotalActuators), F("")); }
 
     return finished;
   }
@@ -452,9 +514,6 @@ uint8_t solenoidValve::getFloor()
 
 uint8_t solenoidValve::getRegion()
   { return __Region; }
-
-String solenoidValve::getName()
-  { return __Name; }
 
 bool solenoidValve::reOrder_byFloor(uint8_t fl)
   { int count = 0;
@@ -497,10 +556,10 @@ float solenoidValve::getH2O()
   { return __H2OVolume; }
 
 void solenoidValve::printH2O()
-  { solenoidPrint("Water Volume = " + String(__H2OVolume) + " liters"); }
+  { solenoidPrint(F("Water Volume = "), String(__H2OVolume), F(" liters")); }
 
 void solenoidValve::printAllH2O(bool printAll = true)
-  { if(__H2Ow>0){ groupPrint("Wasted Water Volume = " + String(__H2Ow) + " liters"); }
+  { if(__H2Ow>0){ groupPrint(F("Wasted Water Volume = "), String(__H2Ow), F(" liters")); }
     if(printAll){ for(int i = 0; i<__TotalActuators; i++){ptr[i]->printH2O();} }
   }
 
@@ -590,13 +649,13 @@ bool solenoidValve::setCycleTime ( unsigned long t_cycle)
   { if( __ActionTime < t_cycle ){
       float minute = float(t_cycle)/60000;
       __CycleTime = t_cycle;
-      ptr[0]->groupPrint("Cycle Time changed to " + String(minute) + " minutes");
+      ptr[0]->groupPrint(F("Cycle Time changed to "), String(minute), F(" minutes"));
       return true; // Succesful
     }
     else{ // Not enough time
       float minute = float(__ActionTime)/60000;
-      ptr[0]->groupPrint("Cycle Time cannot be changed, it has to be greater than " +
-      String(minute) + " minutes");
+      ptr[0]->groupPrint(F("Cycle Time cannot be changed, it has to be greater than "),
+      String(minute), F(" minutes"));
       return false;
     }
   }
@@ -788,16 +847,17 @@ float solenoidValve::getWaterByFloor(uint8_t fl)
 
 /***   asyncActuator   ***/
 // Constructor
-asyncActuator::asyncActuator(String name)
+asyncActuator::asyncActuator(uint8_t type=250)
    { __State = LOW;
      __Enable = true;
-     __Name = name;
+     __Type = type;
    }
 
 void asyncActuator::printAction(String act)
   { Serial.print(F("Actuator ("));
-    Serial.print(__Name);
-    Serial.print(F("): "));
+    if(__Type == 0){ Serial.print(F("EV-KegsH2O): ")); }
+    else if(__Type == 1){ Serial.print(F("EV-KegsNutrition): ")); }
+    else{ Serial.print(F("Undefined): ")); }
     Serial.println(act);
   }
 

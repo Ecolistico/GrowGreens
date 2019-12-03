@@ -10,11 +10,9 @@ EZO::EZO(uint8_t type)
     else __Type = EZO_PH; // pHmeter by default
     if(__Type == EZO_PH){
       __I2CAddress = PH_I2C_ADDRESS;
-      __Name = "PH";
     }
     else if(__Type == EZO_EC) {
       __I2CAddress = EC_I2C_ADDRESS;
-      __Name = "EC";
     }
 
     // Default parameters
@@ -34,7 +32,13 @@ EZO::EZO(uint8_t type)
   }
 
 void EZO::printAction(String act)
-  { Serial.print(__Name); Serial.print(F(" EZO sensor: "));
+  { if(__Type == EZO_PH){
+      Serial.print(F("PH")); 
+    }
+    else if(__Type == EZO_EC) {
+      Serial.print(F("EC")); 
+    }
+    Serial.print(F(" EZO sensor: "));
     Serial.println(act);
   }
 
@@ -58,19 +62,19 @@ void EZO::requestResponse()
         __Request = false;
         break;
       case 2:                        // Failed
-        printAction("Request Failed");
+        printAction(F("Request Failed"));
         __Request = false;
         break;
       case 254:                      // Not ready
-        printAction("Request Pending");
+        printAction(F("Request Pending"));
         __ActualTime = millis();
         break;
       case 255:                      // There is not request
-        printAction("No Request");
+        printAction(F("No Request"));
         __ActualTime = millis();
         break;
       default:
-        printAction("Wire Read failed");
+        printAction(F("Wire Read failed"));
         break;
     }
   }
@@ -121,7 +125,7 @@ void EZO::getParamResponse()
   }
 
 void EZO::decodeResults()
-  { if(__ParamResponse[0] == "EXPORT"){
+  { if(__ParamResponse[0] == F("EXPORT")){
       if(__ParamResponse[2].length()>=1 && __CalibrationCount == 0){
         __CalibrationLines = __ParamResponse[1].toInt();
         __CalibrationBytes = __ParamResponse[2].toInt();
@@ -130,10 +134,10 @@ void EZO::decodeResults()
         printAction(act);
         exportCalibration(false);
       }
-      else{ printAction("Something wrong"); }
+      else{ printAction(F("Something wrong")); }
     }
 
-    else if(__ParamResponse[0] == "STATUS"){ // Device status
+    else if(__ParamResponse[0] == F("STATUS")){ // Device status
       String act = "Status - Restart reason = ";
       switch (__ParamResponse[1][0]){
         case 'P':
@@ -159,32 +163,32 @@ void EZO::decodeResults()
       printAction(act);
     }
 
-    else if(__ParamResponse[0] == "I"){ // Device information
+    else if(__ParamResponse[0] == F("I")){ // Device information
       String act = "This is a " + __ParamResponse[1] + " sensor, Firmware= "+__ParamResponse[2];
       printAction(act);
     }
 
-    else if(__ParamResponse[0] == "L"){ // Led Status
+    else if(__ParamResponse[0] == F("L")){ // Led Status
       String act = "Led Status = ";
       if(__ParamResponse[1][0] == '1') { act+= "On"; }
       else if(__ParamResponse[1][0] == '0') { act += "Off"; }
       printAction(act);
     }
 
-    else if(__ParamResponse[0] == "PLOCK"){ // Plock Status
+    else if(__ParamResponse[0] == F("PLOCK")){ // Plock Status
       String act = "Plock Status = ";
       if(__ParamResponse[1][0] == '1') { act+= "disable"; }
       else if(__ParamResponse[1][0] == '0') { act += "enable"; }
       printAction(act);
     }
 
-    else if(__ParamResponse[0] == "T"){ // Temperature saved for compensation
+    else if(__ParamResponse[0] == F("T")){ // Temperature saved for compensation
       String act = "Compensation Temperature = ";
       act += __ParamResponse[1];
       printAction(act);
     }
 
-    else if(__ParamResponse[0] == "O"){ // Parameter Status
+    else if(__ParamResponse[0] == F("O")){ // Parameter Status
       String act = "Exporting ";
       int par = 0;
       int count = 0;
@@ -194,10 +198,10 @@ void EZO::decodeResults()
       bool sg = false;
 
       for(int j=1; j<MAX_PARAM; j++){
-        if(__ParamResponse[j] == "EC"){ec = true; par++;}
-        else if(__ParamResponse[j] == "TDS"){tds = true; par++;}
-        else if(__ParamResponse[j] == "S"){s = true; par++;}
-        else if(__ParamResponse[j] == "SG"){sg = true; par++;}
+        if(__ParamResponse[j] == F("EC")){ec = true; par++;}
+        else if(__ParamResponse[j] == F("TDS")){tds = true; par++;}
+        else if(__ParamResponse[j] == F("S")){s = true; par++;}
+        else if(__ParamResponse[j] == F("SG")){sg = true; par++;}
       }
       act += String(par);
       act += " parameters (";
@@ -229,7 +233,7 @@ void EZO::decodeResults()
       printAction(act);
     }
 
-    else if(__ParamResponse[0] == "SLOPE"){ // Slope Saved
+    else if(__ParamResponse[0] == F("SLOPE")){ // Slope Saved
       String act = "The slope of the pHmeter is ";
       act += __ParamResponse[1];
       act += "% close from ideal acid and ";
@@ -238,8 +242,8 @@ void EZO::decodeResults()
       printAction(act);
     }
 
-    else if(__ParamResponse[0] == "K"){ // Slope Saved
-      if(__ParamResponse[1] != "") {
+    else if(__ParamResponse[0] == F("K")){ // Slope Saved
+      if(__ParamResponse[1] != F("")) {
         String act = "Probe ";
         act += __ParamResponse[1];
         act += " is configured";
@@ -258,13 +262,13 @@ void EZO::decodeResults()
     }
 
     else if(__CalibrationCount!=0){
-      if(__ParamResponse[0] != "*DONE"){
+      if(__ParamResponse[0] != F("*DONE")){
         printAction(__ParamResponse[0]);
         __CalibrationCount++;
         exportCalibration(false);
       }
       else {
-        printAction("Export calibration finished");
+        printAction(F("Export calibration finished"));
         __CalibrationCount = 0;
       }
 
@@ -276,7 +280,7 @@ void EZO::decodeResults()
 
 void EZO::init()
   { Wire.begin();
-    printAction("Started corrrectly");
+    printAction(F("Started corrrectly"));
   }
 
 bool EZO::isEnable()
@@ -311,11 +315,11 @@ void EZO::calibration(byte act, float value)
                 break;
               case 3: // Clear calibration params
                 cmd += "clear";
-                printAction("Clear Calibration");
+                printAction(F("Clear Calibration"));
                 break;
               case 4: // Ask if the device is calibrated
                 cmd += "?";
-                printAction("Ask Calibration");
+                printAction(F("Ask Calibration"));
                 break;
               default: // Do nothing if act is not recognized
                 break;
@@ -324,9 +328,9 @@ void EZO::calibration(byte act, float value)
             __Request = true;
             __ActualTime = millis();
           }
-          else{printAction("Parameter act incorrect. Action undefined");}
+          else{printAction(F("Parameter act incorrect. Action undefined"));}
         }
-        else{printAction("Parameter value incorrect. It has to be between 0-14");}
+        else{printAction(F("Parameter value incorrect. It has to be between 0-14"));}
       }
       else if(__Type == EZO_EC){
         if(value>=0){
@@ -351,15 +355,15 @@ void EZO::calibration(byte act, float value)
               case 3: // High calibration params
                 cmd += "high,";
                 cmd += String(value);
-                printAction("High Calibration");
+                printAction("High Calibration," + String(value));
                 break;
               case 4: // Clear calibration params
                 cmd += "clear";
-                printAction("Clear Calibration");
+                printAction(F("Clear Calibration"));
                 break;
               case 5: // Ask if the device is calibrated
                 cmd += "?";
-                printAction("Ask Calibration");
+                printAction(F("Ask Calibration"));
                 break;
               default: // Do nothing if act is not recognized
                 break;
@@ -368,13 +372,13 @@ void EZO::calibration(byte act, float value)
             __Request = true;
             __ActualTime = millis();
           }
-          else{printAction("Parameter act incorrect. Action undefined");}
+          else{printAction(F("Parameter act incorrect. Action undefined"));}
         }
-        else{printAction("Parameter value incorrect. It has to be bigger than zero");}
+        else{printAction(F("Parameter value incorrect. It has to be bigger than zero"));}
       }
-      else{printAction("Sensor does not match a type");}
+      else{printAction(F("Sensor does not match a type"));}
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::exportCalibration(bool act)
@@ -382,20 +386,20 @@ void EZO::exportCalibration(bool act)
       if(__Type == EZO_PH) __Time = 300;
       else if(__Type == EZO_EC) __Time = 400;
       if(act){
-        sendCmd("export,?");
+        sendCmd(F("export,?"));
       }
       else{
-        sendCmd("export");
+        sendCmd(F("export"));
       }
       __Request = true;
       __ActualTime = millis();
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::exportCal()
   { exportCalibration(true);
-    printAction("Starting Calibration sequence");
+    printAction(F("Starting Calibration sequence"));
   }
 
 void EZO::importCalibration(String parameters)
@@ -406,41 +410,41 @@ void EZO::importCalibration(String parameters)
       sendCmd(cmd);
       __Request = true;
       __ActualTime = millis();
-      printAction("Importing calibration parameters");
+      printAction(F("Importing calibration parameters"));
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::reboot()
   { if(!__Request){
-      sendCmd("factory");
-      printAction("Rebooting");
+      sendCmd(F("factory"));
+      printAction(F("Rebooting"));
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::find()
   { if(!__Request){
       if(__Type == EZO_PH) __Time = 300;
       else if(__Type == EZO_EC) __Time = 400;
-      sendCmd("find");
+      sendCmd(F("find"));
       __Request = true;
       __ActualTime = millis();
-      printAction("Looking for the sensor. Blinking white led");
+      printAction(F("Looking for the sensor. Blinking white led"));
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::information()
   { if(!__Request){
       if(__Type == EZO_PH) __Time = 300;
       else if(__Type == EZO_EC) __Time = 400;
-      sendCmd("i");
+      sendCmd(F("i"));
       __Request = true;
       __ActualTime = millis();
-      printAction("Asking for sensor information");
+      printAction(F("Asking for sensor information"));
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::changeI2Caddress(int newAddress)
@@ -452,9 +456,9 @@ void EZO::changeI2Caddress(int newAddress)
         __I2CAddress = newAddress;
         printAction("Changing I2C address to " + String(newAddress));
       }
-      else{printAction("New address invalid. It has to be between 8-124");}
+      else{printAction(F("New address invalid. It has to be between 8-124"));}
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::led(byte act)
@@ -464,15 +468,15 @@ void EZO::led(byte act)
         else if(__Type == EZO_EC) __Time = 400;
         switch(act){
           case 0: // Turn off led
-            sendCmd("l,0");
+            sendCmd(F("l,0"));
             printAction("Turn off LED" + String(act));
             break;
           case 1: // Turn on led
-            sendCmd("l,1");
+            sendCmd(F("l,1"));
             printAction("Turn on LED" + String(act));
             break;
           case 2: // Led status
-            sendCmd("l,?");
+            sendCmd(F("l,?"));
             printAction("Asking LED status" + String(act));
             break;
           default:
@@ -482,7 +486,7 @@ void EZO::led(byte act)
         __ActualTime = millis();
       }
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::plock(byte act)
@@ -492,15 +496,15 @@ void EZO::plock(byte act)
         else if(__Type == EZO_EC) __Time = 400;
         switch(act){
           case 0: // Disable plock
-            sendCmd("plock,0");
+            sendCmd(F("plock,0"));
             printAction("Enable Plock" + String(act));
             break;
           case 1: // Enable plock
-            sendCmd("plock,1");
+            sendCmd(F("plock,1"));
             printAction("Disable Plock" + String(act));
             break;
           case 2: // Plock status
-            sendCmd("plock,?");
+            sendCmd(F("plock,?"));
             printAction("Plock status" + String(act));
             break;
           default:
@@ -510,20 +514,20 @@ void EZO::plock(byte act)
         __ActualTime = millis();
       }
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::read()
   { if(!__Request){
       if(__Type == EZO_PH){__Time = 900;}
       else if(__Type == EZO_EC){__Time = 600;}
-      sendCmd("r");
+      sendCmd(F("r"));
       // printAction("Asking for single reading"); // Just for debbugging
       __Request = true;
       __Read = true;
       __ActualTime = millis();
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::readWithTempCompensation(float temp)
@@ -538,29 +542,29 @@ void EZO::readWithTempCompensation(float temp)
         __Read = true;
         __ActualTime = millis();
       }
-      else{printAction("Temperature parameter has to be positive");}
+      else{printAction(F("Temperature parameter has to be positive"));}
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::sleep()
   { if(!__Request){
-    sendCmd("sleep");
-    printAction("Sleep Mode");
+    sendCmd(F("sleep"));
+    printAction(F("Sleep Mode"));
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::infoStatus()
   { if(!__Request){
       if(__Type == EZO_PH) __Time = 300;
       else if(__Type == EZO_EC) __Time = 400;
-      sendCmd("status");
-      printAction("Asking for sensor status");
+      sendCmd(F("status"));
+      printAction(F("Asking for sensor status"));
       __Request = true;
       __ActualTime = millis();
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::tempCompensation(bool act, float temp = 0)
@@ -576,31 +580,31 @@ void EZO::tempCompensation(bool act, float temp = 0)
             printAction("New temperature for compensate " + String(temp));
           }
           else{ // Ask for temp saved
-            sendCmd("t,?");
-            printAction("Asking for temperature saved for compensation");
+            sendCmd(F("t,?"));
+            printAction(F("Asking for temperature saved for compensation"));
           }
           __Request = true;
           __ActualTime = millis();
         }
-        else{printAction("Temperature parameter has to be positive");}
+        else{printAction(F("Temperature parameter has to be positive"));}
       }
-      else{printAction("Action type does not match");}
+      else{printAction(F("Action type does not match"));}
     }
-    else{printAction("Busy, waiting response for before command");}
+    else{printAction(F("Busy, waiting response for before command"));}
   }
 
 void EZO::slope()
   { if(__Type == EZO_PH){
       if(!__Request){
         __Time = 300;
-        sendCmd("slope,?");
-        printAction("Asking for slope value");
+        sendCmd(F("slope,?"));
+        printAction(F("Asking for slope value"));
         __Request = true;
         __ActualTime = millis();
       }
-      else{printAction("Busy, waiting response for before command");}
+      else{printAction(F("Busy, waiting response for before command"));}
     }
-    else{printAction("Sensor type does not have slope function");}
+    else{printAction(F("Sensor type does not have slope function"));}
   }
 
 void EZO::setProbe(bool act, float probeType)
@@ -615,19 +619,19 @@ void EZO::setProbe(bool act, float probeType)
             __Request = true;
             __ActualTime = millis();
           }
-          else{printAction("Probe type does not match a type");}
+          else{printAction(F("Probe type does not match a type"));}
         }
         else{
           __Time = 400;
-          sendCmd("k,?");
-          printAction("Asking what type of probe is setted ");
+          sendCmd(F("k,?"));
+          printAction(F("Asking what type of probe is setted "));
           __Request = true;
           __ActualTime = millis();
         }
       }
-      else{printAction("Busy, waiting response for before command");}
+      else{printAction(F("Busy, waiting response for before command"));}
     }
-    else{printAction("Sensor type does not have setProbe function");}
+    else{printAction(F("Sensor type does not have setProbe function"));}
 
   }
 
@@ -644,30 +648,30 @@ void EZO::enableParameters(bool en, byte parameter)
             case 0: // Enable/Disable electrical condictivity
               cmd += "EC,";
               cmd += enable;
-              if(en) printAction("Enable EC parameter");
-              else printAction("Disable EC parameter");
+              if(en) printAction(F("Enable EC parameter"));
+              else printAction(F("Disable EC parameter"));
               break;
             case 1: // Enable/Disable total disolved solids
               cmd += "TDS,";
               cmd += enable;
-              if(en) printAction("Enable TDS parameter");
-              else printAction("Disable TDS parameter");
+              if(en) printAction(F("Enable TDS parameter"));
+              else printAction(F("Disable TDS parameter"));
               break;
             case 2: // Enable/Disable salinity
               cmd += "S,";
               cmd += enable;
-              if(en) printAction("Enable S parameter");
-              else printAction("Disable S parameter");
+              if(en) printAction(F("Enable S parameter"));
+              else printAction(F("Disable S parameter"));
               break;
             case 3: // Enable/Disable specific gravity
               cmd += "SG,";
               cmd += enable;
-              if(en) printAction("Enable SG parameter");
-              else printAction("Disable SG parameter");
+              if(en) printAction(F("Enable SG parameter"));
+              else printAction(F("Disable SG parameter"));
               break;
             case 4: // Parameter status
               cmd += "?";
-              printAction("Asking parameter status");
+              printAction(F("Asking parameter status"));
               break;
             default: // Else do nothing
               break;
@@ -676,9 +680,9 @@ void EZO::enableParameters(bool en, byte parameter)
           __Request = true;
           __ActualTime = millis();
         }
-        else{printAction("Parameter wrong. It has to be a number between 0-4");}
+        else{printAction(F("Parameter wrong. It has to be a number between 0-4"));}
       }
-    else{printAction("Sensor type does not have enableParameters function");}
+    else{printAction(F("Sensor type does not have enableParameters function"));}
   }
 
 void EZO::run()

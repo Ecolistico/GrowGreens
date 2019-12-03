@@ -48,12 +48,17 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define WATER_STATE           LOW // Water State = LOW
 
 // Class to declarate Analog Sensor and applied different filters
+/* Types:
+ *      0 - "Nutrition Pressure"
+ *      1 - "Tank Pressure"
+ *      2 - "Water Pressure"
+ *      250 - Undefined
+*/
 class analogSensor
   { private:
-        uint8_t __Pin, __Degree;
+        uint8_t __Pin, __Degree, __Type;
         bool __FirstRead;
         float __A, __B, __C, __Value, __PreValue;
-        String __Name;
 
         // Constants for the filters
         uint8_t __Filter;
@@ -76,7 +81,7 @@ class analogSensor
         // List of pointers to each sensor
         static analogSensor *ptr[MAX_ANALOG_SENSOR];
 
-        analogSensor(uint8_t pin, String name); // Constructor
+        analogSensor(uint8_t pin, uint8_t type=250); // Constructor
 
         bool setModel(
           uint8_t degree,
@@ -99,13 +104,22 @@ class analogSensor
  *      0 = Not model return Distance
  *      1 = Cilinder -> __Param = radio
  *      2 = Rectangular Prism -> __Param = Rectangule Area
+ * 
+ * Types:
+ *      0 - "Recirculation Level"
+ *      1 - "Solution 1 Level"
+ *      2 - "Solution 2 Level"
+ *      3 - "Solution 3 Level"
+ *      4 - "Solution 4 Level"
+ *      5 - "Water Level"
+ *      6 - "Solution Maker Level"
+ *      250 - Undefined
 */
 
 class UltraSonic
   { private:
-        uint8_t __Pin1, __Pin2, __State;
+        uint8_t __Pin1, __Pin2, __State, __Type;
         bool __FirstRead;
-        String __Name;
         NewPing *__Sonar;
         int __minDist, __maxDist, __countState;
         float __Distance, __PreDistance;
@@ -139,7 +153,7 @@ class UltraSonic
         UltraSonic(
           uint8_t pin1,
           uint8_t pin2,
-          String name,
+          uint8_t type=250,
           int minDist = MIN_SECURITY_DISTANCE,
           int maxDist = MAX_SECURITY_DISTANCE
         );
@@ -165,12 +179,16 @@ class UltraSonic
   };
 
 // Class to declarate Water/Air Sensor
+/*  Types:
+ *      0 - "Water Irrigation Sensor"
+ *      1 - "Water Evacuation Sensor"
+ *      250 - Undefined
+*/
 class waterSensor
   { private:
-        uint8_t __Pin;
+        uint8_t __Pin, __Type;
         bool __State, __FirstRead;
         int __countState;
-        String __Name;
 
         static unsigned long __ActualTime; // Time Counter
         void begin(); // Start sensor
@@ -181,7 +199,7 @@ class waterSensor
         // List of pointers to each sensor
         static waterSensor *ptr[MAX_WATER_SENSOR];
 
-        waterSensor(uint8_t pin, String name ); // Constructor
+        waterSensor(uint8_t pin, uint8_t type=250 ); // Constructor
 
         bool getState();
         static void beginAll();

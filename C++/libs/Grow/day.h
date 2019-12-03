@@ -71,7 +71,6 @@ class LED_Mod
   {  private:
          bool __State, __Enable;
          uint8_t __Floor, __Region;
-         String __Name;
 
          void printAction(String act);
          void setState(bool state);
@@ -80,7 +79,7 @@ class LED_Mod
         static uint8_t __TotalLeds;
         static LED_Mod *ptr[MAX_LEDS]; // List of pointers to each object
 
-        LED_Mod (String name, uint8_t floor, uint8_t region); // Constructor
+        LED_Mod (uint8_t floor, uint8_t region); // Constructor
         bool getState();
         uint8_t getFloor();
         uint8_t getRegion();

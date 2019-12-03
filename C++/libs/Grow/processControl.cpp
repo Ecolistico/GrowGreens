@@ -6,18 +6,23 @@
 
 /***   processControl   ***/
 
-processControl::processControl(String name)
+processControl::processControl(uint8_t type=250)
   {
     state = 0;
     lastState = 0;
     actualTime = millis();
     parameter = 0;
-    __Name = name;
+    __Type = type;
   }
 
 void processControl::printAction(String act)
   {
-    Serial.print(__Name); Serial.print(" : "); Serial.println(act);
+    if(__Type==0){Serial.print(F("IPC"));}
+    else if(__Type==1){Serial.print(F("MPC"));}
+    else if(__Type==2){Serial.print(F("CC"));}
+    else{Serial.print(F("Control (Undefined)"));}
+    Serial.print(F(" : ")); 
+    Serial.println(act);
   }
 
 void processControl::setState(uint8_t st, float par = 0)

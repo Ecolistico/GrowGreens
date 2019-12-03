@@ -107,7 +107,7 @@ bool MultiDay::isDay(uint8_t HOUR, uint8_t MINUTE)
 uint8_t LED_Mod::__TotalLeds = 0;
 LED_Mod *LED_Mod::ptr[MAX_LEDS];
 
-LED_Mod::LED_Mod(String name, uint8_t floor, uint8_t region) // Constructor
+LED_Mod::LED_Mod(uint8_t floor, uint8_t region) // Constructor
   { // Just the first
      if(__TotalLeds<1){
        for (int i=0; i < MAX_LEDS; i++) {
@@ -116,7 +116,6 @@ LED_Mod::LED_Mod(String name, uint8_t floor, uint8_t region) // Constructor
      }
     __State = LOW;
     __Enable = HIGH;
-    __Name = name;
     __Floor = floor;
     __Region = region;
     ptr[__TotalLeds] = this; // Set Static pointer to object
@@ -124,8 +123,10 @@ LED_Mod::LED_Mod(String name, uint8_t floor, uint8_t region) // Constructor
   }
 
 void LED_Mod::printAction(String act)
-  { Serial.print(F("LED Section "));
-    Serial.print(__Name);
+  { Serial.print(F("LED Section L"));
+    Serial.print(__Floor+1);
+    Serial.print(F("S"));
+    Serial.print(__Region+1);
     Serial.print(F(": "));
     Serial.println(act);
   }

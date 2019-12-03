@@ -45,9 +45,9 @@ class processControl
       unsigned long actualTime; // Time Control for the process
       // Auxiliar variable to transfer parameters to different states in the same process
       float parameter;
-      String __Name;
+      uint8_t __Type;
 
-      processControl(String name); // Constructor
+      processControl(uint8_t type=250); // Constructor
       void setState(uint8_t st, float par = 0); // Function to update the process state
   };
 

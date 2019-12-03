@@ -25,25 +25,25 @@ const unsigned long debounceTime = 1000;
 bool debounce = false;
 
 /*** Pressure sensors definitions ***/
-// analogSensor object(analogPin, name)
-analogSensor pressureSensorNutrition(A15, "Nutrition Pressure");
-analogSensor pressureSensorTank(A14, "Tank Pressure");
-analogSensor pressureSensorWater(A13, "Water Pressure");
+// analogSensor object(analogPin, type)
+analogSensor pressureSensorNutrition(A15, 0);
+analogSensor pressureSensorTank(A14, 1);
+analogSensor pressureSensorWater(A13, 2);
 
 /*** UltraSonic Sensors ***/
-// UltraSonic object(pin, name)
-UltraSonic US0(34, 40, "Recirculation Level");
-UltraSonic US1(26, 48, "Solution 1 Level");
-UltraSonic US2(28, 46, "Solution 2 Level");
-UltraSonic US3(30, 44, "Solution 3 Level");
-UltraSonic US4(32, 42, "Solution 4 Level");
-UltraSonic US5(24, 50, "Water Level");
-UltraSonic US6(36, 38, "Solution Maker Level");
+// UltraSonic object(pin, type)
+UltraSonic US0(34, 40, 0);
+UltraSonic US1(26, 48, 1);
+UltraSonic US2(28, 46, 2);
+UltraSonic US3(30, 44, 3);
+UltraSonic US4(32, 42, 4);
+UltraSonic US5(24, 50, 5);
+UltraSonic US6(36, 38, 6);
 
 /*** Water Sensors ***/
-// waterSensor object(pin, name)
-waterSensor checkWaterIrrigation(23, "Water Irrigation Sensor");
-waterSensor checkWaterEvacuation(25, "Water Evacuation Sensor");
+// waterSensor object(pin, type)
+waterSensor checkWaterIrrigation(23, 0);
+waterSensor checkWaterEvacuation(25, 1);
 bool checkRecirculation = true;
 bool enableWaterSensor = false;
 
@@ -64,42 +64,42 @@ recirculationController Recirculation;
 irrigationController Irrigation(4, 0, 0, 1, 2, 3, 25, 25, 25, 25);
 
 /*** Actuators ***/
-// solenoidValve object(name)
-// LED object(name, floor, section)
+// solenoidValve object
+// LED object(floor, section)
 // Actuator object(type, floor, time_On, timeOff);
-// asyncActuator(name)
+// asyncActuator(type)
 
 // 1st floor
-solenoidValve EV1A1("1A1"); solenoidValve EV1A2("1A2"); solenoidValve EV1A3("1A3"); solenoidValve EV1A4("1A4");
-solenoidValve EV1B1("1B1"); solenoidValve EV1B2("1B2"); solenoidValve EV1B3("1B3"); solenoidValve EV1B4("1B4");
-LED_Mod L1S1("L1S1", 0, 0); LED_Mod L1S2("L1S2", 0, 1); LED_Mod L1S3("L1S3", 0, 2); LED_Mod L1S4("L1S4", 0, 3);
+solenoidValve EV1A1; solenoidValve EV1A2; solenoidValve EV1A3; solenoidValve EV1A4;
+solenoidValve EV1B1; solenoidValve EV1B2; solenoidValve EV1B3; solenoidValve EV1B4;
+LED_Mod L1S1(0, 0); LED_Mod L1S2(0, 1); LED_Mod L1S3(0, 2); LED_Mod L1S4(0, 3);
 Actuator IFan1 (0, 0, 30, 150); Actuator OFan1 (1, 0, 30, 150); Actuator VFan1 (2, 0, 30, 150);
 Actuator VHum1 (3, 0, 2, 300);
 
 // 2nd floor
-solenoidValve EV2A1("2A1"); solenoidValve EV2A2("2A2"); solenoidValve EV2A3("2A3"); solenoidValve EV2A4("2A4");
-solenoidValve EV2B1("2B1"); solenoidValve EV2B2("2B2"); solenoidValve EV2B3("2B3"); solenoidValve EV2B4("2B4");
-LED_Mod L2S1("L2S1", 1, 0); LED_Mod L2S2("L2S2", 1, 1); LED_Mod L2S3("L2S3", 1, 2); LED_Mod L2S4("L2S4", 1, 3);
+solenoidValve EV2A1; solenoidValve EV2A2; solenoidValve EV2A3; solenoidValve EV2A4;
+solenoidValve EV2B1; solenoidValve EV2B2; solenoidValve EV2B3; solenoidValve EV2B4;
+LED_Mod L2S1(1, 0); LED_Mod L2S2(1, 1); LED_Mod L2S3(1, 2); LED_Mod L2S4(1, 3);
 Actuator IFan2 (0, 1, 30, 150); Actuator OFan2 (1, 1, 30, 150); Actuator VFan2 (2, 1, 30, 150);
 Actuator VHum2 (3, 1, 2, 300);
 
 // 3rd floor
-solenoidValve EV3A1("3A1"); solenoidValve EV3A2("3A2"); solenoidValve EV3A3("3A3"); solenoidValve EV3A4("3A4");
-solenoidValve EV3B1("3B1"); solenoidValve EV3B2("3B2"); solenoidValve EV3B3("3B3"); solenoidValve EV3B4("3B4");
-LED_Mod L3S1("L3S1", 2, 0); LED_Mod L3S2("L3S2", 2, 1); LED_Mod L3S3("L3S3", 2, 2); LED_Mod L3S4("L3S4", 2, 3);
+solenoidValve EV3A1; solenoidValve EV3A2; solenoidValve EV3A3; solenoidValve EV3A4;
+solenoidValve EV3B1; solenoidValve EV3B2; solenoidValve EV3B3; solenoidValve EV3B4;
+LED_Mod L3S1(2, 0); LED_Mod L3S2(2, 1); LED_Mod L3S3(2, 2); LED_Mod L3S4(2, 3);
 Actuator IFan3 (0, 2, 30, 150); Actuator OFan3 (1, 2, 30, 150); Actuator VFan3 (2, 2, 30, 150);
 Actuator VHum3 (3, 2, 2, 300);
 
 // 4th floor
-solenoidValve EV4A1("4A1"); solenoidValve EV4A2("4A2"); solenoidValve EV4A3("4A3"); solenoidValve EV4A4("4A4");
-solenoidValve EV4B1("4B1"); solenoidValve EV4B2("4B2"); solenoidValve EV4B3("4B3"); solenoidValve EV4B4("4B4");
-LED_Mod L4S1("L4S1", 3, 0); LED_Mod L4S2("L4S2", 3, 1); LED_Mod L4S3("L4S3", 3, 2); LED_Mod L4S4("L4S4", 3, 3);
+solenoidValve EV4A1; solenoidValve EV4A2; solenoidValve EV4A3; solenoidValve EV4A4;
+solenoidValve EV4B1; solenoidValve EV4B2; solenoidValve EV4B3; solenoidValve EV4B4;
+LED_Mod L4S1(3, 0); LED_Mod L4S2(3, 1); LED_Mod L4S3(3, 2); LED_Mod L4S4(3, 3);
 Actuator IFan4 (0, 3, 30, 150); Actuator OFan4 (1, 3, 30, 150); Actuator VFan4 (2, 3, 30, 150);
 Actuator VHum4 (3, 3, 2, 300);
 
 // asyncActuator
-asyncActuator IrrigationKegsH2O("EV-KegsH2O"); // eV to irrigate H2O
-asyncActuator IrrigationKegsNutrition("EV-KegsNutrition"); // eV to irrigate Nutrition
+asyncActuator IrrigationKegsH2O(0); // eV to irrigate H2O
+asyncActuator IrrigationKegsNutrition(1); // eV to irrigate Nutrition
 
 /*** Day Objects ***/
 // MultiDay object(daysPerDay, light%, initHour)
@@ -109,9 +109,9 @@ MultiDay day3(3, 75, 4);
 MultiDay day4(3, 75, 6);
 
 /*** Process Control ***/
-processControl IPC("IPC"); // Initial Preconditions Control
-processControl MPC("MPC"); // Middle Preconditions Control
-processControl CC("CC"); // Comunication Control
+processControl IPC(0); // Initial Preconditions Control
+processControl MPC(1); // Middle Preconditions Control
+processControl CC(2); // Comunication Control
 
 /*** Auxiliar Variables ***/
 // Control irrigation process

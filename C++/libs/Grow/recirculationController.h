@@ -93,6 +93,7 @@ class recirculationController
         void getVolume(); // Returns volume since fill proccess starts
         void printAction(float volume, String from, String to);
         void printAction(String act);
+        void printAction(String act1, String act2, String act3, String act4);
 
     public:
          recirculationController(); // Constructor
