@@ -59,7 +59,8 @@ class serialController:
         elif(mssg.startswith("info,")): logger.info(mssg.split(",")[1])
         elif(mssg.startswith("warning,")): logger.warning(mssg.split(",")[1])
         elif(mssg.startswith("error,")): logger.error(mssg.split(",")[1])
-        else: logger.info(mssg)
+        elif(mssg.startswith("critical,")): logger.critical(mssg.split(",")[1])
+        else: logger.debug(mssg)
 
     def write(self, serialObject, mssg):
         serialObject.write(bytes(mssg, "utf-8"))
@@ -113,7 +114,7 @@ class serialController:
         solution = int(param[2])
         ph = float(param[3])
         ec = int(param[4])
-        self.logMain.info("Prepare Solution line: {}".format(self.respLine[index]))
+        self.logMain.debug("Prepare Solution line: {}".format(self.respLine[index]))
         # Check parameters
         if(liters>0):
             if(solution>=0 and solution<4):
@@ -153,7 +154,7 @@ class serialController:
                 # solutionMaker finished to prepare the solution
                 elif(resp == "solutionFinished"): self.write(self.generalControl, "solutionMaker,finished")
                     
-                self.logMain.info("Request {} was answered".format(resp))
+                self.logMain.debug("Request {} was answered".format(resp))
               
             self.resp = []
             self.respLine = []           
@@ -186,7 +187,7 @@ class serialController:
                         decition = True
                         self.write(self.motorsGrower, "sequence,1,35,20")
                         self.share.Gr1.serialReq("")
-                        self.self.logMain.warning("Grower1 sending request to start sequence")
+                        self.self.logMain.info("Grower1 sending request to start sequence")
                     elif resp == "Unavailable" and self.share.Gr1.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "stop,1")
@@ -201,7 +202,7 @@ class serialController:
                         decition = True
                         self.write(self.motorsGrower, "sequence,2,35,20")
                         self.share.Gr2.serialReq("")
-                        self.self.logMain.warning("Grower2 sending request to start sequence")
+                        self.self.logMain.info("Grower2 sending request to start sequence")
                     elif resp == "Unavailable" and self.share.Gr2.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "stop,2")
@@ -216,7 +217,7 @@ class serialController:
                         decition = True
                         self.write(self.motorsGrower, "sequence,3,35,20")
                         self.share.Gr3.serialReq("")
-                        self.self.logMain.warning("Grower3 sending request to start sequence")
+                        self.self.logMain.info("Grower3 sending request to start sequence")
                     elif resp == "Unavailable" and self.share.Gr3.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "stop,3")
@@ -231,7 +232,7 @@ class serialController:
                         decition = True
                         self.write(self.motorsGrower, "sequence,4,35,20")
                         self.share.Gr4.serialReq("")
-                        self.self.logMain.warning("Grower4 sending request to start sequence")
+                        self.self.logMain.info("Grower4 sending request to start sequence")
                     elif resp == "Unavailable" and self.share.Gr4.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "stop,4")
@@ -247,7 +248,7 @@ class serialController:
                         self.share.Gr1.startRoutine = False
                         self.share.Gr1.inRoutine = True
                         self.share.Gr1.count = 0
-                        self.self.logMain.warning("Grower1 sequence started")
+                        self.self.logMain.info("Grower1 sequence started")
                         
             # If we are waiting Gr2 to reach home and start the sequence
             if(self.share.Gr2.serialRequest=="" and self.share.Gr2.startRoutine and not decition):
@@ -259,7 +260,7 @@ class serialController:
                         self.share.Gr2.startRoutine = False
                         self.share.Gr2.inRoutine = True
                         self.share.Gr2.count = 0
-                        self.self.logMain.warning("Grower2 sequence started")
+                        self.self.logMain.info("Grower2 sequence started")
                         
             # If we are waiting Gr3 to reach home and start the sequence
             if(self.share.Gr3.serialRequest=="" and self.share.Gr3.startRoutine and not decition):
@@ -271,7 +272,7 @@ class serialController:
                         self.share.Gr3.startRoutine = False
                         self.share.Gr3.inRoutine = True
                         self.share.Gr3.count = 0
-                        self.self.logMain.warning("Grower3 sequence started")
+                        self.self.logMain.info("Grower3 sequence started")
                         
             # If we are waiting Gr4 to reach home and start the sequence
             if(self.share.Gr4.serialRequest=="" and self.share.Gr4.startRoutine and not decition):
@@ -283,7 +284,7 @@ class serialController:
                         self.share.Gr4.startRoutine = False
                         self.share.Gr4.inRoutine = True
                         self.share.Gr4.count = 0
-                        self.self.logMain.warning("Grower4 sequence started")
+                        self.self.logMain.info("Grower4 sequence started")
                 
             # If we are waiting Gr1 to reach next sequence position
             if(self.share.Gr1.inRoutine and not decition):
@@ -297,13 +298,13 @@ class serialController:
                         self.share.Gr1.count += 1
                         self.share.Gr1.mqttReq("photoSequence,{}".format(photoName))
                         self.share.Gr1.actualTime = time()-20
-                        self.self.logMain.info("Grower1 in position to take photo sequence")
+                        self.self.logMain.debug("Grower1 in position to take photo sequence")
                     elif resp=="Routine Finished":
                         decition = True
                         self.share.Gr1.inRoutine = False
                         self.share.Gr1.mqttReq("sendPhotos")
                         self.share.Gr1.actualTime = time()-20
-                        self.self.logMain.warning("Grower1 finished its routine")
+                        self.self.logMain.info("Grower1 finished its routine")
                         
             # If we are waiting Gr2 to reach next sequence position
             if(self.share.Gr2.inRoutine and not decition):
@@ -317,13 +318,13 @@ class serialController:
                         self.share.Gr2.count += 1
                         self.share.Gr2.mqttReq("photoSequence,{}".format(photoName))
                         self.share.Gr2.actualTime = time()-20
-                        self.self.logMain.info("Grower2 in position to take photo sequence")
+                        self.self.logMain.debug("Grower2 in position to take photo sequence")
                     elif resp=="Routine Finished":
                         decition = True
                         self.share.Gr2.inRoutine = False
                         self.share.Gr2.mqttReq("sendPhotos")
                         self.share.Gr2.actualTime = time()-20
-                        self.self.logMain.warning("Grower2 finished its routine")
+                        self.self.logMain.info("Grower2 finished its routine")
                         
             # If we are waiting Gr3 to reach next sequence position
             if(self.share.Gr3.inRoutine  and not decition):
@@ -337,13 +338,13 @@ class serialController:
                         self.share.Gr3.count += 1
                         self.share.Gr3.mqttReq("photoSequence,{}".format(photoName))
                         self.share.Gr3.actualTime = time()-20
-                        self.self.logMain.info("Grower3 in position to take photo sequence")
+                        self.self.logMain.debug("Grower3 in position to take photo sequence")
                     elif resp=="Routine Finished":
                         decition = True
                         self.share.Gr3.inRoutine = False
                         self.share.Gr3.mqttReq("sendPhotos")
                         self.share.Gr3.actualTime = time()-20
-                        self.self.logMain.warning("Grower3 finished its routine")
+                        self.self.logMain.info("Grower3 finished its routine")
                         
             # If we are waiting Gr4 to reach next sequence position
             if(self.share.Gr4.inRoutine and not decition):
@@ -357,13 +358,13 @@ class serialController:
                         self.share.Gr4.count += 1
                         self.share.Gr4.mqttReq("photoSequence,{}".format(photoName))
                         self.share.Gr4.actualTime = time()-20
-                        self.self.logMain.info("Grower4 in position to take photo sequence")
+                        self.self.logMain.debug("Grower4 in position to take photo sequence")
                     elif resp=="Routine Finished":
                         decition = True
                         self.share.Gr4.inRoutine = False
                         self.share.Gr4.mqttReq("sendPhotos")
                         self.share.Gr4.actualTime = time()-20
-                        self.self.logMain.warning("Grower4 finished its routine")
+                        self.self.logMain.info("Grower4 finished its routine")
                         
         # If bytes available in solutionMaker
         while self.solutionMaker.in_waiting>0:

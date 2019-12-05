@@ -120,7 +120,7 @@ void growerStepper::begin(
 
      pinMode(__Enable, HIGH); // Disable motors
 
-     printAction(F("Started Correctly"));
+     printAction(F("Started Correctly"), 0);
 
      // Go home by default
      if(goHome){ home(); }
@@ -157,31 +157,16 @@ bool growerStepper::isTimeToGoHome()
     else{return false;}
   }
 
-void growerStepper::printAction(String act)
-  { Serial.print(F("Grower"));
-    Serial.print(__Floor);
-    Serial.print(F(": "));
-    Serial.println(act);
-  }
-
-void growerStepper::printAction(String act, uint8_t level)
+void growerStepper::printAction(String act, uint8_t level=0)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
     else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
     Serial.print(F("Grower"));
     Serial.print(__Floor);
     Serial.print(F(": "));
     Serial.println(act);
-  }
-  
-void growerStepper::printAction(String act1, String act2, String act3)
-  { Serial.print(F("Grower"));
-    Serial.print(__Floor);
-    Serial.print(F(": "));
-    Serial.print(act1);
-    Serial.print(act2);
-    Serial.println(act3);
   }
 
 void growerStepper::printAction(String act1, String act2, String act3, uint8_t level)
@@ -189,6 +174,7 @@ void growerStepper::printAction(String act1, String act2, String act3, uint8_t l
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
     else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
     Serial.print(F("Grower"));
     Serial.print(__Floor);
     Serial.print(F(": "));
@@ -246,12 +232,12 @@ long growerStepper::getYPosition()
 
 void growerStepper::setMaxDistanceX(long maxDist)
   { __MaxX = DEFAULT_MAX_X_DISTANCE_MM-maxDist;
-    printAction(F("MaxDistanceX "), String(getMaxDistanceX()), F(""));
+    printAction(F("MaxDistanceX "), String(getMaxDistanceX()), F(""), 1);
   }
 
 void growerStepper::setMaxDistanceY(long maxDist)
   { __MaxY = DEFAULT_MAX_Y_DISTANCE_MM-maxDist;
-    printAction(F("MaxDistanceY "), String(getMaxDistanceY()), F(""));
+    printAction(F("MaxDistanceY "), String(getMaxDistanceY()), F(""), 1);
   }
 
 long growerStepper::getMaxDistanceX()
@@ -303,7 +289,7 @@ bool growerStepper::moveX(long some_mm, bool seq = false)
     __MoveX2 = true;
     __steppersRunning += 2;
     resetTime();
-    printAction(F("Moving X "), String(some_mm), F(" mm"));
+    printAction(F("Moving X "), String(some_mm), F(" mm"), 0);
     return true;
   }
 
@@ -343,7 +329,7 @@ bool growerStepper::moveY(long some_mm, bool seq = false)
     __MoveY = true;
     __steppersRunning++;
     resetTime();
-    printAction(F("Moving Y "), String(some_mm), F(" mm"));
+    printAction(F("Moving Y "), String(some_mm), F(" mm"), 0);
     return true;
   }
 
@@ -387,7 +373,7 @@ bool growerStepper::moveXTo(long some_mm, bool seq = false)
     __MoveX2 = true;
     __steppersRunning += 2;
     resetTime();
-    printAction(F("Moving X to "), String(some_mm), F(" mm"));
+    printAction(F("Moving X to "), String(some_mm), F(" mm"), 0);
     return true;
   }
 
@@ -427,7 +413,7 @@ bool growerStepper::moveYTo(long some_mm, bool seq = false)
     __MoveY = true;
     __steppersRunning++;
     resetTime();
-    printAction(F("Moving Y to "), String(some_mm), F(" mm"));
+    printAction(F("Moving Y to "), String(some_mm), F(" mm"), 0);
     return true;
   }
 
@@ -435,7 +421,7 @@ bool growerStepper::calibration()
   { if(__Available){
       if(__Sequence==0){
         __Calibration = 1; // First stage of the calibration is go home
-        printAction(F("Starting Calibration Sequence Stage 1"), 2);
+        printAction(F("Starting Calibration Sequence Stage 1"), 1);
         if(!home()){
           __Home = true;
         }
@@ -451,20 +437,20 @@ bool growerStepper::calibration()
 void growerStepper::enable()
   { digitalWrite(__Enable, LOW);
     __IsEnable = true;
-    printAction(F("Enable"));
+    printAction(F("Enable"), 0);
   }
 
 void growerStepper::disable()
   { digitalWrite(__Enable, HIGH);
     __IsEnable = false;
-    printAction(F("Disable"));
+    printAction(F("Disable"), 0);
   }
 
 bool growerStepper::isEnable()
   { return __IsEnable; }
 
 bool growerStepper::isAvailable()
-  { if(__Available){printAction(F("Available"), 2);}
+  { if(__Available){printAction(F("Available"), 1);}
     else{printAction(F("Unavailable"), 2);}
     return __Available;
   }
@@ -478,7 +464,7 @@ bool growerStepper::continueSequence()
   { if(__Available){
       if(__Sequence>0){
         __SequenceStop = false;
-        printAction(F("Continue routine"));
+        printAction(F("Continue routine"), 0);
         return true;
       }
       printAction(F("Cannot continue routine because it has not started"), 3);
@@ -512,7 +498,7 @@ bool growerStepper::sequence(long mm_X, long mm_Y)
           __SequenceYMoves = int(secureYDistance/__SequenceYmm);
           // Number of movements is all the points + home()
           __SequenceMovements = __SequenceXMoves*(__SequenceYMoves+1) + __SequenceYMoves + 1;
-          printAction(F("Starting Routine Stage "), String(__Sequence), F(""), 2);
+          printAction(F("Starting Routine Stage "), String(__Sequence), F(""), 1);
           if(!home()){
             __Home = true;
           }
@@ -549,10 +535,10 @@ bool growerStepper::home()
           __MoveY = true;
           __steppersRunning += 3;
           resetTime();
-          printAction(F("Moving to Home"), 2);
+          printAction(F("Moving to Home"), 1);
           return true;
         }
-        printAction(F("Already at Home"), 1);
+        printAction(F("Already at Home"), 2);
         return false;
       }
       printAction(F("Routine in progress"), 3);
@@ -694,14 +680,14 @@ void growerStepper::run()
         __Calibration = 3;
         decition = true;
         home();
-        printAction(F("Starting Calibration Sequence Stage 3"), 2);
+        printAction(F("Starting Calibration Sequence Stage 3"), 1);
       }
 
       // If the grower is in routine (sequence value in range)
       if(__Sequence>1 && __Sequence<=__SequenceMovements){
         if(!__SequenceStageFinished){
           __SequenceStageFinished = true;
-          printAction(F("In Position"));
+          printAction(F("In Position"), 0);
         }
         // If the central computer gives the permission to continue then
         if(!__SequenceStop){
@@ -713,7 +699,7 @@ void growerStepper::run()
           __Sequence++;
           __SequenceStop = true;
           __SequenceStageFinished = false;
-          printAction(F("Starting Routine Stage "), String(__Sequence), F(""));
+          printAction(F("Starting Routine Stage "), String(__Sequence), F(""), 0);
           if(whatNext<__SequenceYMoves){
             moveY(__SequenceDir*__SequenceYmm, true);
           }
@@ -728,11 +714,11 @@ void growerStepper::run()
       else if(__Sequence>__SequenceMovements){
         if(!__SequenceStageFinished){
           __SequenceStageFinished = true;
-          printAction(F("In Position"));
+          printAction(F("In Position"), 0);
         }
         if(!__SequenceStop){
           __Sequence = 0;
-          printAction(F("Routine Finished"), 2);
+          printAction(F("Routine Finished"), 1);
         }
       }
 
@@ -750,7 +736,7 @@ void growerStepper::run()
             stepperY->setCurrentPosition(0);
           }
           disable(); // Disable the motors when home reached
-          printAction(F("Home Reached"), 2);
+          printAction(F("Home Reached"), 1);
 
           // If calibration is at stage 1 then starts stage 2
           if(__Calibration == 1){
@@ -768,7 +754,7 @@ void growerStepper::run()
             __Calibration = 2;
             decition = true;
             enable();
-            printAction(F("Starting Calibration Sequence Stage 2"), 2);
+            printAction(F("Starting Calibration Sequence Stage 2"), 1);
           }
 
           // If calibration is at stage 3 then finish it and reset all the variables involves
@@ -780,7 +766,7 @@ void growerStepper::run()
             setMaxDistanceX((getMaxDistanceX()+x)/2);
             setMaxDistanceY((getMaxDistanceY()+y)/2);
             __Calibration = 0; // There finished the calibration
-            printAction(F("Calibration Finished"), 2);
+            printAction(F("Calibration Finished"), 1);
 
             stepperX1->setCurrentPosition(0);
             stepperX2->setCurrentPosition(0);
@@ -803,7 +789,7 @@ void growerStepper::run()
             __Sequence++;
             __SequenceStop = true;
             enable();
-            printAction(F("Starting Routine Stage "), String(__Sequence), F(""));
+            printAction(F("Starting Routine Stage "), String(__Sequence), F(""), 0);
           }
         }
       }

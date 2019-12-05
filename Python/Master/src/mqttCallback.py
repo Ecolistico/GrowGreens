@@ -54,6 +54,8 @@ class mqttController:
         elif(mssg.split(",")[1]=="info"): logger.info(mssg.split(",")[0])
         elif(mssg.split(",")[1]=="warning"): logger.warning(mssg.split(",")[0])
         elif(mssg.split(",")[1]=="error"): logger.error(mssg.split(",")[0])
+        elif(mssg.split(",")[1]=="critical"): logger.critical(mssg.split(",")[0])
+        else: logger.debug(mssg)
         
     # Callback fires when conected to MQTT broker.
     def on_connect(self, client, userdata, flags, rc):
@@ -63,8 +65,8 @@ class mqttController:
             message += " Connection succesful"
             mssg = "Master connected"
             client.subscribe(Topic)
-            self.logMain.info(message)
-            self.logMain.info("Subscribed topic= {}".format(Topic))
+            self.logMain.debug(message)
+            self.logMain.debug("Subscribed topic= {}".format(Topic))
         else:
             message += " Connection refused"
             if(rc == 1): message += " - incorrect protocol version"
@@ -111,9 +113,9 @@ class mqttController:
                     self.share.Gr4.mqttReq("")
                     self.share.Gr4.serialReq("available,4")
                     self.share.Gr4.actualTime = time()-20
-            elif(device == "esp32front"): self.logFront.info(message)
-            elif(device == "esp32center"): self.logCenter.info(message)
-            elif(device == "esp32back"): self.logBack.info(message)
+            elif(device == "esp32front"): self.logFront.debug(message)
+            elif(device == "esp32center"): self.logCenter.debug(message)
+            elif(device == "esp32back"): self.logBack.debug(message)
             else: self.logMain.warning("Unknown mqtt log recieve - device={}, message={}".format(device, message))
         
         # Get MQTT errors from ESP32´s
@@ -135,7 +137,7 @@ class mqttController:
             # Ask again for the data if not complete
 
     def on_publish(client, userdata, mid):
-        self.logMain.info("Message delivered")
+        self.logMain.debug("Message delivered")
 
     def on_disconnect(client, userdata, rc):
         self.logMain.warning("Client MQTT Disconnected")

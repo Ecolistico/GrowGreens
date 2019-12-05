@@ -16,7 +16,7 @@ processControl::processControl(uint8_t type=250)
   }
 
 void processControl::printAction(String act)
-  {
+  { Serial.print(F("debug,"));
     if(__Type==0){Serial.print(F("IPC"));}
     else if(__Type==1){Serial.print(F("MPC"));}
     else if(__Type==2){Serial.print(F("CC"));}

@@ -63,7 +63,7 @@ class compressorController
         void fillAll(); // Settings to fill everything
         void setMode(uint8_t mode); // Set the actual mode of operation
 
-        void printAct(String act);
+        void printAct(String act, uint8_t level=0);
 
     public:
          compressorController( // Constructor

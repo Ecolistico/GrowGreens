@@ -152,9 +152,9 @@ class solutionMaker
         void moveStepper(long steps, uint8_t st);
         void resetPosition(uint8_t st); // reset the position to zero of some stepper
         // Print in serial an action executed with the correct format
-        void printAction(String act, uint8_t actuator);
+        void printAction(String act, uint8_t actuator, uint8_t level=0);
         // Print in serial an action executed with the correct format (Atlas Scientific Sensors)
-        void printEZOAction(String act, uint8_t sensorType);
+        void printEZOAction(String act, uint8_t sensorType, uint8_t level=0);
         void printLCD(String main, String subAction = ""); // Print something in LCD Screen
         void checkButtonLCD(); // Check if the button is pressed and turn on the backlight
         float filter(float val, float preVal);

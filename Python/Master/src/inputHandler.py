@@ -63,7 +63,7 @@ class inputHandler:
             
     def handleInput(self, line):
         if(line.lower()=="exit"):
-            self.log.info("Exit command activated")
+            self.log.debug("Exit command activated")
             self.exit = True
         elif(line.startswith("raw")):
             param = self.valSplit(line)
@@ -71,22 +71,22 @@ class inputHandler:
                 if(param[1]=="generalControl" and self.valLenList1(param, 3)):
                     cmd = ",".join(param[2:])
                     self.writeGC(cmd)
-                    self.log.warning("inputHandler-[generalControl] Raw Command={}".format(cmd))          
+                    self.log.info("inputHandler-[generalControl] Raw Command={}".format(cmd))          
                 elif(param[1]=="motorsGrower" and self.valLenList1(param, 3)):
                     cmd = ",".join(param[2:])
                     self.writeMG(cmd)
-                    self.log.warning("inputHandler-[motorsGrower] Raw Command={}".format(cmd)) 
+                    self.log.info("inputHandler-[motorsGrower] Raw Command={}".format(cmd)) 
                 elif(param[1]=="solutionMaker" and self.valLenList1(param, 3)):
                     cmd = ",".join(param[2:])
                     self.writeSM(cmd)
-                    self.log.warning("inputHandler-[solutionMaker] Raw Command={}".format(cmd))
+                    self.log.info("inputHandler-[solutionMaker] Raw Command={}".format(cmd))
                 elif( (param[1]=="esp32" or param[1]=="Grower") and self.valLenList1(param, 4)):
                     cmd = ",".join(param[3:])
                     topic = "{}/{}{}".format(self.mqttControl.ID, param[1], param[2])
                     publish.single(topic, "{}".format(cmd), hostname = self.mqttControl.brokerIP)
-                    self.log.warning("inputHandler-[mqtt] Raw Command Topic={} Message={}".format(
+                    self.log.info("inputHandler-[mqtt] Raw Command Topic={} Message={}".format(
                         topic,cmd))
-                else: self.log.warning("inputHandler- {} Command Unknown".format(line))
+                else: self.log.info("inputHandler- {} Command Unknown".format(line))
         elif(line.startswith("irr")):
             param = self.valSplit(line)
             if(param!=None):
@@ -113,19 +113,19 @@ class inputHandler:
                         self.writeGC("solenoid,setTimeOn,{},{},{},{}".format(fl-1, reg-1, sol, time_s))
                         self.log.warning("Irrigation- Solenoid of fl {}, reg {} change time to {}s with sol {}".format(
                             fl, reg, time_s, sol))
-                else: self.log.warning("inputHandler- {} Command Unknown".format(line))
+                else: self.log.error("inputHandler- {} Command Unknown".format(line))
         
         elif(line.startswith("debug")):
             param = self.valSplit(line)
             if(param!=None):
                 if(param[1].startswith("whatSol")):
                     self.writeGC("debug,irrigation,whatSolution")
-                    self.log.warning("Debug - Asking for next solution")
+                    self.log.debug("Asking for next solution")
                 elif(param[1].startswith("getEC")):
                     self.writeGC("debug,irrigation,getEC")
-                    self.log.warning("Debug - Asking for the actual EC parameter")
-                else: self.log.warning("inputHandler- {} Command Unknown".format(line))
-        else: self.log.warning("inputHandler- {} Command Unknown".format(line))
+                    self.log.debug("Asking for the actual EC parameter")
+                else: self.log.error("inputHandler- {} Command Unknown".format(line))
+        else: self.log.error("inputHandler- {} Command Unknown".format(line))
             
     def loop(self):
         line = self.getLine()

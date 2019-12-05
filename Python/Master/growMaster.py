@@ -69,7 +69,7 @@ if(param==""):
 
 if(start.startswith("y") or start.startswith("Y") or param=="start"):
     run = True
-    log.logger.info("Permission to start GrowGreens accepted")
+    log.logger.debug("Permission to start GrowGreens accepted")
 
     # Define database
     DataBase = './data/{}.db'.format(strftime("%Y-%m-%d", localtime()))
@@ -119,7 +119,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     except: log.logger.warning("Cannot connect with MQTT Broker")
 
     # Setting up
-    bme = BME680() # Start bme680 sensor
+    bme = BME680(log.logger) # Start bme680 sensor
     day = 0
     hour = 0
     minute = 0
@@ -131,7 +131,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
 
 else:
     run = False
-    log.logger.info("Permission to start GrowGreens refused")
+    log.logger.warning("Permission to start GrowGreens refused")
     
 try:
     # Main program
@@ -192,7 +192,7 @@ try:
             publish.single("{}/esp32center".format(ID), "sendData", hostname = brokerIP)
             publish.single("{}/esp32back".format(ID), "sendData", hostname = brokerIP)
             # Request bme data
-            if bme.read(): log.logger.debug("BME680 reading succes")
+            if bme.read(): bme.logData()
             else: log.logger.warning("BME680 sensor cannot take reading")
             
             # Coordinate Grower routines
@@ -270,10 +270,10 @@ try:
             if (ex.startswith("y") or start.startswith("Y")):
                 run = False
                 mainClose() # Finished th program
-                log.logger.info("Program finished by operator")
+                log.logger.warning("Program finished by operator")
             else:
                 inputControl.exit = False
-                log.logger.info("Exit aborted")
+                log.logger.warning("Exit canceled")
                 
 except:
     log.logger.exception("Exception Raised")

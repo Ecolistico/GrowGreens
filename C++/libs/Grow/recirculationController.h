@@ -91,9 +91,9 @@ class recirculationController
 
         static void countPulses(); // Interrupt Caudalimeter
         void getVolume(); // Returns volume since fill proccess starts
-        void printAction(float volume, String from, String to);
-        void printAction(String act);
-        void printAction(String act1, String act2, String act3, String act4);
+        void printAction(float volume, String from, String to, uint8_t level=0);
+        void printAction(String act, uint8_t level=0);
+        void printAction(String act1, String act2, String act3, String act4, uint8_t level=0);
 
     public:
          recirculationController(); // Constructor

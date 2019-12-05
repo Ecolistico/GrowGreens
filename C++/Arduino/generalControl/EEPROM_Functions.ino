@@ -1,5 +1,5 @@
 void clean_EEPROM(){
-  Serial.println(F("EEPROM: Deleting Memory..."));
+  Serial.println(F("warning,EEPROM: Deleting Memory..."));
   for(int i=0; i<solenoidValve::__TotalActuators*5+35; i++){
     EEPROM.update(i, 0);
   }
@@ -9,11 +9,11 @@ void clean_EEPROM(){
   for(int i=511; i<662; i++){
     EEPROM.update(i, 0);
   }
-  Serial.println(F("EEPROM: Memory Deleted"));
+  Serial.println(F("warning,EEPROM: Memory Deleted"));
 }
 
 void print_EEPROM(){
-  Serial.println(F("EEPROM: Printing Memory Info"));
+  Serial.println(F("info,EEPROM: Printing Memory Info"));
   for(int i=0; i<solenoidValve::__TotalActuators*5+35; i++){
     Serial.print(i); Serial.print(F(": ")); Serial.println(EEPROM.read(i));
   }
@@ -28,14 +28,14 @@ void print_EEPROM(){
 void save_EEPROM(int pos, int val){
   int actualVal = EEPROM.read(pos);
   if(val!=actualVal){
-    Serial.print(F("Saving in EEPROM on position("));
+    Serial.print(F("info,Saving in EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.println(val);
     EEPROM.update(pos, val);
   }
   else{ 
-    Serial.print(F("EEPROM on position("));
+    Serial.print(F("warning,EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.print(val);
@@ -47,14 +47,14 @@ void save_EEPROM(int pos, float val){
   float actualVal = 0;
   EEPROM.get(pos, actualVal);
   if(val!=actualVal){
-    Serial.print(F("Saving in EEPROM on position("));
+    Serial.print(F("info,Saving in EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.println(val);
     EEPROM.put(pos, val);
   }
   else{
-    Serial.print(F("EEPROM on position("));
+    Serial.print(F("warning,EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.print(val);

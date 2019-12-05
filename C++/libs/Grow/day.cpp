@@ -60,11 +60,11 @@ void MultiDay::redefine(uint8_t cyclesPerDay, float percentageLight, float initi
 
     else{ // If parameters are wrong
       // Cycles are not a divisor of 24 hrs
-      if(24%cyclesPerDay != 0){ Serial.println(F("Parameter cyclesPerDay incorrect")); }
+      if(24%cyclesPerDay != 0){ Serial.println(F("error,Parameter cyclesPerDay incorrect")); }
       // percentageLight out of range [0-100]
-      if(percentageLight<0 || percentageLight>100){ Serial.println(F("Parameter percentageLight incorrect")); }
+      if(percentageLight<0 || percentageLight>100){ Serial.println(F("error,Parameter percentageLight incorrect")); }
       // initialHourout of Range [0-24) hrs
-      if(initialHour>=24 || initialHour<0){ Serial.println(F("Parameter initialHour incorrect")); }
+      if(initialHour>=24 || initialHour<0){ Serial.println(F("error,Parameter initialHour incorrect")); }
     }
   }
 
@@ -122,8 +122,13 @@ LED_Mod::LED_Mod(uint8_t floor, uint8_t region) // Constructor
     __TotalLeds++; // Add the new led object to the total
   }
 
-void LED_Mod::printAction(String act)
-  { Serial.print(F("LED Section L"));
+void LED_Mod::printAction(String act, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
+    Serial.print(F("LED Section L"));
     Serial.print(__Floor+1);
     Serial.print(F("S"));
     Serial.print(__Region+1);
@@ -135,8 +140,8 @@ void LED_Mod::setState(bool state)
   { if(__Enable){
       if(__State!=state){
         __State = state;
-        if(__State) printAction(F("Turn On"));
-        else printAction(F("Turn Off"));
+        if(__State) printAction(F("Turn On"), 0);
+        else printAction(F("Turn Off"), 0);
       }
     }
   }
@@ -155,8 +160,8 @@ uint8_t LED_Mod:: getRegion()
 void LED_Mod::enable(bool en)
   { if(__Enable!=en){
       __Enable = en;
-      if(__Enable){printAction(F("Enable"));}
-      else{printAction(F("Disable"));}
+      if(__Enable){printAction(F("Enable"), 0);}
+      else{printAction(F("Disable"), 0);}
     }
   }
 

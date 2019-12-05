@@ -97,7 +97,7 @@ void analogSensor::printModel()
   { if (__Type==0){Serial.print(F("Nutrition Pressure"));}
     else if (__Type==1){Serial.print(F("Tank Pressure"));}
     else if(__Type==2){Serial.print(F("Water Pressure"));}
-    else{Serial.print(F("Undefined"));}
+    else{Serial.print(F("error,Undefined"));}
     Serial.print(F(" Sensor: "));
     if(__Degree == 0 ){
       Serial.println(F("You are not using any model yet..."));
@@ -113,7 +113,7 @@ void analogSensor::printFilter()
   { if (__Type==0){Serial.print(F("Nutrition Pressure"));}
     else if (__Type==1){Serial.print(F("Tank Pressure"));}
     else if(__Type==2){Serial.print(F("Water Pressure"));}
-    else{Serial.print(F("Undefined"));}
+    else{Serial.print(F("error,Undefined"));}
     Serial.print(F(" Sensor: "));
     switch(__Filter){
       case 0:
@@ -129,7 +129,7 @@ void analogSensor::printFilter()
       Serial.println(__Err);
       break;
     default:
-      Serial.println(F("Filters parameters unknowns"));
+      Serial.println(F("error,Filters parameters unknowns"));
     }
   }
 
@@ -146,10 +146,10 @@ void analogSensor::read()
       __FirstRead = true;
       __PreValue = model(val);
       __Value = __PreValue;
-      if (__Type==0){Serial.print(F("Nutrition Pressure"));}
-      else if (__Type==1){Serial.print(F("Tank Pressure"));}
-      else if(__Type==2){Serial.print(F("Water Pressure"));}
-      else{Serial.print(F("Undefined"));}
+      if (__Type==0){Serial.print(F("info,Nutrition Pressure"));}
+      else if (__Type==1){Serial.print(F("info,Tank Pressure"));}
+      else if(__Type==2){Serial.print(F("info,Water Pressure"));}
+      else{Serial.print(F("error,Undefined"));}
       Serial.print(F("Sensor: Initial value="));
       Serial.println(__Value);
     }
@@ -380,7 +380,7 @@ void UltraSonic::printModel()
     else if(__Type==4){Serial.print(F("Solution 4 Level"));}
     else if(__Type==5){Serial.print(F("Water Level"));}
     else if(__Type==6){Serial.print(F("Solution Maker Level"));}
-    else{Serial.print(F("Undefined"));}
+    else{Serial.print(F("error,Undefined"));}
     Serial.print(F(" Sensor: "));
     if(__Model == 0){
       Serial.println(F("You are not using any model yet..."));
@@ -409,7 +409,7 @@ void UltraSonic::printFilter()
     else if(__Type==4){Serial.print(F("Solution 4 Level"));}
     else if(__Type==5){Serial.print(F("Water Level"));}
     else if(__Type==6){Serial.print(F("Solution Maker Level"));}
-    else{Serial.print(F("Undefined"));}
+    else{Serial.print(F("error,Undefined"));}
     Serial.print(F(" Sensor: "));
     switch(__Filter){
       case 0:
@@ -425,7 +425,7 @@ void UltraSonic::printFilter()
       Serial.println(__Err);
       break;
     default:
-      Serial.println(F("Filters parameters unknowns"));
+      Serial.println(F("error,Filters parameters unknowns"));
     }
   }
 
@@ -453,14 +453,14 @@ uint8_t UltraSonic::updateState()
 
     if(!__FirstRead){
       __FirstRead = true;
-      if (__Type==0){Serial.print(F("Recirculation Level"));}
-      else if (__Type==1){Serial.print(F("Solution 1 Level"));}
-      else if(__Type==2){Serial.print(F("Solution 2 Level"));}
-      else if(__Type==3){Serial.print(F("Solution 3 Level"));}
-      else if(__Type==4){Serial.print(F("Solution 4 Level"));}
-      else if(__Type==5){Serial.print(F("Water Level"));}
-      else if(__Type==6){Serial.print(F("Solution Maker Level"));}
-      else{Serial.print(F("Undefined"));}
+      if (__Type==0){Serial.print(F("info,Recirculation Level"));}
+      else if (__Type==1){Serial.print(F("info,Solution 1 Level"));}
+      else if(__Type==2){Serial.print(F("info,Solution 2 Level"));}
+      else if(__Type==3){Serial.print(F("info,Solution 3 Level"));}
+      else if(__Type==4){Serial.print(F("info,Solution 4 Level"));}
+      else if(__Type==5){Serial.print(F("info,Water Level"));}
+      else if(__Type==6){Serial.print(F("info,Solution Maker Level"));}
+      else{Serial.print(F("error,Undefined"));}
       Serial.print(F("Sensor: Initial value="));
       Serial.print(model(__Height-__Distance));
       Serial.println(F("liters"));
@@ -557,14 +557,14 @@ void UltraSonic::readAndPrint()
   { for(int i = 0; i<__TotalSensors; i++){
       uint8_t state = ptr[i]->updateState();
       uint8_t type = ptr[i]->__Type;
-      if (type==0){Serial.print(F("Recirculation Level"));}
-      else if (type==1){Serial.print(F("Solution 1 Level"));}
-      else if(type==2){Serial.print(F("Solution 2 Level"));}
-      else if(type==3){Serial.print(F("Solution 3 Level"));}
-      else if(type==4){Serial.print(F("Solution 4 Level"));}
-      else if(type==5){Serial.print(F("Water Level"));}
-      else if(type==6){Serial.print(F("Solution Maker Level"));}
-      else{Serial.print(F("Undefined"));}
+      if (type==0){Serial.print(F("info,Recirculation Level"));}
+      else if (type==1){Serial.print(F("info,Solution 1 Level"));}
+      else if(type==2){Serial.print(F("info,Solution 2 Level"));}
+      else if(type==3){Serial.print(F("info,Solution 3 Level"));}
+      else if(type==4){Serial.print(F("info,Solution 4 Level"));}
+      else if(type==5){Serial.print(F("info,Water Level"));}
+      else if(type==6){Serial.print(F("info,Solution Maker Level"));}
+      else{Serial.print(F("error,Undefined"));}
       Serial.print(F(" Sensor: "));
       Serial.println(ptr[i]->__Distance);
     }

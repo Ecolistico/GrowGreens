@@ -51,8 +51,13 @@ void Actuator::setTime()
 void Actuator::resetTime()
   {  __Actual_time = millis(); }
 
-void Actuator::printAction(String act)
-  { Serial.print(F("Actuator ("));
+void Actuator::printAction(String act, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
+    Serial.print(F("Actuator ("));
     switch(__Type){
       case 0:
         Serial.print(F("Input Fan-"));
@@ -75,8 +80,13 @@ void Actuator::printAction(String act)
     Serial.println(act);
   }
 
-void Actuator::printAction(String act1, String act2, String act3)
-  { Serial.print(F("Actuator ("));
+void Actuator::printAction(String act1, String act2, String act3, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
+    Serial.print(F("Actuator ("));
     switch(__Type){
       case 0:
         Serial.print(F("Input Fan-"));
@@ -114,12 +124,12 @@ void Actuator::turnOff()
 bool Actuator::setTimeOn(unsigned long t_on)
   { if(t_on*1000UL < __CycleTime){
      __TimeOn = t_on*1000UL;
-     printAction(F("TimeOn changed to "), String(t_on), F(" seconds"));
+     printAction(F("TimeOn changed to "), String(t_on), F(" seconds"), 0);
      return true;
    }
    else{
      printAction(F("Cannot change TimeOn. Parameter has to be smaller than "),
-     String(float(__CycleTime)/1000), F(" seconds"));
+     String(float(__CycleTime)/1000), F(" seconds"), 3);
      return false;
    }
   }
@@ -127,12 +137,12 @@ bool Actuator::setTimeOn(unsigned long t_on)
 bool Actuator::setCycleTime(unsigned long t_cycle)
   { if(__TimeOn < t_cycle*1000UL){
      __CycleTime = t_cycle*1000UL;
-     printAction(F("TimeOff changed to "), String(t_cycle), F(" seconds"));
+     printAction(F("TimeOff changed to "), String(t_cycle), F(" seconds"), 0);
      return true;
    }
    else{
      printAction(F("Cannot change TimeOff. Parameter has to be bigger than "),
-     String(float(__TimeOn)/1000), F(" seconds"));
+     String(float(__TimeOn)/1000), F(" seconds"), 3);
      return false;
    }
   }
@@ -141,12 +151,12 @@ bool Actuator::setTime(unsigned long t_on, unsigned long t_cycle)
   { if(t_on < t_cycle){
      __TimeOn = t_on*1000UL;
      __CycleTime = t_cycle*1000UL;
-     printAction(F("TimeOn changed to "), String(t_on), F(" seconds"));
-     printAction(F("TimeOff changed to "), String(t_cycle), F(" seconds"));
+     printAction(F("TimeOn changed to "), String(t_on), F(" seconds"), 0);
+     printAction(F("TimeOff changed to "), String(t_cycle), F(" seconds"), 0);
      return true;
    }
    else{
-     printAction(F("Cannot change Times. Parameter t_on has to be bigger than t_cycle"));
+     printAction(F("Cannot change Times. Parameter t_on has to be bigger than t_cycle"), 3);
      return false;
    }
   }
@@ -163,8 +173,8 @@ unsigned long Actuator::getTime()
 void Actuator::enable(bool en)
   { if(__Enable!=en){
       __Enable = en;
-      if(__Enable){ printAction(F("Enable")); }
-      else{ printAction(F("Disable")); }
+      if(__Enable){ printAction(F("Enable"), 0); }
+      else{ printAction(F("Disable"), 0); }
     }
   }
 
@@ -190,11 +200,11 @@ void Actuator::run()
   {  if(__Enable){
        if( millis()-__Actual_time<__TimeOn && __State==LOW){
          __State = HIGH;
-         printAction(F("Turn On"));
+         printAction(F("Turn On"), 0);
        }
        else if(millis()-__Actual_time>=__TimeOn && millis()-__Actual_time<__CycleTime && __State==HIGH){
          __State = LOW;
-         printAction(F("Turn Off"));
+         printAction(F("Turn Off"), 0);
        }
        else if(millis()-__Actual_time>=__CycleTime){
          resetTime();
@@ -250,7 +260,7 @@ unsigned long Actuator::getTimeOnAll(uint8_t type, uint8_t floor)
   { for(int i=0; i < __TotalActuators; i++){
       if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
         unsigned long timeOn = ptr[i]->getTimeOn();
-        ptr[i]->printAction(F("Time On "), String(timeOn), F(" seconds"));
+        ptr[i]->printAction(F("Time On "), String(timeOn), F(" seconds"), 0);
         return timeOn;
       }
     }
@@ -261,7 +271,7 @@ unsigned long Actuator::getCycleTimeAll(uint8_t type, uint8_t floor)
   { for(int i=0; i < __TotalActuators; i++){
       if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
         unsigned long cycleTime = ptr[i]->getCycleTime();
-        ptr[i]->printAction(F("Cycle time "), String(cycleTime), F(" seconds"));
+        ptr[i]->printAction(F("Cycle time "), String(cycleTime), F(" seconds"), 0);
         return cycleTime;
       }
     }
@@ -272,7 +282,7 @@ unsigned long Actuator::getTimeAll(uint8_t type, uint8_t floor)
   { for(int i=0; i < __TotalActuators; i++){
       if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
         unsigned long acTime = ptr[i]->getTime();
-        ptr[i]->printAction(F("Time since cycle started "), String(acTime), F(" seconds"));
+        ptr[i]->printAction(F("Time since cycle started "), String(acTime), F(" seconds"), 0);
         return acTime;
       }
     }
@@ -378,8 +388,13 @@ void solenoidValve::getConsumptionH2O()
     interrupts();   // Enable Interrupts
   }
 
-void solenoidValve::solenoidPrint(String act)
-  { Serial.print(F("Solenoid Valve "));
+void solenoidValve::solenoidPrint(String act, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
+    Serial.print(F("Solenoid Valve "));
     Serial.print(__Floor+1);
     if(__Region<MAX_IRRIGATION_REGIONS/2){
       Serial.print(F("A"));
@@ -393,8 +408,13 @@ void solenoidValve::solenoidPrint(String act)
     Serial.println(act);
   }
 
-void solenoidValve::solenoidPrint(String act1, String act2, String act3)
-  { Serial.print(F("Solenoid Valve "));
+void solenoidValve::solenoidPrint(String act1, String act2, String act3, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
+    Serial.print(F("Solenoid Valve "));
     Serial.print(__Floor+1);
     if(__Region<MAX_IRRIGATION_REGIONS/2){
       Serial.print(F("A"));
@@ -410,15 +430,25 @@ void solenoidValve::solenoidPrint(String act1, String act2, String act3)
     Serial.println(act3);
   }
 
-void solenoidValve::groupPrint(String act)
-  { Serial.print(F("Solenoid Group "));
+void solenoidValve::groupPrint(String act, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
+    Serial.print(F("Solenoid Group "));
     Serial.print(__Group);
     Serial.print(F(": "));
     Serial.println(act);
   }
 
-void solenoidValve::groupPrint(String act1, String act2, String act3)
-  { Serial.print(F("Solenoid Group "));
+void solenoidValve::groupPrint(String act1, String act2, String act3, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
+    Serial.print(F("Solenoid Group "));
     Serial.print(__Group);
     Serial.print(F(": "));
     Serial.print(act1);
@@ -443,13 +473,13 @@ bool solenoidValve::setTimeOn(unsigned long t_on)
       __ActionTime -= __TimeOn;
       __TimeOn = t_on;
       __ActionTime += __TimeOn;
-      solenoidPrint(F("Time On changed to "), String(seconds), F(" seconds"));
+      solenoidPrint(F("Time On changed to "), String(seconds), F(" seconds"), 0);
       return true; // Succesful
     }
     else{ // Not enough time
       float seconds = float(__CycleTime)/1000;
       solenoidPrint(F("Time On cannot be changed. Total solenoids turn-on time has to be smaller than "),
-      String(seconds), F(" seconds"));
+      String(seconds), F(" seconds"), 3);
       return false;
     }
   }
@@ -465,13 +495,13 @@ uint8_t solenoidValve::getOrder()
 
 void solenoidValve::turnOn(bool rst_time)
   { __State = HIGH;
-    solenoidPrint(F("Turn On"));
+    solenoidPrint(F("Turn On"), 0);
     if(rst_time){setTime(); }
   }
 
 void solenoidValve::turnOff(bool rst_time)
   { __State = LOW;
-    solenoidPrint(F("Turn Off"));
+    solenoidPrint(F("Turn Off"), 0);
     if(rst_time){setTime(); }
   }
 
@@ -492,8 +522,8 @@ bool solenoidValve::reOrder(uint8_t number)
     }
     else{finished = false; } // Incorrect number proposition
 
-    if(finished){ solenoidPrint(F("Reorder Succesful. New Number = "), String(__Number), F("")); }
-    else{ solenoidPrint(F("Reorder Failed. Number order has to be smaller than "), String(__TotalActuators), F("")); }
+    if(finished){ solenoidPrint(F("Reorder Succesful. New Number = "), String(__Number), F(""), 0); }
+    else{ solenoidPrint(F("Reorder Failed. Number order has to be smaller than "), String(__TotalActuators), F(""), 3); }
 
     return finished;
   }
@@ -501,8 +531,8 @@ bool solenoidValve::reOrder(uint8_t number)
 void solenoidValve::enable(bool en)
   { if(__Enable!=en){
       __Enable = en;
-      if(__Enable){ solenoidPrint(F("Enabled")); }
-      else{ solenoidPrint(F("Disabled")); }
+      if(__Enable){ solenoidPrint(F("Enabled"), 0); }
+      else{ solenoidPrint(F("Disabled"), 0); }
     }
   }
 
@@ -532,23 +562,23 @@ bool solenoidValve::reOrder_byFloor(uint8_t fl)
       }
     }
     if(count==MAX_IRRIGATION_REGIONS){
-      groupPrint(F("re-order by Floor succesful"));
+      groupPrint(F("re-order by Floor succesful"), 1);
       return true;
     }
     else{
-      groupPrint(F("re-order by Floor unsuccesful"));
+      groupPrint(F("re-order by Floor unsuccesful"), 3);
       return false;}
   }
 
 void solenoidValve::restartH2O(bool print)
-  { if(print){ solenoidPrint(F("Water Volume Restarted")); }
+  { if(print){ solenoidPrint(F("Water Volume Restarted"), 0); }
     __H2OVolume = 0;
   }
 
 void solenoidValve::restartAllH2O(bool print)
-  { Serial.println(F("Restarting all water parameters saved"));
+  { Serial.println(F("debug,Restarting all water parameters saved"));
     __H2Ow = 0;
-    if(print){ Serial.println(F("Waste Water Volume Restarted")); }
+    if(print){ Serial.println(F("debug,Waste Water Volume Restarted")); }
     for(int i = 0; i<__TotalActuators; i++){ ptr[i]->restartH2O(print); }
   }
 
@@ -556,10 +586,10 @@ float solenoidValve::getH2O()
   { return __H2OVolume; }
 
 void solenoidValve::printH2O()
-  { solenoidPrint(F("Water Volume = "), String(__H2OVolume), F(" liters")); }
+  { solenoidPrint(F("Water Volume = "), String(__H2OVolume), F(" liters"), 0); }
 
 void solenoidValve::printAllH2O(bool printAll = true)
-  { if(__H2Ow>0){ groupPrint(F("Wasted Water Volume = "), String(__H2Ow), F(" liters")); }
+  { if(__H2Ow>0){ groupPrint(F("Wasted Water Volume = "), String(__H2Ow), F(" liters"), 0); }
     if(printAll){ for(int i = 0; i<__TotalActuators; i++){ptr[i]->printH2O();} }
   }
 
@@ -577,16 +607,16 @@ uint8_t solenoidValve::begin(uint8_t fl, uint8_t reg)
         __CycleTime = SOLENOID_CYCLE_TIME*60000UL;
         __ActionTime += __TimeOn; // Add action time to each group
 
-        solenoidPrint(F("Started correctly"));
+        solenoidPrint(F("Started correctly"), 0);
         return 0; // Succesful
       }
       else{
-        solenoidPrint(F("Region value incorrectly configured"));
+        solenoidPrint(F("Region value incorrectly configured"), 3);
         return 1; // Region outside of range [0-MAX_IRRIGATION_REGIONS-1]
       }
     }
     else{
-      solenoidPrint(F("Floor value incorrectly configured"));
+      solenoidPrint(F("Floor value incorrectly configured"), 3);
       return 2; // Floor outside of range [0-MAX_FLOOR-1]
     }
   }
@@ -612,7 +642,7 @@ bool solenoidValve::run()
         // Restart cycle
         else if(__ActualNumber>=__TotalActuators && getTime()>=__CycleTime){
           __ActualNumber = 0;
-          groupPrint(F("Restarting cycle"));
+          groupPrint(F("Restarting cycle"), 0);
         }
         return true;
      }
@@ -629,7 +659,7 @@ bool solenoidValve::run()
        // Restart cycle
        else if(__ActualNumber>=__TotalActuators && getTime()>=__CycleTime){
          __ActualNumber = 0;
-         groupPrint(F("Restarting cycle"));
+         groupPrint(F("Restarting cycle"), 0);
        }
        return false;
       }
@@ -649,13 +679,13 @@ bool solenoidValve::setCycleTime ( unsigned long t_cycle)
   { if( __ActionTime < t_cycle ){
       float minute = float(t_cycle)/60000;
       __CycleTime = t_cycle;
-      ptr[0]->groupPrint(F("Cycle Time changed to "), String(minute), F(" minutes"));
+      ptr[0]->groupPrint(F("Cycle Time changed to "), String(minute), F(" minutes"), 0);
       return true; // Succesful
     }
     else{ // Not enough time
       float minute = float(__ActionTime)/60000;
       ptr[0]->groupPrint(F("Cycle Time cannot be changed, it has to be greater than "),
-      String(minute), F(" minutes"));
+      String(minute), F(" minutes"), 3);
       return false;
     }
   }
@@ -796,11 +826,11 @@ bool solenoidValve::defaultOrder(uint8_t night_floor)
     }
 
     if(count==__TotalActuators){
-      ptr[0]->groupPrint(F("default re-order succesful"));
+      ptr[0]->groupPrint(F("default re-order succesful"), 0);
       return true;
     }
     else{
-      ptr[0]->groupPrint(F("default re-order unsuccesful"));
+      ptr[0]->groupPrint(F("default re-order unsuccesful"), 3);
       return false;
     }
   }
@@ -809,7 +839,7 @@ void solenoidValve::enableGroup(bool en)
   { if(__EnableGroup!=en){
       __EnableGroup = en;
       if(__EnableGroup){
-        ptr[0]->groupPrint(F("Enabled"));
+        ptr[0]->groupPrint(F("Enabled"), 0);
         if(__ActualNumber<__TotalActuators && __ActualNumber!=0){ ptr[0]->getWasteH2O(false); }
       }
       else{
@@ -820,7 +850,7 @@ void solenoidValve::enableGroup(bool en)
             break;
           }
         }
-        ptr[0]->groupPrint(F("Disabled"));
+        ptr[0]->groupPrint(F("Disabled"), 0);
       }
     }
   }
@@ -851,10 +881,16 @@ asyncActuator::asyncActuator(uint8_t type=250)
    { __State = LOW;
      __Enable = true;
      __Type = type;
+     __Counter = 0;
    }
 
-void asyncActuator::printAction(String act)
-  { Serial.print(F("Actuator ("));
+void asyncActuator::printAction(String act, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
+    Serial.print(F("Actuator ("));
     if(__Type == 0){ Serial.print(F("EV-KegsH2O): ")); }
     else if(__Type == 1){ Serial.print(F("EV-KegsNutrition): ")); }
     else{ Serial.print(F("Undefined): ")); }
@@ -864,22 +900,24 @@ void asyncActuator::printAction(String act)
 void asyncActuator::turnOn()
   { if(!__State){
       __State = HIGH;
-      printAction(F("Turn On"));
+      printAction(F("Turn On"), 0);
     }
   }
 
 void asyncActuator::turnOff()
-  { if(__State){
+  { if(__Counter<1){__Counter++;}
+    else if(__State){
+      __Counter = 0;
       __State = LOW;
-      printAction(F("Turn Off"));
+      printAction(F("Turn Off"), 0);
     }
   }
 
 void asyncActuator::enable(bool en)
   { if(__Enable!=en){
       __Enable = en;
-      if(__Enable){ printAction(F("Enable")); }
-      else{ printAction(F("Disable")); }
+      if(__Enable){ printAction(F("Enable"), 0); }
+      else{ printAction(F("Disable"), 0); }
     }
   }
 

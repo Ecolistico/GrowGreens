@@ -109,41 +109,42 @@ uint8_t inWhatFloorIsNight(){ // This function cannot be executed until the firs
 void updateDay(){ 
   if(day1.getState()!=day1.isDay(dateHour, dateMinute)){
     if(day1.getState()){
-      Serial.println(F("warning,Day Started in Floor 1"));
+      Serial.println(F("info,Day Started in Floor 1"));
       LED_Mod::turnOn(0);
       }
     else{
-      Serial.println(F("warning,Night Started in Floor 1"));
+      Serial.println(F("info,Night Started in Floor 1"));
       LED_Mod::turnOff(0);
       }
   }
   if(day2.getState()!=day2.isDay(dateHour, dateMinute)){
     if(day2.getState()){
-      Serial.println(F("warning,Day Started in Floor 2"));
+      Serial.println(F("info,Day Started in Floor 2"));
       LED_Mod::turnOn(1);
       }
     else{
-      Serial.println(F("warning,Night Started in Floor 2"));
+      Serial.println(F("info,Night Started in Floor 2"));
       LED_Mod::turnOff(1);
       }
   }
   if(day3.getState()!=day3.isDay(dateHour, dateMinute)){
     if(
-      day3.getState()){Serial.println(F("warning,Day Started in Floor 3"));
-      LED_Mod::turnOn(2);
+      day3.getState()){
+        Serial.println(F("info,Day Started in Floor 3"));
+        LED_Mod::turnOn(2);
       }
     else{
-      Serial.println(F("warning,Night Started in Floor 3"));
+      Serial.println(F("info,Night Started in Floor 3"));
       LED_Mod::turnOff(2);
       }
   }
   if(day4.getState()!=day4.isDay(dateHour, dateMinute)){
     if(day4.getState()){
-      Serial.println(F("warning,Day Started in Floor 4"));
+      Serial.println(F("info,Day Started in Floor 4"));
       LED_Mod::turnOn(3);
       }
     else{
-      Serial.println(F("warning,Night Started in Floor 4"));
+      Serial.println(F("info,Night Started in Floor 4"));
       LED_Mod::turnOff(3);
       }
   }

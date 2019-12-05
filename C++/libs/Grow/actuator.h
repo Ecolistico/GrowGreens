@@ -66,8 +66,8 @@ class Actuator
 
         void setTime();
         void resetTime();
-        void printAction(String act);
-        void printAction(String act1, String act2, String act3);
+        void printAction(String act, uint8_t level=0);
+        void printAction(String act1, String act2, String act3, uint8_t level=0);
         void turnOn();
         void turnOff();
         bool setTimeOn(unsigned long t_on); // Returns true if succesful
@@ -175,10 +175,10 @@ class solenoidValve
          bool changeOrderNumber(uint8_t new_number); // Change the order number. Return 0 if succesful
          void getWasteH2O(bool print = true); // Get Water Consumption  when no solenoids are active
          void getConsumptionH2O(); // Get Water Consumption for each Region
-         void solenoidPrint(String act); // Print an action for the solenoid
-         void solenoidPrint(String act1, String act2, String act3); // Print an action for the solenoid
-         void groupPrint(String act); // Print an action for the group
-         void groupPrint(String act1, String act2, String act3); // Print an action for the group
+         void solenoidPrint(String act, uint8_t level=0); // Print an action for the solenoid
+         void solenoidPrint(String act1, String act2, String act3, uint8_t level=0); // Print an action for the solenoid
+         void groupPrint(String act, uint8_t level=0); // Print an action for the group
+         void groupPrint(String act1, String act2, String act3, uint8_t level=0); // Print an action for the group
 
      public:
           static uint8_t __TotalActuators;
@@ -230,9 +230,9 @@ class solenoidValve
 class asyncActuator
   {  private:
          bool __State, __Enable;
-         uint8_t __Type;
-
-         void printAction(String act);
+         uint8_t __Type, __Counter;
+         
+         void printAction(String act, uint8_t level=0);
 
      public:
          // Constructor

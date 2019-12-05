@@ -125,12 +125,12 @@ void irrigationController::redefine( uint8_t cyclesPerDay,
           __percentage[i] = 25;
         }
        // Cycles are not a divisor of 24 hrs
-       if(24%cyclesPerDay != 0){ Serial.println(F("Parameter cyclesPerDay incorrect")); }
+       if(24%cyclesPerDay != 0){ Serial.println(F("error,Parameter cyclesPerDay incorrect")); }
        // percentages not sum 100
-       if(per1+per2+per3+per4!=100){ Serial.println(F("Percentages sum has to be equal to 100")); }
+       if(per1+per2+per3+per4!=100){ Serial.println(F("error,Percentages sum has to be equal to 100")); }
        // order parameters wrong
        if(ord1+ord2+ord3+ord4!=6 || ord1==ord2 || ord1==ord3 || ord1==ord4 ||
-          ord2==ord3 || ord2==ord4 || ord3==ord4){ Serial.println(F("Order parameters incorrect")); }
+          ord2==ord3 || ord2==ord4 || ord3==ord4){ Serial.println(F("error,Order parameters incorrect")); }
     }
   }
 
@@ -139,9 +139,9 @@ void irrigationController::setEC(uint8_t sol, uint16_t ec)
       if(ec>0 && ec<5000){
         __ec[sol] = ec;
       }
-      else{ Serial.println(F("set EC failed: ec out of range [0-5000]")); }
+      else{ Serial.println(F("error,set EC failed: ec out of range [0-5000]")); }
     }
-    else{ Serial.println(F("set EC failed: solution out of range [0-3]")); }
+    else{ Serial.println(F("error,set EC failed: solution out of range [0-3]")); }
   }
 
 void irrigationController::setEC(uint16_t ec1, uint16_t ec2, uint16_t ec3, uint16_t ec4)
@@ -156,9 +156,9 @@ void irrigationController::setPH(uint8_t sol, float ph)
       if(ph>0 && ph<14){
         __ph[sol] = ph;
       }
-      else{ Serial.println(F("set PH failed: ph out of range [0-5000]")); }
+      else{ Serial.println(F("error,set PH failed: ph out of range [0-5000]")); }
     }
-    else{ Serial.println(F("set PH failed: solution out of range [0-3]")); }
+    else{ Serial.println(F("error,set PH failed: solution out of range [0-3]")); }
 
   }
 

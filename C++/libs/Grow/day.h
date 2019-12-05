@@ -72,7 +72,7 @@ class LED_Mod
          bool __State, __Enable;
          uint8_t __Floor, __Region;
 
-         void printAction(String act);
+         void printAction(String act, uint8_t level=0);
          void setState(bool state);
 
      public:

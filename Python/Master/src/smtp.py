@@ -27,6 +27,6 @@ class Mail:
             server.login(infoMail, "Kale5elak.")
             server.sendmail(infoMail, recipients, msg.as_string())
             server.close()
-            self.log.info("Email sent to {}, Subject={}, Message={}".format(self.logMail, subject,mssg))
+            self.log.debug("Email sent to {}, Subject={}, Message={}".format(self.logMail, subject,mssg))
         except:
             self.log.exception("Email Error, cannot send the email")
