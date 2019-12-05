@@ -49,6 +49,7 @@ void serialEvent() {                                  //if the hardware serial p
               Serial.println(ec);
               if(show){
                  delay(10000);
+                 Serial.println(F("info,Solution Finished"));
                  Serial.println(F("Solution Finished"));
               } else {
                 sMaker.prepareSolution(liters, sol, ph, ec);

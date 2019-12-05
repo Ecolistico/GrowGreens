@@ -545,6 +545,7 @@ void solutionMaker::relayControl()
     }
     else if(!digitalRead(__Relay1) && !__RelayState && !__Work && millis()-__RelayTime>RELAY_ACTION_TIME){
       digitalWrite(__Relay1, !__RelayState);
+      Serial.println(F("info,Solution Finished"));
       Serial.println(F("Solution Finished"));
     }
   }
