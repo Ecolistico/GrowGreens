@@ -17,7 +17,7 @@ void emergencyStop() {
 
 // Print Log from sensors when the information is relevant
 void logSens() {
-  if(millis()-logSensTime>5000){
+  if(millis()-logSensTime>10000){
     logSensTime = millis();
     if(Recirculation.getInPump() || Recirculation.getRSolValve() || Recirculation.getRH2OValve()){
       Serial.print(F("Level Recirculation Tank: ")); Serial.print(US0.getVolume()); Serial.println(F(" liters"));

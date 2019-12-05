@@ -231,7 +231,7 @@ void recirculationController::fillH2O(float liters)
           __Fh2o = HIGH;
           __FPump = HIGH;
         }
-        else{ printAction(F("Cannot execute fillH2O, parameter liters incorrect"), 3); }
+        else{ printAction(F("Cannot execute fillH2O... parameter liters incorrect"), 3); }
       }
       else{ printAction(F("Water kegs is already filling"), 2); }
     }
@@ -246,7 +246,7 @@ void recirculationController::fillSol(float liters)
           __FSol = HIGH;
           __FPump = HIGH;
         }
-        else{ printAction(F("Cannot execute fillSol, parameter liters incorrect"), 3); }
+        else{ printAction(F("Cannot execute fillSol... parameter liters incorrect"), 3); }
       }
       else{ printAction(F("Solution Maker is already filling"), 2); }
     }
@@ -275,7 +275,7 @@ bool recirculationController::moveIn()
       }
       return true;
     }
-    printAction(F("Cannot execute moveIn, another solution is moving in"), 2);
+    printAction(F("Cannot execute moveIn... pump already working"), 2);
     return false;
   }
 
@@ -339,12 +339,12 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
         }
       }
       else{
-        printAction(F("Cannot execute moveOut, parameter toWhere incorrect"), 3);
+        printAction(F("Cannot execute moveOut... parameter toWhere incorrect"), 3);
         return 0;
       }
     }
     else{
-      printAction(F("Cannot execute moveOut, another solution is moving out"), 3);
+      printAction(F("Cannot execute moveOut... pump already working"), 2);
       return 0;
     }
   }
@@ -356,7 +356,7 @@ bool recirculationController::moveSol()
       __SolPump = HIGH;
       printAction(F("Emptying solution Maker"), 1);
     }
-    else{ printAction(F("There is nothing to move in solution Maker"), 3);}
+    else{ printAction(F("There is nothing to move in solution Maker"), 2);}
     return true;
   }
 

@@ -39,13 +39,13 @@ void serialEvent() {                                  //if the hardware serial p
           if(ph>0 && ph<14){
             if(ec>0){
               Serial.println(F("Request accepted"));
-              Serial.print(F("warning,Preparing "));
+              Serial.print(F("info,Preparing "));
               Serial.print(liters);
               Serial.print(F(" liters of solution "));
               Serial.print(sol+1);
               Serial.print(F(" with ph="));
               Serial.print(ph);
-              Serial.print(F(",ec="));
+              Serial.print(F("and ec="));
               Serial.println(ec);
               if(show){
                  delay(10000);

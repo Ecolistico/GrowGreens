@@ -70,7 +70,6 @@ void initialPreconditions(bool before, void (*ptr2function)()){
       uint8_t inSol = Recirculation.getIn();
       Recirculation.setIn(WATER);
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(WATER): request success")); }
-      else{ Serial.println(F("warning,Recirculation moveIn(WATER): pumpIn already working")); }
       Recirculation.setIn(inSol);
       IPC.setState(30); // Check IPC Process 30
     }
@@ -131,7 +130,6 @@ void recirculateWater() {
     uint8_t inSol = Recirculation.getIn();
     Recirculation.setIn(WATER);
     if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(WATER): request success")); }
-    else{ Serial.println(F("warning,Recirculation moveIn(WATER): pumpIn already working")); }
     Recirculation.setIn(inSol);
   }
 }
@@ -200,7 +198,6 @@ void middlePreconditions(void (*ptr2function)()){
 
 void startMiddleIrrigation(){
   if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request success")); }
-  else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
       
   solenoidValve::enableGroup(true); // Enable Valves Group
   irrigationStage = 4; // Pass to the next irrigation Stage
@@ -276,7 +273,6 @@ void runIPC(){
       //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS); delete
       uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
-        Serial.println(F("warning,PumpOut is working on another process... Please wait until it finished"));
         IPC.setState(250); // Check IPC Process 250
       }
       else if(resp==1){
@@ -357,7 +353,6 @@ void runIPC(){
       Recirculation.resetVolKnut(); // Volumen in nutrition kegs is 0
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request success")); }
-      else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
       chargeSolenoidParameters(Irrigation.getSolution()); // Update irrigation parameters
       // Update recirculation parameters
       Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
@@ -374,7 +369,6 @@ void runIPC(){
       Recirculation.finishRelease(true); // Get out the solution from nutrition kegs
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request success")); }
-      else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
       chargeSolenoidParameters(Irrigation.getSolution()); // Update irrigation parameters
       // Update recirculation parameters
       Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
@@ -395,7 +389,6 @@ void runIPC(){
       //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS); delete
       uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
-        Serial.println(F("warning,PumpOut is working on another process... Please wait until it finished"));
         IPC.setState(251); // Check IPC Process 251
       }
       else if(resp==1){
@@ -403,7 +396,7 @@ void runIPC(){
         IPC.setState(41); // Check IPC Process 41
       }
       else if(resp==2){
-        Serial.println(F("warning,There is not enough solution to fill nutrition kegs, adding extra water in solutionMaker"));
+        Serial.println(F("info,There is not enough solution to fill nutrition kegs, adding extra water in solutionMaker"));
         IPC.setState(42); // Check IPC Process 22
       }
     }
@@ -505,7 +498,6 @@ void runIPC(){
       Recirculation.resetVolKnut(); // Volumen in nutrition kegs is 0
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request success")); }
-      else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
       chargeSolenoidParameters(Irrigation.getSolution()); // Update irrigation parameters
       // Update recirculation parameters
       Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
@@ -528,7 +520,6 @@ void runIPC(){
       Recirculation.finishRelease(true); // Get out the solution from nutrition kegs
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
       if(Recirculation.moveIn()){ Serial.println(F("Recirculation moveIn(): request success")); }
-      else{ Serial.println(F("warning,Recirculation moveIn(): pumpIn already working")); }
       chargeSolenoidParameters(Irrigation.getSolution()); // Update irrigation parameters
       // Update recirculation parameters
       Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
@@ -578,7 +569,6 @@ void runIPC(){
       //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
       uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
-        Serial.println(F("warning,PumpOut is working on another process... Please wait until it finished"));
         IPC.setState(252); // Check IPC Process 252
       }
       else if(resp==1){
@@ -682,7 +672,6 @@ void runMPC(){
       uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
-        Serial.println(F("warning,PumpOut is working on another process... Please wait until it finished"));
         MPC.setState(250); // Check MPC Process 250
       }
       else if(resp==1){
@@ -757,7 +746,6 @@ void runMPC(){
       uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
-        Serial.println(F("warning,PumpOut is working on another process... Please wait until it finished"));
         MPC.setState(252); // Check MPC Process 252
       }
       else if(resp==1){

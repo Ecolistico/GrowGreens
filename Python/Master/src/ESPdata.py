@@ -74,10 +74,10 @@ class dataESP32:
         self.log.warning(mssg)
     
     def logValues(self):
-        self.log.debug("T1R={0} , H1R={1}\tT1L={2} , H1L={3}".format(self.T1R, self.H1R, self.T1L, self.H1L))
-        self.log.debug("T2R={0} , H2R={1}\tT2L={2} , H2L={3}".format(self.T2R, self.H2R, self.T2L, self.H2L))
-        self.log.debug("T3R={0} , H3R={1}\tT3L={2} , H3L={3}".format(self.T3R, self.H3R, self.T3L, self.H3L))
-        self.log.debug("T4R={0} , H4R={1}\tT4L={2} , H4L={3}".format(self.T4R, self.H4R, self.T4L, self.H4L))
+        self.log.debug("T1R={0}, H1R={1}, T1L={2} , H1L={3}".format(self.T1R, self.H1R, self.T1L, self.H1L))
+        self.log.debug("T2R={0}, H2R={1}, T2L={2} , H2L={3}".format(self.T2R, self.H2R, self.T2L, self.H2L))
+        self.log.debug("T3R={0}, H3R={1}, T3L={2} , H3L={3}".format(self.T3R, self.H3R, self.T3L, self.H3L))
+        self.log.debug("T4R={0}, H4R={1}, T4L={2} , H4L={3}".format(self.T4R, self.H4R, self.T4L, self.H4L))
         
 # Define class for the 3 ESP
 class multiESP:

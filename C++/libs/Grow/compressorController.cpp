@@ -198,11 +198,9 @@ void compressorController::closeFreeH2O()
 void compressorController::compressTank()
   { if(!__Vnut){
       if(__Mode==4){
-        printAct(F("Already filling water kegs, opening valves to fill also air tank"), 2);
         setMode(5);
       }
       else if(__Mode!=2 && __Mode!=3 && __Mode!=5 && __Mode!=6){
-        printAct(F("Getting the correct pressure in water kegs"), 1);
         setMode(2);
       }
       else{printAct(F("Already compressing air tank"), 2);}
@@ -213,11 +211,9 @@ void compressorController::compressTank()
 void compressorController::compressNut()
   { if(!__Fnut){
       if(__Mode==4 || __Mode==5){
-        printAct(F("Already filling water kegs, opening valves to fill nutrition kegs"), 2);
         setMode(6);
       }
       else if(__Mode!=3 && __Mode!=6){
-        printAct(F("Getting the correct pressure in nutrition kegs"), 1);
         setMode(3);
       }
       else{printAct(F("Already compressing nutrition kegs") , 2);}
@@ -228,15 +224,12 @@ void compressorController::compressNut()
 void compressorController::compressH2O()
   { if(!__Fh2o){
       if(__Mode==2){
-        printAct(F("Already filling air tank, opening valves to fill also water kegs"), 1);
         setMode(5);
       }
       else if(__Mode==3){
-        printAct(F("Already filling nutrition kegs, opening valves to fill also water kegs"), 1);
         setMode(6);
       }
       else if(__Mode!=4 && __Mode!=5 && __Mode!=6){
-        printAct(F("Getting the correct pressure in water kegs"), 1);
         setMode(4);
       }
       else{printAct(F("Already compressing water kegs"), 2);}

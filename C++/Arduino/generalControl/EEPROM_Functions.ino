@@ -224,6 +224,9 @@ void chargeMultidayParameters(){
   light = EEPROM.read(pos+11);
   initHour = float(EEPROM.read(pos+12))/10;
   if(cycles>0 && light>0){ day4.redefine(cycles, light, initHour); }
+  
+  Serial.flush();
+  delay(1000);
 }
 
 void regionSave(int fl, int reg){
@@ -261,6 +264,9 @@ void chargeLedRegion(){
   enableLED(1, reg_2f);
   enableLED(2, reg_3f);
   enableLED(3, reg_4f);
+
+  Serial.flush();
+  delay(1000);
 }
 
 void chargeSolenoidRegion(){
@@ -274,6 +280,9 @@ void chargeSolenoidRegion(){
   enableSolenoid(1, reg_2f);
   enableSolenoid(2, reg_3f);
   enableSolenoid(3, reg_4f);
+
+  Serial.flush();
+  delay(1000);
 }
 
 void irrigationSave(int cyclesPerDay, int initialHour){
@@ -346,6 +355,9 @@ void chargeIrrigationParameters(){
     Irrigation.setPH(ph1, ph2, ph3, ph4);
   }
   else{ Serial.println(F("error,Charge Irrigation Parameters Error: Cannot charge ph parameters because they are incosistent")); }
+
+  Serial.flush();
+  delay(1000);
 }
 
 void analogSaveFilter(int Type, int filt, float filterParam){
@@ -488,20 +500,23 @@ void chargePressureParameter(){
 
     if(maxPress>0 && max_pressure!=maxPress && !isnan(maxPress)){
       max_pressure = maxPress;
-      Serial.print(F("Max Pressure = "));
+      Serial.print(F("Max Pressure\t= "));
       Serial.print(max_pressure);
       Serial.println(F(" psi"));
     }
     if(minPress>0 && min_pressure!=minPress && !isnan(minPress)){
       min_pressure = minPress;
-      Serial.print(F("Min Pressure = "));
+      Serial.print(F("Min Pressure\t= "));
       Serial.print(min_pressure);
       Serial.println(F(" psi"));
     }
     if(criticalPress>0 && critical_pressure!=criticalPress && !isnan(criticalPress)){
       critical_pressure = criticalPress;
-      Serial.print(F("Critical Pressure = "));
+      Serial.print(F("Critical Pressure\t= "));
       Serial.print(critical_pressure);
       Serial.println(F(" psi"));
     }
+
+    Serial.flush();
+    delay(2500);
 }

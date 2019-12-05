@@ -236,6 +236,7 @@ void setup() {
   solenoid_setup(); // Initialize solenoids valves
   // Initialize recController
   Recirculation.begin(US0, US1, US2, US3, US4, US5, US6);
+  Serial.flush();
   
   // Charge EEPROM parameters saved
   chargeMultidayParameters(); // For multiDay
@@ -243,7 +244,7 @@ void setup() {
   chargeSolenoidRegion(); // For solenoidValves
   chargeIrrigationParameters(); // For irrigation control
   chargePressureParameter(); // For pressure control
-
+  
   // Set initial state
   inputstring.reserve(30); // Reserve 30 bytes for serial strings
   codification_Multiplexer(); // Initialize Multiplexers
@@ -254,10 +255,13 @@ void setup() {
   
   // Finished
   Serial.println(F("Device Ready"));
-
+  Serial.flush();
+  delay(1000);
   // Request boot info to raspberry
   Serial.println(F("?boot"));
-
+  Serial.flush();
+  delay(3000);
+  
   if(!digitalRead(emergencyUser)){ // Enable Relays
     digitalWrite(mR, !HIGH); // Turn on multiplexors
   }

@@ -419,7 +419,7 @@ void solutionMaker::printAction(String act, uint8_t actuator, uint8_t level=0)
     else if(actuator==5){Serial.print(F("Pump 2"));}
     else{Serial.print(F("Actuator does not match"));}
     
-    Serial.print(F("): "));
+    Serial.print(F("):\t"));
     Serial.println(act);
   }
 
@@ -518,7 +518,7 @@ void solutionMaker::EZOReadRequest(float temp, bool sleep = false)
         ecMeter->readWithTempCompensation(temp);
       }
     }
-    else{Serial.println(F("warning,Solution Maker (EZO Sensors): They are not available"));}
+    else{Serial.println(F("debug,Solution Maker (EZO Sensors): They are not available"));}
   }
 
 void solutionMaker::readRequest()

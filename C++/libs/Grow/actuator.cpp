@@ -69,14 +69,14 @@ void Actuator::printAction(String act, uint8_t level=0)
         Serial.print(F("Vent Fan-"));
         break;
       case 3:
-        Serial.print(F("Humidity Valve-"));
+        Serial.print(F("Hum Valve-"));
         break;
       default:
         Serial.print(F("Undefined-"));
         break;
     }
     Serial.print(__Floor+1);
-    Serial.print(F("): "));
+    Serial.print(F("):\t"));
     Serial.println(act);
   }
 

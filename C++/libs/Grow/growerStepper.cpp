@@ -232,12 +232,12 @@ long growerStepper::getYPosition()
 
 void growerStepper::setMaxDistanceX(long maxDist)
   { __MaxX = DEFAULT_MAX_X_DISTANCE_MM-maxDist;
-    printAction(F("MaxDistanceX "), String(getMaxDistanceX()), F(""), 1);
+    printAction(F("MaxDistanceX "), String(getMaxDistanceX()), F(""), 0);
   }
 
 void growerStepper::setMaxDistanceY(long maxDist)
   { __MaxY = DEFAULT_MAX_Y_DISTANCE_MM-maxDist;
-    printAction(F("MaxDistanceY "), String(getMaxDistanceY()), F(""), 1);
+    printAction(F("MaxDistanceY "), String(getMaxDistanceY()), F(""), 0);
   }
 
 long growerStepper::getMaxDistanceX()
