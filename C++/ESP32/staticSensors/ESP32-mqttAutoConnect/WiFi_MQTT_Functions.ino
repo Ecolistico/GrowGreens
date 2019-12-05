@@ -91,20 +91,20 @@ void callback(char* topic, byte* message, unsigned int length) {
       if(newValue>=2){
         update_constant = newValue;
         memorySave(3);
-        Serial.print(F("Attemp to change update time constant succeed,Taking measurements every ")); Serial.print(newValue); Serial.println(F(" s"));
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attemp to change update time constant succeed,Taking measurements every "+String(newValue)+" s");
+        Serial.print(F("Attempt to change update time constant succeed, Taking measurements every ")); Serial.print(newValue); Serial.println(F(" s"));
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attempt to change update time constant succeeded, Taking measurements every "+String(newValue)+" s");
       }
       else{
-        Serial.println(F("Attemp to change update time constant failed,Parameter has to be at least 2 s"));
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attemp to change update time constant failed,Parameter has to be at least 2 s");
+        Serial.println(F("Attempt to change update time constant failed, Parameter has to be at least 2 s"));
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attempt to change update time constant failed, Parameter has to be at least 2 s");
       }
     }
 
     else if(messageTemp == "notFilter"){
       filter = 0;
       memorySave(0);
-      Serial.println(F("Attemp to change -Not Filter- Configuration succed"));
-      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attemp to change -Not Filter- Configuration succed");
+      Serial.println(F("Attempt to change -Not Filter- Configuration succeeded"));
+      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attempt to change -Not Filter- Configuration succeeded");
     }
     
     else if(messageTemp.startsWith("setExponentialFilter")){
@@ -119,12 +119,12 @@ void callback(char* topic, byte* message, unsigned int length) {
       
       if(setExponentialFilter(newValue)){
         memorySave(1);
-        Serial.print(F("Attemp to set Exponential Filter succed,New Alpha = ")); Serial.println(newValue);
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/log",  "Attemp to set Exponential Filter succed,New Alpha = "+String(newValue));
+        Serial.print(F("Attempt to set Exponential Filter succeeded, New Alpha = ")); Serial.println(newValue);
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/log",  "Attempt to set Exponential Filter succeeded, New Alpha = "+String(newValue));
       }
       else{
-        Serial.println(F("Attemp to set Exponential Filter failed,Alpha parameter is wrong"));
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attemp to set Exponential Filter failed,Alpha parameter is wrong");
+        Serial.println(F("Attempt to set Exponential Filter failed,Alpha parameter is wrong"));
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attempt to set Exponential Filter failed,Alpha parameter is wrong");
       }
     }
 
@@ -140,8 +140,8 @@ void callback(char* topic, byte* message, unsigned int length) {
 
       if(setKalmanFilter(newValue)){
         memorySave(2);
-        Serial.print(F("Attemp to set Kalman Filter succed,New Kalman Noise = ")); Serial.println(newValue);
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/log",  "Attemp to set Kalman Filter succed,New Kalman Noise = "+String(newValue));
+        Serial.print(F("Attempt to set Kalman Filter succeeded, New Kalman Noise = ")); Serial.println(newValue);
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/log",  "Attempt to set Kalman Filter succeeded, New Kalman Noise = "+String(newValue));
       }
       else{
         Serial.println(F("Attemp to set Kalman Filter failed,Kalman Noise parameter is wrong"));
