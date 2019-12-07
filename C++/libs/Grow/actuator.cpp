@@ -457,11 +457,21 @@ void solenoidValve::groupPrint(String act1, String act2, String act3, uint8_t le
   }
 
 unsigned long solenoidValve::getTime()
-  { for(int i = 0; i<__TotalActuators; i++){
+  { /*
+    for(int i = 0; i<__TotalActuators; i++){
       if(ptr[i]->getOrder()==0){
         return ptr[i]->getCurrentTime();
       }
     }
+    */
+    unsigned long refTime = 0;
+    for(int i = 0; i<__TotalActuators; i++){
+      unsigned long newTime = ptr[i]->getCurrentTime();
+      if(newTime>refTime){
+        refTime = newTime;
+      }
+    }
+    return refTime;
   }
 
 unsigned long solenoidValve::getCurrentTime()

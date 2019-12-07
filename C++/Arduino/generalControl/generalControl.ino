@@ -142,6 +142,7 @@ uint8_t night = 0;
 // Control action that has to be executed at least once when booting/rebooting
 bool firstHourUpdate = false;
 bool bootParameters = false;
+unsigned long bootTimer;
 
 // Serial comunication
 String inputstring = "";
@@ -212,6 +213,7 @@ void substractSolutionConsumption(bool updateConsumption = false);
 void substractWaterConsumption(bool updateConsumption = false);
 // Aux Functions
 void emergencyStop();
+void boot();
 void logSens();
 
 void setup() {
@@ -252,15 +254,12 @@ void setup() {
   multiplexerTime = millis();
   logSensTime = millis();
   buttonTime = millis();
+  bootTimer = millis();
   
   // Finished
   Serial.println(F("Device Ready"));
   Serial.flush();
   delay(1000);
-  // Request boot info to raspberry
-  Serial.println(F("?boot"));
-  Serial.flush();
-  delay(3000);
   
   if(!digitalRead(emergencyUser)){ // Enable Relays
     digitalWrite(mR, !HIGH); // Turn on multiplexors
@@ -271,6 +270,9 @@ void setup() {
 }
 
 void loop() {
+  /*** Request boot info to raspberry ***/
+  boot();
+  
   /*** Emergency Conditions ***/
   emergencyStop();
   /*** Sensors ***/

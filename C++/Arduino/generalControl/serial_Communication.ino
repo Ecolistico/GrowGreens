@@ -395,7 +395,7 @@ void serialEvent(){                                  //if the hardware serial po
         float vh2o = parameter[3].toFloat();
         float solCons = parameter[4].toFloat();
         float h2oCons = parameter[5].toFloat();
-        if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>0 && h2oCons>0){
+        if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>=0 && h2oCons>=0){
           bootParameters = true; // Set bootParameters as true
           lastSolution = lastSol+1; // solution using for irrigation class
           // Update Recirculation class parameters

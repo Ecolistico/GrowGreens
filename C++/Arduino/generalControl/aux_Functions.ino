@@ -15,6 +15,14 @@ void emergencyStop() {
   }
 }
 
+// Ask again for boot parameters after a while without response
+void boot(){
+  if(!bootParameters && millis()-bootTimer>20000){
+    bootTimer=millis();
+    Serial.println(F("?boot"));
+  }
+}
+
 // Print Log from sensors when the information is relevant
 void logSens() {
   if(millis()-logSensTime>10000){

@@ -148,6 +148,8 @@ class serialController:
                 elif(resp == "updateIrrigationState"): self.updateIrrigationState(i)
                 # generalControl is requesting to prepare a solution
                 elif(resp == "requestSolution"): self.requestSolution(i)
+                # generalControl ask if sMaker finished to prepare the solution
+                elif(resp == "askSolFinished"): self.write(self.solutionMaker, "?solutionFinished")
                 # solutionMaker accepts to prepare a new solution
                 elif(resp == "requestAccepted"):
                     self.write(self.generalControl, "solutionMaker,accept")
@@ -171,6 +173,8 @@ class serialController:
                 self.concatResp("updateIrrigationState", line1)
             elif(line1.startswith("?solutionMaker")):
                 self.concatResp("requestSolution", line1)
+            elif(line1.startswith("?solutionFinished")):
+                self.concatResp("askSolFinished", line1)
                     
         # If bytes available in motorsGrower
         while self.motorsGrower.in_waiting>0:

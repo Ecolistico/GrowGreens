@@ -317,6 +317,10 @@ void runIPC(){
       IPC.setState(25); // Check IPC Process 25
       CC.setState(0); // Return Computer Control to normal state
     }
+    else if(CC.state==1 && millis()-IPC.actualTime>=20000){
+      IPC.actualTime=millis();
+      Serial.println(F("?solutionFinished"));
+    }
   }
 
   else if(IPC.state==25){ // PumpSol filling nutrition kegs
@@ -456,6 +460,10 @@ void runIPC(){
       Recirculation.moveSol();
       IPC.setState(45); // Check IPC Process 45
       CC.setState(0); // Return Computer Control to normal state
+    }
+    else if(CC.state==1 && millis()-IPC.actualTime>=20000){
+      IPC.actualTime=millis();
+      Serial.println(F("?solutionFinished"));
     }
   }
   
@@ -613,6 +621,10 @@ void runIPC(){
       Recirculation.moveSol();
       IPC.setState(76); // Check IPC Process 76
       CC.setState(0); // Return Computer Control to normal state
+    }
+    else if(CC.state==1 && millis()-IPC.actualTime>=20000){
+      IPC.actualTime=millis();
+      Serial.println(F("?solutionFinished"));
     }
   }
 

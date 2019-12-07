@@ -75,7 +75,10 @@ solutionMaker::solutionMaker(
     // Define relay pin
     __Relay1 = relay1;
     __RelayState = LOW;
-
+    
+    // At boot solution not ready
+    SolFinished = false;
+    
     // Default parameters
     for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER;i++){
       __IsEnable[i] = false;
@@ -547,6 +550,7 @@ void solutionMaker::relayControl()
       digitalWrite(__Relay1, !__RelayState);
       Serial.println(F("info,Solution Finished"));
       Serial.println(F("Solution Finished"));
+      SolFinished = true;
     }
   }
 
@@ -947,6 +951,7 @@ void solutionMaker::prepareSolution(float liters, uint8_t sol, float ph, float e
         if(mgPowder==-1 && success){Serial.println(F("error,Solution Maker: balanceEC function error"));}
         else if(mlAcid==-1 && success){Serial.println(F("error,Solution Maker: balancePH function error"));}
         if(success){
+          SolFinished = false;
           Serial.print(F("debug,Solution Maker: mgPowder="));
           Serial.print(mgPowder);
           Serial.print(F(", mlAcid="));
@@ -959,3 +964,4 @@ void solutionMaker::prepareSolution(float liters, uint8_t sol, float ph, float e
     }
     else{Serial.println(F("error,Solution Maker: Working on another solution, please wait"));}
   }
+  

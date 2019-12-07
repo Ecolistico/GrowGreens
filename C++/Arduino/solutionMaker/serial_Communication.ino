@@ -49,6 +49,7 @@ void serialEvent() {                                  //if the hardware serial p
               Serial.println(ec);
               if(show){
                  delay(10000);
+                 sMaker.SolFinished = true;
                  Serial.println(F("info,Solution Finished"));
                  Serial.println(F("Solution Finished"));
               } else {
@@ -63,6 +64,12 @@ void serialEvent() {                                  //if the hardware serial p
         else {Serial.println(F("error,prepare(): solution out of range [0-3]"));}
       }
       else {Serial.println(F("error,prepare(): liters has to be positive"));}
+    }
+
+    // solFinished() ?
+    else if(parameter[0]==F("?solutionFinished") || parameter[0]==F("?solutionFinished\n")){
+      if(sMaker.SolFinished){Serial.println(F("Solution Finished"));}
+      else{Serial.println(F("warning,Solution is not ready"));}
     }
     
     // dispense() 
