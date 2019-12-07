@@ -456,22 +456,24 @@ void solenoidValve::groupPrint(String act1, String act2, String act3, uint8_t le
     Serial.println(act3);
   }
 
-unsigned long solenoidValve::getTime()
-  { /*
-    for(int i = 0; i<__TotalActuators; i++){
-      if(ptr[i]->getOrder()==0){
-        return ptr[i]->getCurrentTime();
+unsigned long solenoidValve::getTime(bool zero)
+  { if(zero){ // Time from solenoid zero
+      for(int i = 0; i<__TotalActuators; i++){
+        if(ptr[i]->getOrder()==0){
+          return ptr[i]->getCurrentTime();
+        }
       }
     }
-    */
-    unsigned long refTime = 0;
-    for(int i = 0; i<__TotalActuators; i++){
-      unsigned long newTime = ptr[i]->getCurrentTime();
-      if(newTime>refTime){
-        refTime = newTime;
+    else{ // Biggest time for all the cycle
+      unsigned long refTime = 0;
+      for(int i = 0; i<__TotalActuators; i++){
+        unsigned long newTime = ptr[i]->getCurrentTime();
+        if(newTime>refTime){
+          refTime = newTime;
+        }
       }
+      return refTime;
     }
-    return refTime;
   }
 
 unsigned long solenoidValve::getCurrentTime()
@@ -650,7 +652,7 @@ bool solenoidValve::run()
           }
         }
         // Restart cycle
-        else if(__ActualNumber>=__TotalActuators && getTime()>=__CycleTime){
+        else if(__ActualNumber>=__TotalActuators && getTime(false)>=__CycleTime){
           __ActualNumber = 0;
           groupPrint(F("Restarting cycle"), 0);
         }
@@ -667,7 +669,7 @@ bool solenoidValve::run()
            __ActualNumber++;
        }
        // Restart cycle
-       else if(__ActualNumber>=__TotalActuators && getTime()>=__CycleTime){
+       else if(__ActualNumber>=__TotalActuators && getTime(false)>=__CycleTime){
          __ActualNumber = 0;
          groupPrint(F("Restarting cycle"), 0);
        }

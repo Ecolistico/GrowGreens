@@ -187,7 +187,13 @@ class solenoidValve
           static void flowSensorBegin();
 
           solenoidValve (); // Constructor
-          unsigned long getTime(); // Get the time into the complete cycle
+          
+          /* Get the time into the cycle
+              - true: return time for the first solenoid into the routine
+              - false: return the biggest time save in all solenoids
+          */
+          unsigned long getTime(bool zero);
+          
           unsigned long getCurrentTime(); // Returns the time into the cycle for the particular actuator
           bool setTimeOn(unsigned long t_on); // Return true if succesful
           unsigned long getTimeOn();

@@ -168,7 +168,7 @@ void wait4MiddleIrrigation(){
 
     pointer = solenoidValve::ptr[0];
     // If already pass 3/4 of the cycle time off since the stage 1 should had finished
-    if(pointer->getTime()>=TimeOn+(solenoidValve::getCycleTime()-TotalTimeOn)*0.75){
+    if(pointer->getTime(true)>=TimeOn+(solenoidValve::getCycleTime()-TotalTimeOn)*0.75){
       irrigationStage = 3; // Pass to the next irrigation Stage
     }
   }
