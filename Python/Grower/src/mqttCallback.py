@@ -22,9 +22,8 @@ class mqttController:
         self.containerID, self.floor, self.brokerIP = sysGrower.getData_JSON(sysGrower.MQTT_PATH)
         self.log.warning("Parameters updated - ID={}, Floor={}, brokerIP={}".format(self.containerID, self.floor, self.brokerIP))
     
-    def sendLog(self, mssg, logType = 1):
+    def sendLog(self, mssg, logType = 0):
         logTopic = "{}/Grower{}/log".format(self.containerID, self.floor)
-        
         # Debug
         if(logType==0):
             self.log.debug(mssg)
@@ -41,6 +40,14 @@ class mqttController:
         elif(logType==3):
             self.log.error(mssg)
             mssg += ",error"
+        # Critical
+        elif(logType==4):
+            self.log.error(mssg)
+            mssg += ",critical"
+        # Any other case
+        else:
+            self.log.debug(mssg)
+            mssg += ",debug"
             
         publish.single(logTopic, mssg, hostname = self.brokerIP)
     # On Conenct Callback for MQTT
