@@ -4,13 +4,14 @@
 from time import time
 import paho.mqtt.publish as publish
 import ESPdata
+import growerData
 
 class mqttController:
     def __init__(self,
                  ID,
                  brokerIP,
                  connector,
-                 share,
+                 multiGrower,
                  loggerMain,
                  loggerGr1,
                  loggerGr2,
@@ -34,8 +35,8 @@ class mqttController:
         self.logBack = loggerBack
         # Define ESP32´s object
         self.ESP32 = ESPdata.multiESP(self.logFront, self.logCenter, self.logBack)
-        # Define share variables with serial module
-        self.share = share
+        # Define multiGrower´s object
+        self.mGrower = growerData.multiGrower(self.logGr1, self.logGr2, self.logGr3, self.logGr4)
         # Define aux variables
         self.clientConnected = False
         self.actualTime = time()
@@ -51,10 +52,15 @@ class mqttController:
     
     def Msg2Log(self, logger, mssg):
         if(mssg.split(",")[1]=="debug"): logger.debug(mssg.split(",")[0])
+        elif(mssg.endswith(",debug")): logger.debug(mssg.replace(",debug", ""))
         elif(mssg.split(",")[1]=="info"): logger.info(mssg.split(",")[0])
+        elif(mssg.endswith(",info")): logger.info(mssg.replace(",info", ""))
         elif(mssg.split(",")[1]=="warning"): logger.warning(mssg.split(",")[0])
+        elif(mssg.endswith(",warning")): logger.warning(mssg.replace(",warning", ""))
         elif(mssg.split(",")[1]=="error"): logger.error(mssg.split(",")[0])
+        elif(mssg.endswith(",error")): logger.error(mssg.replace(",error", ""))
         elif(mssg.split(",")[1]=="critical"): logger.critical(mssg.split(",")[0])
+        elif(mssg.endswith(",critical")): logger.critical(mssg.replace(",critical", ""))
         else: logger.debug(mssg)
         
     # Callback fires when conected to MQTT broker.
@@ -89,30 +95,43 @@ class mqttController:
                 self.Msg2Log(self.logGr1, message)
                 self.requestGr1 = False
                 if(message.startswith("Photo Sequence taken")):
-                    self.share.Gr1.mqttReq("")
-                    self.share.Gr1.serialReq("available,1")
-                    self.share.Gr1.actualTime = time()-20
+                    self.mGrower.Gr1.mqttReq("")
+                    self.mGrower.Gr1.serialReq("available,1")
+                    self.mGrower.Gr1.actualTime = time()-20
+                elif(message.startswith("cozir")):
+                    self.mGrower.Gr1.str2array(message)
+                    self.mGrower.Gr1.connected = True
             elif(device == "Grower2"):
-                self.Msg2Log(selflogGr2, message)
+                self.Msg2Log(self.logGr2, message)
                 self.requestGr2 = False
                 if(message.startswith("Photo Sequence taken")):
-                    self.share.Gr2.mqttReq("")
-                    self.share.Gr2.serialReq("available,2")
-                    self.share.Gr2.actualTime = time()-20
+                    self.mGrower.Gr2.mqttReq("")
+                    self.mGrower.Gr2.serialReq("available,2")
+                    self.mGrower.Gr2.actualTime = time()-20
+                elif(message.startswith("cozir")):
+                    self.mGrower.Gr2.str2array(message)
+                    self.mGrower.Gr2.connected = True
             elif(device == "Grower3"):
                 self.Msg2Log(self.logGr3, message)
                 self.requestGr3 = False
                 if(message.startswith("Photo Sequence taken")):
-                    self.share.Gr3.mqttReq("")
-                    self.share.Gr3.serialReq("available,3")
-                    self.share.Gr3.actualTime = time()-20
+                    self.mGrower.Gr3.mqttReq("")
+                    self.mGrower.Gr3.serialReq("available,3")
+                    self.mGrower.Gr3.actualTime = time()-20
+                elif(message.startswith("cozir")):
+                    self.mGrower.Gr3.str2array(message)
+                    self.mGrower.Gr3.connected = True
             elif(device == "Grower4"):
                 self.Msg2Log(self.logGr4, message)
                 self.requestGr4 = False
                 if(message.startswith("Photo Sequence taken")):
-                    self.share.Gr4.mqttReq("")
-                    self.share.Gr4.serialReq("available,4")
-                    self.share.Gr4.actualTime = time()-20
+                    self.mGrower.Gr4.mqttReq("")
+                    self.mGrower.Gr4.serialReq("available,4")
+                    self.mGrower.Gr4.actualTime = time()-20
+                elif(message.startswith("cozir")):
+                    self.mGrower.Gr4.str2array(message)
+                    self.mGrower.Gr4.connected = True
+                    
             elif(device == "esp32front"): self.logFront.debug(message)
             elif(device == "esp32center"): self.logCenter.debug(message)
             elif(device == "esp32back"): self.logBack.debug(message)
@@ -128,12 +147,15 @@ class mqttController:
         # Get data from ESP32 front, center and back
         elif(top.endswith("esp32front") and message!="sendData"):
             self.ESP32.front.str2array(message)
+            self.ESP32.front.connected = True
             # Ask again for the data if not complete
         elif(top.endswith("esp32center") and message!="sendData"):
             self.ESP32.center.str2array(message)
+            self.ESP32.center.connected = True
             # Ask again for the data if not complete
         elif(top.endswith("esp32back") and message!="sendData"):
             self.ESP32.back.str2array(message)
+            self.ESP32.back.connected = True
             # Ask again for the data if not complete
 
     def on_publish(client, userdata, mid):

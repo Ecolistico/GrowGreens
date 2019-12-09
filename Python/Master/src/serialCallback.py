@@ -6,7 +6,7 @@ from time import time, sleep
 from systemState import systemState
 
 class serialController:
-    def __init__(self, share, loggerMain, loggerGC, loggerMG, loggerSM, stateFile):
+    def __init__(self, multiGrower, loggerMain, loggerGC, loggerMG, loggerSM, stateFile):
         # Define microcontrolers
         self.generalControl = Serial('/dev/generalControl', 115200, timeout=0)
         self.generalControl.dtr = False # Reset
@@ -17,8 +17,8 @@ class serialController:
         self.solutionMaker = Serial('/dev/solutionMaker', 115200, timeout=0)
         self.solutionMaker.dtr = False # Reset
         self.solutionMaker.close()
-        # Define share variables with mqtt module
-        self.share = share
+        # Define multiGrower variables with mqtt module
+        self.mGrower = multiGrower
         # Define responses auxVariables
         self.resp = []
         self.respLine = []
@@ -183,191 +183,191 @@ class serialController:
             
             decition = False
             # If we are waiting for a particular response from Grower1
-            if(self.share.Gr1.serialRequest!="" and not decition):
+            if(self.mGrower.Gr1.serialRequest!="" and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==1):
                     resp = self.cleanGrowerLine(resp)
-                    if resp == "Available" and self.share.Gr1.startRoutine:
+                    if resp == "Available" and self.mGrower.Gr1.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "sequence,1,35,20")
-                        self.share.Gr1.serialReq("")
+                        self.mGrower.Gr1.serialReq("")
                         self.self.logMain.info("Grower1 sending request to start sequence")
-                    elif resp == "Unavailable" and self.share.Gr1.startRoutine:
+                    elif resp == "Unavailable" and self.mGrower.Gr1.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "stop,1")
                         self.self.logMain.warning("Grower1 is busy, sending request to stop")
                         
             # If we are waiting for a particular response from Grower2
-            if(self.share.Gr2.serialRequest!="" and not decition):
+            if(self.mGrower.Gr2.serialRequest!="" and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==2):
                     resp = self.cleanGrowerLine(resp)
-                    if resp == "Available" and self.share.Gr2.startRoutine:
+                    if resp == "Available" and self.mGrower.Gr2.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "sequence,2,35,20")
-                        self.share.Gr2.serialReq("")
+                        self.mGrower.Gr2.serialReq("")
                         self.self.logMain.info("Grower2 sending request to start sequence")
-                    elif resp == "Unavailable" and self.share.Gr2.startRoutine:
+                    elif resp == "Unavailable" and self.mGrower.Gr2.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "stop,2")
                         self.self.logMain.warning("Grower2 is busy, sending request to stop")
                         
             # If we are waiting for a particular response from Grower3
-            if(self.share.Gr3.serialRequest!="" and not decition):
+            if(self.mGrower.Gr3.serialRequest!="" and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==3):
                     resp = self.cleanGrowerLine(resp)
-                    if resp == "Available" and self.share.Gr3.startRoutine:
+                    if resp == "Available" and self.mGrower.Gr3.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "sequence,3,35,20")
-                        self.share.Gr3.serialReq("")
+                        self.mGrower.Gr3.serialReq("")
                         self.self.logMain.info("Grower3 sending request to start sequence")
-                    elif resp == "Unavailable" and self.share.Gr3.startRoutine:
+                    elif resp == "Unavailable" and self.mGrower.Gr3.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "stop,3")
                         self.self.logMain.warning("Grower3 is busy, sending request to stop")
                     
             # If we are waiting for a particular response from Grower4
-            if(self.share.Gr4.serialRequest!="" and not decition):
+            if(self.mGrower.Gr4.serialRequest!="" and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==4):
                     resp = self.cleanGrowerLine(resp)
-                    if resp == "Available" and self.share.Gr4.startRoutine:
+                    if resp == "Available" and self.mGrower.Gr4.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "sequence,4,35,20")
-                        self.share.Gr4.serialReq("")
+                        self.mGrower.Gr4.serialReq("")
                         self.self.logMain.info("Grower4 sending request to start sequence")
-                    elif resp == "Unavailable" and self.share.Gr4.startRoutine:
+                    elif resp == "Unavailable" and self.mGrower.Gr4.startRoutine:
                         decition = True
                         self.write(self.motorsGrower, "stop,4")
                         self.self.logMain.warning("Grower4 is busy, sending request to stop")
             
             # If we are waiting Gr1 to reach home and start the sequence
-            if(self.share.Gr1.serialRequest=="" and self.share.Gr1.startRoutine and not decition):
+            if(self.mGrower.Gr1.serialRequest=="" and self.mGrower.Gr1.startRoutine and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==1):
                     resp = self.cleanGrowerLine(resp)
                     if resp=="Starting Routine Stage 2":
                         decition = True
-                        self.share.Gr1.startRoutine = False
-                        self.share.Gr1.inRoutine = True
-                        self.share.Gr1.count = 0
+                        self.mGrower.Gr1.startRoutine = False
+                        self.mGrower.Gr1.inRoutine = True
+                        self.mGrower.Gr1.count = 0
                         self.self.logMain.info("Grower1 sequence started")
                         
             # If we are waiting Gr2 to reach home and start the sequence
-            if(self.share.Gr2.serialRequest=="" and self.share.Gr2.startRoutine and not decition):
+            if(self.mGrower.Gr2.serialRequest=="" and self.mGrower.Gr2.startRoutine and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==2):
                     resp = self.cleanGrowerLine(resp)
                     if resp=="Starting Routine Stage 2":
                         decition = True
-                        self.share.Gr2.startRoutine = False
-                        self.share.Gr2.inRoutine = True
-                        self.share.Gr2.count = 0
+                        self.mGrower.Gr2.startRoutine = False
+                        self.mGrower.Gr2.inRoutine = True
+                        self.mGrower.Gr2.count = 0
                         self.self.logMain.info("Grower2 sequence started")
                         
             # If we are waiting Gr3 to reach home and start the sequence
-            if(self.share.Gr3.serialRequest=="" and self.share.Gr3.startRoutine and not decition):
+            if(self.mGrower.Gr3.serialRequest=="" and self.mGrower.Gr3.startRoutine and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==3):
                     resp = self.cleanGrowerLine(resp)
                     if resp=="Starting Routine Stage 2":
                         decition = True
-                        self.share.Gr3.startRoutine = False
-                        self.share.Gr3.inRoutine = True
-                        self.share.Gr3.count = 0
+                        self.mGrower.Gr3.startRoutine = False
+                        self.mGrower.Gr3.inRoutine = True
+                        self.mGrower.Gr3.count = 0
                         self.self.logMain.info("Grower3 sequence started")
                         
             # If we are waiting Gr4 to reach home and start the sequence
-            if(self.share.Gr4.serialRequest=="" and self.share.Gr4.startRoutine and not decition):
+            if(self.mGrower.Gr4.serialRequest=="" and self.mGrower.Gr4.startRoutine and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==4):
                     resp = self.cleanGrowerLine(resp)
                     if resp=="Starting Routine Stage 2":
                         decition = True
-                        self.share.Gr4.startRoutine = False
-                        self.share.Gr4.inRoutine = True
-                        self.share.Gr4.count = 0
+                        self.mGrower.Gr4.startRoutine = False
+                        self.mGrower.Gr4.inRoutine = True
+                        self.mGrower.Gr4.count = 0
                         self.self.logMain.info("Grower4 sequence started")
                 
             # If we are waiting Gr1 to reach next sequence position
-            if(self.share.Gr1.inRoutine and not decition):
+            if(self.mGrower.Gr1.inRoutine and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==1):
                     resp = self.cleanGrowerLine(resp)
                     if resp=="In Position":
                         decition = True
                         # request Grower1 to take pictures
-                        photoName = self.share.Gr1.count
-                        self.share.Gr1.count += 1
-                        self.share.Gr1.mqttReq("photoSequence,{}".format(photoName))
-                        self.share.Gr1.actualTime = time()-20
+                        photoName = self.mGrower.Gr1.count
+                        self.mGrower.Gr1.count += 1
+                        self.mGrower.Gr1.mqttReq("photoSequence,{}".format(photoName))
+                        self.mGrower.Gr1.actualTime = time()-20
                         self.self.logMain.debug("Grower1 in position to take photo sequence")
                     elif resp=="Routine Finished":
                         decition = True
-                        self.share.Gr1.inRoutine = False
-                        self.share.Gr1.mqttReq("sendPhotos")
-                        self.share.Gr1.actualTime = time()-20
+                        self.mGrower.Gr1.inRoutine = False
+                        self.mGrower.Gr1.mqttReq("sendPhotos")
+                        self.mGrower.Gr1.actualTime = time()-20
                         self.self.logMain.info("Grower1 finished its routine")
                         
             # If we are waiting Gr2 to reach next sequence position
-            if(self.share.Gr2.inRoutine and not decition):
+            if(self.mGrower.Gr2.inRoutine and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==2):
                     resp = self.cleanGrowerLine(resp)
                     if resp=="In Position":
                         decition = True
                         # request Grower2 to take pictures
-                        photoName = self.share.Gr2.count
-                        self.share.Gr2.count += 1
-                        self.share.Gr2.mqttReq("photoSequence,{}".format(photoName))
-                        self.share.Gr2.actualTime = time()-20
+                        photoName = self.mGrower.Gr2.count
+                        self.mGrower.Gr2.count += 1
+                        self.mGrower.Gr2.mqttReq("photoSequence,{}".format(photoName))
+                        self.mGrower.Gr2.actualTime = time()-20
                         self.self.logMain.debug("Grower2 in position to take photo sequence")
                     elif resp=="Routine Finished":
                         decition = True
-                        self.share.Gr2.inRoutine = False
-                        self.share.Gr2.mqttReq("sendPhotos")
-                        self.share.Gr2.actualTime = time()-20
+                        self.mGrower.Gr2.inRoutine = False
+                        self.mGrower.Gr2.mqttReq("sendPhotos")
+                        self.mGrower.Gr2.actualTime = time()-20
                         self.self.logMain.info("Grower2 finished its routine")
                         
             # If we are waiting Gr3 to reach next sequence position
-            if(self.share.Gr3.inRoutine  and not decition):
+            if(self.mGrower.Gr3.inRoutine  and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==3):
                     resp = self.cleanGrowerLine(resp)
                     if resp=="In Position":
                         decition = True
                         # request Grower3 to take pictures
-                        photoName = self.share.Gr3.count
-                        self.share.Gr3.count += 1
-                        self.share.Gr3.mqttReq("photoSequence,{}".format(photoName))
-                        self.share.Gr3.actualTime = time()-20
+                        photoName = self.mGrower.Gr3.count
+                        self.mGrower.Gr3.count += 1
+                        self.mGrower.Gr3.mqttReq("photoSequence,{}".format(photoName))
+                        self.mGrower.Gr3.actualTime = time()-20
                         self.self.logMain.debug("Grower3 in position to take photo sequence")
                     elif resp=="Routine Finished":
                         decition = True
-                        self.share.Gr3.inRoutine = False
-                        self.share.Gr3.mqttReq("sendPhotos")
-                        self.share.Gr3.actualTime = time()-20
+                        self.mGrower.Gr3.inRoutine = False
+                        self.mGrower.Gr3.mqttReq("sendPhotos")
+                        self.mGrower.Gr3.actualTime = time()-20
                         self.self.logMain.info("Grower3 finished its routine")
                         
             # If we are waiting Gr4 to reach next sequence position
-            if(self.share.Gr4.inRoutine and not decition):
+            if(self.mGrower.Gr4.inRoutine and not decition):
                 resp = self.cleanLine(line2)
                 if(self.detectGrower(resp)==4):
                     resp = self.cleanGrowerLine(resp)
                     if resp=="In Position":
                         decition = True
                         # request Grower4 to take pictures
-                        photoName = self.share.Gr4.count
-                        self.share.Gr4.count += 1
-                        self.share.Gr4.mqttReq("photoSequence,{}".format(photoName))
-                        self.share.Gr4.actualTime = time()-20
+                        photoName = self.mGrower.Gr4.count
+                        self.mGrower.Gr4.count += 1
+                        self.mGrower.Gr4.mqttReq("photoSequence,{}".format(photoName))
+                        self.mGrower.Gr4.actualTime = time()-20
                         self.self.logMain.debug("Grower4 in position to take photo sequence")
                     elif resp=="Routine Finished":
                         decition = True
-                        self.share.Gr4.inRoutine = False
-                        self.share.Gr4.mqttReq("sendPhotos")
-                        self.share.Gr4.actualTime = time()-20
+                        self.mGrower.Gr4.inRoutine = False
+                        self.mGrower.Gr4.mqttReq("sendPhotos")
+                        self.mGrower.Gr4.actualTime = time()-20
                         self.self.logMain.info("Grower4 finished its routine")
                         
         # If bytes available in solutionMaker

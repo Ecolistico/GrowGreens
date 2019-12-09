@@ -17,7 +17,7 @@ from smtp import Mail
 from logger import logger
 from sensor import BME680
 from asciiART import asciiArt
-from communication import share
+from growerData import multiGrower
 from inputHandler import inputHandler
 from mqttCallback import mqttController
 from serialCallback import serialController
@@ -35,10 +35,10 @@ if not os.path.exists('temp/'): os.makedirs('temp/')
 log = logger()
 
 # From communication
-sh = share()
+mGrower = multiGrower(log.logger_grower1, log.logger_grower2, log.logger_grower3, log.logger_grower4)
 
 # From Serial Callback
-serialControl = serialController(sh,
+serialControl = serialController(mGrower,
                                  log.logger,
                                  log.logger_generalControl,
                                  log.logger_motorsGrower,
@@ -93,7 +93,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     mqttControl = mqttController(ID,
                                  brokerIP,
                                  conn,
-                                 sh,
+                                 mGrower,
                                  log.logger,
                                  log.logger_grower1,
                                  log.logger_grower2,
@@ -182,88 +182,97 @@ try:
             if(boot):
                 # Upload sensor data
                 mqttControl.ESP32.upload2DB(conn)
+                mqttControl.mGrower.upload2DB(conn)
                 bme.upload2DB(conn)
                 # Send to generalControl new time info
                 serialControl.write(serialControl.generalControl, "updateHour,{0},{1}".format(
                     now.hour, now.minute))
             else: boot = True
             # Request ESP32 data
+            mqttControl.ESP32.updateStatus()
             publish.single("{}/esp32front".format(ID), "sendData", hostname = brokerIP)
             publish.single("{}/esp32center".format(ID), "sendData", hostname = brokerIP)
             publish.single("{}/esp32back".format(ID), "sendData", hostname = brokerIP)
+            # Check if Grower are connected
+            mqttControl.mGrower.updateStatus()
+            publish.single("{}/Grower1".format(ID), "cozirData", hostname = brokerIP)
+            publish.single("{}/Grower2".format(ID), "cozirData", hostname = brokerIP)
+            publish.single("{}/Grower3".format(ID), "cozirData", hostname = brokerIP)
+            publish.single("{}/Grower4".format(ID), "cozirData", hostname = brokerIP)
+            
             # Request bme data
             if bme.read(): bme.logData()
             else: log.logger.warning("BME680 sensor cannot take reading")
             
             # Coordinate Grower routines
             if(hour==6 and minute==0): # It is time to move Grower3
-                sh.Gr1.startRoutine = True
+                mGrower.Gr1.startRoutine = True
                 mssg = "available,1"
                 serialControl.write(serialControl.motorsGrower, mssg)
-                sh.Gr1.serialReq(mssg)
+                mGrower.Gr1.serialReq(mssg)
                 log.logger.info("Checking Grower1 status to start sequence")
             elif(hour==8 and minute==0): # It is time to move Grower2
-                sh.Gr2.startRoutine = True
+                mGrower.Gr2.startRoutine = True
                 mssg = "available,2"
                 serialControl.write(serialControl.motorsGrower, mssg)
-                sh.Gr2.serialReq(mssg)
+                mGrower.Gr2.serialReq(mssg)
                 log.logger.info("Checking Grower2 status to start sequence")
             elif(hour==10 and minute==0): # It is time to move Grower3
-                sh.Gr3.startRoutine = True
+                mGrower.Gr3.startRoutine = True
                 mssg = "available,3"
                 serialControl.write(serialControl.motorsGrower, mssg)
-                sh.Gr3.serialReq(mssg)
+                mGrower.Gr3.serialReq(mssg)
                 log.logger.info("Checking Grower3 status to start sequence")
             elif(hour==12 and minute==0): # It is time to move Grower4
-                sh.Gr4.startRoutine = True
+                mGrower.Gr4.startRoutine = True
                 mssg = "available,4"
                 serialControl.write(serialControl.motorsGrower, mssg)
-                sh.Gr3.serialReq(mssg)
+                mGrower.Gr3.serialReq(mssg)
                 log.logger.info("Checking Grower4 status to start sequence")
         
         # Resend serial messages without response in 20s for Growers
-        if(sh.Gr1.serialRequest!="" and time()-sh.Gr1.actualTime>20):
-            serialControl.write(serialControl.motorsGrower, sh.Gr1.serialRequest)
-            sh.Gr1.actualTime = time()
-        if(sh.Gr2.serialRequest!="" and time()-sh.Gr2.actualTime>20):
-            serialControl.write(serialControl.motorsGrower, sh.Gr2.serialRequest)
-            sh.Gr2.actualTime = time()
-        if(sh.Gr3.serialRequest!="" and time()-sh.Gr3.actualTime>20):
-            serialControl.write(serialControl.motorsGrower, sh.Gr3.serialRequest)
-            sh.Gr3.actualTime = time()
-        if(sh.Gr4.serialRequest!="" and time()-sh.Gr4.actualTime>20):
-            serialControl.write(serialControl.motorsGrower, sh.Gr4.serialRequest)
-            sh.Gr4.actualTime = time()
+        if(mGrower.Gr1.serialRequest!="" and time()-mGrower.Gr1.actualTime>20):
+            serialControl.write(serialControl.motorsGrower, mGrower.Gr1.serialRequest)
+            mGrower.Gr1.actualTime = time()
+        if(mGrower.Gr2.serialRequest!="" and time()-mGrower.Gr2.actualTime>20):
+            serialControl.write(serialControl.motorsGrower, mGrower.Gr2.serialRequest)
+            mGrower.Gr2.actualTime = time()
+        if(mGrower.Gr3.serialRequest!="" and time()-mGrower.Gr3.actualTime>20):
+            serialControl.write(serialControl.motorsGrower, mGrower.Gr3.serialRequest)
+            mGrower.Gr3.actualTime = time()
+        if(mGrower.Gr4.serialRequest!="" and time()-mGrower.Gr4.actualTime>20):
+            serialControl.write(serialControl.motorsGrower, mGrower.Gr4.serialRequest)
+            mGrower.Gr4.actualTime = time()
         
         # Resend mqtt messages withouth response in 20s for Growers
-        if(sh.Gr1.mqttRequest!="" and time()-sh.Gr1.actualTime>20):
-            if sh.Gr1.mqttRequest=="sendPhotos":
-                mssg = "{},{},{},{}".format(sh.Gr1.mqttRequest, brokerIP,
+        if(mGrower.Gr1.mqttRequest!="" and time()-mGrower.Gr1.actualTime>20):
+            if mGrower.Gr1.mqttRequest=="sendPhotos":
+                mssg = "{},{},{},{}".format(mGrower.Gr1.mqttRequest, brokerIP,
                     security.decode(security.hostName), security.decode(security.passw))
-            else: mssg = sh.Gr1.mqttRequest
+            else: mssg = mGrower.Gr1.mqttRequest
             publish.single("{}/Grower1".format(ID), mssg, hostname = brokerIP)
-            sh.Gr1.actualTime = time()
-        if(sh.Gr2.mqttRequest!="" and time()-sh.Gr2.actualTime>20):
-            if sh.Gr2.mqttRequest=="sendPhotos":
-                mssg = "{},{},{},{}".format(sh.Gr2.mqttRequest, brokerIP,
+            mGrower.Gr1.actualTime = time()
+        if(mGrower.Gr2.mqttRequest!="" and time()-mGrower.Gr2.actualTime>20):
+            if mGrower.Gr2.mqttRequest=="sendPhotos":
+                mssg = "{},{},{},{}".format(mGrower.Gr2.mqttRequest, brokerIP,
                     security.decode(security.hostName), security.decode(security.passw))
-            else: mssg = sh.Gr2.mqttRequest
+            else: mssg = mGrower.Gr2.mqttRequest
             publish.single("{}/Grower2".format(ID), mssg, hostname = brokerIP)
-            sh.Gr2.actualTime = time()
-        if(sh.Gr3.mqttRequest!="" and time()-sh.Gr3.actualTime>20):
-            if sh.Gr3.mqttRequest=="sendPhotos":
-                mssg = "{},{},{},{}".format(sh.Gr3.mqttRequest, brokerIP,
+            mGrower.Gr2.actualTime = time()
+        if(mGrower.Gr3.mqttRequest!="" and time()-mGrower.Gr3.actualTime>20):
+            if mGrower.Gr3.mqttRequest=="sendPhotos":
+                mssg = "{},{},{},{}".format(mGrower.Gr3.mqttRequest, brokerIP,
                     security.decode(security.hostName), security.decode(security.passw))
-            else: mssg = sh.Gr3.mqttRequest
+            else: mssg = mGrower.Gr3.mqttRequest
             publish.single("{}/Grower3".format(ID), mssg, hostname = brokerIP)
-            sh.Gr3.actualTime = time()
-        if(sh.Gr4.mqttRequest!="" and time()-sh.Gr4.actualTime>20):
-            if sh.Gr4.mqttRequest=="sendPhotos":
-                mssg = "{},{},{},{}".format(sh.Gr4.mqttRequest, brokerIP,
+            mGrower.Gr3.actualTime = time()
+        if(mGrower.Gr4.mqttRequest!="" and time()-mGrower.Gr4.actualTime>20):
+            if mGrower.Gr4.mqttRequest=="sendPhotos":
+                mssg = "{},{},{},{}".format(mGrower.Gr4.mqttRequest, brokerIP,
                     security.decode(security.hostName), security.decode(security.passw))
-            else: mssg = sh.Gr4.mqttRequest
+            else: mssg = mGrower.Gr4.mqttRequest
             publish.single("{}/Grower4".format(ID), mssg, hostname = brokerIP)
-            sh.Gr4.actualTime = time()
+            mGrower.Gr4.actualTime = time()
             
         if inputControl.exit:
             ex = input("Are you sure? y/n\n")
