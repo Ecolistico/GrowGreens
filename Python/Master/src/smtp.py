@@ -29,4 +29,4 @@ class Mail:
             server.close()
             self.log.debug("Email sent to {}, Subject={}, Message={}".format(self.logMail, subject,mssg))
         except:
-            self.log.exception("Email Error, cannot send the email")
+            self.log.critical("Email Error, cannot send the email", exc_info=True)

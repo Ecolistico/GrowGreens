@@ -6,6 +6,7 @@ import sys
 import csv
 import json
 import sqlite3
+import colored_traceback
 from datetime import datetime
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
@@ -21,6 +22,9 @@ from growerData import multiGrower
 from inputHandler import inputHandler
 from mqttCallback import mqttController
 from serialCallback import serialController
+
+# Colored traceback useful for raise exception with colors in terminal
+colored_traceback.add_hook()
 
 art = asciiArt()
 print("\033[1;32;40m", end='')
@@ -115,8 +119,8 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
         client.on_disconnect = mqttControl.on_disconnect  # Specify on_publish callback
         # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
         if(client.connect(brokerIP, 1883, 60)==0): mqttControl.clientConnected = True
-        else: log.logger.warning("Cannot connect with MQTT Broker")
-    except: log.logger.warning("Cannot connect with MQTT Broker")
+        else: log.logger.error("Cannot connect with MQTT Broker")
+    except: log.logger.error("Cannot connect with MQTT Broker")
 
     # Setting up
     bme = BME680(log.logger) # Start bme680 sensor
@@ -154,8 +158,8 @@ try:
                 client.on_disconnect = mqttControl.on_disconnect  # Specify on_publish callback
                 # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
                 if(client.connect(brokerIP, 1883, 60)==0): mqttControl.clientConnected = True
-                else: log.logger.warning("Cannot connect with MQTT Broker")
-            except: log.logger.warning("Cannot connect with MQTT Broker")
+                else: log.logger.error("Cannot connect with MQTT Broker")
+            except: log.logger.error("Cannot connect with MQTT Broker")
             
         # When it is a new day
         if day!=now.day:
@@ -284,8 +288,9 @@ try:
                 inputControl.exit = False
                 log.logger.warning("Exit canceled")
                 
-except:
-    log.logger.exception("Exception Raised")
+except Exception as e:
+    log.logger.critical("Exception Raised", exc_info=True)
+    raise e
     
 finally:
-    if run: mainClose() # Finished th program
+    if run: mainClose() # Finished the program
