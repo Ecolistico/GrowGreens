@@ -270,7 +270,6 @@ void runIPC(){
   else if(IPC.state==20){ // Depressurize nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
-      //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS); delete
       uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(250); // Check IPC Process 250
@@ -294,8 +293,9 @@ void runIPC(){
     }
   }
 
-  else if(IPC.state==22){ // PumpOut and FillNutValve working on fill solutionMaker
-    if(Recirculation.getWait4Fill()==0 && !Recirculation.getOutPump() && !Recirculation.getFSolValve()){ // If sMaker is filled
+  else if(IPC.state==22){ // PumpOut and FillNutValve working on fill sMaker
+    if(!Recirculation.getOutValve(0) && !Recirculation.getOutValve(1) && !Recirculation.getOutValve(2) && 
+       !Recirculation.getOutValve(3) && !Recirculation.getFSolValve()){ // If sMaker is filled
       requestSolution(); // Asking central computer that solutionMaker as to prepare a solution with the next parameters
       IPC.setState(23); // Check IPC Process 23
     }
@@ -390,7 +390,6 @@ void runIPC(){
       IPC.setState(20); // Check IPC Process 20
     }
     else if(p1<=10){
-      //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS); delete
       uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(251); // Check IPC Process 251
@@ -400,7 +399,7 @@ void runIPC(){
         IPC.setState(41); // Check IPC Process 41
       }
       else if(resp==2){
-        Serial.println(F("info,There is not enough solution to fill nutrition kegs, adding extra water in solutionMaker"));
+        Serial.println(F("info,There is not enough solution to fill nutrition kegs... adding extra water in solutionMaker"));
         IPC.setState(42); // Check IPC Process 22
       }
     }
@@ -420,14 +419,15 @@ void runIPC(){
     }
   }
 
-  else if(IPC.state==42){ // PumpOut and FillNutValve working on fill solutionMaker/Compress air tank
+  else if(IPC.state==42){ // PumpOut and FillNutValve working on fill sMaker/Compress air tank
     float p2 = pressureSensorTank.getValue();
     if(p2>=max_pressure){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(22); // Check IPC Process 22
     }
-    else if(Recirculation.getWait4Fill()==0 && !Recirculation.getOutPump() && !Recirculation.getFSolValve()){ // If sMaker fill
+    else if(!Recirculation.getOutValve(0) && !Recirculation.getOutValve(1) && !Recirculation.getOutValve(2) && 
+       !Recirculation.getOutValve(3) && !Recirculation.getFSolValve()){ // If sMaker fill
       requestSolution(); // Asking central computer that solutionMaker as to prepare a solution with the next parameters
       IPC.setState(43); // Check IPC Process 43
     }
@@ -571,10 +571,9 @@ void runIPC(){
     }
   }
 
-  else if(IPC.state==71){ // Emergency: Air in line. Depressurize Water Kegs
+  else if(IPC.state==71){ // Emergency: Air in line. Depressurize Nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
-      //uint8_t resp = Recirculation.moveOut(solutionConsumption*2.5, NUTRITION_KEGS);
       uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(252); // Check IPC Process 252
@@ -599,8 +598,9 @@ void runIPC(){
     }
   }
 
-  else if(IPC.state==73){ // Emergency: Air in line. PumpOut working on fill solutionMaker
-    if(!Recirculation.getOutPump() && !Recirculation.getFSolValve()){
+  else if(IPC.state==73){ // Emergency: Air in line. PumpOut working on fill sMaker
+    if(!Recirculation.getOutValve(0) && !Recirculation.getOutValve(1) && !Recirculation.getOutValve(2) && 
+       !Recirculation.getOutValve(3) && !Recirculation.getFSolValve()){ // If sMaker is filled
       requestSolution(); // Asking central computer that solutionMaker as to prepare a solution with the next parameters
       IPC.setState(74); // Check IPC Process 74
     }
@@ -680,7 +680,6 @@ void runMPC(){
     if(p3<=10){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
-      //uint8_t resp = Recirculation.moveOut(h2oConsumption*2.5, WATER_KEGS); delete
       uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
@@ -706,7 +705,7 @@ void runMPC(){
   }
 
   else if(MPC.state==22){ // PumpOut and FillH2OValve working on fill water kegs
-    if(Recirculation.getWait4Fill()==0 && !Recirculation.getOutPump() && !Recirculation.getFH2OValve()){ // If Kegs_H2O fill
+    if(!Recirculation.getOutValve(4) && !Recirculation.getFSolValve()){ // If Kegs_H2O fill
       Compressor.closeFreeH2O(); // Close Free Pressure Valve in Water Kegs
       Compressor.compressH2O(); // Compress water kegs
       MPC.setState(10); // Check MPC Process 10
@@ -754,7 +753,6 @@ void runMPC(){
     if(p3<=10){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
-      //uint8_t resp = Recirculation.moveOut(h2oConsumption*2.5, WATER_KEGS); delete
       uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
@@ -780,7 +778,7 @@ void runMPC(){
   }
 
   else if(MPC.state==73){ // Emergency: Air in line. PumpOut and FillH2OValve working on fill water kegs
-    if(Recirculation.getWait4Fill()==0 && !Recirculation.getOutPump() && !Recirculation.getFH2OValve()){
+    if(!Recirculation.getOutValve(4) && !Recirculation.getFSolValve()){
       Compressor.closeFreeH2O(); // Close Free Pressure Valve in Water Kegs
       Compressor.compressH2O(); // Compress water kegs
       MPC.setState(60); // Check MPC Process 60

@@ -49,50 +49,65 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define Y_HOME_DISTANCE_MM 2500 // The max distance to get home in y
 #define WAIT_TIME_FOR_GO_HOME 1800000 // By default 30min the value is given in ms
 #define MIN_LIMIT_SECURITY_DISTANCE 15 // The min distance when moving to not touch the limit switch
+#define DEBOUNCE_TIME 5 // The time for debouncing limit switch in ms
 
 // Class to control the motors of a Grower
 class growerStepper
   {
     private:
+        /*   Pins   */
         uint8_t        __DirX1, __StepX1; // Pins required to the stepper motor X1
         uint8_t        __DirX2, __StepX2; // Pins required to the stepper motor X2
         uint8_t        __DirY, __StepY; // Pins required to the stepper motor Y
         uint8_t        __HomeX1, __HomeX2, __HomeY; // Pins required to home
         uint8_t        __Enable; // Pin to enable all the motors
+        
+        /*   Aux   */
         bool           __IsEnable; // Let´s know if the motor are enable/disable
-        unsigned long  __ActualTime; // The time that the motor has stopped
-
+        bool           __Available; // Variables to know if the growerStepepr is working
+        bool           __Home, __IsAtHome; // Variable to know if right now is in Home Position
+        bool           __Stop;
+        uint8_t        __Calibration; // Aux variable for calibration algorithm
+        unsigned long  __ActualTime; // The time Grower has been stopped
+        
+        /*   Configuration   */
         // Inverse of the configurated microSteps in the driver
         uint8_t        __MicroSteps;
         // Teeth of the pulley, Xmm per tooth, Ymm per tooth
         uint8_t        __PulleyTeeth, __Xmm, __Ymm;
         uint8_t        __StepPerRev;
 
+        /*   Pointers   */
         AccelStepper *stepperX1;
         AccelStepper *stepperX2;
         AccelStepper *stepperY;
-
-        bool __Available; // Variables to know if the growerStepepr is working
-        bool __Home, __IsAtHome; // Variable to know if right now is in Home Position
-        uint8_t __Calibration; // Aux variable for calibration algorithm
-
-        int __Sequence; // Variable to know in what part of the sequence is the grower
+        
+        /*   Sequence variables   */
+        int  __Sequence; // Variable to know in what part of the sequence is the grower
         bool __SequenceStop; // Variable to stop the sequence until sequenceContinue is executed
         bool __SequenceStageFinished; // Variable to inform that sequence movements has finished
-        int __SequenceMovements; // Variable to know the max number of movements
-        int __SequenceXMoves, __SequenceYMoves; // Variable to know the number of moves in x and y
-        int __SequenceDir;
+        int  __SequenceMovements; // Variable to know the max number of movements
+        int  __SequenceXMoves, __SequenceYMoves; // Variable to know the number of moves in x and y
+        int  __SequenceDir;
         long __SequenceXmm, __SequenceYmm;
-
+        
+        /*   Others   */
         long __MaxX, __MaxY; // Maximun security distances
         bool __OutHomeX1, __OutHomeX2, __OutHomeY; // Aux variables to allow move out of the limits switch
         bool __MoveX1, __MoveX2, __MoveY; // Aux variable to detect when some motors stops moving
-
+        
+        /*   Limit Switches   */
+        bool __HX1, __HX2, __HY;
+        bool __CheckX1, __CheckX2, __CheckY;  
+        unsigned long __X1Time, __X2Time, __YTime; // Timers to debounce limit switch
+        
+        /*   Communication   */
         uint8_t __Floor;
-        bool __Stop;
-
+        
+        /*   Static Variables   */
         static uint8_t __steppersRunning;
-
+        
+        /*   Functions   */
         long StepsToMM_X(long steps); // Return the number of mm that equals the steps parameter in X
         long MMToSteps_X(long dist_mm); // Return the number of steps that equals the mm parameter in X
         long StepsToMM_Y(long steps); // Return the number of mm that equals the steps parameter in Y

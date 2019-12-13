@@ -75,6 +75,17 @@ growerStepper::growerStepper(
     __Floor = fl;
     __Stop = false;
 
+    // Limit Switches
+    __HX1 = false;
+    __HX2 = false;
+    __HY = false;
+    __CheckX1 = false;
+    __CheckX2 = false;
+    __CheckY = false;
+    __X1Time = millis();
+    __X2Time = millis();
+    __YTime = millis();
+    
     resetTime();
   }
 
@@ -614,7 +625,68 @@ void growerStepper::run()
     stepperX1->run();
     stepperX2->run();
     stepperY->run();
-
+    
+    // Maybe limit switch X1 was touched
+    if(__HX1!=!digitalRead(__HomeX1) && !__CheckX1){
+      __CheckX1 = true;
+      __X1Time = millis();
+    }
+    else if(__CheckX1 && millis()-__X1Time>DEBOUNCE_TIME){
+      bool limitX1 = !digitalRead(__HomeX1);
+      if(__HX1!=limitX1){ __HX1=limitX1; }
+      __CheckX1 = false;
+    }
+      
+    // Stop X1 when limit switch touched
+    if(__HX1 && !__OutHomeX1){
+      __OutHomeX1 = true;
+      stop(0);
+    }
+    else if(!__HX1 && __OutHomeX1){
+      __OutHomeX1 = false;
+    }
+      
+    // Maybe limit switch X2 was touched
+    if(__HX2!=!digitalRead(__HomeX2) && !__CheckX2){
+      __CheckX2 = true;
+      __X2Time = millis();
+    }
+    else if(__CheckX2 && millis()-__X2Time>DEBOUNCE_TIME){
+      bool limitX2 = !digitalRead(__HomeX2);
+      if(__HX2!=limitX2){ __HX1=limitX2; }
+      __CheckX2 = false;
+    }
+      
+    // Stop X2 when limit switch touched
+    if(__HX2 && !__OutHomeX2){
+      __OutHomeX2 = true;
+      stop(1);
+    }
+    else if(!__HX2 && __OutHomeX2){
+      __OutHomeX2 = false;
+    }
+    
+    // Maybe limit switch Y was touched
+    if(__HY!=!digitalRead(__HomeY) && !__CheckY){
+      __CheckY = true;
+      __YTime = millis();
+    }
+    else if(__CheckY && millis()-__YTime>DEBOUNCE_TIME){
+      bool limitY = !digitalRead(__HomeY);
+      if(__HY!=limitY){ __HY=limitY; }
+      __CheckY = false;
+    }
+      
+    // Stop Y when limit switch touched
+    if(__HY && !__OutHomeY){
+      __OutHomeY = true;
+      stop(2);
+    }
+    else if(!__HY && __OutHomeY){
+      __OutHomeY = false;
+    }
+    
+    /*
     // Stop X1 when limit switch touched
     if(!digitalRead(__HomeX1) && !__OutHomeX1){
       __OutHomeX1 = true;
@@ -641,7 +713,8 @@ void growerStepper::run()
     else if(digitalRead(__HomeY) && __OutHomeY){
       __OutHomeY = false;
     }
-
+    */
+    
     // If X1 was running and stop it substract 1 to __steppersRunning
     if(__MoveX1 && !stepperX1->isRunning()){
       __MoveX1 = false;

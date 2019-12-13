@@ -23,6 +23,22 @@ void boot(){
   }
 }
 
+
+// Get liters require until next change of solution
+float litersRequire(){
+  int minutes = Irrigation.min2Change(dateHour, dateMinute);
+  uint8_t cycle = EEPROM.read(solenoidValve::__TotalActuators*5);
+  int rounds = minutes/cycle;
+  if(rounds<=0){rounds = 1;}
+  else{rounds++;}
+
+  float liters = rounds*solutionConsumption;
+  if(liters<15){liters = 15;}
+  else if(liters>100){liters = 100;}
+
+  return liters;
+}
+
 // Print Log from sensors when the information is relevant
 void logSens() {
   if(millis()-logSensTime>10000){

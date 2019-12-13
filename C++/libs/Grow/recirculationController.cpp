@@ -305,7 +305,8 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
         }
         else{
           printAction(F("There are not enough solution"), 0);
-
+          liters = liters*1.15; // Add or prepare 15% extra water
+          
           if(to_Where==NUTRITION_KEGS || to_Where==SOLUTION_MAKER){ // Nutrition Kegs || Solution Maker
             // Move to Solution Maker
             /* DEBUG
@@ -332,7 +333,7 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
             __Go[1] = HIGH;
             addVolKh2o(__OutLiters);
             printAction(__OutLiters, "solution"+String(__Out+1), F("water kegs"), 0);
-            __Wait4Fill = 2; // Wait for fill kegs_nut
+            __Wait4Fill = 2; // Wait for fill kegs_h20
             __WaitLiters = liters-__OutLiters;  // Liters to move when await finished
           }
           return 2;

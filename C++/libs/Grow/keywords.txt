@@ -79,6 +79,7 @@ setPH	KEYWORD2
 getEC	KEYWORD2
 getPH	KEYWORD2
 whatSolution	KEYWORD2
+min2Change	KEYWORD2
 getValveTank	KEYWORD2
 getValveNut	KEYWORD2
 getValveH2O	KEYWORD2

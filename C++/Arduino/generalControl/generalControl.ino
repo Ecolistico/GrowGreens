@@ -214,6 +214,7 @@ void substractWaterConsumption(bool updateConsumption = false);
 // Aux Functions
 void emergencyStop();
 void boot();
+float litersRequire();
 void logSens();
 
 void setup() {
