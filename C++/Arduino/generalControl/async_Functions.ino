@@ -270,7 +270,8 @@ void runIPC(){
   else if(IPC.state==20){ // Depressurize nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
-      uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
+      // uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS); // DEBUG
+      uint8_t resp = Recirculation.moveOut(litersRequire(), NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(250); // Check IPC Process 250
       }
@@ -390,7 +391,8 @@ void runIPC(){
       IPC.setState(20); // Check IPC Process 20
     }
     else if(p1<=10){
-      uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
+      // uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS); // DEBUG
+      uint8_t resp = Recirculation.moveOut(litersRequire(), NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(251); // Check IPC Process 251
       }
@@ -574,7 +576,8 @@ void runIPC(){
   else if(IPC.state==71){ // Emergency: Air in line. Depressurize Nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
-      uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS);
+      // uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS); // DEBUG
+      uint8_t resp = Recirculation.moveOut(litersRequire(), NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(252); // Check IPC Process 252
       }
@@ -705,7 +708,7 @@ void runMPC(){
   }
 
   else if(MPC.state==22){ // PumpOut and FillH2OValve working on fill water kegs
-    if(!Recirculation.getOutValve(4) && !Recirculation.getFSolValve()){ // If Kegs_H2O fill
+    if(!Recirculation.getOutValve(4) && !Recirculation.getFH2OValve()){ // If Kegs_H2O fill
       Compressor.closeFreeH2O(); // Close Free Pressure Valve in Water Kegs
       Compressor.compressH2O(); // Compress water kegs
       MPC.setState(10); // Check MPC Process 10
@@ -778,7 +781,7 @@ void runMPC(){
   }
 
   else if(MPC.state==73){ // Emergency: Air in line. PumpOut and FillH2OValve working on fill water kegs
-    if(!Recirculation.getOutValve(4) && !Recirculation.getFSolValve()){
+    if(!Recirculation.getOutValve(4) && !Recirculation.getFH2OValve()){
       Compressor.closeFreeH2O(); // Close Free Pressure Valve in Water Kegs
       Compressor.compressH2O(); // Compress water kegs
       MPC.setState(60); // Check MPC Process 60
