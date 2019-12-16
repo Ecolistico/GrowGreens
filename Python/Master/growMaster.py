@@ -147,7 +147,7 @@ try:
         # If mqtt connected check for messages
         if mqttControl.clientConnected: client.loop()
         # Else try to reconnect every 30s
-        elif(time()-mqttControl.actualTime):
+        elif(time()-mqttControl.actualTime>30):
             mqttControl.actualTime = time()
             try:
                 # Reconnect client
