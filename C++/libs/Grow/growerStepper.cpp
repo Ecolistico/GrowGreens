@@ -653,7 +653,7 @@ void growerStepper::run()
     }
     else if(__CheckX2 && millis()-__X2Time>DEBOUNCE_TIME){
       bool limitX2 = !digitalRead(__HomeX2);
-      if(__HX2!=limitX2){ __HX1=limitX2; }
+      if(__HX2!=limitX2){ __HX2=limitX2; }
       __CheckX2 = false;
     }
       
