@@ -29,8 +29,8 @@ float litersRequire(){
   int minutes = Irrigation.min2Change(dateHour, dateMinute);
   uint8_t cycle = EEPROM.read(solenoidValve::__TotalActuators*5);
   int rounds = minutes/cycle;
-  if(rounds<=0){rounds = 1;}
-  else{rounds++;}
+  if(rounds<=0){rounds = 2;}
+  else{rounds+=2;}
 
   float liters = rounds*solutionConsumption;
   if(liters<15){liters = 15;}
