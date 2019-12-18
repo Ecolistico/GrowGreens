@@ -71,7 +71,7 @@ class mqttController:
             message += " Connection succesful"
             mssg = "Master connected"
             client.subscribe(Topic)
-            self.logMain.debug(message)
+            self.logMain.info(message)
             self.logMain.debug("Subscribed topic= {}".format(Topic))
         else:
             message += " Connection refused"

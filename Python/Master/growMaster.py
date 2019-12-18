@@ -58,6 +58,12 @@ def mainClose(): # When program is finishing
     log.logger.info("GrowGreens Finished")
     if run: mail.sendMail("Ecolistico Alerta", "GrowGreens se detuvo")
     else: mail.sendMail("Ecolistico Alerta", "GrowGreens fue detenido por el operador")
+
+def mqttDisconnect(cliente, mqttObj):
+    cliente.disconnect()
+    mqttObj.logMain.warning("Client MQTT Disconnected")
+    mqttObj.clientConnected = False
+    mqttObj.actualTime = time()
     
 # Aux Variables
 try: param = sys.argv[1]
@@ -145,21 +151,24 @@ try:
         now = datetime.now()
         
         # If mqtt connected check for messages
-        if mqttControl.clientConnected: client.loop()
-        # Else try to reconnect every 30s
-        elif(time()-mqttControl.actualTime>30):
-            mqttControl.actualTime = time()
-            try:
-                # Reconnect client
-                client = mqtt.Client()
-                client.on_connect = mqttControl.on_connect  # Specify on_connect callback
-                client.on_message = mqttControl.on_message  # Specify on_message callback
-                #client.on_publish = mqttController.on_publish  # Specify on_publish callback
-                client.on_disconnect = mqttControl.on_disconnect  # Specify on_disconnect callback
-                # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
-                if(client.connect(brokerIP, 1883, 60)==0): mqttControl.clientConnected = True
-                else: log.logger.error("Cannot connect with MQTT Broker")
-            except: log.logger.error("Cannot connect with MQTT Broker")
+        if mqttControl.clientConnected: client.loop(0.2)
+        else:
+            sleep(0.2)
+            # Else try to reconnect every 30s
+            if(time()-mqttControl.actualTime>30):
+                mqttControl.actualTime = time()
+                try:
+                    # Reconnect client
+                    client = mqtt.Client()
+                    client.on_connect = mqttControl.on_connect  # Specify on_connect callback
+                    client.on_message = mqttControl.on_message  # Specify on_message callback
+                    #client.on_publish = mqttController.on_publish  # Specify on_publish callback
+                    client.on_disconnect = mqttControl.on_disconnect  # Specify on_disconnect callback
+                    # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
+                    if(client.connect(brokerIP, 1883, 60)==0): mqttControl.clientConnected = True
+                    else: log.logger.error("Cannot connect with MQTT Broker")
+                    
+                except: log.logger.error("Cannot connect with MQTT Broker")
             
         # When it is a new day
         if day!=now.day:
@@ -196,18 +205,20 @@ try:
             mqttControl.mGrower.updateStatus()
             mqttControl.ESP32.updateStatus()
             
-            try:
-                # Request ESP32's and Growers data
-                publish.single("{}/esp32front".format(ID), "sendData", hostname = brokerIP)
-                publish.single("{}/esp32center".format(ID), "sendData", hostname = brokerIP)
-                publish.single("{}/esp32back".format(ID), "sendData", hostname = brokerIP)
-                publish.single("{}/Grower1".format(ID), "cozirData", hostname = brokerIP)
-                publish.single("{}/Grower2".format(ID), "cozirData", hostname = brokerIP)
-                publish.single("{}/Grower3".format(ID), "cozirData", hostname = brokerIP)
-                publish.single("{}/Grower4".format(ID), "cozirData", hostname = brokerIP)
-            except:
-                log.logger.error("LAN/WLAN not found- Impossible use publish() to request ESP&Grower data")
-            
+            if(mqttControl.clientConnected):
+                try:
+                    # Request ESP32's and Growers data
+                    publish.single("{}/esp32front".format(ID), "sendData", hostname = brokerIP)
+                    publish.single("{}/esp32center".format(ID), "sendData", hostname = brokerIP)
+                    publish.single("{}/esp32back".format(ID), "sendData", hostname = brokerIP)
+                    publish.single("{}/Grower1".format(ID), "cozirData", hostname = brokerIP)
+                    publish.single("{}/Grower2".format(ID), "cozirData", hostname = brokerIP)
+                    publish.single("{}/Grower3".format(ID), "cozirData", hostname = brokerIP)
+                    publish.single("{}/Grower4".format(ID), "cozirData", hostname = brokerIP)
+                except:
+                    log.logger.error("LAN/WLAN not found- Impossible use publish() to request ESP&Grower data")
+                    mqttDisconnect(client, mqttControl)
+        
             # Request bme data
             if bme.read(): bme.logData()
             else: log.logger.warning("BME680 sensor cannot take reading")
@@ -258,40 +269,48 @@ try:
                 mssg = "{},{},{},{}".format(mGrower.Gr1.mqttRequest, brokerIP,
                     security.decode(security.hostName), security.decode(security.passw))
             else: mssg = mGrower.Gr1.mqttRequest
-            try:
-                publish.single("{}/Grower1".format(ID), mssg, hostname = brokerIP)
-            except:
-                log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower1 request")
+            if(mqttControl.clientConnected):
+                try:
+                    publish.single("{}/Grower1".format(ID), mssg, hostname = brokerIP)
+                except:
+                    log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower1 request")
+                    mqttDisconnect(client, mqttControl)
             mGrower.Gr1.actualTime = time()
         if(mGrower.Gr2.mqttRequest!="" and time()-mGrower.Gr2.actualTime>20):
             if mGrower.Gr2.mqttRequest=="sendPhotos":
                 mssg = "{},{},{},{}".format(mGrower.Gr2.mqttRequest, brokerIP,
                     security.decode(security.hostName), security.decode(security.passw))
             else: mssg = mGrower.Gr2.mqttRequest
-            try:
-                publish.single("{}/Grower2".format(ID), mssg, hostname = brokerIP)
-            except:
-                log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower2 request")
+            if(mqttControl.clientConnected):
+                try:
+                    publish.single("{}/Grower2".format(ID), mssg, hostname = brokerIP)
+                except:
+                    log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower2 request")
+                    mqttDisconnect(client, mqttControl)
             mGrower.Gr2.actualTime = time()
         if(mGrower.Gr3.mqttRequest!="" and time()-mGrower.Gr3.actualTime>20):
             if mGrower.Gr3.mqttRequest=="sendPhotos":
                 mssg = "{},{},{},{}".format(mGrower.Gr3.mqttRequest, brokerIP,
                     security.decode(security.hostName), security.decode(security.passw))
             else: mssg = mGrower.Gr3.mqttRequest
-            try:
-                publish.single("{}/Grower3".format(ID), mssg, hostname = brokerIP)
-            except:
-                log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower3 request")
+            if(mqttControl.clientConnected):
+                try:
+                    publish.single("{}/Grower3".format(ID), mssg, hostname = brokerIP)
+                except:
+                    log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower3 request")
+                    mqttDisconnect(client, mqttControl)
             mGrower.Gr3.actualTime = time()
         if(mGrower.Gr4.mqttRequest!="" and time()-mGrower.Gr4.actualTime>20):
             if mGrower.Gr4.mqttRequest=="sendPhotos":
                 mssg = "{},{},{},{}".format(mGrower.Gr4.mqttRequest, brokerIP,
                     security.decode(security.hostName), security.decode(security.passw))
             else: mssg = mGrower.Gr4.mqttRequest
-            try:
-                publish.single("{}/Grower4".format(ID), mssg, hostname = brokerIP)
-            except:
-                log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower4 request")
+            if(mqttControl.clientConnected):
+                try:
+                    publish.single("{}/Grower4".format(ID), mssg, hostname = brokerIP)
+                except:
+                    log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower4 request")
+                    mqttDisconnect(client, mqttControl)
             mGrower.Gr4.actualTime = time()
             
         if inputControl.exit:
