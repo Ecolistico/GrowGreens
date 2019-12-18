@@ -73,28 +73,28 @@ irrigationController Irrigation(4, 0, 0, 1, 2, 3, 25, 25, 25, 25);
 solenoidValve EV1A1; solenoidValve EV1A2; solenoidValve EV1A3; solenoidValve EV1A4;
 solenoidValve EV1B1; solenoidValve EV1B2; solenoidValve EV1B3; solenoidValve EV1B4;
 LED_Mod L1S1(0, 0); LED_Mod L1S2(0, 1); LED_Mod L1S3(0, 2); LED_Mod L1S4(0, 3);
-Actuator IFan1 (0, 0, 60, 300); Actuator OFan1 (1, 0, 100, 250); Actuator VFan1 (2, 0, 120, 180);
+Actuator IFan1 (0, 0, 50, 300); Actuator OFan1 (1, 0, 100, 250); Actuator VFan1 (2, 0, 120, 180);
 Actuator VHum1 (3, 0, 5, 1200);
 
 // 2nd floor
 solenoidValve EV2A1; solenoidValve EV2A2; solenoidValve EV2A3; solenoidValve EV2A4;
 solenoidValve EV2B1; solenoidValve EV2B2; solenoidValve EV2B3; solenoidValve EV2B4;
 LED_Mod L2S1(1, 0); LED_Mod L2S2(1, 1); LED_Mod L2S3(1, 2); LED_Mod L2S4(1, 3);
-Actuator IFan2 (0, 1, 60, 300); Actuator OFan2 (1, 1, 100, 250); Actuator VFan2 (2, 1, 120, 180);
+Actuator IFan2 (0, 1, 125, 300); Actuator OFan2 (1, 1, 160, 250); Actuator VFan2 (2, 1, 120, 180);
 Actuator VHum2 (3, 1, 5, 1200);
 
 // 3rd floor
 solenoidValve EV3A1; solenoidValve EV3A2; solenoidValve EV3A3; solenoidValve EV3A4;
 solenoidValve EV3B1; solenoidValve EV3B2; solenoidValve EV3B3; solenoidValve EV3B4;
 LED_Mod L3S1(2, 0); LED_Mod L3S2(2, 1); LED_Mod L3S3(2, 2); LED_Mod L3S4(2, 3);
-Actuator IFan3 (0, 2, 60, 300); Actuator OFan3 (1, 2, 100, 250); Actuator VFan3 (2, 2, 120, 180);
+Actuator IFan3 (0, 2, 200, 300); Actuator OFan3 (1, 2, 190, 250); Actuator VFan3 (2, 2, 120, 180);
 Actuator VHum3 (3, 2, 5, 1200);
 
 // 4th floor
 solenoidValve EV4A1; solenoidValve EV4A2; solenoidValve EV4A3; solenoidValve EV4A4;
 solenoidValve EV4B1; solenoidValve EV4B2; solenoidValve EV4B3; solenoidValve EV4B4;
 LED_Mod L4S1(3, 0); LED_Mod L4S2(3, 1); LED_Mod L4S3(3, 2); LED_Mod L4S4(3, 3);
-Actuator IFan4 (0, 3, 60, 300); Actuator OFan4 (1, 3, 100, 250); Actuator VFan4 (2, 3, 120, 180);
+Actuator IFan4 (0, 3, 250, 300); Actuator OFan4 (1, 3, 220, 250); Actuator VFan4 (2, 3, 120, 180);
 Actuator VHum4 (3, 3, 5, 1200);
 
 // asyncActuator
