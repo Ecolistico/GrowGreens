@@ -37,7 +37,7 @@ UltraSonic US1(26, 48, 1);
 UltraSonic US2(28, 46, 2);
 UltraSonic US3(30, 44, 3);
 UltraSonic US4(32, 42, 4);
-UltraSonic US5(24, 50, 5);
+UltraSonic US5(22, 52, 5);
 UltraSonic US6(36, 38, 6);
 
 /*** Water Sensors ***/
