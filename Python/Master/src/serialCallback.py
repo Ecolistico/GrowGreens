@@ -89,54 +89,57 @@ class serialController:
             self.system.state["consumptionH2O"], self.system.state["IPC"],
             self.system.state["MPC"], self.system.state["missingLiters"]))
         
-        
     def updateSystemState(self, index):
         param = self.respLine[index].split(",")
-        if(self.system.update("solution", int(param[1]))):
-            self.logMain.debug("Irrigation Solution Updated")
-        else: self.logMain.error("Cannot Update Solution State")
-        if(self.system.update("vol,nut", float(param[2]))):
-            self.logMain.debug("Irrigation volNut Updated")
-        else: self.logMain.error("Cannot Update volNut State")
-        if(self.system.update("vol,h2o", float(param[3]))):
-            self.logMain.debug("Irrigation volH2O Updated")
-        else: self.logMain.error("Cannot Update volH2O State")
-        if(self.system.update("cons,nut", float(param[4]))):
-            self.logMain.debug("Irrigation consNut Updated")
-        else: self.logMain.error("Cannot Update consNut State")
-        if(self.system.update("cons,h2o", float(param[5]))):
-            self.logMain.debug("Irrigation consH2O Updated")
-        else: self.logMain.error("Cannot Update consH2O State")
-        if(self.system.update("IPC", int(param[6]))):
-            self.logMain.debug("System IPC Updated")
-        else: self.logMain.error("Cannot Update IPC State")
-        if(self.system.update("MPC", int(param[7]))):
-            self.logMain.debug("Irrigation MPC Updated")
-        else: self.logMain.error("Cannot Update MPC State")
-        if(self.system.update("missingLiters", float(param[8]))):
-            self.logMain.debug("Irrigation Missing Liters Updated")
-        else: self.logMain.error("Cannot Update Missing Liters State")
+        if(len(param)>=9):
+            if(self.system.update("solution", int(param[1]))):
+                self.logMain.debug("Irrigation Solution Updated")
+            else: self.logMain.error("Cannot Update Solution State")
+            if(self.system.update("vol,nut", float(param[2]))):
+                self.logMain.debug("Irrigation volNut Updated")
+            else: self.logMain.error("Cannot Update volNut State")
+            if(self.system.update("vol,h2o", float(param[3]))):
+                self.logMain.debug("Irrigation volH2O Updated")
+            else: self.logMain.error("Cannot Update volH2O State")
+            if(self.system.update("cons,nut", float(param[4]))):
+                self.logMain.debug("Irrigation consNut Updated")
+            else: self.logMain.error("Cannot Update consNut State")
+            if(self.system.update("cons,h2o", float(param[5]))):
+                self.logMain.debug("Irrigation consH2O Updated")
+            else: self.logMain.error("Cannot Update consH2O State")
+            if(self.system.update("IPC", int(param[6]))):
+                self.logMain.debug("System IPC Updated")
+            else: self.logMain.error("Cannot Update IPC State")
+            if(self.system.update("MPC", int(param[7]))):
+                self.logMain.debug("Irrigation MPC Updated")
+            else: self.logMain.error("Cannot Update MPC State")
+            if(self.system.update("missingLiters", float(param[8]))):
+                self.logMain.debug("Irrigation Missing Liters Updated")
+            else: self.logMain.error("Cannot Update Missing Liters State")
+        else: self.logMain.error("Line incomplete - {}".format(self.respLine[index]))
     
     def requestSolution(self, index):
         # Form -> "?solutionMaker,float[liters],int[sol],float[ph],int[ec]"
         param = self.respLine[index].split(",")
-        liters = float(param[1])
-        solution = int(param[2])
-        ph = float(param[3])
-        ec = int(param[4])
-        self.logMain.debug("Prepare Solution line: {}".format(self.respLine[index]))
-        # Check parameters
-        if(liters>0):
-            if(solution>=0 and solution<4):
-                if(ph>0 and ph<14):
-                    if(ec>0 and ec<5000):
-                        # If parameters correct then request a solution
-                        self.write(self.solutionMaker, "prepare,{0},{1},{2},{3}".format(
-                            liters, solution, ph, ec))
-                    else: self.logGC.error("solutionMaker ec out of range [0-5000]")
-                else: self.logGC.error("solutionMaker ph out of range [0-14]")
-            else: self.logGC.error("solutionMaker solution out of range [0-3]")
-        else: self.logGC.error("solutionMaker liters has to be positive")
+        if(len(param)>=5):
+            liters = float(param[1])
+            solution = int(param[2])
+            ph = float(param[3])
+            ec = int(param[4])
+            self.logMain.debug("Prepare Solution line: {}".format(self.respLine[index]))
+            # Check parameters
+            if(liters>0):
+                if(solution>=0 and solution<4):
+                    if(ph>0 and ph<14):
+                        if(ec>0 and ec<5000):
+                            # If parameters correct then request a solution
+                            self.write(self.solutionMaker, "prepare,{0},{1},{2},{3}".format(
+                                liters, solution, ph, ec))
+                        else: self.logGC.error("solutionMaker ec out of range [0-5000]")
+                    else: self.logGC.error("solutionMaker ph out of range [0-14]")
+                else: self.logGC.error("solutionMaker solution out of range [0-3]")
+            else: self.logGC.error("solutionMaker liters has to be positive")
+        else: self.logMain.error("Line incomplete - {}".format(self.respLine[index]))
         
     def concatResp(self, resp, line):
         # If that request is not save
