@@ -1,0 +1,77 @@
+[Prioridad 1]
+*1- Sistema para recordar el estado del sistema ante cualquier falla del sistema o de la luz
+1.1 Cambiar nombre irrigation.json -> state.json
+* 1.2 Pasar parámetros IPC, MPC y CC al state.json
+* 1.3 En generalControl extender función boot para continuar el proceso acorde a los parámetros
+iniciales incluyendo IPC y MPC.
+* 1.4 Revisar si es necesario guardar algún volumen de agua antes de implementar los cambios.
+
+[Prioridad 2]
+2- Growers
+2.1- Level msg Grower
+Revisar el nivel de los mensajes que se desean mandar y corregirlos para mostrarlos correctamente en log.
+Subir hasta que se tenga internet instalado.
+2.2- Corregir Alto Consumo de CPU cuando no hay internet
+2.3- Corregir problema de conexión a internet cuando las credenciales del internet se añaden por medio de
+AP (Access Point).
+2.4- Añadir Try/Except Statement para el uso de cámaras térmicas de manera que si no es posible iniciar
+la conexión con alguna de ellas las omita para que el programa no fallé.
+Adicional- Revisar y analizar posibles causas en fallos de conexión
+
+[Prioridad 3]
+* 3- Comunicación serial
+* 3.1 Añadir condiciones para evitar errores cuando un comando serial sea recibido (Ligado a problema 1).
+Esta validación es necesaria con todas las líneas que sean similares a "updateSystemState"
+
+[Prioridad 5]
+5- Modificación log
+5.1 Numeración a errores y mensajes
+5.2 Integración errores críticos que requieran asistencia del operador
+
+[Prioridad 6]
+6- Showroom Backend
+6-1 Identificación de msj importantes en log
+6-2 Actualización de parámetros en clase state
+6-3 Cambiar contador 1s por condición con datetime.second
+
+[Prioridad 7]
+7- Reconectar fines de carrera
+7.1- Verificar que todos funcionan
+7.2- Verificar que no alteran el funcionamiento del sistema por estar conectados
+
+[Prioridad 8]
+8- Envío de correos y msg Telegram eventos (peligrosos, importantes)
+Nota: Tener cuidado en caso de no tener internet se pierden entre 15-20s
+cada intento de mandar un correo hasta que falla.
+
+[Prioridad 9]
+9- Alertas y Recordatorios (Diarios, Semanales, Quincenales y Mensuales)
+- Drenar compresor, etc. Integrar con correos, Telegram y log en pantalla
+
+[Prioridad 10]
+10- Problemas en la frontera (cambios de solución)
+10.1 ¿Qué pasa si tocaba cambio de solución y llenó con la antigua solución?
+Solicitar cambio de solución adelantada en caso de que los litros requeridos para
+rellenar el kegs sean 0
+
+[Prioridad 20]
+20- Análisis de datos
+20.1 Incluir en base de datos caudales, consumos de agua por etapa
+20.2 Incluir en base de datos agua consumida por el sistema desde la línea externa
+20.3 Comenzar filtrado, selección de datos
+20.4 Graficar resultados preeliminares
+20.5 Robustecer captura y pre-procesamiento con resultados
+
+[Prioridad 100]
+100- Añadir exportación e importación de csv con parámetros de funcionamiento
+guardados
+
+[Prioridad 1000]
+1000- Control de Clima Inteligente (Aire Acondicionado, ventiladores)
+
+[Prioridad 2000]
+2000- Integración sMaker con función completa
+
+*** Status: A prueba
+**  Pendiente de cargar y de hacer commit en git
+*   Pendiente de cargar
