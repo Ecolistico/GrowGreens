@@ -17,7 +17,7 @@ void emergencyStop() {
 
 // Ask again for boot parameters after a while without response
 void boot(){
-  if(!bootParameters && millis()-bootTimer>20000){
+  if(!bootParameters && millis()-bootTimer>20000 && firstHourUpdate){
     bootTimer=millis();
     Serial.println(F("?boot"));
   }

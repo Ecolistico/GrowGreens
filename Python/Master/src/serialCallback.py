@@ -28,9 +28,9 @@ class serialController:
         self.logGC = loggerGC
         self.logMG = loggerMG
         self.logSM = loggerSM
-        self.irrigation = systemState(stateFile)
-        if(self.irrigation.load()): self.logMain.info("Irrigation State charged")
-        else: self.logMain.error("[ERROR-1] Cannot charge Irrigation State because it does not exist")
+        self.system = systemState(stateFile)
+        if(self.system.load()): self.logMain.info("System State charged")
+        else: self.logMain.error("[ERROR-1] Cannot charge System State because it does not exist")
         
     def open(self):
         if not self.generalControl.is_open:
@@ -83,29 +83,39 @@ class serialController:
         return resp[1:]
     
     def sendBootParams(self):
-        self.write(self.generalControl, "boot,{0},{1},{2},{3},{4}".format(
-            self.irrigation.state["solution"], self.irrigation.state["volumenNut"],
-            self.irrigation.state["volumenH2O"], self.irrigation.state["consumptionNut"],
-            self.irrigation.state["consumptionH2O"]))
+        self.write(self.generalControl, "boot,{0},{1},{2},{3},{4},{5},{6},{7}".format(
+            self.system.state["solution"], self.system.state["volumenNut"],
+            self.system.state["volumenH2O"], self.system.state["consumptionNut"],
+            self.system.state["consumptionH2O"], self.system.state["IPC"],
+            self.system.state["MPC"], self.system.state["missingLiters"]))
         
         
-    def updateIrrigationState(self, index):
+    def updateSystemState(self, index):
         param = self.respLine[index].split(",")
-        if(self.irrigation.update("solution", int(param[1]))):
+        if(self.system.update("solution", int(param[1]))):
             self.logMain.debug("Irrigation Solution Updated")
         else: self.logMain.error("Cannot Update Solution State")
-        if(self.irrigation.update("vol,nut", float(param[2]))):
+        if(self.system.update("vol,nut", float(param[2]))):
             self.logMain.debug("Irrigation volNut Updated")
         else: self.logMain.error("Cannot Update volNut State")
-        if(self.irrigation.update("vol,h2o", float(param[3]))):
+        if(self.system.update("vol,h2o", float(param[3]))):
             self.logMain.debug("Irrigation volH2O Updated")
         else: self.logMain.error("Cannot Update volH2O State")
-        if(self.irrigation.update("cons,nut", float(param[4]))):
+        if(self.system.update("cons,nut", float(param[4]))):
             self.logMain.debug("Irrigation consNut Updated")
         else: self.logMain.error("Cannot Update consNut State")
-        if(self.irrigation.update("cons,h2o", float(param[5]))):
+        if(self.system.update("cons,h2o", float(param[5]))):
             self.logMain.debug("Irrigation consH2O Updated")
         else: self.logMain.error("Cannot Update consH2O State")
+        if(self.system.update("IPC", int(param[6]))):
+            self.logMain.debug("System IPC Updated")
+        else: self.logMain.error("Cannot Update IPC State")
+        if(self.system.update("MPC", int(param[7]))):
+            self.logMain.debug("Irrigation MPC Updated")
+        else: self.logMain.error("Cannot Update MPC State")
+        if(self.system.update("missingLiters", float(param[8]))):
+            self.logMain.debug("Irrigation Missing Liters Updated")
+        else: self.logMain.error("Cannot Update Missing Liters State")
     
     def requestSolution(self, index):
         # Form -> "?solutionMaker,float[liters],int[sol],float[ph],int[ec]"
@@ -144,8 +154,8 @@ class serialController:
             for i, resp in enumerate(self.resp):
                 # generalControl is requesting the necessary booting parameters
                 if(resp == "boot"): self.sendBootParams()            
-                # Update irrigation state
-                elif(resp == "updateIrrigationState"): self.updateIrrigationState(i)
+                # Update system state
+                elif(resp == "updateSystemState"): self.updateSystemState(i)
                 # generalControl is requesting to prepare a solution
                 elif(resp == "requestSolution"): self.requestSolution(i)
                 # generalControl ask if sMaker finished to prepare the solution
@@ -169,8 +179,8 @@ class serialController:
             
             if(line1.startswith("?boot")):
                 self.concatResp("boot", line1)
-            elif(line1.startswith("updateIrrigationState")):
-                self.concatResp("updateIrrigationState", line1)
+            elif(line1.startswith("updateSystemState")):
+                self.concatResp("updateSystemState", line1)
             elif(line1.startswith("?solutionMaker")):
                 self.concatResp("requestSolution", line1)
             elif(line1.startswith("?solutionFinished")):

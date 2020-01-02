@@ -199,7 +199,7 @@ void codification_Multiplexer();
 void multiplexerRun();
 // Serial Communication
 void requestSolution();
-void updateIrrigationState();
+void updateSystemState();
 void serialEvent();
 // Setup
 void solenoid_setup();
@@ -211,6 +211,7 @@ uint8_t inWhatFloorIsNight();
 void updateDay();
 void substractSolutionConsumption(bool updateConsumption = false);
 void substractWaterConsumption(bool updateConsumption = false);
+void rememberState(int ipc, int mpc, float missingLiters);
 // Aux Functions
 void emergencyStop();
 void boot();
@@ -237,7 +238,7 @@ void setup() {
   sensors_setup(); // Initialize sensors
   Actuator::beginAll(); // Initialize actuators
   solenoid_setup(); // Initialize solenoids valves
-  // Initialize recController
+  // Initialize recirculationController
   Recirculation.begin(US0, US1, US2, US3, US4, US5, US6);
   Serial.flush();
   

@@ -13,8 +13,9 @@ void requestSolution(){ // Form -> "?solutionMaker,float[liters],int[sol],float[
   Serial.println(Irrigation.getEC(Recirculation.getOut())); // ec
 }
 
-void updateIrrigationState(){ // Form -> "updateIrrigationState,int[sol],float[volNut],float[volH],float[consNut],float[consH2O]"
-  Serial.print(F("updateIrrigationState,"));
+void updateSystemState(){ 
+  // Form -> "updateSystemState,int[sol],float[volNut],float[volH2O],float[consNut],float[consH2O],int[IPC],int[MPC],float[missingLiters]"
+  Serial.print(F("updateSystemState,"));
   Serial.print(Recirculation.getOut()); // Solution
   Serial.print(F(",")); 
   Serial.print(Recirculation.getVolKnut()); // volNut
@@ -23,7 +24,13 @@ void updateIrrigationState(){ // Form -> "updateIrrigationState,int[sol],float[v
   Serial.print(F(","));
   Serial.print(solutionConsumption); // consNut
   Serial.print(F(",")); 
-  Serial.println(h2oConsumption); // consH2O
+  Serial.print(h2oConsumption); // consH2O
+  Serial.print(F(",")); 
+  Serial.print(IPC.state); // IPC
+  Serial.print(F(",")); 
+  Serial.print(MPC.state); // MPC
+  Serial.print(F(","));
+  Serial.println(Recirculation.getMissingLiters()); // missingLiters
 }
 
 void serialEvent(){                                  //if the hardware serial port_0 receives a char
@@ -31,7 +38,7 @@ void serialEvent(){                                  //if the hardware serial po
   input_string_complete = true;                       //set the flag used to tell if we have received a completed string from the PC
   
   if(input_string_complete==true){
-    String parameter[8];
+    String parameter[10];
     int k = 0;
     int l = 0;
     // Split the parameters
@@ -388,14 +395,19 @@ void serialEvent(){                                  //if the hardware serial po
     }
 
     else if(parameter[0]==F("boot")){ // Functions to recieve variables when boot/rebooting
-      // Form "boot,int[lastSol],float[volumenNut],float[volumeH2O],float[solConsumption],float[h2oConsumption]"
+      // Form "boot,int[lastSol],float[volumenNut],float[volumeH2O],float[solConsumption],
+      // float[h2oConsumption],int[IPC],int[MPC],float[missingLiters]"
       if(!bootParameters){
         int lastSol = parameter[1].toInt();
         float vnut = parameter[2].toFloat();
         float vh2o = parameter[3].toFloat();
         float solCons = parameter[4].toFloat();
         float h2oCons = parameter[5].toFloat();
-        if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>=0 && h2oCons>=0){
+        int ipc = parameter[6].toInt();
+        int mpc = parameter[7].toInt();
+        float missingLiters = parameter[8].toFloat();
+        
+        if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>=0 && h2oCons>=0 && missingLiters>=0){
           bootParameters = true; // Set bootParameters as true
           lastSolution = lastSol+1; // solution using for irrigation class
           // Update Recirculation class parameters
@@ -422,8 +434,17 @@ void serialEvent(){                                  //if the hardware serial po
           Serial.print(F("Boot: Initial Water Kegs Consumption updated to "));
           Serial.print(h2oConsumption);
           Serial.println(F(" liters"));
+          Serial.print(F("Boot: IPC updated to "));
+          Serial.println(ipc);
+          Serial.print(F("Boot: MPC updated to "));
+          Serial.println(mpc);
+          if(missingLiters!=0){
+            Serial.print(F("Boot: Missing Liters updated to "));
+            Serial.println(missingLiters);
+          }
+          rememberState(ipc, mpc, missingLiters);
         }
-        else{ Serial.println(F("error,boot(): Parameter[1-6] incorrect")); } 
+        else{ Serial.println(F("error,boot(): Parameter[1-8] incorrect")); } 
       }
       else{ Serial.println(F("error,Set Initial Parameters(): Parameters already setted")); } 
     }
@@ -431,9 +452,11 @@ void serialEvent(){                                  //if the hardware serial po
     else if(parameter[0]==F("solutionMaker")){ // Coordinate action with solutionMaker
       if(parameter[1]==F("accept") || parameter[1]==F("accept\n")){ // Computer informs that solutionMaker accepts the last request
           CC.setState(1);
+          updateSystemState();
         }
         else if(parameter[1]==F("finished") || parameter[1]==F("finished\n")){ // Computer informs that solutionMaker finished the last request
           CC.setState(2);
+          updateSystemState();
         }
         else{Serial.println(F("error,solutionMaker(): Parameter[1] unknown"));}
     }
@@ -460,8 +483,8 @@ void serialEvent(){                                  //if the hardware serial po
       }
       else if(parameter[1]==F("requestSolution") || parameter[1]==F("requestSolution\n"))
       { requestSolution(); }
-      else if(parameter[1]==F("updateIrrigationState") || parameter[1]==F("updateIrrigationState\n"))
-      { updateIrrigationState(); }
+      else if(parameter[1]==F("updateSystemState") || parameter[1]==F("updateSystemState\n"))
+      { updateSystemState(); }
     }
     
     else{Serial.println(F("error, Serial Command Unknown"));}

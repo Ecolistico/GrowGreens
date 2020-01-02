@@ -223,6 +223,16 @@ void recirculationController::resetVolKnut()
 void recirculationController::resetVolKh2o()
   { __VolKh2o = 0; }
 
+float recirculationController::getMissingLiters()
+  { if(!__OutPump && !__Fh2o && !__FSol){ return 0; }
+    float pumpLiters = __OutLiters-(__ActualLiters-__Level[__LastOut+1]->getVolume());
+    if(pumpLiters<0){ pumpLiters=0; }
+    float outsideLiters = __FillLiters-__H2OVol;
+    if(outsideLiters<0){ outsideLiters=0; }
+    float totalMissingLiters = pumpLiters + outsideLiters;
+    return totalMissingLiters;
+  }
+  
 void recirculationController::fillH2O(float liters)
   { if(!__FSol){
       if(!__Fh2o){
@@ -309,14 +319,6 @@ uint8_t recirculationController::moveOut(float liters, uint8_t to_Where)
           
           if(to_Where==NUTRITION_KEGS || to_Where==SOLUTION_MAKER){ // Nutrition Kegs || Solution Maker
             // Move to Solution Maker
-            /* DEBUG
-            if(__Level[__Out+1]->getDistance() < __Level[__Out+1]->getMaxDist()){
-              __OutLiters = __ActualLiters;
-              __OutPump = HIGH;
-              __OutValve[__Out] = HIGH;
-              __Go[2] = HIGH;
-              printAction(__OutLiters, "solution"+String(__Out+1), "solution maker");
-            }*/
             __OutLiters = __ActualLiters;
             __OutPump = HIGH;
             __OutValve[__Out] = HIGH;
@@ -395,7 +397,7 @@ void recirculationController::run(bool check, bool sensorState)
       printAction(F("Move Out finished. "), String(__OutLiters), 
       F(" liters were move to "), toWhere, 0);
       //__ActualLiters = 0;
-      //__OutLiters = 0;
+      __OutLiters = 0;
       
       if(__Wait4Fill==1){ // Now fill sMaker
         fillSol(__WaitLiters); // Fill solution maker with the rest
@@ -421,20 +423,20 @@ void recirculationController::run(bool check, bool sensorState)
     // Stop filling with water when
     if(__Fh2o || __FSol){
       getVolume();
-      if(__H2OVol>=__FillLiters || __Level[6]->getVolume()-__Level[6]->getMinVolume()>=__FillLiters+__OutLiters){
-        if(__Fh2o){
-          __Fh2o = LOW;
-          __FPump = LOW;
-          printAction(F("Fill water kegs finished. "), String(__FillLiters),
-          F(" liters were move to water kegs"), F(""), 0);
-          addVolKh2o(__H2OVol);
-        }
-        else if(__FSol){
-          __FSol = LOW;
-          __FPump = LOW;
-          printAction(F("Fill solution Maker finished. "), String(__FillLiters),
-          F(" liters were move to solution maker"), F(""), 0);
-        }
+      if(__Fh2o && __H2OVol>=__FillLiters){
+        __Fh2o = LOW;
+        __FPump = LOW;
+        printAction(F("Fill water kegs finished. "), String(__FillLiters),
+        F(" liters were move to water kegs"), F(""), 0);
+        addVolKh2o(__H2OVol);
+        __FillLiters = 0;
+        __H2OVol = 0;
+      }
+      else if(__FSol && (__H2OVol>=__FillLiters || __Level[6]->getVolume()-__Level[6]->getMinVolume()>=__FillLiters+__OutLiters)){
+        __FSol = LOW;
+        __FPump = LOW;
+        printAction(F("Fill solution Maker finished. "), String(__FillLiters),
+        F(" liters were move to solution maker"), F(""), 0);
         __FillLiters = 0;
         __H2OVol = 0;
       }

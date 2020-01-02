@@ -14,7 +14,7 @@ void async(){
   asyncIrrigation(); // This functions check in what state has to be the valves of both kegs
 
   // If it is time check the initialPreconditions and if they pass startIrrigation
-  if(irrigationStage==0 && IPC.state==0 && bootParameters && firstHourUpdate){
+  if(irrigationStage==0 && (IPC.state==0 || IPC.state==1) && bootParameters && firstHourUpdate){
     initialPreconditions(true, &startIrrigation); // pass irrigationStage from 0 to 1. true parameter means it check before irrigation starts
   }
   // finishInitialIrrigation() in solenoidValverunAll() pass irrigationStage from 1 to 2
@@ -78,13 +78,14 @@ void initialPreconditions(bool before, void (*ptr2function)()){
       checkRecirculation = false; // Disable the air/water sensor
       if(enableWaterSensor){ // If waterSensor enable
         if(IPC.state==1){IPC.setState(51);} // Check IPC Process 51
-        else{IPC.setState(31);} // Check IPC Process 31  
+        else{IPC.setState(31);} // Check IPC Process 31
       }
       else{
         if(IPC.state==1){IPC.setState(55);} // Check IPC Process 55
         else{IPC.setState(35);} // Check IPC Process 35
       }
     }
+    updateSystemState();
   } else{ count++; }
   
   // Else if it is not enough solution
@@ -93,6 +94,7 @@ void initialPreconditions(bool before, void (*ptr2function)()){
     Compressor.openFreeNut(); // Depressurize Nutrition Kegs
     if(IPC.state==1){IPC.setState(40);} // Check IPC Process 40
     else{IPC.setState(20);} // Check IPC Process 20
+    updateSystemState();
   } else{ count++; }
   
   // Else if it is not enough pressure
@@ -100,6 +102,7 @@ void initialPreconditions(bool before, void (*ptr2function)()){
     decition = true;
     Compressor.compressNut(); // Compress Nutrition Kegs
     IPC.setState(10); // Check IPC Process 10
+    updateSystemState();
   } else{ count++; }
 
   if(count>=3){ ptr2function(); } // Execute some function if all the preconditions are fulfilled
@@ -145,6 +148,7 @@ void finishInitialIrrigation(){
     if(p2<min_pressure){ // Check if pressure is low in air tank
       Compressor.compressTank(); // Compress air tank
       IPC.setState(1); // Check IPC Process 1
+      updateSystemState();
     }
     
     initialPreconditions(false, &doNothing); // Check initialPreconditions again. false parameter means it check before irrigation finish
@@ -184,6 +188,7 @@ void middlePreconditions(void (*ptr2function)()){
     decition = true;
     Compressor.openFreeH2O(); // Depressurize Water Kegs
     MPC.setState(20); // Check MPC Process 20
+    updateSystemState();
   } else{ count++; }
 
   // If there is not enough pressure
@@ -191,6 +196,7 @@ void middlePreconditions(void (*ptr2function)()){
     decition = true;
     Compressor.compressH2O(); // Compress Water Kegs
     MPC.setState(10); // Check MPC Process 10
+    updateSystemState();
   } else{ count++; }
 
   if(count>=2){ ptr2function(); } // Execute some function if all the preconditions are fulfilled
@@ -219,13 +225,14 @@ void doNothing(){} // Pass as it as reference parameter when initial or middle P
 
 void irrigationEmergency(){
   // If we are in irrigationStage 1 and the system is supposed to be fine
-  if(irrigationStage==1 && IPC.state==0){
+  if(irrigationStage==1 && (IPC.state==0 || IPC.state==1)){
     float p1 = pressureSensorNutrition.getValue();
     // If we detect air in irrigation line
     //if(checkWaterIrrigation.getState()==AIR_STATE){ debug: use water/air sensor in irrigation line
     if(WATER_STATE==AIR_STATE){
       Serial.println(F("warning,IPC Warning: Probably there is air in irrigation line"));
       IPC.setState(70); // Check IPC Process 70
+      updateSystemState();
     }
     // If we detect low pressure
     else if(p1<critical_pressure){
@@ -234,6 +241,7 @@ void irrigationEmergency(){
       solenoidValve::enableGroup(false); // Disable Valves Group
       Compressor.compressNut(); // Compress Nutrition Kegs
       IPC.setState(60); // Check IPC Process 60
+      updateSystemState();
     }
   }
 
@@ -245,6 +253,7 @@ void irrigationEmergency(){
     if(WATER_STATE==AIR_STATE){
       Serial.println(F("warning,MPC Warning: Probably there is air in irrigation line"));
       MPC.setState(70); // Check MPC Process 70
+      updateSystemState();
     }
     // If we detect low pressure
     else if(p3<critical_pressure){
@@ -253,17 +262,29 @@ void irrigationEmergency(){
       solenoidValve::enableGroup(false); // Disable Valves Group
       Compressor.compressH2O(); // Compress Water Kegs
       MPC.setState(60); // Check IPC Process 60
+      updateSystemState();
     }
   }
 }
 
 void runIPC(){
-  if(IPC.state==10){ // Compress nutrition kegs
+  if(IPC.state==1){
+    float p2 = pressureSensorTank.getValue();
+    if(p2>=max_pressure){
+      if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
+      else{ Compressor.Off(); } // Turn off the compressor
+      IPC.setState(0); // Return to normal state
+      updateSystemState();
+    }
+  }
+  
+  else if(IPC.state==10){ // Compress nutrition kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1>=max_pressure){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(0); // Return to normal state
+      updateSystemState();
     }
   }
 
@@ -283,6 +304,7 @@ void runIPC(){
         Serial.println(F("info,There is not enough solution to fill nutrition kegs... adding extra water in solutionMaker"));
         IPC.setState(22); // Check IPC Process 22
       }
+      updateSystemState();
     }
   }
 
@@ -291,7 +313,9 @@ void runIPC(){
       Compressor.closeFreeNut(); // Close Free Pressure Valve in Nutrition Kegs
       Compressor.compressNut(); // Compress nutrition kegs
       IPC.setState(10); // Check IPC Process 10
+      updateSystemState();
     }
+    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
   }
 
   else if(IPC.state==22){ // PumpOut and FillNutValve working on fill sMaker
@@ -299,16 +323,20 @@ void runIPC(){
        !Recirculation.getOutValve(3) && !Recirculation.getFSolValve()){ // If sMaker is filled
       requestSolution(); // Asking central computer that solutionMaker as to prepare a solution with the next parameters
       IPC.setState(23); // Check IPC Process 23
+      updateSystemState();
     }
+    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
   }
 
   else if(IPC.state==23){ // Waiting for central computer to confirm request
     if(CC.state==1){
       Serial.println(F("info,Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
       IPC.setState(24); // Check IPC Process 24
+      updateSystemState();
     }
     else if(millis()-IPC.actualTime>=10000){
       IPC.setState(22); // Check IPC Process 22
+      updateSystemState();
     }
   }
 
@@ -317,6 +345,7 @@ void runIPC(){
       Recirculation.moveSol();
       IPC.setState(25); // Check IPC Process 25
       CC.setState(0); // Return Computer Control to normal state
+      updateSystemState();
     }
     else if(CC.state==1 && millis()-IPC.actualTime>=20000){
       IPC.actualTime=millis();
@@ -329,6 +358,7 @@ void runIPC(){
       Compressor.closeFreeNut(); // Close Free Pressure Valve in Nutrition Kegs
       Compressor.compressNut(); // Compress nutrition kegs
       IPC.setState(10); // Check IPC Process 10
+      updateSystemState();
     }
   }
 
@@ -342,6 +372,7 @@ void runIPC(){
       else{
         IPC.setState(35); // Check IPC Process 35
       }
+      updateSystemState();
     }
   }
 
@@ -349,6 +380,7 @@ void runIPC(){
     if(millis()-IPC.actualTime>=6000){
       checkRecirculation = true; // Enable the air/water sensor
       IPC.setState(32); // Check IPC Process 32
+      updateSystemState();
     }
   }
 
@@ -363,6 +395,7 @@ void runIPC(){
       Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
       Recirculation.setOut(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
       IPC.setState(20); // Check IPC Process 20
+      updateSystemState();
     }
   }
 
@@ -379,6 +412,7 @@ void runIPC(){
       Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
       Recirculation.setOut(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
       IPC.setState(20); // Check IPC Process 20
+      updateSystemState();
     }
   }
 
@@ -389,6 +423,7 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(20); // Check IPC Process 20
+      updateSystemState();
     }
     else if(p1<=10){
       // uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS); // DEBUG
@@ -404,6 +439,7 @@ void runIPC(){
         Serial.println(F("info,There is not enough solution to fill nutrition kegs... adding extra water in solutionMaker"));
         IPC.setState(42); // Check IPC Process 22
       }
+      updateSystemState();
     }
   }
 
@@ -413,12 +449,15 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(21); // Check IPC Process 21
+      updateSystemState();
     }
     else if(!Recirculation.getOutPump()){
       Compressor.closeFreeNut(); // Close Free Pressure Valve in Nutrition Kegs
       Compressor.compressNut(); // Compress nutrition kegs
       IPC.setState(10); // Check IPC Process 10
+      updateSystemState();
     }
+    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
   }
 
   else if(IPC.state==42){ // PumpOut and FillNutValve working on fill sMaker/Compress air tank
@@ -427,12 +466,15 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(22); // Check IPC Process 22
+      updateSystemState();
     }
     else if(!Recirculation.getOutValve(0) && !Recirculation.getOutValve(1) && !Recirculation.getOutValve(2) && 
        !Recirculation.getOutValve(3) && !Recirculation.getFSolValve()){ // If sMaker fill
       requestSolution(); // Asking central computer that solutionMaker as to prepare a solution with the next parameters
       IPC.setState(43); // Check IPC Process 43
+      updateSystemState();
     }
+    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
   }
 
   else if(IPC.state==43){ // Waiting for central computer to confirm request/Compress air tank
@@ -441,13 +483,16 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(23); // Check IPC Process 23
+      updateSystemState();
     }
     else if(CC.state==1){
       Serial.println(F("info,Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
       IPC.setState(44); // Check IPC Process 44
+      updateSystemState();
     }
     else if(millis()-IPC.actualTime>=10000){
       IPC.setState(42); // Check IPC Process 42
+      updateSystemState();
     }
   }
 
@@ -457,11 +502,13 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(24); // Check IPC Process 24
+      updateSystemState();
     }
     else if(CC.state==2){
       Recirculation.moveSol();
       IPC.setState(45); // Check IPC Process 45
       CC.setState(0); // Return Computer Control to normal state
+      updateSystemState();
     }
     else if(CC.state==1 && millis()-IPC.actualTime>=20000){
       IPC.actualTime=millis();
@@ -475,11 +522,13 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(25); // Check IPC Process 25
+      updateSystemState();
     }
     else if(!Recirculation.getSolPump()){
       Compressor.closeFreeNut(); // Close Free Pressure Valve in Nutrition Kegs
       Compressor.compressNut(); // Compress nutrition kegs
       IPC.setState(10); // Check IPC Process 10
+      updateSystemState();
     }
   }
 
@@ -489,10 +538,12 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(31); // Check IPC Process 31
+      updateSystemState();
     }
     else if(millis()-IPC.actualTime>=6000){
       checkRecirculation = true; // Enable the air/water sensor
       IPC.setState(52); // Check IPC Process 52
+      updateSystemState();
     }
   }
 
@@ -502,6 +553,7 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(32); // Check IPC Process 32
+      updateSystemState();
     }
     // In theory, Recirculation.run closes the valve when the sensor detect air in line
     else if(!Recirculation.getRSolValve()){
@@ -513,6 +565,7 @@ void runIPC(){
       Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
       Recirculation.setOut(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
       IPC.setState(40); // Check IPC Process 40
+      updateSystemState();
     }
   }
 
@@ -523,6 +576,7 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(35); // Check IPC Process 35
+      updateSystemState();
     }
     // the sensor is desactivated, we are going to wait until the pressure goes down
     else if(p1<5){
@@ -535,6 +589,7 @@ void runIPC(){
       Recirculation.setIn(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
       Recirculation.setOut(Irrigation.getSolution()-1); // In Recirculation Sol1 = 0, etc.
       IPC.setState(40); // Check IPC Process 40
+      updateSystemState();
     }
   }
   
@@ -544,7 +599,8 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       solenoidValve::enableGroup(true); // Enable Valves Group
-      IPC.setState(0); // Return to normal state      
+      IPC.setState(0); // Return to normal state
+      updateSystemState();      
     }
   }
 
@@ -570,6 +626,7 @@ void runIPC(){
         Serial.println(F("info,IPC False Alarm: There is not air in irrigation line"));
         IPC.setState(0); // Return to normal state
       }
+      updateSystemState();
     }
   }
 
@@ -589,6 +646,7 @@ void runIPC(){
         Serial.println(F("warning,There is not enough solution to fill nutrition kegs... adding extra water in solutionMaker"));
         IPC.setState(73); // Check IPC Process 73
       }
+      updateSystemState();
     }
   }
   
@@ -598,7 +656,9 @@ void runIPC(){
       Compressor.keepConnected(true); // Connect nutrition kegs and air tank
       Compressor.compressNut(); // Compress nutrition kegs
       IPC.setState(60); // Check IPC Process 60
+      updateSystemState();
     }
+    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
   }
 
   else if(IPC.state==73){ // Emergency: Air in line. PumpOut working on fill sMaker
@@ -606,16 +666,20 @@ void runIPC(){
        !Recirculation.getOutValve(3) && !Recirculation.getFSolValve()){ // If sMaker is filled
       requestSolution(); // Asking central computer that solutionMaker as to prepare a solution with the next parameters
       IPC.setState(74); // Check IPC Process 74
+      updateSystemState();
     }
+    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
   }
 
   else if(IPC.state==74){ // Emergency: Air in line. Waiting for central computer to confirm request
     if(CC.state==1){
       Serial.println(F("info,Central Computer confirms that solutionMaker accept the request of prepare a new solution"));
       IPC.setState(75); // Check IPC Process 75
+      updateSystemState();
     }
     else if(millis()-IPC.actualTime>=10000){
       IPC.setState(73); // Check IPC Process 73
+      updateSystemState();
     }
   }
 
@@ -624,6 +688,7 @@ void runIPC(){
       Recirculation.moveSol();
       IPC.setState(76); // Check IPC Process 76
       CC.setState(0); // Return Computer Control to normal state
+      updateSystemState();
     }
     else if(CC.state==1 && millis()-IPC.actualTime>=20000){
       IPC.actualTime=millis();
@@ -637,12 +702,14 @@ void runIPC(){
       Compressor.keepConnected(true); // Connect nutrition kegs and air tank
       Compressor.compressNut(); // Compress nutrition kegs
       IPC.setState(60); // Check IPC Process 60
+      updateSystemState();
     }
   }
   
   else if(IPC.state==250){ // PumpOut working on another process
     if(!Recirculation.getOutPump()){
       IPC.setState(20); // Check IPC Process 20
+      updateSystemState();
     }
   }
 
@@ -652,15 +719,18 @@ void runIPC(){
       if(MPC.state==10 || MPC.state==60){ Compressor.Off(); Compressor.compressH2O(); } // Compress water kegs
       else{ Compressor.Off(); } // Turn off the compressor
       IPC.setState(250); // Check IPC Process 250
+      updateSystemState();
     }
     else if(!Recirculation.getOutPump()){
       IPC.setState(40); // Check IPC Process 40
+      updateSystemState();
     }
   }
 
   else if(IPC.state==252){ // Emergency: Air in line. PumpOut working on another process
     if(!Recirculation.getOutPump()){
       IPC.setState(71); // Check IPC Process 71
+      updateSystemState();
     }
   }
 
@@ -669,12 +739,14 @@ void runIPC(){
 void runMPC(){
   if(MPC.state==10){ // Compress water kegs
     float p3 = pressureSensorWater.getValue();
-    if(p3>=max_pressure){
-      if(IPC.state==10 || IPC.state==60){  Compressor.Off(); Compressor.compressNut(); } // Compress nutrition kegs
+    if(p3>=max_pressure){ 
+      if(IPC.state==1){ Compressor.Off(); Compressor.compressTank(); } // Compress air tank
+      else if(IPC.state==10 || IPC.state==60){ Compressor.Off(); Compressor.compressNut(); } // Compress nutrition kegs
       else if(IPC.state==40 || IPC.state==41 || IPC.state==42 || IPC.state==43 || IPC.state==44 || 
       IPC.state==45 || IPC.state==51 || IPC.state==52 || IPC.state==55 || IPC.state==251){  Compressor.Off(); Compressor.compressTank(); } // Compress just air tank
       else{ Compressor.Off(); } // Turn off the compressor
       MPC.setState(0); // Return to normal state
+      updateSystemState();
     }
   }
 
@@ -696,6 +768,7 @@ void runMPC(){
         Serial.println(F("warning,There is not enough solution to fill water kegs... adding extra water"));
         MPC.setState(22); // Check MPC Process 22
       }
+      updateSystemState();
     }
   }
 
@@ -704,7 +777,9 @@ void runMPC(){
       Compressor.closeFreeH2O(); // Close Free Pressure Valve in Water Kegs
       Compressor.compressH2O(); // Compress water kegs
       MPC.setState(10); // Check MPC Process 10
+      updateSystemState();
     }
+    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
   }
 
   else if(MPC.state==22){ // PumpOut and FillH2OValve working on fill water kegs
@@ -712,18 +787,22 @@ void runMPC(){
       Compressor.closeFreeH2O(); // Close Free Pressure Valve in Water Kegs
       Compressor.compressH2O(); // Compress water kegs
       MPC.setState(10); // Check MPC Process 10
+      updateSystemState();
     }
+    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
   }
 
   else if(MPC.state==60){ // Emergency: Low Pressure
     float p3 = pressureSensorWater.getValue();
     if(p3>=min_pressure){
-      if(IPC.state==10 || IPC.state==60){  Compressor.Off(); Compressor.compressNut(); } // Compress nutrition kegs
+      if(IPC.state==1){ Compressor.Off(); Compressor.compressTank(); } // Compress air tank
+      else if(IPC.state==10 || IPC.state==60){ Compressor.Off(); Compressor.compressNut(); } // Compress nutrition kegs
       else if(IPC.state==40 || IPC.state==41 || IPC.state==42 || IPC.state==43 || IPC.state==44 || 
       IPC.state==45 || IPC.state==51 || IPC.state==52 || IPC.state==55 || IPC.state==251){  Compressor.Off(); Compressor.compressTank(); } // Compress just air tank
       else{ Compressor.Off(); } // Turn off the compressor
       solenoidValve::enableGroup(true); // Enable Valves Group
       MPC.setState(0); // Return to normal state
+      updateSystemState();
     }
   }
 
@@ -748,6 +827,7 @@ void runMPC(){
         Serial.println(F("info,MPC False Alarm: There is not air in irrigation line"));
         MPC.setState(0); // Return to normal state
       }
+      updateSystemState();
     }
   }
 
@@ -769,6 +849,7 @@ void runMPC(){
         Serial.println(F("warning,There is not enough solution to fill water kegs... adding extra water"));
         MPC.setState(73); // Check MPC Process 73
       }
+      updateSystemState();
     }
   }
 
@@ -777,7 +858,9 @@ void runMPC(){
       Compressor.closeFreeH2O(); // Close Free Pressure Valve in Water Kegs
       Compressor.compressH2O(); // Compress water kegs
       MPC.setState(60); // Check MPC Process 60
+      updateSystemState();
     }
+    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
   }
 
   else if(MPC.state==73){ // Emergency: Air in line. PumpOut and FillH2OValve working on fill water kegs
@@ -785,18 +868,22 @@ void runMPC(){
       Compressor.closeFreeH2O(); // Close Free Pressure Valve in Water Kegs
       Compressor.compressH2O(); // Compress water kegs
       MPC.setState(60); // Check MPC Process 60
+      updateSystemState();
     }
+    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
   }
   
   else if(MPC.state==250){ // PumpOut working on another process
     if(!Recirculation.getOutPump()){
       MPC.setState(20); // Check MPC Process 20
+      updateSystemState();
     }
   }
 
   else if(MPC.state==252){ // Emergency: Air in line. PumpOut working on another process
     if(!Recirculation.getOutPump()){
       MPC.setState(71); // Check MPC Process 71
+      updateSystemState();
     }
   }
 }

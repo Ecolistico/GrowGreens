@@ -14,6 +14,9 @@ class systemState:
         self.state["volumenH2O"] = 0
         self.state["consumptionNut"] = 0
         self.state["consumptionH2O"] = 0
+        self.state["IPC"] = 0
+        self.state["MPC"] = 0
+        self.state["missingLiters"] = 0
         
     def load(self):
         if(os.path.isfile(self.file)):
@@ -24,6 +27,9 @@ class systemState:
                 self.state["volumenH2O"] = data["volumenH2O"]
                 self.state["consumptionNut"] = data["consumptionNut"]
                 self.state["consumptionH2O"] = data["consumptionH2O"]
+                self.state["IPC"] = data["IPC"]
+                self.state["MPC"] = data["MPC"]
+                self.state["missingLiters"] = data["missingLiters"]
             return True
         else: return False
     
@@ -31,6 +37,15 @@ class systemState:
         save = False
         if(key.startswith("s") and val>=0 and val<4):
             self.state["solution"] = val
+            save = True
+        elif(key.startswith("IPC")):
+            self.state["IPC"] = val
+            save = True
+        elif(key.startswith("MPC")):
+            self.state["MPC"] = val
+            save = True
+        elif(key.startswith("missingLiters")):
+            self.state["missingLiters"] = val
             save = True
         else:
             keySplit = key.lower().split(",")

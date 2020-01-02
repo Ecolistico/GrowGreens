@@ -79,7 +79,7 @@ class recirculationController
         float __SolLiters; // Aux Control in moveSol()
         uint8_t __Wait4Fill; // Aux Control when we need get water from municipal line
         float __WaitLiters; // Aux Control to save how much liters we needs from municipal line
-
+        
         /*** Sensors ***/
         // Ultrasonic
         UltraSonic *__Level[MAX_NUMBER_US_SENSOR];
@@ -142,13 +142,15 @@ class recirculationController
          void resetVolKnut(); // Set the volume in nutrition kegs in 0
          void resetVolKh2o(); // Set the volume in H2O kegs in 0
 
+         float getMissingLiters(); // Returns how many liters we need to finish the moveOut()
+         
          void fillH2O(float liters); // Fills the water kegs with water
          void fillSol(float liters); // Fills the solution maker with water
 
          bool moveIn(); // InPump move
          uint8_t moveOut(float liters, uint8_t to_Where); // OutPump move
          bool moveSol(); // SolPump move
-
+         
          void run(bool check, bool sensorState);
   };
 
