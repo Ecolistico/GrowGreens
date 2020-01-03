@@ -214,6 +214,7 @@ void rememberState(int ipc, int mpc, float missingLiters) {
     Compressor.openFreeNut(); // Depressurize Nutrition Kegs 
   }
   else if(ipc==21 || ipc==22){
+    Compressor.openFreeNut(); // Depressurize Nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
       uint8_t resp = Recirculation.moveOut(missingLiters, NUTRITION_KEGS);
@@ -236,6 +237,7 @@ void rememberState(int ipc, int mpc, float missingLiters) {
     b_ipc = false;
   }
   else if(ipc==23 || ipc==24 || ipc==43 || ipc==44 || ipc==74 || ipc==75){
+    Compressor.openFreeNut(); // Depressurize Nutrition Kegs
     if(ipc==43 || ipc==44){ Compressor.compressTank(); } // Compress air tank
     requestSolution(); // Asking central computer that solutionMaker as to prepare a solution with the next parameters
     if(ipc==24 || ipc==44 || ipc==75){
@@ -246,6 +248,7 @@ void rememberState(int ipc, int mpc, float missingLiters) {
     }
   }
   else if(ipc==25 || ipc==45 || ipc==76){
+    Compressor.openFreeNut(); // Depressurize Nutrition Kegs
     if(ipc==45) { Compressor.compressTank(); } // Compress air tank
     Recirculation.moveSol(); // Empty SMaker -> Kegs_nut
   }
@@ -271,6 +274,7 @@ void rememberState(int ipc, int mpc, float missingLiters) {
     b_ipc = false;
   }
   else if(ipc==41 || ipc==42){
+    Compressor.openFreeNut(); // Depressurize Nutrition Kegs
     Compressor.compressTank(); // Compress air tank
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
@@ -288,7 +292,6 @@ void rememberState(int ipc, int mpc, float missingLiters) {
       }
     }
     else {
-      Compressor.openFreeNut(); // Depressurize Nutrition Kegs 
       IPC.setState(40); // Check IPC Process 40
     }
     b_ipc = false;
@@ -320,6 +323,7 @@ void rememberState(int ipc, int mpc, float missingLiters) {
     Compressor.openFreeNut(); // Depressurize Nutrition Kegs
   }
   else if(ipc==72 || ipc==73){
+    Compressor.openFreeNut(); // Depressurize Nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
       uint8_t resp = Recirculation.moveOut(missingLiters, NUTRITION_KEGS);
@@ -353,6 +357,7 @@ void rememberState(int ipc, int mpc, float missingLiters) {
   else if(mpc==10){ Compressor.compressH2O(); } // Compress Water Kegs
   else if(mpc==20){ Compressor.openFreeH2O(); } // Depressurize Water Kegs
   else if(mpc==21 || mpc==22){
+    Compressor.openFreeH2O();
     float p3 = pressureSensorWater.getValue();
     if(p3<=10){
       uint8_t lastOut = Recirculation.getOut();
@@ -399,6 +404,7 @@ void rememberState(int ipc, int mpc, float missingLiters) {
     Compressor.openFreeH2O(); // Depressurize Water Kegs
   }
   else if(mpc==72 || mpc==73){
+    Compressor.openFreeH2O(); // Depressurize Water Kegs
     float p3 = pressureSensorWater.getValue();
     if(p3<=10){
       uint8_t lastOut = Recirculation.getOut();
@@ -421,7 +427,6 @@ void rememberState(int ipc, int mpc, float missingLiters) {
       Serial.println(F("warning,MPC: Pump was working on another process... waiting a little while"));
     }
     else {
-      Compressor.openFreeH2O(); // Depressurize Water Kegs
       MPC.setState(71); // Check MPC Process 71
     }
     b_mpc = false;
