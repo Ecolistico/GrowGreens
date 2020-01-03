@@ -47,7 +47,7 @@ serialControl = serialController(mGrower,
                                  log.logger_generalControl,
                                  log.logger_motorsGrower,
                                  log.logger_solutionMaker,
-                                 "irrigation.json")
+                                 "state.json")
 
 # Define functions
 def mainClose(): # When program is finishing
