@@ -434,10 +434,6 @@ void serialEvent(){                                  //if the hardware serial po
           Serial.print(F("Boot: Initial Water Kegs Consumption updated to "));
           Serial.print(h2oConsumption);
           Serial.println(F(" liters"));
-          Serial.print(F("Boot: IPC updated to "));
-          Serial.println(ipc);
-          Serial.print(F("Boot: MPC updated to "));
-          Serial.println(mpc);
           if(missingLiters!=0){
             Serial.print(F("Boot: Missing Liters updated to "));
             Serial.println(missingLiters);

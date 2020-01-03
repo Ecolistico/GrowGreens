@@ -205,8 +205,9 @@ void substractWaterConsumption(bool updateConsumption = false){
 void rememberState(int ipc, int mpc, float missingLiters) {
   bool b_ipc = true;
   bool b_mpc = true;
-  
-  if(ipc==1){ Compressor.compressTank(); } // Compress air tank
+
+  if(ipc==0){ Serial.println(F("debug,IPC starts in default state"));} // Do nothing
+  else if(ipc==1){ Compressor.compressTank(); } // Compress air tank
   else if(ipc==10){ Compressor.compressNut(); } // Compress Nutrition Kegs 
   else if(ipc==20 || ipc==40){
     if(ipc==40) { Compressor.compressTank(); } // Compress air tank
@@ -347,8 +348,9 @@ void rememberState(int ipc, int mpc, float missingLiters) {
     Serial.println(F("critical,IPC invalid value"));
     b_ipc = false;
   }
-  
-  if(mpc==10){ Compressor.compressH2O(); } // Compress Water Kegs
+
+  if(mpc==0){ Serial.println(F("debug,MPC starts in default state"));} // Do nothing
+  else if(mpc==10){ Compressor.compressH2O(); } // Compress Water Kegs
   else if(mpc==20){ Compressor.openFreeH2O(); } // Depressurize Water Kegs
   else if(mpc==21 || mpc==22){
     float p3 = pressureSensorWater.getValue();

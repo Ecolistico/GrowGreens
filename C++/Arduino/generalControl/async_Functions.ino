@@ -315,7 +315,10 @@ void runIPC(){
       IPC.setState(10); // Check IPC Process 10
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
+    else if(millis()-IPC.actualTime>=10000){
+      IPC.actualTime=millis();
+      updateSystemState(); 
+    }
   }
 
   else if(IPC.state==22){ // PumpOut and FillNutValve working on fill sMaker
@@ -325,7 +328,10 @@ void runIPC(){
       IPC.setState(23); // Check IPC Process 23
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
+    else if(millis()-IPC.actualTime>=10000){
+      IPC.actualTime=millis();
+      updateSystemState(); 
+    }
   }
 
   else if(IPC.state==23){ // Waiting for central computer to confirm request
@@ -457,7 +463,10 @@ void runIPC(){
       IPC.setState(10); // Check IPC Process 10
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
+    else if(millis()-IPC.actualTime>=10000){
+      IPC.actualTime=millis();
+      updateSystemState(); 
+    }
   }
 
   else if(IPC.state==42){ // PumpOut and FillNutValve working on fill sMaker/Compress air tank
@@ -474,7 +483,10 @@ void runIPC(){
       IPC.setState(43); // Check IPC Process 43
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
+    else if(millis()-IPC.actualTime>=10000){
+      IPC.actualTime=millis();
+      updateSystemState(); 
+    }
   }
 
   else if(IPC.state==43){ // Waiting for central computer to confirm request/Compress air tank
@@ -658,7 +670,10 @@ void runIPC(){
       IPC.setState(60); // Check IPC Process 60
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
+    else if(millis()-IPC.actualTime>=10000){
+      IPC.actualTime=millis();
+      updateSystemState(); 
+    }
   }
 
   else if(IPC.state==73){ // Emergency: Air in line. PumpOut working on fill sMaker
@@ -668,7 +683,10 @@ void runIPC(){
       IPC.setState(74); // Check IPC Process 74
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
+    else if(millis()-IPC.actualTime>=10000){
+      IPC.actualTime=millis();
+      updateSystemState(); 
+    }
   }
 
   else if(IPC.state==74){ // Emergency: Air in line. Waiting for central computer to confirm request
@@ -779,7 +797,10 @@ void runMPC(){
       MPC.setState(10); // Check MPC Process 10
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
+    else if(millis()-MPC.actualTime>=10000){
+      MPC.actualTime=millis();
+      updateSystemState(); 
+    }
   }
 
   else if(MPC.state==22){ // PumpOut and FillH2OValve working on fill water kegs
@@ -789,7 +810,10 @@ void runMPC(){
       MPC.setState(10); // Check MPC Process 10
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
+    else if(millis()-MPC.actualTime>=10000){ 
+      MPC.actualTime=millis();
+      updateSystemState(); 
+    }
   }
 
   else if(MPC.state==60){ // Emergency: Low Pressure
@@ -860,7 +884,10 @@ void runMPC(){
       MPC.setState(60); // Check MPC Process 60
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
+    else if(millis()-MPC.actualTime>=10000){ 
+      MPC.actualTime=millis();
+      updateSystemState(); 
+    }
   }
 
   else if(MPC.state==73){ // Emergency: Air in line. PumpOut and FillH2OValve working on fill water kegs
@@ -870,7 +897,10 @@ void runMPC(){
       MPC.setState(60); // Check MPC Process 60
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){ updateSystemState(); }
+    else if(millis()-MPC.actualTime>=10000){ 
+      MPC.actualTime=millis();
+      updateSystemState(); 
+    }
   }
   
   else if(MPC.state==250){ // PumpOut working on another process
