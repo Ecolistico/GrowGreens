@@ -224,12 +224,23 @@ void recirculationController::resetVolKh2o()
   { __VolKh2o = 0; }
 
 float recirculationController::getMissingLiters()
-  { if(!__OutPump && !__Fh2o && !__FSol){ return 0; }
-    float pumpLiters = __OutLiters-(__ActualLiters-__Level[__LastOut+1]->getVolume());
-    if(pumpLiters<0){ pumpLiters=0; }
-    float outsideLiters = __FillLiters-__H2OVol;
-    if(outsideLiters<0){ outsideLiters=0; }
-    float totalMissingLiters = pumpLiters + outsideLiters;
+  { float pumpLiters, outsideLiters, totalMissingLiters;
+    
+    if(!__OutPump){ pumpLiters = 0; }
+    else {
+      pumpLiters = __OutLiters-(__ActualLiters-__Level[__LastOut+1]->getVolume()-__Level[__LastOut+1]->getMinVolume());
+      if(pumpLiters<0){ pumpLiters=0; }
+    }
+    
+    if(!__Fh2o && !__FSol){ outsideLiters = 0; }
+    else{
+      if(__FillLiters==0){ outsideLiters = __WaitLiters-__H2OVol; }
+      else if(__WaitLiters==0){ outsideLiters = __FillLiters-__H2OVol; }
+      else{ outsideLiters = 0; }
+      if(outsideLiters<0){ outsideLiters=0; }
+    }
+    
+    totalMissingLiters = pumpLiters + outsideLiters;
     return totalMissingLiters;
   }
   
@@ -397,7 +408,7 @@ void recirculationController::run(bool check, bool sensorState)
       printAction(F("Move Out finished. "), String(__OutLiters), 
       F(" liters were move to "), toWhere, 0);
       //__ActualLiters = 0;
-      __OutLiters = 0;
+      //__OutLiters = 0; // This cannot be activated because the condition to stop filling kegs_nut get errors
       
       if(__Wait4Fill==1){ // Now fill sMaker
         fillSol(__WaitLiters); // Fill solution maker with the rest

@@ -291,7 +291,6 @@ void runIPC(){
   else if(IPC.state==20){ // Depressurize nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
-      // uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS); // DEBUG
       uint8_t resp = Recirculation.moveOut(litersRequire(), NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(250); // Check IPC Process 250
@@ -432,7 +431,6 @@ void runIPC(){
       updateSystemState();
     }
     else if(p1<=10){
-      // uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS); // DEBUG
       uint8_t resp = Recirculation.moveOut(litersRequire(), NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(251); // Check IPC Process 251
@@ -645,7 +643,6 @@ void runIPC(){
   else if(IPC.state==71){ // Emergency: Air in line. Depressurize Nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
     if(p1<=10){
-      // uint8_t resp = Recirculation.moveOut(100, NUTRITION_KEGS); // DEBUG
       uint8_t resp = Recirculation.moveOut(litersRequire(), NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(252); // Check IPC Process 252
