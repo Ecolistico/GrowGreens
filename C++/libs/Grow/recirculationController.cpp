@@ -33,8 +33,8 @@ recirculationController::recirculationController() // Constructor
     __Wait4Fill = 0;
     __WaitLiters = 0;
     // Flow meter
-    //__K = 13.562; // flowSensor constant
-    __K = 6.781; // flowSensor constant
+    // __K = 6.781; // Original flowSensor constant
+    __K =  7.784 // New flowSensor constant
     __H2OVol = 0;
 
     // Set null the UltrSonic pointers until begin function
@@ -377,18 +377,18 @@ void recirculationController::updateState()
     
     // OutPump volume require
     if(__OutPump && __Go[WATER_KEGS]){
-      h2oLiters += __OutLiters-(__ActualLiters-__Level[__LastOut+1]->getVolume()-__Level[__LastOut+1]->getMinVolume());
+      h2oLiters += __OutLiters-(__ActualLiters-(__Level[__LastOut+1]->getVolume()-__Level[__LastOut+1]->getMinVolume()));
     }
     else if(__OutPump && __Go[NUTRITION_KEGS]){
-      nutLiters += __OutLiters-(__ActualLiters-__Level[__LastOut+1]->getVolume()-__Level[__LastOut+1]->getMinVolume());
+      nutLiters += __OutLiters-(__ActualLiters-(__Level[__LastOut+1]->getVolume()-__Level[__LastOut+1]->getMinVolume()));
     }
     else if(__OutPump && __Go[SOLUTION_MAKER]){
-      sMLiters += __OutLiters-(__ActualLiters-__Level[__LastOut+1]->getVolume()-__Level[__LastOut+1]->getMinVolume());
+      sMLiters += __OutLiters-(__ActualLiters-(__Level[__LastOut+1]->getVolume()-__Level[__LastOut+1]->getMinVolume()));
     }
 
     // SMaker volume require
     if(__SolPump){
-      nutLiters += __SolLiters-__Level[6]->getVolume()-__Level[6]->getMinVolume();
+      nutLiters += __SMLiters-(__SolLiters-(__Level[6]->getVolume()-__Level[6]->getMinVolume()));
     }
 
     // Outside volume require
@@ -414,9 +414,12 @@ void recirculationController::updateState()
       __VolCnut = sMLiters;
     }
     else{ 
-      __VolCnut = nutLiters; 
-      addVolKnut(__SolLiters-nutLiters);
-      __SolLiters = nutLiters; // Liters missed to add in nutrition kegs
+      if(!__SolPump){
+        addVolKnut(__SolLiters-nutLiters);
+        __SolLiters = nutLiters;
+      }
+      else{ addVolKnut(__VolCnut-nutLiters); }
+      __VolCnut = nutLiters;
     }
     
   }
@@ -436,8 +439,8 @@ void recirculationController::run(bool check, bool sensorState)
 
     // Stop Move Out when level in tank reach the volume require
     // or when tank level is low and OutPump is ON
-    if( (__ActualLiters-__Level[__LastOut+1]->getVolume()>=__OutLiters ||
-        __Level[__LastOut+1]->getState()==1 ) && __OutPump){
+    if( (__ActualLiters-(__Level[__LastOut+1]->getVolume()-__Level[__LastOut+1]->getMinVolume())>=__OutLiters ||
+        __Level[__LastOut+1]->getState()==1) && __OutPump){
       updateState();
       String toWhere;
       __OutPump = LOW;
