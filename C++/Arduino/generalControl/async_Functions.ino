@@ -314,7 +314,7 @@ void runIPC(){
       IPC.setState(10); // Check IPC Process 10
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){
+    else if(millis()-IPC.actualTime>=5000){
       IPC.actualTime=millis();
       updateSystemState(); 
     }
@@ -364,6 +364,10 @@ void runIPC(){
       Compressor.compressNut(); // Compress nutrition kegs
       IPC.setState(10); // Check IPC Process 10
       updateSystemState();
+    }
+    else if(millis()-IPC.actualTime>=5000){
+      IPC.actualTime=millis();
+      updateSystemState(); 
     }
   }
 
@@ -461,7 +465,7 @@ void runIPC(){
       IPC.setState(10); // Check IPC Process 10
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){
+    else if(millis()-IPC.actualTime>=5000){
       IPC.actualTime=millis();
       updateSystemState(); 
     }
@@ -539,6 +543,10 @@ void runIPC(){
       Compressor.compressNut(); // Compress nutrition kegs
       IPC.setState(10); // Check IPC Process 10
       updateSystemState();
+    }
+    else if(millis()-IPC.actualTime>=5000){
+      IPC.actualTime=millis();
+      updateSystemState(); 
     }
   }
 
@@ -667,7 +675,7 @@ void runIPC(){
       IPC.setState(60); // Check IPC Process 60
       updateSystemState();
     }
-    else if(millis()-IPC.actualTime>=10000){
+    else if(millis()-IPC.actualTime>=5000){
       IPC.actualTime=millis();
       updateSystemState(); 
     }
@@ -718,6 +726,10 @@ void runIPC(){
       Compressor.compressNut(); // Compress nutrition kegs
       IPC.setState(60); // Check IPC Process 60
       updateSystemState();
+    }
+    else if(millis()-IPC.actualTime>=5000){
+      IPC.actualTime=millis();
+      updateSystemState(); 
     }
   }
   
@@ -794,7 +806,7 @@ void runMPC(){
       MPC.setState(10); // Check MPC Process 10
       updateSystemState();
     }
-    else if(millis()-MPC.actualTime>=10000){
+    else if(millis()-MPC.actualTime>=5000){
       MPC.actualTime=millis();
       updateSystemState(); 
     }
@@ -807,7 +819,7 @@ void runMPC(){
       MPC.setState(10); // Check MPC Process 10
       updateSystemState();
     }
-    else if(millis()-MPC.actualTime>=10000){ 
+    else if(millis()-MPC.actualTime>=5000){ 
       MPC.actualTime=millis();
       updateSystemState(); 
     }
@@ -881,7 +893,7 @@ void runMPC(){
       MPC.setState(60); // Check MPC Process 60
       updateSystemState();
     }
-    else if(millis()-MPC.actualTime>=10000){ 
+    else if(millis()-MPC.actualTime>=5000){ 
       MPC.actualTime=millis();
       updateSystemState(); 
     }
@@ -894,7 +906,7 @@ void runMPC(){
       MPC.setState(60); // Check MPC Process 60
       updateSystemState();
     }
-    else if(millis()-MPC.actualTime>=10000){ 
+    else if(millis()-MPC.actualTime>=5000){ 
       MPC.actualTime=millis();
       updateSystemState(); 
     }

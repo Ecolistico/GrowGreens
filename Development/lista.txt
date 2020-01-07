@@ -1,22 +1,26 @@
-[Prioridad 1]
-*** 1- Sistema para recordar el estado del sistema ante cualquier falla del sistema o de la luz
-Cambios probados en IPC=0,10,22,23,24,35
+***[Prioridad 1]
+1- Sistema para recordar el estado del sistema ante cualquier falla del sistema o de la luz
 Por corregir:
-1.1- ¿Qué hacer con la bomba(In) al arrancar en cada estado?
-1.2- Actualizar solución en kegs de nutrición y recirculado cada 5s en todos los estados que meten agua
-IPC=21,22 y similares MPC=21,22 y similares
 
 [Prioridad 2]
 2- Growers
 2.1- Level msg Grower
 Revisar el nivel de los mensajes que se desean mandar y corregirlos para mostrarlos correctamente en log.
 Subir hasta que se tenga internet instalado.
-2.2- Corregir Alto Consumo de CPU cuando no hay internet
-2.3- Corregir problema de conexión a internet cuando las credenciales del internet se añaden por medio de
+2.2- Color log and Exceptions
+2.3- Corregir Alto Consumo de CPU cuando no hay internet
+2.4- Corregir problema de conexión a internet cuando las credenciales del internet se añaden por medio de
 AP (Access Point).
-2.4- Añadir Try/Except Statement para el uso de cámaras térmicas de manera que si no es posible iniciar
+2.5- Añadir Try/Except Statement para el uso de cámaras térmicas de manera que si no es posible iniciar
 la conexión con alguna de ellas las omita para que el programa no fallé.
 Adicional- Revisar y analizar posibles causas en fallos de conexión
+2.6- ¿Por qué están fallando? Leer código Juan y buscar replicar el fallo
+
+[Prioridad 3]
+3- Problema Aire en tuberías cuando hay cambios de solución y error estimación kegs H2O
+3.1 Definir problemática
+3.2 Proponer soluciones y analizar su viabilidad
+3.3 Definir pasos subsecuentes
 
 [Prioridad 5]
 5- Modificación log
@@ -40,8 +44,13 @@ Nota: Tener cuidado en caso de no tener internet se pierden entre 15-20s
 cada intento de mandar un correo hasta que falla.
 
 [Prioridad 9]
-9- Alertas y Recordatorios (Diarios, Semanales, Quincenales y Mensuales)
+9- Alertas y Recordatorios
+9.1 Recordatorios (Diarios, Semanales, Quincenales y Mensuales)
 - Drenar compresor, etc. Integrar con correos, Telegram y log en pantalla
+9.2 Contadores de tiempo para rastrear cuando el programa duré demasiado en un mismo
+estado. Movimiento de agua con bombas, comprimiendo aire, etc.
+9.2.1 Definir tiempos de espera razonables para cada estado
+9.3 Integrar con envío de correos y msg Telegram
 
 [Prioridad 10]
 10- Problemas en la frontera (cambios de solución)
@@ -66,6 +75,15 @@ guardados
 
 [Prioridad 2000]
 2000- Integración sMaker con función completa
+
+[Prioridad 3000]
+3000- Problema de volumen recirculado 
+Descripción: Cuando 2 bombas trabajan sobre la misma solución, quien determina cuanto volumen se ha movido es
+el sensor de nivel, debido a los flujos no es posible determinar con exactitud la cantidad de litros que se han
+movido.
+Solución: Para resolver por completo este problema es necesario la instalación de un caudalímetro o algún otro
+sensor que ayude a determinar cuantos litros han entrado a recirculado, y contrastar esa información con todos
+los sensores ultrasónicos.
 
 *** Status: A prueba
 **  Pendiente de cargar y de hacer commit en git

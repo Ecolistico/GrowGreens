@@ -3,7 +3,7 @@
 # Import directories
 import os
 import json
-    
+
 class systemState:
     def __init__(self, file):
         # Default State
@@ -14,9 +14,11 @@ class systemState:
         self.state["volumenH2O"] = 0
         self.state["consumptionNut"] = 0
         self.state["consumptionH2O"] = 0
+        self.state["pumpIn"] = 0
         self.state["IPC"] = 0
         self.state["MPC"] = 0
-        self.state["missingLiters"] = 0
+        self.state["missedNut"] = 0
+        self.state["missedH2O"] = 0
         
     def load(self):
         if(os.path.isfile(self.file)):
@@ -27,16 +29,33 @@ class systemState:
                 self.state["volumenH2O"] = data["volumenH2O"]
                 self.state["consumptionNut"] = data["consumptionNut"]
                 self.state["consumptionH2O"] = data["consumptionH2O"]
+                self.state["pumpIn"] = data["pumpIn"]
                 self.state["IPC"] = data["IPC"]
                 self.state["MPC"] = data["MPC"]
-                self.state["missingLiters"] = data["missingLiters"]
+                self.state["missedNut"] = data["missedNut"]
+                self.state["missedH2O"] = data["missedH2O"]                
             return True
         else: return False
     
     def update(self, key, val):
         save = False
-        if(key.startswith("s") and val>=0 and val<4):
+        if(key.startswith("solution") and val>=0 and val<4):
             self.state["solution"] = val
+            save = True 
+        elif(key.startswith("volumenNut") and val>=0):
+            self.state["volumenNut"] = val
+            save = True
+        elif(key.startswith("volumenH2O") and val>=0):
+            self.state["volumenH2O"] = val
+            save = True
+        elif(key.startswith("consumptionNut") and val>=0):
+            self.state["consumptionNut"] = val
+            save = True
+        elif(key.startswith("consumptionH2O") and val>=0):
+            self.state["consumptionH2O"] = val
+            save = True
+        elif(key.startswith("pumpIn")):
+            self.state["pumpIn"] = val
             save = True
         elif(key.startswith("IPC")):
             self.state["IPC"] = val
@@ -44,23 +63,12 @@ class systemState:
         elif(key.startswith("MPC")):
             self.state["MPC"] = val
             save = True
-        elif(key.startswith("missingLiters")):
-            self.state["missingLiters"] = val
+        elif(key.startswith("missedNut")):
+            self.state["missedNut"] = val
             save = True
-        else:
-            keySplit = key.lower().split(",")
-            if(keySplit[0].startswith("v") and keySplit[1].startswith("n") and val>=0):
-                self.state["volumenNut"] = val
-                save = True
-            elif(keySplit[0].startswith("v") and keySplit[1].startswith("h") and val>=0):
-                self.state["volumenH2O"] = val
-                save = True
-            if(keySplit[0].startswith("c") and keySplit[1].startswith("n") and val>=0):
-                self.state["consumptionNut"] = val
-                save = True
-            elif(keySplit[0].startswith("c") and keySplit[1].startswith("h") and val>=0):
-                self.state["consumptionH2O"] = val
-                save = True
+        elif(key.startswith("missedH2O")):
+            self.state["missedH2O"] = val
+            save = True
         
         if save:
             self.save()

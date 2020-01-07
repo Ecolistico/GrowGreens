@@ -14,7 +14,9 @@ void requestSolution(){ // Form -> "?solutionMaker,float[liters],int[sol],float[
 }
 
 void updateSystemState(){ 
-  // Form -> "updateSystemState,int[sol],float[volNut],float[volH2O],float[consNut],float[consH2O],int[IPC],int[MPC],float[missingLiters]"
+  Recirculation.updateState();
+  // Form -> "updateSystemState,int[sol],float[volNut],float[volH2O],float[consNut],float[consH2O],
+  //          int[pumpIn],int[IPC],int[MPC],float[missedNut],float[missedH2O]"
   Serial.print(F("updateSystemState,"));
   Serial.print(Recirculation.getOut()); // Solution
   Serial.print(F(",")); 
@@ -25,12 +27,16 @@ void updateSystemState(){
   Serial.print(solutionConsumption); // consNut
   Serial.print(F(",")); 
   Serial.print(h2oConsumption); // consH2O
-  Serial.print(F(",")); 
+  Serial.print(F(","));
+  Serial.print(Recirculation.InpumpWorkIn()); // pumpIn
+  Serial.print(F(","));
   Serial.print(IPC.state); // IPC
   Serial.print(F(",")); 
   Serial.print(MPC.state); // MPC
   Serial.print(F(","));
-  Serial.println(Recirculation.getMissingLiters()); // missingLiters
+  Serial.print(Recirculation.getVolCnut()); // missedNut
+  Serial.print(F(","));
+  Serial.println(Recirculation.getVolCh2o()); // missedH2O
 }
 
 void serialEvent(){                                  //if the hardware serial port_0 receives a char
@@ -38,7 +44,7 @@ void serialEvent(){                                  //if the hardware serial po
   input_string_complete = true;                       //set the flag used to tell if we have received a completed string from the PC
   
   if(input_string_complete==true){
-    String parameter[10];
+    String parameter[12];
     int k = 0;
     int l = 0;
     // Split the parameters
@@ -396,18 +402,21 @@ void serialEvent(){                                  //if the hardware serial po
 
     else if(parameter[0]==F("boot")){ // Functions to recieve variables when boot/rebooting
       // Form "boot,int[lastSol],float[volumenNut],float[volumeH2O],float[solConsumption],
-      // float[h2oConsumption],int[IPC],int[MPC],float[missingLiters]"
+      // float[h2oConsumption],int[pumpInState],int[IPC],int[MPC],float[missedNut],float[missedH2O]"
       if(!bootParameters){
         int lastSol = parameter[1].toInt();
         float vnut = parameter[2].toFloat();
         float vh2o = parameter[3].toFloat();
         float solCons = parameter[4].toFloat();
         float h2oCons = parameter[5].toFloat();
-        int ipc = parameter[6].toInt();
-        int mpc = parameter[7].toInt();
-        float missingLiters = parameter[8].toFloat();
+        int pumpInState = parameter[6].toInt();
+        int ipc = parameter[7].toInt();
+        int mpc = parameter[8].toInt();
+        float missedNut = parameter[9].toFloat();
+        float missedH2O = parameter[10].toFloat();
         
-        if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>=0 && h2oCons>=0 && missingLiters>=0){
+        if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>=0 && h2oCons>=0 && pumpInState>0 &&
+        ipc>=0 && mpc>=0 && missedNut>=0 && missedH2O>=0){
           bootParameters = true; // Set bootParameters as true
           lastSolution = lastSol+1; // solution using for irrigation class
           // Update Recirculation class parameters
@@ -434,13 +443,9 @@ void serialEvent(){                                  //if the hardware serial po
           Serial.print(F("Boot: Initial Water Kegs Consumption updated to "));
           Serial.print(h2oConsumption);
           Serial.println(F(" liters"));
-          if(missingLiters!=0){
-            Serial.print(F("Boot: Missing Liters updated to "));
-            Serial.println(missingLiters);
-          }
-          rememberState(ipc, mpc, missingLiters);
+          rememberState(ipc, mpc, pumpInState, missedNut, missedH2O);
         }
-        else{ Serial.println(F("error,boot(): Parameter[1-8] incorrect")); } 
+        else{ Serial.println(F("error,boot(): Parameter[1-10] incorrect")); } 
       }
       else{ Serial.println(F("error,Set Initial Parameters(): Parameters already setted")); } 
     }

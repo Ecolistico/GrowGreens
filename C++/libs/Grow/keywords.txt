@@ -149,10 +149,12 @@ addVolKnut	KEYWORD2
 addVolKh2o	KEYWORD2
 getVolKnut	KEYWORD2
 getVolKh2o	KEYWORD2
+getVolCnut	KEYWORD2
+getVolCh2o	KEYWORD2
 resetVolKnut	KEYWORD2
 resetVolKh2o	KEYWORD2
-fillH2O	KEYWORD2
-fillSol	KEYWORD2
+InpumpWorkIn	KEYWORD2
+updateState	KEYWORD2
 moveIn	KEYWORD2
 moveOut	KEYWORD2
 moveSol	KEYWORD2

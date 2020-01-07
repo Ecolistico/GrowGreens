@@ -211,7 +211,7 @@ uint8_t inWhatFloorIsNight();
 void updateDay();
 void substractSolutionConsumption(bool updateConsumption = false);
 void substractWaterConsumption(bool updateConsumption = false);
-void rememberState(int ipc, int mpc, float missingLiters);
+void rememberState(int ipc, int mpc, int pumpIn, float missedNut, float missedH2O);
 // Aux Functions
 void emergencyStop();
 void boot();

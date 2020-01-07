@@ -74,9 +74,11 @@ class recirculationController
         uint8_t __In, __Out; // Solution coming in and coming out
         uint8_t __LastOut; // Solution in current process coming out
         float __VolKnut, __VolKh2o; // Volume in kegs (nutrition/H2O)
-        float __OutLiters, __ActualLiters; // Aux Control moveOut()
-        float __FillLiters; // Aux Control in fillH2O() and fillNut()
+        float __VolCnut, __VolCh20; // Aux control to calculate Volume missing (nutrition/H2O/sMaker) 
         float __SolLiters; // Aux Control in moveSol()
+        float __OutLiters, __ActualLiters; // Aux Control moveOut()
+        float __SMLiters; // Aux control when SMaker is getting water from outside
+        float __FillNut, __FillH2O; // Aux Control in fillH2O() and fillNut()
         uint8_t __Wait4Fill; // Aux Control when we need get water from municipal line
         float __WaitLiters; // Aux Control to save how much liters we needs from municipal line
         
@@ -94,6 +96,9 @@ class recirculationController
         void printAction(float volume, String from, String to, uint8_t level=0);
         void printAction(String act, uint8_t level=0);
         void printAction(String act1, String act2, String act3, String act4, uint8_t level=0);
+
+        void fillH2O(float liters); // Fills the water kegs with water
+        void fillSol(float liters); // Fills the solution maker with water
 
     public:
          recirculationController(); // Constructor
@@ -114,7 +119,7 @@ class recirculationController
          bool getInPump(); // Returns In Pump State
          bool getOutPump(); // Returns Out Pump State
          bool getSolPump(); // Returns Out Pump State
-
+         
          bool getInValve(uint8_t valve); // Returns Valve In State
          bool getOutValve(uint8_t valve); // Returns Valve Out State
          bool getReleaseValve(); // Returns Release Valve State
@@ -123,7 +128,6 @@ class recirculationController
          bool getFH2OValve(); // Returns Fill H2O Valve State
          bool getFSolValve(); // Returns Fill Sol Valve State
          bool getFPump(); // Return Fill Pump State
-         uint8_t getWait4Fill(); // Return Wait4Fill
          
          bool getRH2OValve(); // Returns Release H2O Valve State
          bool getRSolValve(); // Returns Release Sol Valve State
@@ -134,23 +138,22 @@ class recirculationController
          bool setOut(uint8_t solution); // Solution coming out
          uint8_t getIn(); // Returns actual solution coming in
          uint8_t getOut(); // Returns actual solution coming out
-
+         uint8_t InpumpWorkIn(); // If InPump is working returns the solution, else return 250
+         
          bool addVolKnut(float liters); // Change the volume in nutrition kegs
          bool addVolKh2o(float liters); // Change the volume in H2O kegs
          float getVolKnut(); // Returns actual volume in nutrition kegs
          float getVolKh2o(); // Returns actual volume in H2O kegs
+         float getVolCnut(); // Returns control volume in nutrition kegs
+         float getVolCh2o(); // Returns control volume in H2O kegs
          void resetVolKnut(); // Set the volume in nutrition kegs in 0
          void resetVolKh2o(); // Set the volume in H2O kegs in 0
-
-         float getMissingLiters(); // Returns how many liters we need to finish the moveOut()
-         
-         void fillH2O(float liters); // Fills the water kegs with water
-         void fillSol(float liters); // Fills the solution maker with water
 
          bool moveIn(); // InPump move
          uint8_t moveOut(float liters, uint8_t to_Where); // OutPump move
          bool moveSol(); // SolPump move
          
+         void updateState(); // Update volumes in kegs and volumes missed
          void run(bool check, bool sensorState);
   };
 
