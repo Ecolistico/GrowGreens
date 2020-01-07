@@ -94,19 +94,19 @@ class serialController:
         param = self.respLine[index].split(",")
         if(len(param)>=11):
             if(self.system.update("solution", int(param[1]))):
-                self.logMain.debug("Irrigation Solution Updated")
+                self.logMain.debug("System Solution Updated")
             else: self.logMain.error("Cannot Update Solution State")
             if(self.system.update("volumenNut", float(param[2]))):
-                self.logMain.debug("Irrigation volNut Updated")
+                self.logMain.debug("System volNut Updated")
             else: self.logMain.error("Cannot Update volNut State")
             if(self.system.update("volumenH2O", float(param[3]))):
-                self.logMain.debug("Irrigation volH2O Updated")
+                self.logMain.debug("System volH2O Updated")
             else: self.logMain.error("Cannot Update volH2O State")
             if(self.system.update("consumptionNut", float(param[4]))):
-                self.logMain.debug("Irrigation consNut Updated")
+                self.logMain.debug("System consNut Updated")
             else: self.logMain.error("Cannot Update consNut State")
             if(self.system.update("consumptionH2O", float(param[5]))):
-                self.logMain.debug("Irrigation consH2O Updated")
+                self.logMain.debug("System consH2O Updated")
             else: self.logMain.error("Cannot Update consH2O State")
             if(self.system.update("pumpIn", int(param[6]))):
                 self.logMain.debug("System pumpIn Updated")
@@ -115,13 +115,13 @@ class serialController:
                 self.logMain.debug("System IPC Updated")
             else: self.logMain.error("Cannot Update IPC State")
             if(self.system.update("MPC", int(param[8]))):
-                self.logMain.debug("Irrigation MPC Updated")
+                self.logMain.debug("System MPC Updated")
             else: self.logMain.error("Cannot Update MPC State")
             if(self.system.update("missedNut", float(param[9]))):
-                self.logMain.debug("Irrigation missedNut Updated")
+                self.logMain.debug("System missedNut Updated")
             else: self.logMain.error("Cannot Update missedNut State")
             if(self.system.update("missedH2O", float(param[10]))):
-                self.logMain.debug("Irrigation missedH2O Updated")
+                self.logMain.debug("System missedH2O Updated")
             else: self.logMain.error("Cannot Update missedH2O State")
             
         else: self.logMain.error("Line incomplete - {}".format(self.respLine[index]))
