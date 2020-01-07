@@ -144,12 +144,11 @@ class Grower:
         
     def createDayDirectory(self):
         os.makedirs('data/photos_{}-{}-{}'.format(self.day, self.month, self.year))
-        os.makedirs('data/photos_{}-{}-{}/thermalPhotos'.format(self.day, self.month, self.year))
-        os.makedirs('data/photos_{}-{}-{}/led'.format(self.day, self.month, self.year))
-        os.makedirs('data/photos_{}-{}-{}/xenon'.format(self.day, self.month, self.year))
-        os.makedirs('data/photos_{}-{}-{}/ir'.format(self.day, self.month, self.year))
-        os.makedirs('data/photos_{}-{}-{}/manual'.format(self.day, self.month, self.year))
         
+        os.makedirs('data/photos_{}-{}-{}/rgb'.format(self.day, self.month, self.year))
+        os.makedirs('data/photos_{}-{}-{}/nir'.format(self.day, self.month, self.year))
+        os.makedirs('data/photos_{}-{}-{}/rgbnir'.format(self.day, self.month, self.year))
+        os.makedirs('data/photos_{}-{}-{}/thermal'.format(self.day, self.month, self.year))
     
     def getDateFormat(self):
         now = datetime.now()
@@ -179,11 +178,24 @@ class Grower:
         thermalPixels2 = reshape(thermalPixels2, (8,8))
         thermalJoin = concatenate((thermalPixels1, thermalPixels2), axis=0)
         
-        savetxt("data/photos_{}-{}-{}/thermalPhotos/{}.csv".format(self.day, self.month, self.year, name), thermalJoin, fmt="%.2f", delimiter=",")
+        savetxt("data/photos_{}-{}-{}/thermal/{}.csv".format(self.day, self.month, self.year, name), thermalJoin, fmt="%.2f", delimiter=",")
     
     def cam_begin(self):
         self.cam = PiCamera()
         self.camEnable = True
+        
+        redAWB = 2.26
+        blueAWB = 0.74
+        customGains = (redAWB, blueAWB)
+        self.cam.awb_mode = "off"
+        self.cam.awb_gains = customGains
+        #self.cam.hflip = True
+        #self.cam.vflip = True
+        self.cam.resolution = (1920, 1080)
+        #self.cam.framerate = Fraction(1,6)
+        #self.cam.shutter_speed = 6000000
+        #self.cam.exposure_mode = "off"
+        #self.cam.iso = 800
         
     def cam_stop(self):
         self.cam.close()
@@ -236,32 +248,43 @@ class Grower:
             self.cam.capture("data/photos_{}-{}-{}/manual/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
             self.wait(0.1) # Wait 100ms
             
+    
     def photoSequence(self, name):
         # Check if directory exist, if not create it
         if not self.checkDayDirectory(): self.createDayDirectory()
 
         #self.cam.start_preview()
+        self.enable_IRCUT(self.IRCUT)
+        
         self.turnOff_IRCUT(self.IRCUT)
-        self.turnOn(self.LED)
+        self.turnOff(self.LED)
         self.turnOff(self.IR)
         self.turnOff(self.XENON)
-        self.wait(0.45) # Wait 0.45 seconds
-        self.cam.capture("data/photos_{}-{}-{}/led/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
+        
+        self.turnOn(self.IR)
+        self.turnOn(self.LED)
+        self.wait(2) # Wait 2 seconds
+        self.cam.capture("data/photos_{}-{}-{}/rgb/{}.png".format(self.day, self.month, self.year, name), "png") # Take photo and give it a name
+        
         self.wait(0.1) # Wait 100ms
         self.turnOff(self.LED)
-        self.turnOn(self.XENON)
-        self.wait(0.45) # Wait 0.45 seconds
-        self.cam.capture("data/photos_{}-{}-{}/xenon/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
-        self.wait(0.1) # Wait 100ms
-        self.turnOff(self.XENON)
         self.turnOn_IRCUT(self.IRCUT)
-        self.turnOn(self.IR)
-        self.wait(0.45) # Wait 0.45 seconds        
-        self.cam.capture("data/photos_{}-{}-{}/ir/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
+        self.wait(2) # Wait 2 seconds
+        self.cam.capture("data/photos_{}-{}-{}/nir/{}.png".format(self.day, self.month, self.year, name), "png") # Take photo and give it a name
+        
+        self.wait(0.1) # Wait 100ms
+        self.turnOn(self.LED)
+        self.wait(2) # Wait 2 seconds        
+        self.cam.capture("data/photos_{}-{}-{}/rgbnir/{}.png".format(self.day, self.month, self.year, name), "png") # Take photo and give it a name
+        
+        self.turnOff(self.LED)
+        self.turnOff(self.XENON)
+        self.turnOFF_IRCUT(self.IRCUT)
+        
         self.thermalPhoto("{}".format(name)) #get thermal cam readings
         self.wait(0.1) # Wait 100ms
         self.turnOff(self.IR)
-        self.turnOff_IRCUT(self.IRCUT)
+        self.disable_IRCUT(self.IRCUT)
         self.wait(0.05) # Wait 50ms
         #self.cam.stop_preview()
             
@@ -343,3 +366,4 @@ class Grower:
     def close(self):
         GPIO.cleanup() # Clean GPIO
         if self.camEnable: self.cam_stop() # Disconnecting cam from this program
+
