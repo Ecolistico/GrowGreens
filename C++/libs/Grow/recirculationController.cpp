@@ -34,7 +34,7 @@ recirculationController::recirculationController() // Constructor
     __WaitLiters = 0;
     // Flow meter
     // __K = 6.781; // Original flowSensor constant
-    __K =  7.784 // New flowSensor constant
+    __K =  7.784; // New flowSensor constant
     __H2OVol = 0;
 
     // Set null the UltrSonic pointers until begin function

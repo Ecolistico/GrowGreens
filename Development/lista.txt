@@ -1,8 +1,6 @@
 ***[Prioridad 1]
 1- Sistema para recordar el estado del sistema ante cualquier falla del sistema o de la luz
 Por corregir:
-** 1.1 Cálculo variables en updateSystemState incorrecto, corregir.
-** 1.2 Recalibrar caudalímetro
 
 [Prioridad 2]
 2- Growers
