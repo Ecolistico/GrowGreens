@@ -1,0 +1,14 @@
+[Unit]
+Description=GrowGreens Service
+After=graphical.target
+
+[Service]
+Type=idle
+User=pi
+Environment="DISPLAY=:0"
+ExecStart=/home/pi/Documents/GrowGreens/Python/Master/start.sh start
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=graphical.target

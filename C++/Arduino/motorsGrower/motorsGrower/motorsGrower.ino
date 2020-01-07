@@ -5,27 +5,27 @@
 // Grower 1
 const byte gr1_XStep1 = 27;
 const byte gr1_XDir1 = 29;
-const byte gr1_XStep2 = 33;
-const byte gr1_XDir2 = 35; 
-const byte gr1_YStep = 39;
-const byte gr1_YDir = 41; 
-const byte gr1_En = 31;
+const byte gr1_XStep2 = 31;
+const byte gr1_XDir2 = 33; 
+const byte gr1_YStep = 35;
+const byte gr1_YDir = 37; 
+const byte gr1_En = 39;
 
-const byte gr1_XHome1 = A13;
+const byte gr1_XHome1 = A15;
 const byte gr1_XHome2 = A14;
-const byte gr1_YHome = A15;
+const byte gr1_YHome = A13;
 
 long MAX_X1 = 0;
 long MAX_Y1 = 0;
 
 // Grower 2
-const byte gr2_XStep1 = 22;
-const byte gr2_XDir1 = 24;
-const byte gr2_XStep2 = 26;
-const byte gr2_XDir2 = 28; 
-const byte gr2_YStep = 30;
-const byte gr2_YDir = 32; 
-const byte gr2_En = 34;
+const byte gr2_XStep1 = 41;
+const byte gr2_XDir1 = 43;
+const byte gr2_XStep2 = 45;
+const byte gr2_XDir2 = 47; 
+const byte gr2_YStep = 49;
+const byte gr2_YDir = 51; 
+const byte gr2_En = 53;
 
 const byte gr2_XHome1 = A12;
 const byte gr2_XHome2 = A11;
@@ -35,33 +35,33 @@ long MAX_X2 = 0;
 long MAX_Y2 = 0;
 
 // Grower 3
-const byte gr3_XStep1 = 36;
-const byte gr3_XDir1 = 38;
-const byte gr3_XStep2 = 40;
-const byte gr3_XDir2 = 42; 
-const byte gr3_YStep = 44;
-const byte gr3_YDir = 46; 
-const byte gr3_En = 48;
+const byte gr3_XStep1 = 22;
+const byte gr3_XDir1 = 24;
+const byte gr3_XStep2 = 26;
+const byte gr3_XDir2 = 28; 
+const byte gr3_YStep = 30;
+const byte gr3_YDir = 32; 
+const byte gr3_En = 34;
 
-const byte gr3_XHome1 = A9;
-const byte gr3_XHome2 = A8;
-const byte gr3_YHome = A7;
+const byte gr3_XHome1 = A7;
+const byte gr3_XHome2 = A6;
+const byte gr3_YHome = A5;
 
 long MAX_X3 = 0;
 long MAX_Y3 = 0;
 
 // Grower 4
-const byte gr4_XStep1 = 2;
-const byte gr4_XDir1 = 3;
-const byte gr4_XStep2 = 4;
-const byte gr4_XDir2 = 5; 
-const byte gr4_YStep = 6;
-const byte gr4_YDir = 7; 
-const byte gr4_En = 8;
+const byte gr4_XStep1 = 52;
+const byte gr4_XDir1 = 50;
+const byte gr4_XStep2 = 48;
+const byte gr4_XDir2 = 46;
+const byte gr4_YStep = 44;
+const byte gr4_YDir = 42; 
+const byte gr4_En = 40;
 
-const byte gr4_XHome1 = A6;
-const byte gr4_XHome2 = A5;
-const byte gr4_YHome = A4;
+const byte gr4_XHome1 = A4;
+const byte gr4_XHome2 = A3;
+const byte gr4_YHome = A2;
 
 long MAX_X4 = 0;
 long MAX_Y4 = 0;
@@ -131,10 +131,17 @@ bool input_string_complete = false;
 void setup() {
   Serial.begin(115200);
   Serial.println(F("Setting up growers..."));
-  grower1.begin(HIGH);
-  grower2.begin(HIGH);
-  grower3.begin(HIGH);
-  grower4.begin(HIGH);
+  /* Going Home
+  grower1.begin();
+  grower2.begin();
+  grower3.begin();
+  grower4.begin();
+  */
+  /* Withouth Going Home*/
+  grower1.begin(LOW);
+  grower2.begin(LOW);
+  grower3.begin(LOW);
+  grower4.begin(LOW);
   read_EEPROM(HIGH); // Charge calibration parameters for each Grower
   EEPROM_timer = millis();
 }

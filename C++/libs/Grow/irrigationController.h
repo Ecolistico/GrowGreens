@@ -94,6 +94,8 @@ class irrigationController
       float getPH(uint8_t sol);
       // Update and return the solution with the given hour
       uint8_t whatSolution(uint8_t HOUR, uint8_t MINUTE);
+      // Return how many minutes are left to the next solution change
+      int min2Change(uint8_t HOUR, uint8_t MINUTE);
   };
 
   #endif

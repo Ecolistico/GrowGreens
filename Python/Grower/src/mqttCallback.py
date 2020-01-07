@@ -24,7 +24,6 @@ class mqttController:
     
     def sendLog(self, mssg, logType = 0):
         logTopic = "{}/Grower{}/log".format(self.containerID, self.floor)
-        
         # Debug
         if(logType==0):
             self.log.debug(mssg)
@@ -59,7 +58,7 @@ class mqttController:
             message += " Connection succesful"
             mssg = "Grower connected"
             client.subscribe(Topic)
-            self.sendLog(mssg)
+            self.sendLog(mssg, 1)
             self.log.info(message)
             self.log.info("Subscribed topic= {}".format(Topic))
         else:
@@ -128,9 +127,9 @@ class mqttController:
                 self.grower.takePicture(picMode, picName)
                 mssg = "Picture taken - mode={}\tname={}".format(str(picMode), picName)
                 if self.growerStream: self.grower.enableStreaming()
-                self.sendLog(mssg)
+                self.sendLog(mssg, 1)
             else:
-                mssg = "Error in takePicture function: Parameter incorrect"
+                mssg = "Error in takePicture(): Parameter incorrect"
                 self.sendLog(mssg, 3)
         
         elif(message.startswith("thermalPhoto")):
@@ -143,7 +142,7 @@ class mqttController:
                 self.grower.thermalPhoto(picName)
                 mssg = "Thermal Photo taken - name={}".format(picName)
                 if self.growerStream: self.grower.enableStreaming()
-                self.sendLog(mssg)
+                self.sendLog(mssg, 1)
             else:
                 mssg = "Error in thermalPhoto function: Parameter incorrect"
                 self.sendLog(mssg, 3)
@@ -158,7 +157,7 @@ class mqttController:
                 self.grower.photoSequence(picName)
                 mssg = "Photo Sequence taken - name={}".format(picName)
                 if self.growerStream: self.grower.enableStreaming()
-                self.sendLog(mssg)
+                self.sendLog(mssg, 1)
             else:
                 mssg = "Error in photoSequence function: Parameter incorrect"
                 self.sendLog(mssg, 3)
@@ -175,7 +174,7 @@ class mqttController:
         
         elif(message == "whatIsMyIP"):
             mssg = "IP={}".format(self.grower.whatIsMyIP())
-            self.sendLog(mssg)
+            self.sendLog(mssg, 1)
         
         elif(message.startswith("sendPhotos")):
             param = message.split(',')
@@ -185,12 +184,12 @@ class mqttController:
             if(host!="" and hostName!="" and hostPassword!=""):
                 if self.grower.sendPhotos(host, hostName, hostPassword, int(self.floor)):
                     mssg = "Photos sended to {}@{}".format(hostName, host)
-                    self.sendLog(mssg)
+                    self.sendLog(mssg, 1)
                 else:
-                    mssg = "Error in sendPhotos function: Cannot be executed"
+                    mssg = "Error in sendPhotos(): Cannot be executed"
                     self.sendLog(mssg, 3)
             else:
-                mssg = "Error in sendPhotos function: Parameter incorrect"
+                mssg = "Error in sendPhotos(): Parameter incorrect"
                 self.sendLog(mssg, 3)
         
         elif(message == "cozirData"):
@@ -200,7 +199,7 @@ class mqttController:
         
         elif(message == "updateGrowerDate"):
             self.grower.getDateFormat()
-            self.sendLog("Updating Date Format")
+            self.sendLog("Updating Date Format", 1)
             
         elif(message == "reboot"):
             self.sendLog("Rebooting", 2)
@@ -212,7 +211,7 @@ class mqttController:
             sysGrower.runShellCommand('sudo python ./src/APconfig.py')
             
         else:
-            self.sendLog("MQTT command unknown", 2)
+            self.sendLog("MQTT command unknown", 3)
 
     def on_publish(self, client, userdata, mid):
         self.log.info("Message delivered")

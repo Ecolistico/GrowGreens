@@ -90,41 +90,46 @@ void compressorController::setMode(uint8_t mode)
     switch(mode){
       case 0: // Do nothing
         doNothing();
-        printAct(F("Do nothing"));
+        printAct(F("Do nothing"), 0);
         break;
       case 1: // Turn off all
         turnOffAll();
-        printAct(F("Turn Off All"));
+        printAct(F("Turn Off All"), 0);
         break;
       case 2: // Fill the tank
         fillTank();
-        printAct(F("Compressing air tank"));
+        printAct(F("Compressing air tank"), 1);
         break;
       case 3: // Fill the nutrition kegs
         fillNut();
-        printAct(F("Compressing nutrition kegs"));
+        printAct(F("Compressing nutrition kegs"), 1);
         break;
       case 4: // Fill the H2O kegs
         fillH2O();
-        printAct(F("Compressing water kegs"));
+        printAct(F("Compressing water kegs"), 1);
         break;
       case 5: // Fill the air Tank and H2O Kegs
         fillTankAndH2O();
-        printAct(F("Compressing air tank and water kegs"));
+        printAct(F("Compressing air tank and water kegs"), 1);
         break;
       case 6: // Fill everything
         fillAll();
-        printAct(F("Compressing all"));
+        printAct(F("Compressing all"), 1);
         break;
       default: // Do nothing
         doNothing();
-        printAct(F("Mode did not match. Do Nothing Instead"));
+        printAct(F("Mode did not match. Do Nothing Instead"), 0);
         break;
     }
   }
 
-void compressorController::printAct(String act)
-  { Serial.print(F("Compressor: "));
+void compressorController::printAct(String act, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
+    Serial.print(F("Compressor: "));
     Serial.println(act);
   }
 
@@ -156,87 +161,80 @@ void compressorController::openFreeNut()
   { if(!__Vnut){
       if(!__Fnut){
         __Fnut = HIGH;
-        printAct(F("Free Nutrition Valve open"));
+        printAct(F("Free Nutrition Valve open"), 0);
       }
-      else{ printAct(F("Free Nutrition Valve already open")); }
+      else{ printAct(F("Free Nutrition Valve already open"), 2); }
     }
-    else{ printAct(F("Cannot Free Pressure in nutrition kegs because nutrition valve is open")); }
+    else{ printAct(F("Cannot Free Pressure in nutrition kegs because nutrition valve is open"), 3); }
   }
 
 void compressorController::closeFreeNut()
   { if(__Fnut){
       __Fnut = LOW;
-      printAct(F("Free Nutrition Valve close"));
+      printAct(F("Free Nutrition Valve close"), 0);
     }
-    else{ printAct(F("Free Nutrition Valve already close")); }
+    else{ printAct(F("Free Nutrition Valve already close"), 2); }
   }
 
 void compressorController::openFreeH2O()
   { if(!__Vh20){
       if(!__Fh2o){
         __Fh2o = HIGH;
-        printAct(F("Free Water Valve open"));
+        printAct(F("Free Water Valve open"), 0);
       }
-      else{ printAct(F("Free Water Valve already open")); }
+      else{ printAct(F("Free Water Valve already open"), 2); }
     }
-    else{ printAct(F("Cannot Free Pressure in water kegs because water valve is open")); }
+    else{ printAct(F("Cannot Free Pressure in water kegs because water valve is open"), 3); }
   }
 
 void compressorController::closeFreeH2O()
   { if(__Fh2o){
       __Fh2o = LOW;
-      printAct(F("Free Water Valve close"));
+      printAct(F("Free Water Valve close"), 0);
     }
-    else{ printAct(F("Free Water Valve already close")); }
+    else{ printAct(F("Free Water Valve already close"), 2); }
   }
 
 void compressorController::compressTank()
   { if(!__Vnut){
       if(__Mode==4){
-        printAct(F("Already filling water kegs, opening valves to fill also air tank"));
         setMode(5);
       }
       else if(__Mode!=2 && __Mode!=3 && __Mode!=5 && __Mode!=6){
-        printAct(F("Getting the correct pressure in water kegs"));
         setMode(2);
       }
-      else{printAct(F("Already compressing air tank"));}
+      else{printAct(F("Already compressing air tank"), 2);}
     }
-    else{printAct(F("Cannot Compress air tank because nutrition valve is open"));}
+    else{printAct(F("Cannot Compress air tank because nutrition valve is open"), 3);}
   }
 
 void compressorController::compressNut()
   { if(!__Fnut){
       if(__Mode==4 || __Mode==5){
-        printAct(F("Already filling water kegs, opening valves to fill nutrition kegs"));
         setMode(6);
       }
       else if(__Mode!=3 && __Mode!=6){
-        printAct(F("Getting the correct pressure in nutrition kegs"));
         setMode(3);
       }
-      else{printAct(F("Already compressing nutrition kegs"));}
+      else{printAct(F("Already compressing nutrition kegs") , 2);}
     }
-    else{printAct(F("Cannot Compress nutrition kegs because Free Nutrition Valve is open"));}
+    else{printAct(F("Cannot Compress nutrition kegs because Free Nutrition Valve is open"), 3);}
   }
 
 void compressorController::compressH2O()
   { if(!__Fh2o){
       if(__Mode==2){
-        printAct(F("Already filling air tank, opening valves to fill also water kegs"));
         setMode(5);
       }
       else if(__Mode==3){
-        printAct(F("Already filling nutrition kegs, opening valves to fill also water kegs"));
         setMode(6);
       }
       else if(__Mode!=4 && __Mode!=5 && __Mode!=6){
-        printAct(F("Getting the correct pressure in water kegs"));
         setMode(4);
       }
-      else{printAct(F("Already compressing water kegs"));}
+      else{printAct(F("Already compressing water kegs"), 2);}
     }
-    else{printAct(F("Cannot Compress water kegs because Free Water Valve is open"));}
+    else{printAct(F("Cannot Compress water kegs because Free Water Valve is open"), 3);}
   }
 
 void compressorController::Off()
@@ -246,11 +244,11 @@ void compressorController::keepConnected(bool con)
   { if(__KeepConnected!=con){
       __KeepConnected = con;
       if(__KeepConnected){
-        printAct(F("Keeping connected nutrition kegs and air tank"));
+        printAct(F("Keeping connected nutrition kegs and air tank"), 0);
         if(!__Vnut){ __Vnut = HIGH; }
       }
       else if(!__KeepConnected){
-        printAct(F("Disconnecting nutrition kegs and air tank"));
+        printAct(F("Disconnecting nutrition kegs and air tank"), 0);
         if(__Vnut && __Mode!=3 && __Mode!=6){
           __Vnut = LOW;
         }

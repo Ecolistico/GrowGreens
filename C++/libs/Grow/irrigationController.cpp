@@ -125,12 +125,12 @@ void irrigationController::redefine( uint8_t cyclesPerDay,
           __percentage[i] = 25;
         }
        // Cycles are not a divisor of 24 hrs
-       if(24%cyclesPerDay != 0){ Serial.println(F("Parameter cyclesPerDay incorrect")); }
+       if(24%cyclesPerDay != 0){ Serial.println(F("error,Parameter cyclesPerDay incorrect")); }
        // percentages not sum 100
-       if(per1+per2+per3+per4!=100){ Serial.println(F("Percentages sum has to be equal to 100")); }
+       if(per1+per2+per3+per4!=100){ Serial.println(F("error,Percentages sum has to be equal to 100")); }
        // order parameters wrong
        if(ord1+ord2+ord3+ord4!=6 || ord1==ord2 || ord1==ord3 || ord1==ord4 ||
-          ord2==ord3 || ord2==ord4 || ord3==ord4){ Serial.println(F("Order parameters incorrect")); }
+          ord2==ord3 || ord2==ord4 || ord3==ord4){ Serial.println(F("error,Order parameters incorrect")); }
     }
   }
 
@@ -139,9 +139,9 @@ void irrigationController::setEC(uint8_t sol, uint16_t ec)
       if(ec>0 && ec<5000){
         __ec[sol] = ec;
       }
-      else{ Serial.println(F("set EC failed: ec out of range [0-5000]")); }
+      else{ Serial.println(F("error,set EC failed: ec out of range [0-5000]")); }
     }
-    else{ Serial.println("set EC failed: solution out of range [0-3]"); }
+    else{ Serial.println(F("error,set EC failed: solution out of range [0-3]")); }
   }
 
 void irrigationController::setEC(uint16_t ec1, uint16_t ec2, uint16_t ec3, uint16_t ec4)
@@ -156,9 +156,9 @@ void irrigationController::setPH(uint8_t sol, float ph)
       if(ph>0 && ph<14){
         __ph[sol] = ph;
       }
-      else{ Serial.println(F("set PH failed: ph out of range [0-5000]")); }
+      else{ Serial.println(F("error,set PH failed: ph out of range [0-5000]")); }
     }
-    else{ Serial.println("set PH failed: solution out of range [0-3]"); }
+    else{ Serial.println(F("error,set PH failed: solution out of range [0-3]")); }
 
   }
 
@@ -241,4 +241,47 @@ uint8_t irrigationController::whatSolution(uint8_t HOUR, uint8_t MINUTE)
     }
 
     return __solution;
+  }
+  
+int irrigationController::min2Change(uint8_t HOUR, uint8_t MINUTE)
+  { bool resp = false;
+    uint8_t control_Stage = 200;
+    float actualHour = float(HOUR) + float(MINUTE)/60;
+
+    // Get the actual irrigation stage
+    for(int i=__cyclesPerDay-1; i>=0; i--){
+      if(__beginHour[i]<=actualHour){
+        control_Stage = i;
+        break;
+      }
+    }
+    if(control_Stage == 200){ control_Stage = __cyclesPerDay-1; }
+    
+    // Get the time passed into the actual stage
+    if(__cyclesPerDay-control_Stage==1 && actualHour-__beginHour[control_Stage]<0){
+      actualHour += 24-__beginHour[control_Stage];
+    }
+    else{
+      actualHour -= __beginHour[control_Stage];
+    }
+    
+    // Get the percentage of the time that have already passed
+    float percentageGap = float(actualHour)/__hoursPerCycle*100;
+    
+    // Get the percentage until the next change of solution
+    uint8_t sol = getSolution()-1; // Actual solution
+    uint8_t ord = __order[sol]; // Order
+    uint8_t percentage = 0; // Finished percentage of the actual solution
+    for(int i =0; i<MAX_SOLUTIONS_NUMBER; i++){
+      if(__order[i]<=ord){
+        percentage += __percentage[i];
+      }
+    }
+    
+    // Get the minutes until next change of solution
+    float per = float(percentage) - percentageGap;    
+    if(per<0){ per=0; }
+    int minutes = int(per*float(__hoursPerCycle)/100*60);
+    
+    return minutes;
   }

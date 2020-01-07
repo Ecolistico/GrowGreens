@@ -1,5 +1,5 @@
 void clean_EEPROM(){
-  Serial.println(F("EEPROM: Deleting Memory..."));
+  Serial.println(F("warning,EEPROM: Deleting Memory..."));
   for(int i=0; i<solenoidValve::__TotalActuators*5+35; i++){
     EEPROM.update(i, 0);
   }
@@ -9,11 +9,11 @@ void clean_EEPROM(){
   for(int i=511; i<662; i++){
     EEPROM.update(i, 0);
   }
-  Serial.println(F("EEPROM: Memory Deleted"));
+  Serial.println(F("warning,EEPROM: Memory Deleted"));
 }
 
 void print_EEPROM(){
-  Serial.println(F("EEPROM: Printing Memory Info"));
+  Serial.println(F("info,EEPROM: Printing Memory Info"));
   for(int i=0; i<solenoidValve::__TotalActuators*5+35; i++){
     Serial.print(i); Serial.print(F(": ")); Serial.println(EEPROM.read(i));
   }
@@ -28,14 +28,14 @@ void print_EEPROM(){
 void save_EEPROM(int pos, int val){
   int actualVal = EEPROM.read(pos);
   if(val!=actualVal){
-    Serial.print(F("Saving in EEPROM on position("));
+    Serial.print(F("info,Saving in EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.println(val);
     EEPROM.update(pos, val);
   }
   else{ 
-    Serial.print(F("EEPROM on position("));
+    Serial.print(F("warning,EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.print(val);
@@ -47,14 +47,14 @@ void save_EEPROM(int pos, float val){
   float actualVal = 0;
   EEPROM.get(pos, actualVal);
   if(val!=actualVal){
-    Serial.print(F("Saving in EEPROM on position("));
+    Serial.print(F("info,Saving in EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.println(val);
     EEPROM.put(pos, val);
   }
   else{
-    Serial.print(F("EEPROM on position("));
+    Serial.print(F("warning,EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.print(val);
@@ -138,9 +138,15 @@ void chargeSolenoidParameters(int sol){
   int reg_3f = EEPROM.read(pos+3);
   int reg_4f = EEPROM.read(pos+4);
 
+  enableSolenoid(0, reg_1f);
+  enableSolenoid(1, reg_2f);
+  enableSolenoid(2, reg_3f);
+  enableSolenoid(3, reg_4f);
+  /* delete
   for(int i=0; i<solenoidValve::__TotalActuators; i++){
     uint8_t fl = solenoidValve::ptr[i]->getFloor();
-    uint8_t rg = solenoidValve::ptr[i]->getRegion(); 
+    uint8_t rg = (solenoidValve::ptr[i]->getRegion());
+    
     if(rg>=MAX_FLOOR){ rg -= MAX_FLOOR; } // Set rg in range [0-3]
     if(fl==0 && rg<reg_1f){ solenoidValve::ptr[i]->enable(true); } // Enable solenoid
     else if(fl==1 && rg<reg_2f){ solenoidValve::ptr[i]->enable(true); } // Enable solenoid
@@ -148,6 +154,7 @@ void chargeSolenoidParameters(int sol){
     else if(fl==3 && rg<reg_4f){ solenoidValve::ptr[i]->enable(true); } // Enable solenoid
     else{ solenoidValve::ptr[i]->enable(false); } // Disable
   }
+  */
 }
 
 void multidaySave(int fl, int cyclesNumber, float lightPercentage, float initHour){
@@ -217,6 +224,9 @@ void chargeMultidayParameters(){
   light = EEPROM.read(pos+11);
   initHour = float(EEPROM.read(pos+12))/10;
   if(cycles>0 && light>0){ day4.redefine(cycles, light, initHour); }
+  
+  Serial.flush();
+  delay(1000);
 }
 
 void regionSave(int fl, int reg){
@@ -254,6 +264,9 @@ void chargeLedRegion(){
   enableLED(1, reg_2f);
   enableLED(2, reg_3f);
   enableLED(3, reg_4f);
+
+  Serial.flush();
+  delay(1000);
 }
 
 void chargeSolenoidRegion(){
@@ -267,6 +280,9 @@ void chargeSolenoidRegion(){
   enableSolenoid(1, reg_2f);
   enableSolenoid(2, reg_3f);
   enableSolenoid(3, reg_4f);
+
+  Serial.flush();
+  delay(1000);
 }
 
 void irrigationSave(int cyclesPerDay, int initialHour){
@@ -339,6 +355,9 @@ void chargeIrrigationParameters(){
     Irrigation.setPH(ph1, ph2, ph3, ph4);
   }
   else{ Serial.println(F("error,Charge Irrigation Parameters Error: Cannot charge ph parameters because they are incosistent")); }
+
+  Serial.flush();
+  delay(1000);
 }
 
 void analogSaveFilter(int Type, int filt, float filterParam){
@@ -391,7 +410,7 @@ bool chargeAnalogParameters(int Type){
     else if(a!=0){deg = 1;}
     else{deg = 0;}
     if(deg==0 || !analogSensor::ptr[Type]->setModel(deg, a, b, c)){
-      analogSensor::ptr[Type]->setModel(1, -22.969, 0.2155);
+      analogSensor::ptr[Type]->setModel(2, -21.17, 0.2117);
     }
     return true;
   }
@@ -456,7 +475,7 @@ bool chargeUltrasonicParameters(int Type){
     }
 
     if(model<0 || model>2 || paramModel<=0 || height<UltraSonic::ptr[Type]->getMaxDist() || !UltraSonic::ptr[Type]->setModel(model, paramModel, height)){
-      UltraSonic::ptr[Type]->setModel(1, 26.5, 88);
+      UltraSonic::ptr[Type]->setModel(1, 27, 88);
     }    
     return true;
   }
@@ -481,20 +500,23 @@ void chargePressureParameter(){
 
     if(maxPress>0 && max_pressure!=maxPress && !isnan(maxPress)){
       max_pressure = maxPress;
-      Serial.print(F("Max Pressure = "));
+      Serial.print(F("Max Pressure\t= "));
       Serial.print(max_pressure);
       Serial.println(F(" psi"));
     }
     if(minPress>0 && min_pressure!=minPress && !isnan(minPress)){
       min_pressure = minPress;
-      Serial.print(F("Min Pressure = "));
+      Serial.print(F("Min Pressure\t= "));
       Serial.print(min_pressure);
       Serial.println(F(" psi"));
     }
     if(criticalPress>0 && critical_pressure!=criticalPress && !isnan(criticalPress)){
       critical_pressure = criticalPress;
-      Serial.print(F("Critical Pressure = "));
+      Serial.print(F("Critical Pressure\t= "));
       Serial.print(critical_pressure);
       Serial.println(F(" psi"));
     }
+
+    Serial.flush();
+    delay(2500);
 }

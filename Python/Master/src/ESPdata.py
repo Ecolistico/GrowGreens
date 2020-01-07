@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+# Import directories
 from numpy import isnan
 from datetime import datetime
 
@@ -21,8 +24,10 @@ class dataESP32:
         self.T4L = 0
         self.H4L = 0
         self.missingData = []
+        self.connected = False
+        self.failedConnection = 0
         self.log = logger
-    
+        
     def append(self, data, key):
         if not key in data: data.append(key)
     
@@ -60,6 +65,8 @@ class dataESP32:
         self.T4L = self.checkValue(float(strSplit[14]), self.T4L, self.missingData, "T4L")
         self.H4L = self.checkValue(float(strSplit[15]), self.H4L, self.missingData, "H4L")
         
+        self.logValues()
+        
     def isDataComplete(self):
         if len(self.missingData)==0: return True
         else: return False
@@ -70,7 +77,22 @@ class dataESP32:
             if i<len(self.missingData)-1: mssg += "{}, ".format(miss)
             else: mssg += "{}".format(miss)
         self.log.warning(mssg)
-
+    
+    def logValues(self):
+        self.log.debug("T1R={0}, H1R={1}, T1L={2}, H1L={3}".format(self.T1R, self.H1R, self.T1L, self.H1L))
+        self.log.debug("T2R={0}, H2R={1}, T2L={2}, H2L={3}".format(self.T2R, self.H2R, self.T2L, self.H2L))
+        self.log.debug("T3R={0}, H3R={1}, T3L={2}, H3L={3}".format(self.T3R, self.H3R, self.T3L, self.H3L))
+        self.log.debug("T4R={0}, H4R={1}, T4L={2}, H4L={3}".format(self.T4R, self.H4R, self.T4L, self.H4L))
+    
+    def connectionFailed(self):
+        self.failedConnection += 1
+        if(self.failedConnection>=5):
+            self.failedConnection = 0
+            self.log.error("Device disconnected")
+            
+    def connectionSuccess(self):
+        self.failedConnection = 0
+        
 # Define class for the 3 ESP
 class multiESP:
     def __init__(self, loggerFront, loggerCenter, loggerBack):
@@ -78,6 +100,22 @@ class multiESP:
         self.center = dataESP32(loggerCenter)
         self.back = dataESP32(loggerBack)
     
+    def updateStatus(self):
+        if(self.front.connected == False): self.front.connectionFailed()
+        else: self.front.connectionSuccess()
+        self.front.connected = False
+        if(self.center.connected == False): self.center.connectionFailed()
+        else: self.center.connectionSuccess()
+        self.center.connected = False
+        if(self.back.connected == False): self.back.connectionFailed()
+        else: self.back.connectionSuccess()
+        self.back.connected = False
+        
+    def logData(self):
+        t1 = t2 = t3 = t4 = 0 
+        h1 = h2 = h3 = h4 = 0
+        #self.front.log.info("Tem")
+        
     def isDataComplete(self):
         if(self.front.isDataComplete() and self.center.isDataComplete() and self.back.isDataComplete()):
             return True

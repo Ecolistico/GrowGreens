@@ -75,7 +75,10 @@ solutionMaker::solutionMaker(
     // Define relay pin
     __Relay1 = relay1;
     __RelayState = LOW;
-
+    
+    // At boot solution not ready
+    SolFinished = false;
+    
     // Default parameters
     for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER;i++){
       __IsEnable[i] = false;
@@ -127,7 +130,7 @@ void solutionMaker::begin(
   uint8_t microStep = DEFAULT_MICROSTEP,
   uint8_t pump_velocity = PUMP_VELOCITY,
   bool invertPump = false
-){    Serial.println(F("Solution Maker: Starting..."));
+){    Serial.println(F("debug,Solution Maker: Starting..."));
 
       // Init LCD screen
       lcd->init();
@@ -137,7 +140,7 @@ void solutionMaker::begin(
       __StatusLCD = true;
 
       // Show message in Screen.
-      printLCD("Preparando");
+      printLCD(F("Preparando"));
       for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER+2;i++){
           pinMode(__Led[i], OUTPUT);
           digitalWrite(__Led[i], HIGH);
@@ -203,7 +206,7 @@ void solutionMaker::begin(
       defaultFilter(); // Set by default exponential filter with alpha=0.2
 
       // Show message in Screen.
-      printLCD("Preparado");
+      printLCD(F("Preparado"));
 
       // Turn off led´s
       for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER+2;i++){
@@ -224,7 +227,7 @@ void solutionMaker::begin(
       __ReadTime = millis();
       __RelayTime = millis();
       __LCDTime = millis();
-      Serial.println(F("Solution Maker: Started Correctly"));
+      Serial.println(F("debug,Solution Maker: Started Correctly"));
    }
 
 bool solutionMaker::isWorking()
@@ -244,13 +247,13 @@ void solutionMaker::enable(uint8_t actuator)
           analogWrite(__En[actuator], __PumpVelocity);
         }
         __IsEnable[actuator] = true;
-        printAction("Enable", actuator);
+        printAction(F("Enable"), actuator, 0);
         return;
       }
-      printAction("Already enable", actuator);
+      printAction(F("Already enable"), actuator, 0);
       return;
     }
-    printAction("Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
     return;
   }
 
@@ -264,13 +267,13 @@ void solutionMaker::disable(uint8_t actuator)
           analogWrite(__En[actuator], LOW);
         }
         __IsEnable[actuator] = false;
-        printAction("Disable", actuator);
+        printAction(F("Disable"), actuator, 0);
         return;
       }
-      printAction("Already disable", actuator);
+      printAction(F("Already disable"), actuator, 0);
       return;
     }
-    printAction("Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
     return;
   }
 
@@ -291,10 +294,10 @@ void solutionMaker::turnOnPump(unsigned long time1, uint8_t pump)
       __Available[pump+MAX_SOLUTIONS_NUMBER] = false;
       __PumpOnTime[pump] = time1;
       __PumpTime[pump] = millis();
-      printAction("Turn On", MAX_SOLUTIONS_NUMBER+pump);
+      printAction(F("Turn On"), MAX_SOLUTIONS_NUMBER+pump, 0);
       return;
     }
-    printAction("Pump does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
     return;
   }
 
@@ -305,10 +308,10 @@ void solutionMaker::turnOffPump(uint8_t pump)
       disable(MAX_SOLUTIONS_NUMBER+pump);
       digitalWrite(__Led[pump+MAX_SOLUTIONS_NUMBER], LOW);
       __Available[pump+MAX_SOLUTIONS_NUMBER] = true;
-      printAction("Turn Off", MAX_SOLUTIONS_NUMBER+pump);
+      printAction(F("Turn Off"), MAX_SOLUTIONS_NUMBER+pump, 0);
       return;
     }
-    printAction("Pump does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
     return;
   }
 
@@ -395,57 +398,49 @@ void solutionMaker::moveStepper(long steps, uint8_t st)
 void solutionMaker::resetPosition(uint8_t st)
   { if(st<MAX_SOLUTIONS_NUMBER){
       stepperS[st]->setCurrentPosition(0);
-      printAction("Reset Position", st);
+      printAction(F("Reset Position"), st, 0);
       return;
     }
-    printAction("Cannot reset position. Motor does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Cannot reset position. Motor does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
     return;
   }
 
-void solutionMaker::printAction(String act, uint8_t actuator)
-  {   Serial.print(F("Solution Maker ("));
-      switch(actuator){
-        case 0:
-          Serial.print(F("Motor 1"));
-          break;
-        case 1:
-          Serial.print(F("Motor 2"));
-          break;
-        case 2:
-          Serial.print(F("Motor 3"));
-          break;
-        case 3:
-          Serial.print(F("Motor 4"));
-          break;
-        case 4:
-          Serial.print(F("Pump 1"));
-          break;
-        case 5:
-          Serial.print(F("Pump 2"));
-          break;
-        default:
-          Serial.print(F("Actuator does not match"));
-          break;
-      }
-      Serial.print(F("): "));
-      Serial.println(act);
+void solutionMaker::printAction(String act, uint8_t actuator, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error 
+     
+    Serial.print(F("Solution Maker ("));
+    
+    if(actuator==0){Serial.print(F("Motor 1"));}
+    else if(actuator==1){Serial.print(F("Motor 2"));}
+    else if(actuator==2){Serial.print(F("Motor 3"));}
+    else if(actuator==3){Serial.print(F("Motor 4"));}
+    else if(actuator==4){Serial.print(F("Pump 1"));}
+    else if(actuator==5){Serial.print(F("Pump 2"));}
+    else{Serial.print(F("Actuator does not match"));}
+    
+    Serial.print(F("):\t"));
+    Serial.println(act);
   }
 
-void solutionMaker::printEZOAction(String act, uint8_t sensorType)
-  {   Serial.print(F("Solution Maker (EZO "));
-      switch(sensorType){
-        case EZO_PH:
-          Serial.print(F("PH"));
-          break;
-        case EZO_EC:
-          Serial.print(F("EC"));
-          break;
-        default:
-          Serial.print(F("Unkwown"));
-          break;
-      }
-      Serial.print(F(" Sensor): "));
-      Serial.println(act);
+void solutionMaker::printEZOAction(String act, uint8_t sensorType, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error 
+    
+    Serial.print(F("Solution Maker (EZO "));
+    
+    if(sensorType==EZO_PH){Serial.print(F("PH"));}
+    else if(sensorType==EZO_EC){Serial.print(F("EC"));}
+    else{Serial.print(F("Unkwown"));}
+ 
+    Serial.print(F(" Sensor): "));
+    Serial.println(act);
   }
 
 void solutionMaker::printLCD(String main, String subAction = "")
@@ -467,7 +462,7 @@ void solutionMaker::checkButtonLCD()
       __StatusLCD = false;
       __LCDTemp = __Temp;
       __LCDTime = millis();
-      Serial.println(F("Solution Maker (LCD Screen): Button Pressed"));
+      Serial.println(F("debug,Solution Maker (LCD Screen): Button Pressed"));
     }
   }
 
@@ -526,7 +521,7 @@ void solutionMaker::EZOReadRequest(float temp, bool sleep = false)
         ecMeter->readWithTempCompensation(temp);
       }
     }
-    else{Serial.println(F("Solution Maker (EZO Sensors): They are not available"));}
+    else{Serial.println(F("debug,Solution Maker (EZO Sensors): They are not available"));}
   }
 
 void solutionMaker::readRequest()
@@ -549,11 +544,13 @@ void solutionMaker::relayControl()
   { if(!digitalRead(__Relay1) && __RelayState && !__Work){
       __RelayState = LOW;
       __RelayTime = millis();
-      Serial.println(F("Solution Maker: 15 seconds to finish the solution"));
+      Serial.println(F("warning,Solution Maker: 15 seconds to finish the solution"));
     }
     else if(!digitalRead(__Relay1) && !__RelayState && !__Work && millis()-__RelayTime>RELAY_ACTION_TIME){
       digitalWrite(__Relay1, !__RelayState);
-      Serial.println("Solution Finished");
+      Serial.println(F("info,Solution Finished"));
+      Serial.println(F("Solution Finished"));
+      SolFinished = true;
     }
   }
 
@@ -565,19 +562,19 @@ bool solutionMaker::dispense(long some_mg, uint8_t st)
           long steps = RevToSteps(rev);
           if(steps>=0){
             moveStepper(steps, st);
-            printAction("Dispensing " + String(some_mg) + " mg", st);
+            printAction("Dispensing " + String(some_mg) + " mg", st, 0);
             return true;
           }
-          printAction("RevToSteps equation problem", st);
+          printAction(F("RevToSteps equation problem"), st, 3);
           return false;
         }
-        printAction("MGToRev equation problem", st);
+        printAction(F("MGToRev equation problem"), st, 3);
         return false;
       }
-      printAction("mg parameter incorrect", st);
+      printAction(F("mg parameter incorrect"), st, 3);
       return false;
     }
-    printAction("Cannot dispense. Motor does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Cannot dispense. Motor does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
     return false;
   }
 
@@ -585,10 +582,10 @@ void solutionMaker::stepperCalibration(long rev, uint8_t st)
   { if(st<MAX_SOLUTIONS_NUMBER){
       long steps = RevToSteps(abs(rev));
       moveStepper(steps, st);
-      printAction("Running " + String(rev) + " revolutions for calibration purpose", st);
+      printAction("Running " + String(rev) + " revolutions for calibration purpose", st, 0);
       return;
     }
-    printAction("Cannot run calibration. Motor does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Cannot run calibration. Motor does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
   }
 
 bool solutionMaker::dispenseAcid(float some_ml, uint8_t pump)
@@ -597,16 +594,16 @@ bool solutionMaker::dispenseAcid(float some_ml, uint8_t pump)
         unsigned long time1 = MLToTime(some_ml, pump)*1000; // *1000 to convert s to ms
         if(time1>0){ // Check equation result
           turnOnPump(time1, pump);
-          printAction("Dispensing " + String(some_ml) + " ml", pump+MAX_SOLUTIONS_NUMBER);
+          printAction("Dispensing " + String(some_ml) + " ml", pump+MAX_SOLUTIONS_NUMBER, 0);
           return true;
         }
-        printAction("MLToTime equation problem", pump+MAX_SOLUTIONS_NUMBER);
+        printAction(F("MLToTime equation problem"), pump+MAX_SOLUTIONS_NUMBER, 3);
         return false;
       }
-      printAction("Mililiters parameter incorrect", pump+MAX_SOLUTIONS_NUMBER);
+      printAction(F("Mililiters parameter incorrect"), pump+MAX_SOLUTIONS_NUMBER, 3);
       return false;
     }
-    printAction("Cannot dispense. Pump does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Cannot dispense. Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
     return false;
   }
 
@@ -614,25 +611,25 @@ void solutionMaker::pumpCalibration(float time1, uint8_t pump)
   { if(pump<MAX_PUMPS_NUMBER){ // Check that the pump exists
       turnOnPump(abs(time1*1000), pump);
     }
-    else{printAction("Cannot run calibration. Pump does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);}
+    else{printAction(F("Cannot run calibration. Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);}
   }
 
 void solutionMaker::setCalibrationParameter(uint8_t param, uint8_t actuator)
   { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
       __Calibration[actuator] = param;
-      printAction(String(param) + " is the new calibration param (motors/pumps)", actuator);
+      printAction(String(param) + " is the new calibration param (motors/pumps)", actuator, 0);
       return;
     }
-      printAction("Cannot set calibration Param. Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+      printAction(F("Cannot set calibration Param. Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
   }
 
 void solutionMaker::setCalibrationParameter1(uint8_t param, uint8_t actuator)
   { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
       __Calibration1[actuator] = param;
-      printAction(String(param) + " is the new calibration param (ph/ec equations)", actuator);
+      printAction(String(param) + " is the new calibration param (ph/ec equations)", actuator, 0);
       return;
     }
-      printAction("Cannot set calibration Param. Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+      printAction(F("Cannot set calibration Param. Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
   }
 
 bool solutionMaker::isEnable(uint8_t actuator)
@@ -664,10 +661,10 @@ void solutionMaker::stop(uint8_t actuator)
         stepperS[actuator]->stop();
       }
       else{turnOffPump(actuator-MAX_SOLUTIONS_NUMBER);}
-      printAction("Stopped", actuator);
+      printAction(F("Stopped"), actuator, 0);
       return;
     }
-    printAction("Cannot stop. Actuator does not exist", MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER);
+    printAction(F("Cannot stop. Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
     return;
   }
 
@@ -684,7 +681,7 @@ bool solutionMaker::setExponentialFilter(float alpha = 0.5)
       return true;
     }
     else{
-      Serial.println(F("Solution Maker: Parameter alpha wrong"));
+      Serial.println(F("error,Solution Maker: Parameter alpha wrong"));
       return false;
     }
   }
@@ -698,13 +695,13 @@ bool solutionMaker::setKalmanFilter(float noise)
       return true;
     }
     else{
-      Serial.print(F("Solution Maker: Parameter noise wrong"));
+      Serial.print(F("error,Solution Maker: Parameter noise wrong"));
       return false;
     }
   }
 
 void solutionMaker::printFilter()
-  { Serial.print(F("Solution Maker (Temperature readings): "));
+  { Serial.print(F("debug,Solution Maker (Temperature readings): "));
     switch(__Filter){
       case 0:
       Serial.println(F("It is not using any filter..."));
@@ -736,7 +733,7 @@ void solutionMaker::EZOcalibration(uint8_t sensorType, uint8_t act, float value)
     else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
       ecMeter->calibration(act, value);
     }
-    else{printEZOAction("Sensor does not match a type or is in another request", sensorType);}
+    else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType, 3);}
   }
 
 void solutionMaker::EZOexportCal(uint8_t sensorType)
@@ -749,9 +746,9 @@ void solutionMaker::EZOexportCal(uint8_t sensorType)
         __ExportEzo = true;
         ecMeter->exportCal();
       }
-      else{printEZOAction("Sensor does not match a type or is in another request", sensorType);}
+      else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType, 3);}
     }
-    else{printEZOAction("Another export is running", sensorType);}
+    else{printEZOAction(F("Another export is running"), sensorType, 3);}
   }
 
 void solutionMaker::EZOimportCalibration(uint8_t sensorType, String parameters)
@@ -761,18 +758,18 @@ void solutionMaker::EZOimportCalibration(uint8_t sensorType, String parameters)
     else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
       ecMeter->importCalibration(parameters);
     }
-    else{printEZOAction("Sensor does not match a type or is in another request", sensorType);}
+    else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType, 3);}
   }
 
 void solutionMaker::EZOimport(bool start)
   { if(start!=__ImportEzo){
       __ImportEzo = start;
-      if(__ImportEzo) Serial.println(F("Solution Maker (EZO Sensors): Starting Calibration Import"));
-      else Serial.println(F("Solution Maker (EZO Sensors): Stopping Calibration Import"));
+      if(__ImportEzo) Serial.println(F("warning,Solution Maker (EZO Sensors): Starting Calibration Import"));
+      else Serial.println(F("warning,Solution Maker (EZO Sensors): Stopping Calibration Import"));
     }
     else{
-      if(start) Serial.println(F("Solution Maker (EZO Sensors): Calibration Import already started"));
-      else Serial.println(F("Solution Maker (EZO Sensors): Calibration Import already stopped"));
+      if(start) Serial.println(F("error,Solution Maker (EZO Sensors): Calibration Import already started"));
+      else Serial.println(F("error,Solution Maker (EZO Sensors): Calibration Import already stopped"));
     }
   }
 
@@ -783,16 +780,16 @@ void solutionMaker::EZOsleep()
         phMeter->sleep();
         ecMeter->sleep();
       }
-      else{Serial.println(F("Solution Maker (EZO Sensors): They are in another request"));}
+      else{Serial.println(F("error,Solution Maker (EZO Sensors): They are in another request"));}
     }
-    else{Serial.println(F("Solution Maker (EZO Sensors): They are already in sleep mode"));}
+    else{Serial.println(F("warning,Solution Maker (EZO Sensors): They are already in sleep mode"));}
   }
 
 void solutionMaker::EZOawake()
   { if(__SleepEzo){
       EZOReadRequest(__Temp, true); // Take a read to awake the sensors
     }
-    else{Serial.println(F("Solution Maker (EZO Sensors): They are already awake"));}
+    else{Serial.println(F("warning,Solution Maker (EZO Sensors): They are already awake"));}
   }
 
 bool solutionMaker::EZOisSleep()
@@ -898,7 +895,7 @@ void solutionMaker::run()
         digitalWrite(__Led[i], LOW);
         disable(i);
         eventLCD();
-        printAction(String(getMG(i)) + " mg were dispensed", i);
+        printAction(String(getMG(i)) + " mg were dispensed", i, 0);
       }
     }
 
@@ -948,13 +945,14 @@ void solutionMaker::prepareSolution(float liters, uint8_t sol, float ph, float e
             break;
           default:
             success = false;
-            Serial.println(F("Solution Maker: Solution Powder not defined"));
+            Serial.println(F("error,Solution Maker: Solution Powder not defined"));
             break;
         }
-        if(mgPowder==-1 && success){Serial.println(F("Solution Maker: balanceEC function error"));}
-        else if(mlAcid==-1 && success){Serial.println(F("Solution Maker: balancePH function error"));}
+        if(mgPowder==-1 && success){Serial.println(F("error,Solution Maker: balanceEC function error"));}
+        else if(mlAcid==-1 && success){Serial.println(F("error,Solution Maker: balancePH function error"));}
         if(success){
-          Serial.print(F("Solution Maker: mgPowder="));
+          SolFinished = false;
+          Serial.print(F("debug,Solution Maker: mgPowder="));
           Serial.print(mgPowder);
           Serial.print(F(", mlAcid="));
           Serial.println(mlAcid);
@@ -962,7 +960,8 @@ void solutionMaker::prepareSolution(float liters, uint8_t sol, float ph, float e
           digitalWrite(__Relay1, !__RelayState);
         }
       }
-      else{Serial.println(F("Solution Maker: Parameter liters, ph or ec wrong"));}
+      else{Serial.println(F("error,Solution Maker: Parameter liters, ph or ec wrong"));}
     }
-    else{Serial.println(F("Solution Maker: Working on another solution, please wait"));}
+    else{Serial.println(F("error,Solution Maker: Working on another solution, please wait"));}
   }
+  

@@ -40,20 +40,25 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define MAX_EQUATION_DEGREE   3 // Max degree of equation for calibration
 #define MAX_ULTRASONIC        8 // Max number of ultrasonic sensors
 #define MAX_DISTANCE          300 // Maximum distance(cm) we want to ping
-#define MIN_SECUTIRY_DISTANCE 10 // Minimum distance(cm) expected
-#define MAX_SECUTIRY_DISTANCE 88 // Maximum distance(cm) expected
-#define PI 3.1416
+#define MIN_SECURITY_DISTANCE 10 // Minimum distance(cm) expected
+#define MAX_SECURITY_DISTANCE 85 // Maximum distance(cm) expected
+//#define PI 3.1416
 #define MAX_WATER_SENSOR      3 // Max number of water sensors
 #define AIR_STATE             HIGH // Air state = HIGH
 #define WATER_STATE           LOW // Water State = LOW
 
 // Class to declarate Analog Sensor and applied different filters
+/* Types:
+ *      0 - "Nutrition Pressure"
+ *      1 - "Tank Pressure"
+ *      2 - "Water Pressure"
+ *      250 - Undefined
+*/
 class analogSensor
   { private:
-        uint8_t __Pin, __Degree;
+        uint8_t __Pin, __Degree, __Type;
         bool __FirstRead;
         float __A, __B, __C, __Value, __PreValue;
-        String __Name;
 
         // Constants for the filters
         uint8_t __Filter;
@@ -76,7 +81,7 @@ class analogSensor
         // List of pointers to each sensor
         static analogSensor *ptr[MAX_ANALOG_SENSOR];
 
-        analogSensor(uint8_t pin, String name); // Constructor
+        analogSensor(uint8_t pin, uint8_t type=250); // Constructor
 
         bool setModel(
           uint8_t degree,
@@ -99,13 +104,22 @@ class analogSensor
  *      0 = Not model return Distance
  *      1 = Cilinder -> __Param = radio
  *      2 = Rectangular Prism -> __Param = Rectangule Area
+ * 
+ * Types:
+ *      0 - "Recirculation Level"
+ *      1 - "Solution 1 Level"
+ *      2 - "Solution 2 Level"
+ *      3 - "Solution 3 Level"
+ *      4 - "Solution 4 Level"
+ *      5 - "Water Level"
+ *      6 - "Solution Maker Level"
+ *      250 - Undefined
 */
 
 class UltraSonic
   { private:
-        uint8_t __Pin, __State;
+        uint8_t __Pin1, __Pin2, __State, __Type;
         bool __FirstRead;
-        String __Name;
         NewPing *__Sonar;
         int __minDist, __maxDist, __countState;
         float __Distance, __PreDistance;
@@ -137,10 +151,11 @@ class UltraSonic
         static UltraSonic *ptr[MAX_ULTRASONIC]; // List of pointers to each sensor
         // Constructor
         UltraSonic(
-          uint8_t pin,
-          String name,
-          int minDist = MIN_SECUTIRY_DISTANCE,
-          int maxDist = MAX_SECUTIRY_DISTANCE
+          uint8_t pin1,
+          uint8_t pin2,
+          uint8_t type=250,
+          int minDist = MIN_SECURITY_DISTANCE,
+          int maxDist = MAX_SECURITY_DISTANCE
         );
 
         bool setModel(uint8_t model, float param, float height);
@@ -153,6 +168,7 @@ class UltraSonic
         float getDistance(); // Returns more actual distance measurement
         float getPreDistance(); // Returns previous distance measurement
         float getVolume(); // Returns volumen measure
+        float getMinVolume(); // Returns min volumen with the model saved
         float getMaxVolume(); // Returns max volumen with the model saved
         uint8_t getState(); // Returns state (High/Ok/Low)
         bool changeMinDist(int minDist);
@@ -163,12 +179,16 @@ class UltraSonic
   };
 
 // Class to declarate Water/Air Sensor
+/*  Types:
+ *      0 - "Water Irrigation Sensor"
+ *      1 - "Water Evacuation Sensor"
+ *      250 - Undefined
+*/
 class waterSensor
   { private:
-        uint8_t __Pin;
+        uint8_t __Pin, __Type;
         bool __State, __FirstRead;
         int __countState;
-        String __Name;
 
         static unsigned long __ActualTime; // Time Counter
         void begin(); // Start sensor
@@ -179,7 +199,7 @@ class waterSensor
         // List of pointers to each sensor
         static waterSensor *ptr[MAX_WATER_SENSOR];
 
-        waterSensor(uint8_t pin, String name ); // Constructor
+        waterSensor(uint8_t pin, uint8_t type=250 ); // Constructor
 
         bool getState();
         static void beginAll();

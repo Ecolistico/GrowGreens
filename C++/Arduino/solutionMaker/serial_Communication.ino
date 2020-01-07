@@ -29,7 +29,7 @@ void serialEvent() {                                  //if the hardware serial p
 
     // prepare()
     // -> Form "prepare,float[liters],int[sol],float[ph],float[ec]"
-    if(parameter[0]=="prepare"){
+    if(parameter[0]==F("prepare")){
       float liters = parameter[1].toFloat();
       byte sol = parameter[2].toInt();
       float ph = parameter[3].toFloat();
@@ -39,9 +39,23 @@ void serialEvent() {                                  //if the hardware serial p
           if(ph>0 && ph<14){
             if(ec>0){
               Serial.println(F("Request accepted"));
-              Serial.println("warning,Preparing "+String(liters)+" liters of solution "+String(sol+1)+" with ph="+ String(ph)+",ec="+String(ec));
-              sMaker.prepareSolution(liters, sol, ph, ec);
-              sMaker.eventLCD();  
+              Serial.print(F("info,Preparing "));
+              Serial.print(liters);
+              Serial.print(F(" liters of solution "));
+              Serial.print(sol+1);
+              Serial.print(F(" with ph="));
+              Serial.print(ph);
+              Serial.print(F("and ec="));
+              Serial.println(ec);
+              if(show){
+                 delay(10000);
+                 sMaker.SolFinished = true;
+                 Serial.println(F("info,Solution Finished"));
+                 Serial.println(F("Solution Finished"));
+              } else {
+                sMaker.prepareSolution(liters, sol, ph, ec);
+                sMaker.eventLCD();  
+              }
             }
             else {Serial.println(F("error,prepare(): ec has to be positive"));}
           }
@@ -51,10 +65,16 @@ void serialEvent() {                                  //if the hardware serial p
       }
       else {Serial.println(F("error,prepare(): liters has to be positive"));}
     }
+
+    // solFinished() ?
+    else if(parameter[0]==F("?solutionFinished") || parameter[0]==F("?solutionFinished\n")){
+      if(sMaker.SolFinished){Serial.println(F("Solution Finished"));}
+      else{Serial.println(F("warning,Solution is not ready"));}
+    }
     
     // dispense() 
     // -> Form "dispense,int[Motor],long[grams]"
-    else if(parameter[0]=="dispense"){
+    else if(parameter[0]==F("dispense")){
       int act = parameter[1].toInt();
       long grams = parameter[2].toFloat();
       if(act>=0 && act<MAX_SOLUTIONS_NUMBER){
@@ -69,7 +89,7 @@ void serialEvent() {                                  //if the hardware serial p
     
     // dispenseAcid()
     // -> Form "dispenseAcid,int[pump],float[mililiters]"
-    else if(parameter[0]=="dispenseAcid"){
+    else if(parameter[0]==F("dispenseAcid")){
       int act = parameter[1].toInt();
       float mililiters = parameter[2].toFloat();
       if(act>=0 && act<MAX_PUMPS_NUMBER){
@@ -83,11 +103,11 @@ void serialEvent() {                                  //if the hardware serial p
     }
     
     // stop()
-    else if(parameter[0]=="stop"){
+    else if(parameter[0]==F("stop")){
       int act = parameter[2].toInt();
       
       // -> Form "stop,motor,int[motor]"
-      if(parameter[1]=="motor"){ 
+      if(parameter[1]==F("motor")){ 
         if(act>=0 && act<MAX_SOLUTIONS_NUMBER){
           sMaker.stop(act);
           sMaker.eventLCD();
@@ -96,21 +116,21 @@ void serialEvent() {                                  //if the hardware serial p
       }
 
       // -> Form "stop,pump,int[pump]"
-      else if(parameter[1]=="pump"){ 
+      else if(parameter[1]==F("pump")){ 
         if(act>=0 && act<MAX_PUMPS_NUMBER){
           sMaker.stop(act+MAX_SOLUTIONS_NUMBER);
           sMaker.eventLCD();
         }
         else{ Serial.println(F("error,stop(): Pump out of range [0-1]"));}
       }
-      else{Serial.println(F("warning,stop(): Parameter[1] does not match a type"));}
+      else{Serial.println(F("error,stop(): Parameter[1] does not match a type"));}
     }
 
     // calibration()
-    else if(parameter[0]=="calibration"){
+    else if(parameter[0]==F("calibration")){
       
       // -> Form "calibration,motor,int[motor],long[revolutions]"
-      if(parameter[1]=="motor"){
+      if(parameter[1]==F("motor")){
         int act = parameter[2].toInt();
         long rev = parameter[3].toInt();
         if(act>=0 && act<MAX_SOLUTIONS_NUMBER){
@@ -124,7 +144,7 @@ void serialEvent() {                                  //if the hardware serial p
       }
       
       // -> Form "calibration,pump,int[pump],long[Time]"
-      else if(parameter[1]=="pump"){
+      else if(parameter[1]==F("pump")){
         int act = parameter[2].toInt();
         float Time = parameter[3].toFloat();
         if(act>=0 && act<MAX_PUMPS_NUMBER){
@@ -139,7 +159,7 @@ void serialEvent() {                                  //if the hardware serial p
       
       // Set parameters for motors/pumps
       // -> Form "calibration,setCal,int[act],int[param]"
-      else if(parameter[1]=="setCal"){
+      else if(parameter[1]==F("setCal")){
         int act = parameter[2].toInt();
         int param = parameter[3].toInt();
         if(act>=0 && act<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
@@ -155,7 +175,7 @@ void serialEvent() {                                  //if the hardware serial p
       
       // Set parameter for ph/ec equations
       // -> Form "calibration,setCal1,int[act],int[param]"
-      else if(parameter[1]=="setCal1"){
+      else if(parameter[1]==F("setCal1")){
         int act = parameter[2].toInt();
         int param = parameter[3].toInt();
         if(act>=0 && act<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
@@ -172,20 +192,20 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // ezo()
-    else if(parameter[0]=="ezo"){
+    else if(parameter[0]==F("ezo")){
       int sensorType = 10;
       String sensorString = "";
-      if(parameter[1]=="ph"){
+      if(parameter[1]==F("ph")){
         sensorType = EZO_PH;
         sensorString = "phmeter";
       }
-      else if(parameter[1]=="ec"){
+      else if(parameter[1]==F("ec")){
         sensorType = EZO_EC;
         sensorString = "ecmeter";
       }
       if(sensorType==EZO_PH || sensorType==EZO_EC){
         // -> Form "ezo,sensorType[ph/ex],isEnable"
-        if(parameter[2]=="isEnable"){
+        if(parameter[2]==F("isEnable") || parameter[2]==F("isEnable\n")){
           if(sMaker.EZOisEnable(sensorType)){
             Serial.print(sensorString);
             Serial.println(F(": Enable"));
@@ -196,22 +216,28 @@ void serialEvent() {                                  //if the hardware serial p
           }
         }
         // -> Form "ezo,sensorType[ph/ex],calibration,int[action],float[val]"
-        else if(parameter[2]=="calibration"){
+        else if(parameter[2]==F("calibration")){
           int action = parameter[3].toInt();
           float val = parameter[4].toFloat();
           sMaker.EZOcalibration(sensorType, action, val);
         }
-        else if(parameter[2]=="exportCal"){ sMaker.EZOexportCal(sensorType); } // -> Form "ezo,sensorType[ph/ex],exportCal"
-        else if(parameter[2]=="startImport"){ sMaker.EZOimport(true); } // -> Form "ezo,sensorType[ph/ex],startImport"
-        else if(parameter[2]=="stopImport"){ sMaker.EZOimport(false); } // -> Form "ezo,sensorType[ph/ex],stopImport"
-        else if(parameter[2]=="importCal"){ sMaker.EZOimportCalibration(sensorType, parameter[3]); } // -> Form "ezo,sensorType[ph/ex],importCal"
-        // -> Form "ezo,sensorType[ph/ex],sleep"
-        else if(parameter[2]=="sleep"){
+        else if(parameter[2]==F("exportCal") || parameter[2]==F("exportCal\n")){ // -> Form "ezo,sensorType[ph/ex],exportCal"
+          sMaker.EZOexportCal(sensorType); 
+        }
+        else if(parameter[2]==F("startImport") || parameter[2]==F("startImport\n")){ // -> Form "ezo,sensorType[ph/ex],startImport"
+          sMaker.EZOimport(true); 
+        }
+        else if(parameter[2]==F("stopImport") || parameter[2]==F("stopImport\n")){ // -> Form "ezo,sensorType[ph/ex],stopImport"
+          sMaker.EZOimport(false); 
+        } 
+        else if(parameter[2]==F("importCal") || parameter[2]==F("importCal\n")){ // -> Form "ezo,sensorType[ph/ex],importCal"
+          sMaker.EZOimportCalibration(sensorType, parameter[3]); 
+        }
+        else if(parameter[2]==F("sleep") || parameter[2]==F("sleep\n")){ // -> Form "ezo,sensorType[ph/ex],sleep"
           if(!sMaker.EZOisSleep()) Serial.println(F("warning,EZO Sensors: Enter into sleep mode"));
           sMaker.EZOsleep();
         }
-        // -> Form "ezo,sensorType[ph/ex],awake"
-        else if(parameter[2]=="awake"){
+        else if(parameter[2]==F("awake") || parameter[2]==F("awake\n")){ // -> Form "ezo,sensorType[ph/ex],awake"
           if(sMaker.EZOisSleep()) Serial.println(F("warning,EZO Sensors: Awaking sensors"));
           sMaker.EZOawake();
         }
@@ -221,28 +247,40 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // filter()
-    else if(parameter[0]=="filter"){
-      if(parameter[1]=="notFilter"){ sMaker.notFilter(); } // -> Form "filter,notFilter"
-      else if(parameter[1]=="default"){ sMaker.defaultFilter(); } // -> Form "filter,defaultFilter"
-      else if(parameter[1]=="exponential"){ // -> Form "filter,exponential,float[alpha]"
+    else if(parameter[0]==F("filter")){
+      if(parameter[1]==F("notFilter") || parameter[1]==F("notFilter\n")){ // -> Form "filter,notFilter"
+        sMaker.notFilter(); 
+      }
+      else if(parameter[1]==F("default") || parameter[1]==F("default\n")){ // -> Form "filter,defaultFilter"
+        sMaker.defaultFilter(); 
+      } 
+      else if(parameter[1]==F("exponential")){ // -> Form "filter,exponential,float[alpha]"
         float alpha = parameter[2].toFloat();
         if(alpha>0 && alpha<1) sMaker.setExponentialFilter(alpha);
         else Serial.println(F("error,filter(): alpha out of range [0-1]"));
       }
-      else if(parameter[1]=="kalman"){ // -> Form "filter,exponential,kalman,float[noise]"
+      else if(parameter[1]==F("kalman")){ // -> Form "filter,exponential,kalman,float[noise]"
         float noise = parameter[2].toFloat();
         if(noise>0) sMaker.setKalmanFilter(noise);
         else Serial.println(F("error,filter(): noise has to be positive"));
       }
-      else if(parameter[1]=="print"){ sMaker.printFilter(); } // -> Form "filter,print"
+      else if(parameter[1]==F("print") || parameter[1]==F("print\n")){ // -> Form "filter,print"
+        sMaker.printFilter(); 
+      }
       else{Serial.println(F("error,filter(): Parameter[1] does not match a type"));}
     }
 
     // eeprom()
-    else if(parameter[0]=="eeprom"){
-      if(parameter[1]=="print"){ print_EEPROM(); } // -> Form "eeprom,print"
-      else if(parameter[1]=="read"){ read_EEPROM(HIGH); } // -> Form "eeprom,read"
-      else if(parameter[1]=="clean"){ clean_EEPROM(); } // -> Form "eeprom,clean"
+    else if(parameter[0]==F("eeprom")){
+      if(parameter[1]==F("print") || parameter[1]==F("print\n")){ // -> Form "eeprom,print"
+        print_EEPROM(); 
+      }
+      else if(parameter[1]==F("read") || parameter[1]==F("read\n")){ // -> Form "eeprom,read"
+        read_EEPROM(HIGH); 
+      }
+      else if(parameter[1]==F("clean") || parameter[1]==F("clean\n")){ // -> Form "eeprom,clean"
+        clean_EEPROM(); 
+      }
     }
 
     else{Serial.println(F("warning, Serial Command Unknown"));}

@@ -13,8 +13,11 @@ void requestSolution(){ // Form -> "?solutionMaker,float[liters],int[sol],float[
   Serial.println(Irrigation.getEC(Recirculation.getOut())); // ec
 }
 
-void updateIrrigationState(){ // Form -> "updateIrrigationState,int[sol],float[volNut],float[volH],float[consNut],float[consH2O]"
-  Serial.print(F("updateIrrigationState,"));
+void updateSystemState(){ 
+  Recirculation.updateState();
+  // Form -> "updateSystemState,int[sol],float[volNut],float[volH2O],float[consNut],float[consH2O],
+  //          int[pumpIn],int[IPC],int[MPC],float[missedNut],float[missedH2O]"
+  Serial.print(F("updateSystemState,"));
   Serial.print(Recirculation.getOut()); // Solution
   Serial.print(F(",")); 
   Serial.print(Recirculation.getVolKnut()); // volNut
@@ -23,7 +26,17 @@ void updateIrrigationState(){ // Form -> "updateIrrigationState,int[sol],float[v
   Serial.print(F(","));
   Serial.print(solutionConsumption); // consNut
   Serial.print(F(",")); 
-  Serial.println(h2oConsumption); // consH2O
+  Serial.print(h2oConsumption); // consH2O
+  Serial.print(F(","));
+  Serial.print(Recirculation.InpumpWorkIn()); // pumpIn
+  Serial.print(F(","));
+  Serial.print(IPC.state); // IPC
+  Serial.print(F(",")); 
+  Serial.print(MPC.state); // MPC
+  Serial.print(F(","));
+  Serial.print(Recirculation.getVolCnut()); // missedNut
+  Serial.print(F(","));
+  Serial.println(Recirculation.getVolCh2o()); // missedH2O
 }
 
 void serialEvent(){                                  //if the hardware serial port_0 receives a char
@@ -31,7 +44,7 @@ void serialEvent(){                                  //if the hardware serial po
   input_string_complete = true;                       //set the flag used to tell if we have received a completed string from the PC
   
   if(input_string_complete==true){
-    String parameter[8];
+    String parameter[12];
     int k = 0;
     int l = 0;
     // Split the parameters
@@ -46,8 +59,8 @@ void serialEvent(){                                  //if the hardware serial po
       }
     }
     
-    if(parameter[0]=="actuator"){ // Functions executed in Actuator class
-      if(parameter[1]=="setTime"){ // Function setTime -> Form "actuator,setTime,type[0-3],floor[0-3],timeOn,cycleTime"
+    if(parameter[0]==F("actuator")){ // Functions executed in Actuator class
+      if(parameter[1]==F("setTime")){ // Function setTime -> Form "actuator,setTime,type[0-3],floor[0-3],timeOn,cycleTime"
         int Type = parameter[2].toInt();
         int Floor = parameter[3].toInt();
         int timeOn = parameter[4].toInt();
@@ -57,7 +70,7 @@ void serialEvent(){                                  //if the hardware serial po
         }
        else{Serial.println(F("error,Actuator(): Parameter[2-5] wrong"));}
       }
-      else if(parameter[1]=="setTimeOn"){  // Function setTimeOn -> Form "actuator,setTimeOn,type[0-3],floor[0-3],timeOn"
+      else if(parameter[1]==F("setTimeOn")){  // Function setTimeOn -> Form "actuator,setTimeOn,type[0-3],floor[0-3],timeOn"
         int Type = parameter[2].toInt();
         int Floor = parameter[3].toInt();
         int timeOn = parameter[4].toInt();
@@ -66,7 +79,7 @@ void serialEvent(){                                  //if the hardware serial po
         }
         else{Serial.println(F("error,Actuator(): Parameter[2-3] wrong"));}
       }
-      else if(parameter[1]=="setCycleTime"){ // Function setCycleTime -> Form "actuator,setCycleTime,type[0-3],floor[0-3],cycleTime"
+      else if(parameter[1]==F("setCycleTime")){ // Function setCycleTime -> Form "actuator,setCycleTime,type[0-3],floor[0-3],cycleTime"
         int Type = parameter[2].toInt();
         int Floor = parameter[3].toInt();
         int cycleTime = parameter[4].toInt();
@@ -75,7 +88,7 @@ void serialEvent(){                                  //if the hardware serial po
         }
         else{Serial.println(F("error,Actuator(): Parameter[2-3] wrong"));}
       }
-      else if(parameter[1]=="getTime"){ // Function getTime -> Form "actuator,getTime,type[0-3],floor[0-3]"
+      else if(parameter[1]==F("getTime")){ // Function getTime -> Form "actuator,getTime,type[0-3],floor[0-3]"
         int Type = parameter[2].toInt();
         int Floor = parameter[3].toInt();
         if(Type>=0 && Floor>=0 && Type<MAX_TYPES_ACTUATOR && Floor<MAX_FLOOR){
@@ -83,7 +96,7 @@ void serialEvent(){                                  //if the hardware serial po
         }
         else{Serial.println(F("error,Actuator(): Parameter[2-3] wrong"));}
       }
-      else if(parameter[1]=="getTimeOn"){ // Function getTimeOn -> Form "actuator,getTimeOn,type[0-3],floor[0-3]"
+      else if(parameter[1]==F("getTimeOn")){ // Function getTimeOn -> Form "actuator,getTimeOn,type[0-3],floor[0-3]"
         int Type = parameter[2].toInt();
         int Floor = parameter[3].toInt();
         if(Type>=0 && Floor>=0 && Type<MAX_TYPES_ACTUATOR && Floor<MAX_FLOOR){
@@ -91,7 +104,7 @@ void serialEvent(){                                  //if the hardware serial po
         }
         else{Serial.println(F("error,Actuator(): Parameter[2-3] wrong"));}
       }
-      else if(parameter[1]=="getCycleTime"){ // Function getCycleTime -> Form "actuator,getCycleTime,type[0-3],floor[0-3]"
+      else if(parameter[1]==F("getCycleTime")){ // Function getCycleTime -> Form "actuator,getCycleTime,type[0-3],floor[0-3]"
         int Type = parameter[2].toInt();
         int Floor = parameter[3].toInt();
         if(Type>=0 && Floor>=0 && Type<MAX_TYPES_ACTUATOR && Floor<MAX_FLOOR){
@@ -99,23 +112,23 @@ void serialEvent(){                                  //if the hardware serial po
         }
         else{Serial.println(F("error,Actuator(): Parameter[2-3] wrong"));}
       }
-      else{Serial.println(F("warning,Actuator(): Parameter[1] unknown"));}
+      else{Serial.println(F("error,Actuator(): Parameter[1] unknown"));}
     }
 
-    else if(parameter[0]=="solenoid"){ // Functions executed in solenoidValve class
-      if(parameter[1]=="enableGroup"){ // Function enableGroup -> Form "solenoid,enableGroup,bool(0/1)"
+    else if(parameter[0]==F("solenoid")){ // Functions executed in solenoidValve class
+      if(parameter[1]==F("enableGroup")){ // Function enableGroup -> Form "solenoid,enableGroup,bool(0/1)"
         if(parameter[2].toInt()==1){ solenoidValve::enableGroup(true); }
         else if(parameter[2].toInt()==0){ solenoidValve::enableGroup(false); }
         else{ Serial.println(F("error,solenoidValve enableGroup() parameter wrong. It has to be 0/1"));}
       }
       
-      else if(parameter[1]=="setCycleTime"){ // Function setCycleTime -> Form "solenoid,setCycleTime,int[min]"
+      else if(parameter[1]==F("setCycleTime")){ // Function setCycleTime -> Form "solenoid,setCycleTime,int[min]"
         // Check that conditions to save in EEPROM are correct
         int inputTime_minutes = parameter[2].toInt();
         solenoidSaveCycleTime(inputTime_minutes);
       }
       
-      else if(parameter[1]=="setTimeOn"){ // Function setTimeOn -> Form "solenoid,setTimeOn,floor,region,solution,int[s]"
+      else if(parameter[1]==F("setTimeOn")){ // Function setTimeOn -> Form "solenoid,setTimeOn,floor,region,solution,int[s]"
         // Check that conditions to save in EEPROM are correct
         int fl = parameter[2].toInt();
         int reg = parameter[3].toInt();
@@ -124,23 +137,28 @@ void serialEvent(){                                  //if the hardware serial po
         solenoidSaveTimeOn(fl, reg, sol, inputTime_seconds);
       }
 
-      else{Serial.println(F("warning,Solenoid(): Parameter[1] unknown"));}
+      else if(parameter[1]==F("charge") || parameter[1]==F("charge\n")){
+        chargeSolenoidParameters(Recirculation.getOut()+1); // Update irrigationparameters
+        Serial.println(F("info,Irrigation Parameters charged"));
+      }
+      
+      else{Serial.println(F("error,Solenoid(): Parameter[1] unknown"));}
     }
 
-    else if(parameter[0]=="multiday"){ // Functions to manage multiDay objects
-      if(parameter[1]=="redefine"){ // Function redifine -> Form "multiday,redefine,floor,int[cycles],int[%light],float[initialHour]"
+    else if(parameter[0]==F("multiday")){ // Functions to manage multiDay objects
+      if(parameter[1]==F("redefine")){ // Function redifine -> Form "multiday,redefine,floor,int[cycles],int[%light],float[initialHour]"
         int fl = parameter[2].toInt();
         int cycles = parameter[3].toInt();
         int light = parameter[4].toInt();
         float initHour = parameter[5].toFloat();
         multidaySave(fl, cycles, light, initHour);
       }
-      else{Serial.println(F("warning,Multiday(): Parameter[1] unknown"));}
+      else{Serial.println(F("error,Multiday(): Parameter[1] unknown"));}
     }
 
-    else if(parameter[0]=="region"){ // Function to save in EEPROM the working stage by floor
+    else if(parameter[0]==F("region")){ // Function to save in EEPROM the working stage by floor
       // Auxiliar functions executed in LED_Mod and solenoidValve class
-      if(parameter[1]=="save"){ // Functions enable -> Form "region,save,int[floor],int[region]"
+      if(parameter[1]==F("save")){ // Functions enable -> Form "region,save,int[floor],int[region]"
         if(firstHourUpdate){
           int fl = parameter[2].toInt();
           int reg = parameter[3].toInt();
@@ -159,7 +177,6 @@ void serialEvent(){                                  //if the hardware serial po
                   else{LED_Mod::turnOn(i);}
                 } 
               }
-
               // Enable solenoidValves
               enableSolenoid(fl, reg);
             }
@@ -169,17 +186,17 @@ void serialEvent(){                                  //if the hardware serial po
         }
         else{Serial.println(F("error,LED Enable(): Wait until the system update the hour"));} 
       }
-      else{Serial.println(F("warning,LED(): Parameter[1] unknown"));}
+      else{Serial.println(F("error,LED(): Parameter[1] unknown"));}
     }
 
-    else if(parameter[0]=="irrigation"){
-      if(parameter[1]=="save"){
-        if(parameter[2]=="general"){
+    else if(parameter[0]==F("irrigation")){
+      if(parameter[1]==F("save")){
+        if(parameter[2]==F("general")){
           int cyclesPerDay = parameter[3].toInt(); 
           int initialHour = parameter[4].toInt();
           irrigationSave(cyclesPerDay, initialHour);
         }
-        else if(parameter[2]=="solution"){
+        else if(parameter[2]==F("solution")){
           int sol = parameter[3].toInt();
           int order = parameter[4].toInt();
           int percent = parameter[5].toInt();
@@ -188,13 +205,13 @@ void serialEvent(){                                  //if the hardware serial po
           solutionSave(sol, order, percent, ec, ph);
         } 
       }
-      else if(parameter[1]=="charge"){
+      else if(parameter[1]==F("charge") || parameter[1]==F("charge\n")){
         chargeIrrigationParameters();
       }
-      else{ Serial.println(F("warning,Irrigation(): Parameter[1] unknown"));}
+      else{ Serial.println(F("error,Irrigation(): Parameter[1] unknown"));}
     }
     
-    else if(parameter[0]=="updateHour"){ // Function updateHour -> Form "updateHour,int[hour],int[minute]"
+    else if(parameter[0]==F("updateHour")){ // Function updateHour -> Form "updateHour,int[hour],int[minute]"
       int hr = parameter[1].toInt();
       int mn = parameter[2].toInt();
       if(hr>=0 && hr<24 && mn>=0 && mn<60){
@@ -208,19 +225,19 @@ void serialEvent(){                                  //if the hardware serial po
             Irrigation.whatSolution(dateHour, dateMinute); // Update the solution parameter
           }
         }
-        else{Serial.println(F("warning,Update(): Hour is already updated"));}
+        else{Serial.println(F("error,Update(): Hour is already updated"));}
       }
       else{Serial.println(F("error,Update(): Hour/Minute wrong"));}
     }
 
-    else if(parameter[0]=="analog"){ // Functions executed in analogSensor class
+    else if(parameter[0]==F("analog")){ // Functions executed in analogSensor class
       int sens = -1;
-      if(parameter[1]=="nutrition"){sens = 0;}
-      else if(parameter[1]=="tank"){sens = 1;}
-      else if(parameter[1]=="water"){sens = 2;}
+      if(parameter[1]==F("nutrition")){sens = 0;}
+      else if(parameter[1]==F("tank")){sens = 1;}
+      else if(parameter[1]==F("water")){sens = 2;}
       else{ sens = -1;}
       if(sens>=0){
-        if(parameter[2]=="setModel"){ // Function setModel -> Form "analog,type,setModel,c,b,a"
+        if(parameter[2]==F("setModel")){ // Function setModel -> Form "analog,type,setModel,c,b,a"
           float c = parameter[3].toFloat();
           float b = parameter[4].toFloat();
           float a = parameter[5].toFloat();
@@ -235,17 +252,17 @@ void serialEvent(){                                  //if the hardware serial po
           else{analogSaveModel(sens, a, b, c);}
         }
         
-        else if(parameter[2]=="notFilter"){ // Function notFilter -> Form "analog,type,notFilter"
+        else if(parameter[2]==F("notFilter") || parameter[2]==F("notFilter\n")){ // Function notFilter -> Form "analog,type,notFilter"
           analogSensor::ptr[sens]->notFilter();
           analogSaveFilter(sens, 0, 0);
         }
         
-        else if(parameter[2]=="defaultFilter"){ // Function defaultFilter -> Form "analog,type,defaultFilter"
+        else if(parameter[2]==F("defaultFilter") || parameter[2]==F("defaultFilter\n")){ // Function defaultFilter -> Form "analog,type,defaultFilter"
           analogSensor::ptr[sens]->defaultFilter();
           analogSaveFilter(sens, 1, 0.25);
         }
         
-        else if(parameter[2]=="setExponentialFilter"){ // Function setExponentialFilter -> Form "analog,type,setExponentialFilter,float[alpha]"
+        else if(parameter[2]==F("setExponentialFilter")){ // Function setExponentialFilter -> Form "analog,type,setExponentialFilter,float[alpha]"
           float alfa = parameter[3].toFloat();
           if(alfa>0 && alfa<1){
             if(!analogSensor::ptr[sens]->setExponentialFilter(alfa)){
@@ -256,7 +273,7 @@ void serialEvent(){                                  //if the hardware serial po
           else{Serial.println(F("error,Analog setExponentialFilter(): Parameter alfa incorrect"));}
         }
         
-        else if(parameter[2]=="setKalmanFilter"){ // Function setKalmanFilter -> Form "analog,type,setKalmanFilter,float[noise]"
+        else if(parameter[2]==F("setKalmanFilter")){ // Function setKalmanFilter -> Form "analog,type,setKalmanFilter,float[noise]"
           float noise = parameter[3].toFloat();
           if(noise>0){
             if(!analogSensor::ptr[sens]->setKalmanFilter(noise)){
@@ -267,24 +284,24 @@ void serialEvent(){                                  //if the hardware serial po
           else{Serial.println(F("error,Analog setKalmanFilter(): Parameter noise incorrect"));}
         }
         
-        else{Serial.println(F("warning,Analog Sensor(): Parameter[2] unknown"));}
+        else{Serial.println(F("error,Analog Sensor(): Parameter[2] unknown"));}
       }
-      else{Serial.println(F("warning,Analog Sensor(): Sensor unknown"));}
+      else{Serial.println(F("error,Analog Sensor(): Sensor unknown"));}
     }
 
 
-    else if(parameter[0]=="ultrasonic"){ // Functions executed in UltraSonic class
+    else if(parameter[0]==F("ultrasonic")){ // Functions executed in UltraSonic class
       int sens = -1;
-      if(parameter[1]=="recirculation"){sens = 0;}
-      else if(parameter[1]=="sol1"){sens = 1;}
-      else if(parameter[1]=="sol2"){sens = 2;}
-      else if(parameter[1]=="sol3"){sens = 3;}
-      else if(parameter[1]=="sol4"){sens = 4;}
-      else if(parameter[1]=="water"){sens = 5;}
-      else if(parameter[1]=="solmaker"){sens = 6;}
+      if(parameter[1]==F("recirculation")){sens = 0;}
+      else if(parameter[1]==F("sol1")){sens = 1;}
+      else if(parameter[1]==F("sol2")){sens = 2;}
+      else if(parameter[1]==F("sol3")){sens = 3;}
+      else if(parameter[1]==F("sol4")){sens = 4;}
+      else if(parameter[1]==F("water")){sens = 5;}
+      else if(parameter[1]==F("solmaker")){sens = 6;}
       else{ sens = -1;}
       if(sens>=0){
-        if(parameter[2]=="setModel"){ // Function setModel -> Form "ultrasonic,type,setModel,int[model],float[paramM],float[height]"
+        if(parameter[2]==F("setModel")){ // Function setModel -> Form "ultrasonic,type,setModel,int[model],float[paramM],float[height]"
           int model = parameter[3].toInt();
           float param = parameter[4].toFloat();
           float height = parameter[5].toFloat();
@@ -303,17 +320,17 @@ void serialEvent(){                                  //if the hardware serial po
           else{Serial.println(F("error,Ultrasonic setModel(): Parameter model incorrect"));}
         }
         
-        else if(parameter[2]=="notFilter"){ // Function notFilter -> Form "ultrasonic,type,notFilter"
+        else if(parameter[2]==F("notFilter") || parameter[2]==F("notFilter\n")){ // Function notFilter -> Form "ultrasonic,type,notFilter"
           UltraSonic::ptr[sens]->notFilter();
           ultrasonicSaveFilter(sens, 0, 0);
         }
         
-        else if(parameter[2]=="defaultFilter"){ // Function defaultFilter -> Form "ultrasonic,type,defaultFilter"
+        else if(parameter[2]==F("defaultFilter") || parameter[2]==F("defaultFilter\n")){ // Function defaultFilter -> Form "ultrasonic,type,defaultFilter"
           UltraSonic::ptr[sens]->defaultFilter();
           ultrasonicSaveFilter(sens, 1, 0.25);
         }
         
-        else if(parameter[2]=="setExponentialFilter"){ // Function setExponentialFilter -> Form "ultrasonic,type,setExponentialFilter,float[alpha]"
+        else if(parameter[2]==F("setExponentialFilter")){ // Function setExponentialFilter -> Form "ultrasonic,type,setExponentialFilter,float[alpha]"
           float alfa = parameter[3].toFloat();
           if(alfa>0 && alfa<1){
             if(!UltraSonic::ptr[sens]->setExponentialFilter(alfa)){
@@ -324,7 +341,7 @@ void serialEvent(){                                  //if the hardware serial po
           else{Serial.println(F("error,Ultrasonic setExponentialFilter(): Parameter alfa incorrect"));}
         }
         
-        else if(parameter[2]=="setKalmanFilter"){ // Function setKalmanFilter -> Form "ultrasonic,type,setKalmanFilter,float[noise]"
+        else if(parameter[2]==F("setKalmanFilter")){ // Function setKalmanFilter -> Form "ultrasonic,type,setKalmanFilter,float[noise]"
           float noise = parameter[3].toFloat();
           if(noise>0){
             if(!UltraSonic::ptr[sens]->setKalmanFilter(noise)){
@@ -334,68 +351,82 @@ void serialEvent(){                                  //if the hardware serial po
           }
           else{Serial.println(F("error,Ultrasonic setKalmanFilter(): Parameter noise incorrect"));}
         }
-        else{Serial.println(F("warning,Ultrasonic Sensor(): Parameter[2] unknown"));}
+        else{Serial.println(F("error,Ultrasonic Sensor(): Parameter[2] unknown"));}
       }
-      else{Serial.println(F("warning,Ultrasonic Sensor(): Sensor unknown"));}
+      else{Serial.println(F("error,Ultrasonic Sensor(): Sensor unknown"));}
     }
 
-    else if(parameter[0]=="hvac"){ // Functions executed in controllerHVAC class
-      if(parameter[1]=="changeMode"){ // Function changeMode -> Form "hvac,changeMode,Mode[off/cool/heat]"
-        if(parameter[2]=="off"){ HVAC.changeMode(OFF_MODE); }
-        else if(parameter[2]=="cool"){ HVAC.changeMode(COOL_MODE); }
-        else if(parameter[2]=="heat"){ HVAC.changeMode(HEAT_MODE); }
-        else{Serial.println(F("warning,HVAC changeMode Function: Parameter[2] mode unknown"));}
+    else if(parameter[0]==F("hvac")){ // Functions executed in controllerHVAC class
+      if(parameter[1]==F("changeMode")){ // Function changeMode -> Form "hvac,changeMode,Mode[off/cool/heat]"
+        if(parameter[2]==F("off") || parameter[2]==F("off\n")){ HVAC.changeMode(OFF_MODE); }
+        else if(parameter[2]==F("cool") || parameter[2]==F("cool\n")){ HVAC.changeMode(COOL_MODE); }
+        else if(parameter[2]==F("heat") || parameter[2]==F("heat\n")){ HVAC.changeMode(HEAT_MODE); }
+        else{Serial.println(F("error,HVAC changeMode Function: Parameter[2] mode unknown"));}
       }
-      else if(parameter[1]=="changeFan"){ // Function changeMode -> Form "hvac,changeMode,Mode[auto/on]"
-        if(parameter[2]=="auto"){ HVAC.changeFan(AUTO_FAN); }
-        else if(parameter[2]=="on"){ HVAC.changeFan(ON_FAN); }
-        else{Serial.println(F("warning,HVAC changeFan Function: Parameter[1] unknown"));}
+      else if(parameter[1]==F("changeFan")){ // Function changeMode -> Form "hvac,changeMode,Mode[auto/on]"
+        if(parameter[2]==F("auto") || parameter[2]==F("auto\n")){ HVAC.changeFan(AUTO_FAN); }
+        else if(parameter[2]==F("on") || parameter[2]==F("on\n")){ HVAC.changeFan(ON_FAN); }
+        else{Serial.println(F("error,HVAC changeFan Function: Parameter[1] unknown"));}
       }
-      else{Serial.println(F("warning,HVAC Functions: Parameter[1] function unknown"));}
+      else{Serial.println(F("error,HVAC Functions: Parameter[1] function unknown"));}
     }
 
-    else if(parameter[0]=="setPressure"){ // Functions executed in controllerHVAC class
+    else if(parameter[0]==F("setPressure")){ // Functions executed in controllerHVAC class
       float pres = parameter[2].toFloat();
       if(pres>0){
-        if(parameter[1]=="max"){
+        if(parameter[1]==F("max")){
           if(pres>min_pressure && pres<=165){
             max_pressure = pres;
             pressureSave(0, pres);  
           }
           else{Serial.println(F("error,Set Max Pressure(): Pressure has to be bigger than min_pressure and smaller than 165 psi"));}
         }
-        else if(parameter[1]=="min"){
+        else if(parameter[1]==F("min")){
           if(pres<max_pressure){
             min_pressure = pres;
             pressureSave(1, pres);
           }
           else{Serial.println(F("error,Set Min Pressure(): Pressure has to be smaller than max_pressure"));}
         }
-        else if(parameter[1]=="critical"){
+        else if(parameter[1]==F("critical")){
           if(pres<min_pressure){
             critical_pressure = pres;
             pressureSave(2, pres);
           }
           else{Serial.println(F("error,Set Critical Pressure(): Pressure has to be smaller than min_pressure"));}
         }
-        else{ Serial.println(F("warning,Set Pressure(): Parameter[1] function unknown")); }
+        else{ Serial.println(F("error,Set Pressure(): Parameter[1] function unknown")); }
       }
-      else{ Serial.println(F("warning,Set Pressure(): Parameter[2] pressure incorrect")); }
+      else{ Serial.println(F("error,Set Pressure(): Parameter[2] pressure incorrect")); }
     }
 
-    else if(parameter[0]=="boot"){ // Functions to recieve variables when boot/rebooting
-      // Form "boot,int[lastSol],float[volumenNut],float[volumeH2O],float[solConsumption],float[h2oConsumption]"
+    else if(parameter[0]==F("boot")){ // Functions to recieve variables when boot/rebooting
+      // Form "boot,int[lastSol],float[volumenNut],float[volumeH2O],float[solConsumption],
+      // float[h2oConsumption],int[pumpInState],int[IPC],int[MPC],float[missedNut],float[missedH2O]"
       if(!bootParameters){
         int lastSol = parameter[1].toInt();
         float vnut = parameter[2].toFloat();
         float vh2o = parameter[3].toFloat();
         float solCons = parameter[4].toFloat();
         float h2oCons = parameter[5].toFloat();
-        if(lastSol>=0 && lastSol<4 && vnut>0 && vh2o>0 && solCons>0 && h2oCons>0){
-          bootParameters = true;
-          lastSolution = lastSol;
+        int pumpInState = parameter[6].toInt();
+        int ipc = parameter[7].toInt();
+        int mpc = parameter[8].toInt();
+        float missedNut = parameter[9].toFloat();
+        float missedH2O = parameter[10].toFloat();
+        
+        if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>=0 && h2oCons>=0 && pumpInState>0 &&
+        ipc>=0 && mpc>=0 && missedNut>=0 && missedH2O>=0){
+          bootParameters = true; // Set bootParameters as true
+          lastSolution = lastSol+1; // solution using for irrigation class
+          // Update Recirculation class parameters
+          Recirculation.setIn(lastSol);
+          Recirculation.setOut(lastSol);
+          chargeSolenoidParameters(lastSolution); // Update irrigationparameters
+          // Update Recirculation parameters
           Recirculation.addVolKnut(vnut);
           Recirculation.addVolKh2o(vh2o);
+          // Update consumption variables
           solutionConsumption = solCons;
           h2oConsumption = h2oCons;
           Serial.print(F("Boot: Last Solution to be irrigated is "));
@@ -412,44 +443,52 @@ void serialEvent(){                                  //if the hardware serial po
           Serial.print(F("Boot: Initial Water Kegs Consumption updated to "));
           Serial.print(h2oConsumption);
           Serial.println(F(" liters"));
+          rememberState(ipc, mpc, pumpInState, missedNut, missedH2O);
         }
-        else{ Serial.println(F("error,boot(): Parameter[1-6] incorrect")); } 
+        else{ Serial.println(F("error,boot(): Parameter[1-10] incorrect")); } 
       }
-      else{ Serial.println(F("warning,Set Initial Parameters(): Parameters already setted")); } 
+      else{ Serial.println(F("error,Set Initial Parameters(): Parameters already setted")); } 
     }
 
-    else if(parameter[0]=="solutionMaker"){ // Coordinate action with solutionMaker
-      if(parameter[1]=="accept"){ // Computer informs that solutionMaker accepts the last request
+    else if(parameter[0]==F("solutionMaker")){ // Coordinate action with solutionMaker
+      if(parameter[1]==F("accept") || parameter[1]==F("accept\n")){ // Computer informs that solutionMaker accepts the last request
           CC.setState(1);
+          updateSystemState();
         }
-        else if(parameter[1]=="finished"){ // Computer informs that solutionMaker finished the last request
+        else if(parameter[1]==F("finished") || parameter[1]==F("finished\n")){ // Computer informs that solutionMaker finished the last request
           CC.setState(2);
+          updateSystemState();
         }
-        else{Serial.println(F("warning,solutionMaker(): Parameter[2] unknown"));}
+        else{Serial.println(F("error,solutionMaker(): Parameter[1] unknown"));}
     }
     
-    else if(parameter[0]=="eeprom"){ // Functions to manage EEPROM memory
-      if(parameter[1]=="clean"){ clean_EEPROM();}
-      else if(parameter[1]=="print"){ print_EEPROM();}
-      else{Serial.println(F("warning,EEPROM(): Parameter[1] unknown"));}
+    else if(parameter[0]==F("eeprom")){ // Functions to manage EEPROM memory
+      if(parameter[1]==F("clean") || parameter[1]==F("clean\n")){ clean_EEPROM();}
+      else if(parameter[1]==F("print") || parameter[1]==F("print\n")){ print_EEPROM();}
+      else{Serial.println(F("error,EEPROM(): Parameter[1] unknown"));}
     }
 
-    else if(parameter[0]=="debug"){ // Functions to debug EEPROM memory
-      if(parameter[1]=="print"){ Serial.println(US0.getDistance());}
-      else if(parameter[1]=="nextIrrigationStage"){ 
+    else if(parameter[0]==F("debug")){ // Functions to debug EEPROM memory
+      if(parameter[1]==F("print") || parameter[1]==F("print\n")){ Serial.println(US0.getDistance());}
+      else if(parameter[1]==F("nextIrrigationStage") || parameter[1]==F("nextIrrigationStage\n")){ 
         Serial.println(F("warning,Debug(): Passing to the next Irrigation Stage"));
         irrigationStage++;
       }
-      else if(parameter[1]=="irrigation"){
-        if(parameter[2]=="whatSolution"){ Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.whatSolution(dateHour, dateMinute)); }
-        else if(parameter[2]=="getEC"){ Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.getEC(parameter[3].toInt())); }
-        else if(parameter[2]=="getPH"){ Serial.print(F("warning,Debug(): ")); Serial.println(Irrigation.getPH(parameter[3].toInt())); }
+      else if(parameter[1]==F("irrigation")){
+        if(parameter[2]==F("whatSolution") || parameter[2]==F("whatSolution\n"))
+        { Serial.print(F("info,Debug(): ")); Serial.println(Irrigation.whatSolution(dateHour, dateMinute)); }
+        else if(parameter[2]==F("getEC") || parameter[2]==F("getEC\n"))
+        { Serial.print(F("info,Debug(): ")); Serial.println(Irrigation.getEC(parameter[3].toInt())); }
+        else if(parameter[2]==F("getPH") || parameter[2]==F("getPH\n"))
+        { Serial.print(F("info,Debug(): ")); Serial.println(Irrigation.getPH(parameter[3].toInt())); }
       }
-      else if(parameter[1]=="requestSolution"){ requestSolution(); }
-      else if(parameter[1]=="updateIrrigationState"){ updateIrrigationState(); }
+      else if(parameter[1]==F("requestSolution") || parameter[1]==F("requestSolution\n"))
+      { requestSolution(); }
+      else if(parameter[1]==F("updateSystemState") || parameter[1]==F("updateSystemState\n"))
+      { updateSystemState(); }
     }
     
-    else{Serial.println(F("warning, Serial Command Unknown"));}
+    else{Serial.println(F("error, Serial Command Unknown"));}
   
   }
   input_string_complete = false;

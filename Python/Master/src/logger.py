@@ -2,6 +2,7 @@
 
 # Import Directories
 import logging
+import coloredlogs
 import logging.handlers
 
 class logger:
@@ -15,13 +16,25 @@ class logger:
         
         # Define a Handler which writes WARNING messages or higher to the sys.stderr
         console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
+        console.setLevel(logging.INFO)
         
         # Set a format for console use
-        formatter = logging.Formatter('%(name)-15s %(message)s')
+        formatter = logging.Formatter('%(asctime)s %(name)-15s %(message)s', '%Y-%m-%d %H:%M:%S')
+        # Add Color to log
+        colorFormatter = coloredlogs.ColoredFormatter(fmt='%(asctime)s %(name)-15s %(message)s',
+                                         datefmt='%Y-%m-%d %H:%M:%S',
+                                         level_styles={'debug':{'color':'cyan'},
+                                          'info':{'color':'white'},
+                                          'warning':{'color':'yellow'},
+                                          'error':{'color':'red'},
+                                          'critical':{'color':'white', 'bold':True, 'background':'red'}
+                                                       },
+                                         field_styles={'asctime':{'color':'white'},
+                                                       'name':{'color':'green', 'bold':True}
+                                                       })
         
         # Tell the handler to use this format
-        console.setFormatter(formatter)
+        console.setFormatter(colorFormatter)
         
         # Add the handler to the root logger
         logging.getLogger('').addHandler(console)
@@ -31,7 +44,7 @@ class logger:
         
         # Define loggers for differents areas
         self.logger = logging.getLogger('master')
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.DEBUG)
         self.logger_esp32front = logging.getLogger('esp32front')
         self.logger_esp32center = logging.getLogger('esp32center')
         self.logger_esp32back = logging.getLogger('esp32back')

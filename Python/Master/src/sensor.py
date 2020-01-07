@@ -7,12 +7,13 @@ from numpy import log
 from datetime import datetime
 
 class BME680:
-    def __init__(self):
+    def __init__(self, logger):
         try:
             self.sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
         except IOError:
             self.sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
         
+        self.logger = logger
         self.temp = 0
         self.hum = 0
         self.pressure = 0
@@ -65,6 +66,10 @@ class BME680:
     def printData(self):
         output = '{0:.2f} C,{1:.2f} %RH, {2:.2f} m'.format(self.temp, self.hum, self.altitude)
         print(output)
+    
+    def logData(self):
+        output = '{0:.2f} C,{1:.2f} %RH, {2:.2f} m'.format(self.temp, self.hum, self.altitude)
+        self.logger.debug(output)
         
     def upload2DB(self, dbConnector):
         # Create cursor

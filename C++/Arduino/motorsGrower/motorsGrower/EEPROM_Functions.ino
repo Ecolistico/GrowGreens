@@ -1,9 +1,9 @@
 void clean_EEPROM(){
-  Serial.println(F("EEPROM: Deleting Memory..."));
+  Serial.println(F("warning,EEPROM: Deleting Memory..."));
   for(int i=0; i<8; i++){
     EEPROM.write(i, 0);
   }
-  Serial.println(F("EEPROM: Memory Deleted"));
+  Serial.println(F("warning,EEPROM: Memory Deleted"));
 }
 
 void print_EEPROM(){

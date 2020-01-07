@@ -51,13 +51,13 @@ bool controllerHVAC::changeMode(uint8_t Mode)
       __Mode = Mode;
       switch(__Mode){
         case OFF_MODE:
-          Serial.println(F("HVAC Controller: Changing Mode - OFF"));
+          Serial.println(F("info,HVAC Controller: Changing Mode - OFF"));
           break;
         case COOL_MODE:
-          Serial.println(F("HVAC Controller: Changing Mode - COOL"));
+          Serial.println(F("info,HVAC Controller: Changing Mode - COOL"));
           break;
         case HEAT_MODE:
-          Serial.println(F("HVAC Controller: Changing Mode - HEAT"));
+          Serial.println(F("info,HVAC Controller: Changing Mode - HEAT"));
           break;
       }
       return true;
@@ -69,10 +69,10 @@ void controllerHVAC::changeFan(bool fan)
   { __Fan = fan;
     switch(__Fan){
       case AUTO_FAN:
-        Serial.println(F("HVAC Controller: Fan Mode - AUTO"));
+        Serial.println(F("info,HVAC Controller: Fan Mode - AUTO"));
         break;
       case ON_FAN:
-        Serial.println(F("HVAC Controller: Fan Mode - ON"));
+        Serial.println(F("info,HVAC Controller: Fan Mode - ON"));
         break;
     }
   }

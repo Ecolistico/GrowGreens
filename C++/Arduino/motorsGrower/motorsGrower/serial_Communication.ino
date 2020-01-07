@@ -30,7 +30,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // home()
-    if(parameter[0]=="home"){
+    if(parameter[0]==F("home")){
       int gr = parameter[1].toInt();
       switch (gr){
         case 1:
@@ -52,7 +52,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // calibration()
-    else if(parameter[0]=="calibration"){
+    else if(parameter[0]==F("calibration")){
       int gr = parameter[1].toInt();
       switch(gr){
         case 1:
@@ -74,7 +74,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // moveX()
-    else if(parameter[0]=="moveX"){
+    else if(parameter[0]==F("moveX")){
       int gr = parameter[1].toInt();
       long some_mm = parameter[2].toInt();
       switch(gr){
@@ -97,7 +97,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // moveY()
-    else if(parameter[0]=="moveY"){
+    else if(parameter[0]==F("moveY")){
       int gr = parameter[1].toInt();
       long some_mm = parameter[2].toInt();
       switch(gr){
@@ -120,7 +120,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // moveXTo()
-    else if(parameter[0]=="moveXTo"){
+    else if(parameter[0]==F("moveXTo")){
       int gr = parameter[1].toInt();
       long some_mm = parameter[2].toInt();
       switch(gr){
@@ -143,7 +143,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // moveYTo()
-    else if(parameter[0]=="moveYTo"){
+    else if(parameter[0]==F("moveYTo")){
       int gr = parameter[1].toInt();
       long some_mm = parameter[2].toInt();
       switch(gr){
@@ -166,7 +166,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // sequence()
-    else if(parameter[0]=="sequence"){
+    else if(parameter[0]==F("sequence")){
       int gr = parameter[1].toInt();
       long x_mm = parameter[2].toInt();
       long y_mm = parameter[3].toInt();
@@ -190,7 +190,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // continueSequence()
-    else if(parameter[0]=="continueSequence"){
+    else if(parameter[0]==F("continueSequence")){
       int gr = parameter[1].toInt();
       switch(gr){
         case 1:
@@ -212,7 +212,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // stopSequence()
-    else if(parameter[0]=="stopSequence"){
+    else if(parameter[0]==F("stopSequence")){
       int gr = parameter[1].toInt();
       switch(gr){
         case 1:
@@ -234,7 +234,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // stop()
-    else if(parameter[0]=="stop"){
+    else if(parameter[0]==F("stop")){
       int gr = parameter[1].toInt();
       switch(gr){
         case 1:
@@ -256,29 +256,41 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // maxDistance()
-    else if(parameter[0]=="maxDistance"){
+    else if(parameter[0]==F("maxDistance")){
       int gr = parameter[1].toInt();
       switch (gr){
         long maxX, maxY;
         case 1:
           maxX = grower1.getMaxDistanceX();
           maxY = grower1.getMaxDistanceY();
-          Serial.println("warning,maxX=" + String(maxX) + " - maxY=" + String(maxY));
+          Serial.print(F("warning,maxX="));
+          Serial.print(maxX);
+          Serial.print(F(" - maxY="));
+          Serial.println(maxY);
           break;
         case 2:
           maxX = grower2.getMaxDistanceX();
           maxY = grower2.getMaxDistanceY();
-          Serial.println("warning,maxX=" + String(maxX) + " - maxY=" + String(maxY));
+          Serial.print(F("warning,maxX="));
+          Serial.print(maxX);
+          Serial.print(F(" - maxY="));
+          Serial.println(maxY);
           break;
         case 3:
           maxX = grower3.getMaxDistanceX();
           maxY = grower3.getMaxDistanceY();
-          Serial.println("warning,maxX=" + String(maxX) + " - maxY=" + String(maxY));
+          Serial.print(F("warning,maxX="));
+          Serial.print(maxX);
+          Serial.print(F(" - maxY="));
+          Serial.println(maxY);
           break;
         case 4:
           maxX = grower4.getMaxDistanceX();
           maxY = grower4.getMaxDistanceY();
-          Serial.println("warning,maxX=" + String(maxX) + " - maxY=" + String(maxY));
+          Serial.print(F("warning,maxX="));
+          Serial.print(maxX);
+          Serial.print(F(" - maxY="));
+          Serial.println(maxY);
           break;
         default:
           Serial.println(F("error,maxDistance(): Grower number do not exist"));
@@ -287,29 +299,41 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // position()
-    else if(parameter[0]=="position"){
+    else if(parameter[0]==F("position")){
       int gr = parameter[1].toInt();
       switch(gr){
         long posX, posY;
         case 1:
           posX = grower1.getXPosition();
           posY = grower1.getYPosition();
-          Serial.println("warning,posX=" + String(posX) + " - posY=" + String(posY));
+          Serial.print(F("warning,posX="));
+          Serial.print(posX);
+          Serial.print(F(" - posY="));
+          Serial.println(posY);
           break;
         case 2:
           posX = grower2.getXPosition();
           posY = grower2.getYPosition();
-          Serial.println("warning,posX=" + String(posX) + " - posY=" + String(posY));
+          Serial.print(F("warning,posX="));
+          Serial.print(posX);
+          Serial.print(F(" - posY="));
+          Serial.println(posY);
           break;
         case 3:
           posX = grower3.getXPosition();
           posY = grower3.getYPosition();
-          Serial.println("warning,posX=" + String(posX) + " - posY=" + String(posY));
+          Serial.print(F("warning,posX="));
+          Serial.print(posX);
+          Serial.print(F(" - posY="));
+          Serial.println(posY);
           break;
         case 4:
           posX = grower4.getXPosition();
           posY = grower4.getYPosition();
-          Serial.println("warning,posX=" + String(posX) + " - posY=" + String(posY));
+          Serial.print(F("warning,posX="));
+          Serial.print(posX);
+          Serial.print(F(" - posY="));
+          Serial.println(posY);
           break;
         default:
           Serial.println(F("error,position(): Grower number do not exist"));
@@ -318,7 +342,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // available()
-    else if(parameter[0]=="available"){
+    else if(parameter[0]==F("available")){
       int gr = parameter[1].toInt();
       switch(gr){
         case 1:
@@ -340,7 +364,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // enable()
-    else if(parameter[0]=="enable"){
+    else if(parameter[0]==F("enable")){
       int gr = parameter[1].toInt();
       switch(gr){
         case 1:
@@ -362,7 +386,7 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // disable()
-    else if(parameter[0]=="disable"){
+    else if(parameter[0]==F("disable")){
       int gr = parameter[1].toInt();
       switch(gr){
         case 1:
@@ -384,10 +408,10 @@ void serialEvent() {                                  //if the hardware serial p
     }
 
     // eeprom
-    else if(parameter[0]=="eeprom"){
-      if(parameter[1]=="print"){ print_EEPROM(); }
-      else if(parameter[1]=="read"){ read_EEPROM(HIGH); }
-      else if(parameter[1]=="clean"){ clean_EEPROM(); }
+    else if(parameter[0]==F("eeprom")){
+      if(parameter[1]==F("print") || parameter[1]==F("print\n")){ print_EEPROM(); }
+      else if(parameter[1]==F("read") || parameter[1]==F("read\n")){ read_EEPROM(HIGH); }
+      else if(parameter[1]==F("clean")|| parameter[1]==F("clean\n")){ clean_EEPROM(); }
       else{ Serial.println(F("warning,eeprom(): parameter[1] does not match a type")); }
     }
 

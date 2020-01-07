@@ -100,7 +100,7 @@ class solutionMaker
         bool           __StatusLCD; // Variable to know if the screen is on/off
         bool           __LCDLightOn; // Variable to turn off the LCD light
         bool           __RelayState; // Variable to hold the state of the relay
-
+        
         // Atlas Scientific Sensors variables
         float __pH, __eC; // Variables to hold the phMeter and ecMeter values
         // Variable to know if some Atlas Scientific Sensor is exporting its calibration parameters
@@ -152,9 +152,9 @@ class solutionMaker
         void moveStepper(long steps, uint8_t st);
         void resetPosition(uint8_t st); // reset the position to zero of some stepper
         // Print in serial an action executed with the correct format
-        void printAction(String act, uint8_t actuator);
+        void printAction(String act, uint8_t actuator, uint8_t level=0);
         // Print in serial an action executed with the correct format (Atlas Scientific Sensors)
-        void printEZOAction(String act, uint8_t sensorType);
+        void printEZOAction(String act, uint8_t sensorType, uint8_t level=0);
         void printLCD(String main, String subAction = ""); // Print something in LCD Screen
         void checkButtonLCD(); // Check if the button is pressed and turn on the backlight
         float filter(float val, float preVal);
@@ -167,6 +167,8 @@ class solutionMaker
         void relayControl(); // Control the actions of the relay
 
     public:
+        bool SolFinished; // Variable to know if the last Solution request finished
+        
         // Constructor. Dir, Step and Enable Pins for all the motors
         solutionMaker(
           uint8_t dirS1,

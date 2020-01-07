@@ -43,6 +43,7 @@ beginAll	KEYWORD2
 runAll	KEYWORD2
 flowSensorBegin	KEYWORD2
 getTime	KEYWORD2
+getCurrentTime	KEYWORD2
 setTimeOn	KEYWORD2
 getTimeOn	KEYWORD2
 getOrder	KEYWORD2
@@ -53,7 +54,6 @@ enable	KEYWORD2
 isEnable	KEYWORD2
 getFloor	KEYWORD2
 getRegion	KEYWORD2
-getName	KEYWORD2
 reOrder_byFloor	KEYWORD2
 restartH2O	KEYWORD2
 restartAllH2O	KEYWORD2
@@ -79,6 +79,7 @@ setPH	KEYWORD2
 getEC	KEYWORD2
 getPH	KEYWORD2
 whatSolution	KEYWORD2
+min2Change	KEYWORD2
 getValveTank	KEYWORD2
 getValveNut	KEYWORD2
 getValveH2O	KEYWORD2
@@ -134,9 +135,12 @@ getReleaseValve	KEYWORD2
 getGoValve	KEYWORD2
 getFH2OValve	KEYWORD2
 getFSolValve	KEYWORD2
+getFPump	KEYWORD2
+getWait4Fill	KEYWORD2
 getRH2OValve	KEYWORD2
 getRSolValve	KEYWORD2
 releaseKegs	KEYWORD2
+finishRelease	KEYWORD2
 setIn	KEYWORD2
 setOut	KEYWORD2
 getIn	KEYWORD2
@@ -145,10 +149,12 @@ addVolKnut	KEYWORD2
 addVolKh2o	KEYWORD2
 getVolKnut	KEYWORD2
 getVolKh2o	KEYWORD2
+getVolCnut	KEYWORD2
+getVolCh2o	KEYWORD2
 resetVolKnut	KEYWORD2
 resetVolKh2o	KEYWORD2
-fillH2O	KEYWORD2
-fillSol	KEYWORD2
+InpumpWorkIn	KEYWORD2
+updateState	KEYWORD2
 moveIn	KEYWORD2
 moveOut	KEYWORD2
 moveSol	KEYWORD2
@@ -162,6 +168,7 @@ getMaxDist	KEYWORD2
 getDistance	KEYWORD2
 getPreDistance	KEYWORD2
 getVolume	KEYWORD2
+getMinVolume	KEYWORD2
 getMaxVolume	KEYWORD2
 changeMinDist	KEYWORD2
 changeMaxDist	KEYWORD2
@@ -226,3 +233,4 @@ SOL4	LITERAL1
 WATER	LITERAL1
 AIR_STATE	LITERAL1
 WATER_STATE	LITERAL1
+SolFinished	LITERAL1

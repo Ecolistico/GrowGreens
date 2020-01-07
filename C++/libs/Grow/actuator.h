@@ -49,10 +49,10 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 /*
 Definitions
   Types:
-    Input Fan = 0
-    Output Fan = 1
-    Vent Fan = 2
-    Humidity Valve = 3
+    0 - Input Fan
+    1 - Output Fan
+    2 - Vent Fan
+    3 - Humidity Valve
   Floor: RealFloor-1 [0-3]
 Limitation Note: This class is limited by definition to 50
   actuators this limitations can be changed but, you need to keep
@@ -66,7 +66,8 @@ class Actuator
 
         void setTime();
         void resetTime();
-        void printAction(String act);
+        void printAction(String act, uint8_t level=0);
+        void printAction(String act1, String act2, String act3, uint8_t level=0);
         void turnOn();
         void turnOff();
         bool setTimeOn(unsigned long t_on); // Returns true if succesful
@@ -74,7 +75,7 @@ class Actuator
         bool setTime(unsigned long t_on, unsigned long t_cycle); // Return true if succesful
         unsigned long getTimeOn(); // Returns TimeOn
         unsigned long getCycleTime(); // Returns TimeOff
-        unsigned long getTime(); // Returns the time into the cycle from [0,timeOff+timeOn].
+        unsigned long getTime(); // Returns the time into the cycle from [0,timeOff+timeOn]
         void enable (bool en); // Enable the actuator
         bool isEnable(); // Returns true if actuator is enable
         bool isType(uint8_t type); // Return true if is the same type
@@ -167,7 +168,6 @@ class solenoidValve
          bool __State, __Enable;// Actuator State and Enable for each solenoid
          uint8_t __Number, __Floor, __Region; // Actuator place into array, floor and region
          unsigned long __TimeOn, __Actual_time;
-         String __Name;
          float __H2OVolume; // Water consumption for each solenoidValve
 
          void setTime();
@@ -175,8 +175,10 @@ class solenoidValve
          bool changeOrderNumber(uint8_t new_number); // Change the order number. Return 0 if succesful
          void getWasteH2O(bool print = true); // Get Water Consumption  when no solenoids are active
          void getConsumptionH2O(); // Get Water Consumption for each Region
-         void solenoidPrint(String act); // Print an action for the solenoid
-         void groupPrint(String act); // Print an action for the group
+         void solenoidPrint(String act, uint8_t level=0); // Print an action for the solenoid
+         void solenoidPrint(String act1, String act2, String act3, uint8_t level=0); // Print an action for the solenoid
+         void groupPrint(String act, uint8_t level=0); // Print an action for the group
+         void groupPrint(String act1, String act2, String act3, uint8_t level=0); // Print an action for the group
 
      public:
           static uint8_t __TotalActuators;
@@ -184,8 +186,15 @@ class solenoidValve
 
           static void flowSensorBegin();
 
-          solenoidValve (String name); // Constructor
-          unsigned long getTime(); // Returns the time into the cycle for the particular actuator
+          solenoidValve (); // Constructor
+          
+          /* Get the time into the cycle
+              - true: return time for the first solenoid into the routine
+              - false: return the biggest time save in all solenoids
+          */
+          unsigned long getTime(bool zero);
+          
+          unsigned long getCurrentTime(); // Returns the time into the cycle for the particular actuator
           bool setTimeOn(unsigned long t_on); // Return true if succesful
           unsigned long getTimeOn();
           bool getState(); // Returns actuator state
@@ -197,7 +206,6 @@ class solenoidValve
           bool isEnable(); // Returns true if the array of the actuator is enable
           uint8_t getFloor(); // Returns the floor of the actuator
           uint8_t getRegion(); // Return the region of the actuator
-          String getName(); // Returns the name of the solenoid
           bool reOrder_byFloor(uint8_t fl); // Send to the last positions the
           void restartH2O(bool print); // Set Volume in zero
           void restartAllH2O(bool print); // Set all Volumes in zero
@@ -221,16 +229,20 @@ class solenoidValve
    };
 
 // Class to control all the Actuators that are not synchronize or have predefine cycles.
+/* Types:
+ * 0 - "EV-KegsH2O"
+ * 1 - "EV-KegsNutrition"
+*/
 class asyncActuator
   {  private:
          bool __State, __Enable;
-         String __Name;
-
-         void printAction(String act);
+         uint8_t __Type, __Counter;
+         
+         void printAction(String act, uint8_t level=0);
 
      public:
          // Constructor
-         asyncActuator(String name);
+         asyncActuator(uint8_t type=250);
          void turnOn();
          void turnOff();
          bool getState(); // Returns asyncActuator State
