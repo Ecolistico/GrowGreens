@@ -416,7 +416,7 @@ void recirculationController::updateState()
       }
       else{
         addVolKnut(__SolLiters-(__Level[6]->getVolume()-__Level[6]->getMinVolume()));
-        __SolLiters += __Level[6]->getVolume()-__Level[6]->getMinVolume();
+        __SolLiters = __Level[6]->getVolume()-__Level[6]->getMinVolume();
       }
     }
     
