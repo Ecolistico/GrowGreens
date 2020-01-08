@@ -386,11 +386,6 @@ void recirculationController::updateState()
       sMLiters += __OutLiters-(__ActualLiters-(__Level[__LastOut+1]->getVolume()-__Level[__LastOut+1]->getMinVolume()));
     }
 
-    // SMaker volume require
-    if(__SolPump){
-      nutLiters += __SMLiters-(__SolLiters-(__Level[6]->getVolume()-__Level[6]->getMinVolume()));
-    }
-
     // Outside volume require
     if(__Wait4Fill==0){
       if(__Fh2o){ h2oLiters += __FillH2O-__H2OVol; }
@@ -419,7 +414,10 @@ void recirculationController::updateState()
         __SolLiters = nutLiters;
         __VolCnut = nutLiters;
       }
-      else{ addVolKnut(__VolCnut-nutLiters); }
+      else{
+        addVolKnut(__SolLiters-(__Level[6]->getVolume()-__Level[6]->getMinVolume()));
+        __SolLiters += __Level[6]->getVolume()-__Level[6]->getMinVolume();
+      }
     }
     
   }
