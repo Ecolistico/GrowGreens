@@ -417,9 +417,9 @@ void recirculationController::updateState()
       if(!__SolPump){
         addVolKnut(__SolLiters-nutLiters);
         __SolLiters = nutLiters;
+        __VolCnut = nutLiters;
       }
       else{ addVolKnut(__VolCnut-nutLiters); }
-      __VolCnut = nutLiters;
     }
     
   }
@@ -494,6 +494,7 @@ void recirculationController::run(bool check, bool sensorState)
     if(__SolPump && __Level[6]->getState()==1){
       updateState();
       __SolPump = LOW;
+      __SMLiters = 0;
       printAction(F("Solution Maker emptied"), 1);
     }
 
@@ -523,7 +524,6 @@ void recirculationController::run(bool check, bool sensorState)
         printAction(F("Fill solution Maker finished. "), String(__FillNut),
         F(" liters were move to solution maker"), F(""), 0);
         __FillNut = 0;
-        __SMLiters = 0;
         __H2OVol = 0;
         if(!__OutPump && __Wait4Fill==20){ // If we were waiting this moment then...
           fillH2O(__WaitLiters); // Fill water kegs from outside
