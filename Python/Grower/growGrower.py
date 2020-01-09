@@ -7,7 +7,7 @@ To check:
 # Import Directories
 import os
 import sys
-from time import time
+from time import time, sleep
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 sys.path.insert(0, './src/')
@@ -103,11 +103,12 @@ try:
                     if(client.connect(mqttControl.brokerIP, 1883, 60)==0): mqttControl.clientConnected = True
                     else: log.logger.warning("Cannot connect with MQTT Broker")
                 except: log.logger.warning("Cannot connect with MQTT Broker")
-                
+            else: sleep(0.1) # Avoid HIGH CPU usage
+        else: sleep(0.1) # Avoid HIGH CPU usage
     mainClose()
 
 except:
-    log.logger.exception("Exception Raised")
-    
+    log.logger.critical("Exception Raised", exc_info=True)
+
 finally:
     mainClose()

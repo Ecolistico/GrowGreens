@@ -63,8 +63,11 @@ class Cozir:
             
             if(resp == " K 0000{0}\r\n".format(mode)):
                 self.act_OpMode = mode
+                self.log.debug("Cozir: Mode set {}".format(mode))
                 return True
-            else: return False
+            else:
+                self.log.error("Cozir: Time limit exceed witouth response")
+                return False
             
         else: # Parameter wrong
             self.log.error("Cozir: Mode Parameter not recognized")
@@ -84,8 +87,11 @@ class Cozir:
         
         if(resp == " M "+ str_comp +"\r\n"):
             self.act_OutMode = val
+            self.log.debug("Cozir: Data output set {}".format(val))
             return True
-        else: return False
+        else:
+            self.log.error("Cozir: Data output not recognized")
+            return False
     
     # Autocalibration
     def autocalibration(self, a, b):
@@ -158,7 +164,7 @@ class Cozir:
         resp = str(self.ser.readline(),'utf-8')
         resp = int(resp[3:8])
         if(resp == filt):
-            self.log.info("Cozir: Filter correctly setted")
+            self.log.debug("Cozir: Filter correctly setted")
             return True
         else:
             self.log.error("Cozir: Filter is not setted")
@@ -196,14 +202,14 @@ class Cozir:
             resp = str(self.ser.readline(),'utf-8')
             resp = int(resp[3:8])
             return resp
-        elif(1):
+        elif(filter == 1):
             self.ser.write(bytes("z\r\n",'utf-8'))
             self.ser.flush()
             resp = str(self.ser.readline(),'utf-8')
             resp = int(resp[3:8])
             return resp
         else:
-            self.log.error("Cozir: Parameter Incorrect")
+            self.log.error("Cozir: Filter Parameter Incorrect")
             return None
     
     # Get Data Outputs setted
@@ -264,8 +270,12 @@ class Cozir:
         if(resp == " P 00009 {}\r\n".format(y_str)):
             i += 1
         
-        if(i == 2): return True
-        else: return False
+        if(i == 2):
+            self.log.info("Cozir: Background set in {}ppm".format(ppm))
+            return True
+        else:
+            self.log.error("Cozir: Cannot set Bckground")
+            return False
 
     # General Calibration
     def calibrate(self, mode, ppm = -1):
@@ -274,27 +284,39 @@ class Cozir:
             self.ser.write(bytes("X {0}\r\n".format(ppm),'utf-8'))
             self.ser.flush()
             resp = str(self.ser.readline(),'utf-8')
-            if(resp[3] != "?" and resp.startswith(" X ")): return True
-            else: return False
+            if(resp[3] != "?" and resp.startswith(" X ")):
+                self.log.info("Cozir: calibrate(gasConcentration) executed correctly")
+                return True
+            else:
+                self.log.error("Cozir: Cannot execute calibrate(gasConcentration)")
+                return False
         
         # 0 CO2 (Nitrogen)
         elif(mode == 1):
             self.ser.write(bytes("U\r\n",'utf-8'))
             self.ser.flush()
             resp = str(self.ser.readline(),'utf-8')
-            if(resp[3] != "?" and resp.startswith(" U ")): return True
-            else: return False
+            if(resp[3] != "?" and resp.startswith(" U ")):
+                self.log.info("Cozir: calibrate(nitrogen) executed correctly")
+                return True
+            else:
+                self.log.error("Cozir: Cannot execute calibrate(nitrogen)")
+                return False
     
         # Fresh Air (400 ppm)
         elif(mode == 2):
             self.ser.write(bytes("G\r\n",'utf-8'))
             self.ser.flush()
             resp = str(self.ser.readline(),'utf-8')
-            if(resp[3] != "?" and resp.startswith(" G ")): return True
-            else: return False
+            if(resp[3] != "?" and resp.startswith(" G ")):
+                self.log.info("Cozir: calibrate(freshAir) executed correctly")
+                return True
+            else:
+                self.log.error("Cozir: Cannot execute calibrate(freshAir)")
+                return False
             
         else:
-            self.log.error("Cozir: Some Parameter wrong")
+            self.log.error("Cozir: In calibrate() some parameter is wrong")
             return False
     
     # Calibration when you know the value reported by the sensor and the actual correct value
@@ -304,9 +326,13 @@ class Cozir:
             self.ser.flush()
             resp = str(self.ser.readline(),'utf-8')
             self.log.debug(resp)
-            if(resp[3] != "?" and resp.startswith(" F ")): return True
-            else: return False
+            if(resp[3] != "?" and resp.startswith(" F ")):
+                self.log.info("Cozir: recalibrate() executed correctly")
+                return True
+            else:
+                self.log.error("Cozir: Cannot execute recalibrate()")
+                return False
             
         else:
-            self.log.error("Cozir: Some Parameter wrong")
+            self.log.error("Cozir: In recalibrate() some parameter wrong")
             return False

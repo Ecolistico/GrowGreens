@@ -20,13 +20,13 @@ class mqttController:
 
     def update(self):
         self.containerID, self.floor, self.brokerIP = sysGrower.getData_JSON(sysGrower.MQTT_PATH)
-        self.log.warning("Parameters updated - ID={}, Floor={}, brokerIP={}".format(self.containerID, self.floor, self.brokerIP))
+        self.log.info("Parameters updated - ID={}, Floor={}, brokerIP={}".format(self.containerID, self.floor, self.brokerIP))
     
     def sendLog(self, mssg, logType = 0):
         logTopic = "{}/Grower{}/log".format(self.containerID, self.floor)
         # Debug
         if(logType==0):
-            self.log.debug(mssg)
+            self.log.info(mssg)
             mssg += ",debug"
         # Info
         elif(logType==1):
@@ -46,10 +46,11 @@ class mqttController:
             mssg += ",critical"
         # Any other case
         else:
-            self.log.debug(mssg)
+            self.log.info(mssg)
             mssg += ",debug"
             
         publish.single(logTopic, mssg, hostname = self.brokerIP)
+        
     # On Conenct Callback for MQTT
     def on_connect(self, client, userdata, flags, rc):
         Topic = "{}/Grower{}".format(self.containerID, self.floor)
@@ -69,7 +70,7 @@ class mqttController:
             elif(rc == 4): message += " - bad username or password"
             elif(rc == 5): message += " - not authorised"
             else: message += " - currently unused"
-            self.log.warning(message)
+            self.log.error(message)
 
     # On Message Callback for MQTT
     def on_message(self, client, userdata, msg):        
@@ -124,10 +125,15 @@ class mqttController:
             
             if(picMode>=0 and picMode<=3 and picName!=""):
                 if self.growerStream: self.grower.disableStreaming()
-                self.grower.takePicture(picMode, picName)
-                mssg = "Picture taken - mode={}\tname={}".format(str(picMode), picName)
+                check = self.grower.takePicture(picMode, picName)
+                if(check):
+                    mssg = "Picture taken - mode={}\tname={}".format(str(picMode), picName)
+                    mssgLevel = 0
+                else:
+                    mssg = "Photo cannot be taken"
+                    mssgLevel = 3
                 if self.growerStream: self.grower.enableStreaming()
-                self.sendLog(mssg, 1)
+                self.sendLog(mssg, mssgLevel)
             else:
                 mssg = "Error in takePicture(): Parameter incorrect"
                 self.sendLog(mssg, 3)
@@ -139,10 +145,15 @@ class mqttController:
             if(picName!=""):
                 if self.growerStream: self.grower.disableStreaming()
                 param = message.split(',')
-                self.grower.thermalPhoto(picName)
-                mssg = "Thermal Photo taken - name={}".format(picName)
+                check = self.grower.thermalPhoto(picName)
+                if(check):
+                    mssg = "Thermal Photo taken - name={}".format(picName)
+                    mssgLevel = 0
+                else:
+                    mssg = "Thermal Photo cannot be taken"
+                    mssgLevel = 3
                 if self.growerStream: self.grower.enableStreaming()
-                self.sendLog(mssg, 1)
+                self.sendLog(mssg, mssgLevel)
             else:
                 mssg = "Error in thermalPhoto function: Parameter incorrect"
                 self.sendLog(mssg, 3)
@@ -154,10 +165,21 @@ class mqttController:
             if(picName!=""):
                 if self.growerStream: self.grower.disableStreaming()
                 param = message.split(',')
-                self.grower.photoSequence(picName)
-                mssg = "Photo Sequence taken - name={}".format(picName)
+                check = self.grower.photoSequence(picName)
+                if(check==0):
+                    mssg = "Photo Sequence cannot be taken"
+                    mssgLevel = 3
+                elif(check==1):
+                    mssg = "Thermal Photo taken... Normal Photos cannot be taken"
+                    mssgLevel = 2
+                elif(check==2):
+                    mssg = "Normal Photos taken... Thermal Photo cannot be taken"
+                    mssgLevel = 2
+                else:    
+                    mssg = "Photo Sequence taken - name={}".format(picName)
+                    mssgLevel = 0
                 if self.growerStream: self.grower.enableStreaming()
-                self.sendLog(mssg, 1)
+                self.sendLog(mssg, mssgLevel)
             else:
                 mssg = "Error in photoSequence function: Parameter incorrect"
                 self.sendLog(mssg, 3)
@@ -199,7 +221,7 @@ class mqttController:
         
         elif(message == "updateGrowerDate"):
             self.grower.getDateFormat()
-            self.sendLog("Updating Date Format", 1)
+            self.sendLog("Updating Date Format")
             
         elif(message == "reboot"):
             self.sendLog("Rebooting", 2)
