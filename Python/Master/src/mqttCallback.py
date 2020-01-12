@@ -94,43 +94,43 @@ class mqttController:
             if(device == "Grower1"):
                 self.Msg2Log(self.logGr1, message)
                 self.requestGr1 = False
+                self.mGrower.Gr1.connected = True
                 if(message.startswith("Photo Sequence taken")):
                     self.mGrower.Gr1.mqttReq("")
                     self.mGrower.Gr1.serialReq("available,1")
                     self.mGrower.Gr1.actualTime = time()-20
                 elif(message.startswith("cozir")):
                     self.mGrower.Gr1.str2array(message)
-                    self.mGrower.Gr1.connected = True
             elif(device == "Grower2"):
                 self.Msg2Log(self.logGr2, message)
                 self.requestGr2 = False
+                self.mGrower.Gr2.connected = True
                 if(message.startswith("Photo Sequence taken")):
                     self.mGrower.Gr2.mqttReq("")
                     self.mGrower.Gr2.serialReq("available,2")
                     self.mGrower.Gr2.actualTime = time()-20
                 elif(message.startswith("cozir")):
                     self.mGrower.Gr2.str2array(message)
-                    self.mGrower.Gr2.connected = True
             elif(device == "Grower3"):
                 self.Msg2Log(self.logGr3, message)
                 self.requestGr3 = False
+                self.mGrower.Gr3.connected = True
                 if(message.startswith("Photo Sequence taken")):
                     self.mGrower.Gr3.mqttReq("")
                     self.mGrower.Gr3.serialReq("available,3")
                     self.mGrower.Gr3.actualTime = time()-20
                 elif(message.startswith("cozir")):
                     self.mGrower.Gr3.str2array(message)
-                    self.mGrower.Gr3.connected = True
             elif(device == "Grower4"):
                 self.Msg2Log(self.logGr4, message)
                 self.requestGr4 = False
+                self.mGrower.Gr4.connected = True
                 if(message.startswith("Photo Sequence taken")):
                     self.mGrower.Gr4.mqttReq("")
                     self.mGrower.Gr4.serialReq("available,4")
                     self.mGrower.Gr4.actualTime = time()-20
                 elif(message.startswith("cozir")):
                     self.mGrower.Gr4.str2array(message)
-                    self.mGrower.Gr4.connected = True
                     
             elif(device == "esp32front"): self.logFront.debug(message)
             elif(device == "esp32center"): self.logCenter.debug(message)

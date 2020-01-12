@@ -1,20 +1,23 @@
 ***[Prioridad 1]
 1- Sistema para recordar el estado del sistema ante cualquier falla del sistema o de la luz
-Por corregir:
 
-[Prioridad 2]
+*** [Prioridad 2]
 2- Growers
-2.1- Level msg Grower
-Revisar el nivel de los mensajes que se desean mandar y corregirlos para mostrarlos correctamente en log.
-Subir hasta que se tenga internet instalado.
-2.2- Color log and Exceptions
-2.3- Corregir Alto Consumo de CPU cuando no hay internet
-2.4- Corregir problema de conexión a internet cuando las credenciales del internet se añaden por medio de
+2.1- Level msg Grower. Revisar
+2.2- Corregir Alto Consumo de CPU cuando no hay internet
+2.3- Corregir problema de conexión a internet cuando las credenciales del internet se añaden por medio de
 AP (Access Point).
-2.5- Añadir Try/Except Statement para el uso de cámaras térmicas de manera que si no es posible iniciar
-la conexión con alguna de ellas las omita para que el programa no fallé.
-Adicional- Revisar y analizar posibles causas en fallos de conexión
-2.6- ¿Por qué están fallando? Leer código Juan y buscar replicar el fallo
+2.4- Añadir try/except a cada cámara térmica por separado. Agregar variables necesesarias para 
+2.6- Manejar desconexión cámara normal. Mismo caso que las térmicas
+2.7- ¿Por qué están fallando? Problema de alimentación revisar cables y fuentes que funcionen correctamente antes de
+instalar
+2.7.1 Fuente de alimentación a 5.25Vmáximo, 5.20 mínimo
+2.7.2 Cables usb de cobre
+2.7.3
+2.8 Revisar variables, funciones. Ajustar para nuevo tocani
+2.9 Correr pruebas con todos los comandos MQTT y verificar que funciones
+Finally: Actualizar código en todos los tocanis. Instalar nuevas dependencias: coloredlogs.
+Probar individualmente antes de insertar.
 
 [Prioridad 3]
 3- Problema Aire en tuberías cuando hay cambios de solución y error estimación kegs H2O
@@ -57,6 +60,12 @@ estado. Movimiento de agua con bombas, comprimiendo aire, etc.
 10.1 ¿Qué pasa si tocaba cambio de solución y llenó con la antigua solución?
 Solicitar cambio de solución adelantada en caso de que los litros requeridos para
 rellenar el kegs sean 0
+
+[Prioridad 11]
+11- ¿Por qué al irse la luz y regresar dejo de escribir el log el sistema?
+
+[Prioridad 12]
+12- Aumento en el consumo del CPU desconocido. Posible actualización de mosquitto
 
 [Prioridad 20]
 20- Análisis de datos
