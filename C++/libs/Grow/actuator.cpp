@@ -917,7 +917,7 @@ void asyncActuator::turnOn()
   }
 
 void asyncActuator::turnOff()
-  { if(__Counter<1){__Counter++;}
+  { if(__Counter<5){__Counter++;}
     else if(__State){
       __Counter = 0;
       __State = LOW;
