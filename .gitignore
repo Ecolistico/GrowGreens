@@ -6,5 +6,6 @@
 Python/Master/data/
 
 # Config Files
+Python/Master/config.json
 Python/Master/state.json
 Python/Master/bootConfig/
