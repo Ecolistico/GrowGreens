@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-from time import time
+from time import time, sleep
 from picamera import PiCamera
 from datetime import datetime
 from numpy import reshape, concatenate, savetxt
@@ -58,10 +58,13 @@ class Grower:
         # Setting Up Thermal Cams
         try:
             self.thermalCam1 = Adafruit_AMG88xx(address=thermal1Addr) # Set thermalCam1 on its i2c addres
+        except:
+            self.log.critical("Thermal Camera Error: Cannot configure camera1")
+            self.thermalCam1 = None
+        try:
             self.thermalCam2 = Adafruit_AMG88xx(address=thermal2Addr) # Set thermalCam2 on its i2c addres
         except:
-            self.log.critical("Thermal Cam Error: Cannot configure thermal cams")
-            self.thermalCam1 = None
+            self.log.critical("Thermal Camera Error: Cannot configure camera2")
             self.thermalCam2 = None
 
         # Set Cam Disable by Default
@@ -145,15 +148,14 @@ class Grower:
         while(time()-actualTime<timeout): continue
         
     def checkDayDirectory(self):
-        if os.path.exists('data/photos_{}-{}-{}'.format(self.day, self.month, self.year)): return True
+        if os.path.exists('data/{}-{}-{}'.format(self.day, self.month, self.year)): return True
         else: return False
         
     def createDayDirectory(self):
-        os.makedirs('data/photos_{}-{}-{}'.format(self.day, self.month, self.year))
-        os.makedirs('data/photos_{}-{}-{}/rgb'.format(self.day, self.month, self.year))
-        os.makedirs('data/photos_{}-{}-{}/nir'.format(self.day, self.month, self.year))
-        os.makedirs('data/photos_{}-{}-{}/rgbnir'.format(self.day, self.month, self.year))
-        os.makedirs('data/photos_{}-{}-{}/thermal'.format(self.day, self.month, self.year))
+        os.makedirs('data/{}-{}-{}'.format(self.day, self.month, self.year))
+        os.makedirs('data/{}-{}-{}/sequence'.format(self.day, self.month, self.year))
+        os.makedirs('data/{}-{}-{}/thermal'.format(self.day, self.month, self.year))
+        os.makedirs('data/{}-{}-{}/manual'.format(self.day, self.month, self.year))
     
     def getDateFormat(self):
         now = datetime.now()
@@ -167,34 +169,13 @@ class Grower:
         return getIPaddr()
     
     def photoPath(self, longPath = True):
-        if longPath: return "data/photos_{}-{}-{}".format(self.day, self.month, self.year) # Return long folder name
-        else: return "photos_{}-{}-{}".format(self.day, self.month, self.year) # Return short folder name
-    
-    def thermalPhoto(self, name):
-        if(self.thermalCam1!=None and self.thermalCam2!=None):
-            # Check if directory exist, if not create it
-            if not self.checkDayDirectory(): self.createDayDirectory()
-
-            # Get lecture
-            thermalPixels1 = self.thermalCam1.readPixels()
-            thermalPixels2 = self.thermalCam2.readPixels()
-
-            # Process and join data
-            thermalPixels1 = reshape(thermalPixels1, (8,8))
-            thermalPixels2 = reshape(thermalPixels2, (8,8))
-            thermalJoin = concatenate((thermalPixels1, thermalPixels2), axis=0)
-
-            savetxt("data/photos_{}-{}-{}/thermal/{}.csv".format(self.day, self.month, self.year, name), thermalJoin, fmt="%.2f", delimiter=",")
-            return True
-        else:
-            self.log.error("Thermal Cams Unavailable")
-            return False
+        if longPath: return "data/{}-{}-{}".format(self.day, self.month, self.year) # Return long folder name
+        else: return "{}-{}-{}".format(self.day, self.month, self.year) # Return short folder name
 
     def cam_begin(self):
         try:
             self.cam = PiCamera()
             self.camEnable = True
-            
             redAWB = 2.26
             blueAWB = 0.74
             customGains = (redAWB, blueAWB)
@@ -207,133 +188,144 @@ class Grower:
             #self.cam.shutter_speed = 6000000
             #self.cam.exposure_mode = "off"
             #self.cam.iso = 800
-        except: self.log.critical("Camera Error: Device not found")
+            self.log.info("Camera Started")
+        except:
+            self.camEnable = False
+            self.log.critical("Camera Error: Device not found")
             
 
     def cam_stop(self):
         self.cam.close()
         self.camEnable = False
+        self.log.info("Camera Stopped")
         
-    def takePicture(self, mode, name):
-        resp = 0 # By default is ok
-        # Check if directory exist, if not create it
-        if not self.checkDayDirectory(): self.createDayDirectory()
-                
-        # Thermal Mode
-        if(mode == 0):
+    def thermalPhoto(self, name):
+        if(self.thermalCam1!=None or self.thermalCam2!=None):
+            # Check if directory exist, if not create it
+            if not self.checkDayDirectory(): self.createDayDirectory()
+            
+            self.turnOn(self.IR)
+            self.wait(0.5) # Wait 0.5 seconcds
+            
+            # Get lecture and give it format
+            if(self.thermalCam1!=None):
+                thermalPixels1 = self.thermalCam1.readPixels()
+                thermalPixels1 = reshape(thermalPixels1, (8,8))
+            if(self.thermalCam2!=None):
+                thermalPixels2 = self.thermalCam2.readPixels()
+                thermalPixels2 = reshape(thermalPixels2, (8,8))
+            
+            # Process and join data
             if(self.thermalCam1!=None and self.thermalCam2!=None):
-                self.turnOn_IRCUT(self.IRCUT)
-                self.turnOn(self.IR)
-                self.turnOff(self.LED)
-                self.turnOff(self.XENON)
-                self.wait(0.45) # Wait 0.45 seconcds
-                self.cam.capture("data/photos_{}-{}-{}/ir/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
-                self.thermalPhoto("{}".format(name)) #get thermal cam readings
-                self.wait(0.1) # Wait 100ms
-                self.turnOff(self.IR)
-                self.turnOff_IRCUT(self.IRCUT)
-                self.wait(0.05) # Wait 50ms
-                return True
+                thermalJoin = concatenate((thermalPixels1, thermalPixels2), axis=0)
+                savetxt("data/{}-{}-{}/thermal/{}.csv".format(
+                    self.day, self.month, self.year, name), thermalJoin, fmt="%.2f", delimiter=",")
+            elif(self.thermalCam1!=None):
+                savetxt("data/{}-{}-{}/thermal/{}.csv".format(
+                    self.day, self.month, self.year, name), thermalPixels1, fmt="%.2f", delimiter=",")
             else:
-                self.log.error("Thermal Cams Unavailable")
-                return False
-
-        # LED mode
-        elif(mode == 1):
-            if(self.camEnable):
-                self.turnOff_IRCUT(self.IRCUT)
-                self.turnOn(self.LED)
-                self.turnOff(self.IR)
-                self.turnOff(self.XENON)   
-                self.wait(0.45) # Wait 0.45 seconds
-                self.cam.capture("data/photos_{}-{}-{}/led/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
-                self.wait(0.1) # Wait 100ms
-                self.turnOff(self.LED)
-                self.wait(0.05) # Wait 50ms
-                return True
-            else:
-                self.log.error("Camera Unavailable")
-                return False
-
-        # XENON mode
-        elif(mode == 2):
-            if(self.camEnable):
-                self.turnOff_IRCUT(self.IRCUT)
-                self.turnOn(self.XENON)
-                self.turnOff(self.IR)
-                self.turnOff(self.LED)
-                self.wait(0.45) # Wait 0.45 seconds
-                self.cam.capture("data/photos_{}-{}-{}/xenon/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
-                self.wait(0.1) # Wait 100ms
-                self.turnOff(self.XENON)
-                self.wait(0.05) # Wait 50ms
-                return True
-            else:
-                self.log.error("Camera Unavailable")
-                return False
+                savetxt("data/{}-{}-{}/thermal/{}.csv".format(
+                    self.day, self.month, self.year, name), thermalPixels2, fmt="%.2f", delimiter=",")
             
-        elif(mode == 3):
-            if(self.camEnable):
-                self.wait(0.45) # Wait 0.45 seconds
-                self.cam.capture("data/photos_{}-{}-{}/manual/{}.jpg".format(self.day, self.month, self.year, name)) # Take photo and give it a name
-                self.wait(0.1) # Wait 100ms
-            else:
-                self.log.error("Camera Unavailable")
-                return False
+            self.wait(0.1) # Wait 100ms
+            self.turnOff(self.IR)
             
+            return True
+        else:
+            self.log.critical("Thermal Cams Unavailable")
+            return False
+        
+    def takePicture(self, name, ledMode, irMode, Photo, Thermal, Cozir):
+        if(Photo or Thermal):
+            if(self.thermalCam1!=None or self.thermalCam2!=None): thermalStatus = True
+            else: thermalStatus = False
+            
+            if(Thermal and not thermalStatus):
+                self.log.error("Cannot take Thermal Data: Thermal Cams Unavailable")
+                Thermal = False
+            
+            if(Photo and not self.camEnable):
+                self.log.error("Cannot take Photo: Camera Unavailable")
+                Photo = False
+                
+            if(Photo or Thermal):
+                # Check if directory exist, if not create it
+                if not self.checkDayDirectory(): self.createDayDirectory()
+                
+                if(ledMode == 0):
+                    self.turnOff(self.LED)
+                    self.turnOff(self.XENON)
+                elif(ledMode == 1):
+                    self.turnOn(self.LED)
+                    self.turnOff(self.XENON)
+                else:
+                    self.turnOn(self.LED)
+                    self.turnOn(self.XENON)
+                    
+                if(irMode): self.turnOn(self.IR)
+                else: self.turnOff(self.IR)
+                    
+                if(Cozir):
+                    # Get Cozir data
+                    hum, temp, co2 = self.coz.getData()
+                    # Adjust data
+                    hum = int(hum * 10)
+                    temp = int(temp * 10)
+                    co2 = int(co2)
+                    name = name + "-{}-{}-{}".format(temp, hum, co2)
+                    
+                self.wait(2) # Wait 2 seconds
+                
+                if(Photo):
+                    self.cam.capture("data/{}-{}-{}/manual/{}.png".format(
+                    self.day, self.month, self.year, name), "png") # Take photo and give it a name
+                if(Thermal):
+                    self.thermalPhoto("{}".format(name)) #get thermal cam readings
+                
+                self.wait(0.1) # Wait 100ms
+                self.turnOff(self.LED)
+                self.turnOff(self.IR)
+                self.turnOff(self.XENON)
+                return True
+            else:
+                return False     
+        else:
+            self.log.error("You must enable Photo or Thermal parameter")
+            return False
     
     def photoSequence(self, name):
-        if(self.camEnable): cameraStatus = True
-        else: cameraStatus = False
         if(self.thermalCam1!=None and self.thermalCam2!=None): thermalStatus = True
         else: thermalStatus = False
         totalShoots = 0
         
-        if(cameraStatus or thermalStatus):
+        if(self.camEnable or thermalStatus):
             # Check if directory exist, if not create it
             if not self.checkDayDirectory(): self.createDayDirectory()
-        
-            #self.cam.start_preview()
-            self.enable_IRCUT(self.IRCUT)
-            
-            self.turnOff_IRCUT(self.IRCUT)
-            self.turnOff(self.LED)
-            self.turnOff(self.IR)
-            self.turnOff(self.XENON)
+            # Get Cozir data
+            hum, temp, co2 = self.coz.getData()
+            # Adjust data
+            hum = int(hum * 10)
+            temp = int(temp * 10)
+            co2 = int(co2)
+            name = name + "-{}-{}-{}".format(temp, hum, co2)
             
             self.turnOn(self.IR)
             self.turnOn(self.LED)
+            self.turnOn(self.XENON)
             self.wait(2) # Wait 2 seconds
-            if(cameraStatus):
-                self.cam.capture("data/photos_{}-{}-{}/rgb/{}.png".format(self.day, self.month, self.year, name), "png") # Take photo and give it a name
-                totalShoots += 1
+            if(self.camEnable):
+                self.cam.capture("data/{}-{}-{}/sequence/{}.png".format(
+                    self.day, self.month, self.year, name), "png") # Take photo and give it a name
+                totalShoots += 2
                 
-            self.wait(0.1) # Wait 100ms
-            self.turnOff(self.LED)
-            self.turnOn_IRCUT(self.IRCUT)
-            self.wait(2) # Wait 2 seconds
-            if(cameraStatus):
-                self.cam.capture("data/photos_{}-{}-{}/nir/{}.png".format(self.day, self.month, self.year, name), "png") # Take photo and give it a name
-                totalShoots += 1
-                
-            self.wait(0.1) # Wait 100ms
-            self.turnOn(self.LED)
-            self.wait(2) # Wait 2 seconds        
-            self.cam.capture("data/photos_{}-{}-{}/rgbnir/{}.png".format(self.day, self.month, self.year, name), "png") # Take photo and give it a name
-            
-            self.turnOff(self.LED)
-            self.turnOff(self.XENON)
-            self.turnOFF_IRCUT(self.IRCUT)
-            
             if(thermalStatus):
                 self.thermalPhoto("{}".format(name)) #get thermal cam readings
                 totalShoots += 1
                 
             self.wait(0.1) # Wait 100ms
             self.turnOff(self.IR)
-            self.disable_IRCUT(self.IRCUT)
-            self.wait(0.05) # Wait 50ms
-            #self.cam.stop_preview()
+            self.turnOff(self.LED)
+            self.turnOff(self.XENON)
             
         return totalShoots
     
@@ -366,7 +358,9 @@ class Grower:
                 runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
                 # Set Python Version
             runShellCommand("sudo update-alternatives --set python /usr/bin/python3.5")
-        
+            
+            self.log.info("Stream Enable")
+            
     def disableStreaming(self):
         if self.stream:
             self.stream = False
@@ -393,6 +387,8 @@ class Grower:
                 runShellCommand("sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2")
                 # Set Python Version
             runShellCommand("sudo update-alternatives --set python /usr/bin/python3.5")
+            
+            self.log.info("Stream Disable")
             
             # Connecting camara to this program
             if not self.camEnable: self.cam_begin()

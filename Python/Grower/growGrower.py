@@ -7,16 +7,29 @@ To check:
 # Import Directories
 import os
 import sys
+import colored_traceback
 from time import time, sleep
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 sys.path.insert(0, './src/')
 import sysGrower
 from logger import logger
+from asciiART import asciiArt
 from mqttCallback import mqttController
+
+# Colored traceback useful for raise exception with colors in terminal
+colored_traceback.add_hook()
+
+art = asciiArt()
+print("\033[1;32;40m", end='')
+print(" Welcome to GrowGreens (Grower Version)".center(80,'*'))
+art.img_print('./img/GrowGreens1_Web.png')
+print("\033[0;37;40m")
 
 # Check if temp dir exists, if not then create it
 if not os.path.exists('temp/'): os.makedirs('temp/')
+# Check if data dir exists, if not then create it
+if not os.path.exists('data/'): os.makedirs('data/')
     
 # Charge logger parameters
 log = logger()
@@ -38,6 +51,7 @@ def mainClose():
     mqttControl.grower.close() # Clean GPIO
     if(client!=None):
         client.disconnect() # Disconnect MQTT
+    log.shutdown()
         
 try:
     while run:

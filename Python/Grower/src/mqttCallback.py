@@ -77,35 +77,12 @@ class mqttController:
         logTopic = "{}/Grower{}/log".format(self.containerID, self.floor) # Output Topic
         top = msg.topic # Input Topic
         message = msg.payload.decode("utf-8") # Input message
-
-        if(message == "OnLED"):
-            self.grower.turnOn(self.grower.LED)
-            self.sendLog("Led On")
-            
-        elif(message == "OnIR"):
-            self.grower.turnOn(self.grower.IR)
-            self.sendLog("IR On")
-            
-        elif(message == "OnXENON"):
-            self.grower.turnOn(self.grower.XENON)
-            self.sendLog("Xenon On")
-            
+        
+        """    
         elif(message == "OnIRCUT"):
             self.grower.turnOn_IRCUT(self.grower.IRCUT)
             self.sendLog("IRCUT On")
-            
-        elif(message == "OffLED"):
-            self.grower.turnOff(self.grower.LED)
-            self.sendLog("Led Off")
-            
-        elif(message == "OffIR"):
-            self.grower.turnOff(self.grower.IR)
-            self.sendLog("IR Off")
-            
-        elif(message == "OffXENON"):
-            self.grower.turnOff(self.grower.XENON)
-            self.sendLog("Xenon Off")
-            
+  
         elif(message == "OffIRCUT"):
             self.grower.turnOff_IRCUT(self.grower.IRCUT)
             self.sendLog("IRCUT Off")
@@ -117,77 +94,106 @@ class mqttController:
         elif(message == "DisableIRCUT"):
             self.grower.disable_IRCUT(self.grower.IRCUT)
             self.sendLog("IRCUT Disable", 2)
+        """    
+        
+        if(message == "OnLED1"):
+            self.grower.turnOn(self.grower.LED)
+            self.sendLog("Led1 On")
             
+        elif(message == "OnIR"):
+            self.grower.turnOn(self.grower.IR)
+            self.sendLog("IR On")
+            
+        elif(message == "OnLED2"):
+            self.grower.turnOn(self.grower.XENON)
+            self.sendLog("Led2 On")
+        
+        elif(message == "OffLED1"):
+            self.grower.turnOff(self.grower.LED)
+            self.sendLog("Led1 Off")
+            
+        elif(message == "OffIR"):
+            self.grower.turnOff(self.grower.IR)
+            self.sendLog("IR Off")
+            
+        elif(message == "OffLED2"):
+            self.grower.turnOff(self.grower.XENON)
+            self.sendLog("Led2 Off")
+        
         elif(message.startswith("takePicture")):
             param = message.split(',')
-            picMode = int(param[1])
-            picName = param[2]
+            if(len(param)>1): Name = param[1]
+            else: Name = "testing_takePicture()"
+            if(len(param)>2): ledMode = int(param[1])
+            else: ledMode = 2
+            if(len(param)>3): irMode = int(param[2])
+            else: irMode = True
+            if(len(param)>4): Photo = int(param[3])
+            else: Photo = True
+            if(len(param)>5): Thermal = int(param[4])
+            else: Thermal = True
+            if(len(param)>6): Cozir = int(param[5])
+            else: Cozir = True
             
-            if(picMode>=0 and picMode<=3 and picName!=""):
-                if self.growerStream: self.grower.disableStreaming()
-                check = self.grower.takePicture(picMode, picName)
-                if(check):
-                    mssg = "Picture taken - mode={}\tname={}".format(str(picMode), picName)
-                    mssgLevel = 0
-                else:
-                    mssg = "Photo cannot be taken"
-                    mssgLevel = 3
-                if self.growerStream: self.grower.enableStreaming()
-                self.sendLog(mssg, mssgLevel)
+            if not Photo and not Thermal:
+                Photo = True
+                Thermal = True
+                self.sendLog("Taking both photo and thermal (Next time you must specify at least 1)", 2) # Warning
+                
+            if self.growerStream and picMode!=0: self.grower.disableStreaming()
+            check = self.grower.takePicture(Name, ledMode, irMode, Photo, Thermal, Cozir)
+            if(check):
+                mssg = "Picture taken - name={}".format(Name)
+                mssgLevel = 0
             else:
-                mssg = "Error in takePicture(): Parameter incorrect"
-                self.sendLog(mssg, 3)
+                mssg = "Photo cannot be taken"
+                mssgLevel = 3
+            if self.growerStream and picMode!=0: self.grower.enableStreaming()
+            self.sendLog(mssg, mssgLevel)
         
         elif(message.startswith("thermalPhoto")):
             param = message.split(',')
-            picName = param[1]
+            if(len(param)>1): Name = param[1]
+            else: Name = "testing_thermalPhoto()"
             
-            if(picName!=""):
-                if self.growerStream: self.grower.disableStreaming()
-                param = message.split(',')
-                check = self.grower.thermalPhoto(picName)
-                if(check):
-                    mssg = "Thermal Photo taken - name={}".format(picName)
-                    mssgLevel = 0
-                else:
-                    mssg = "Thermal Photo cannot be taken"
-                    mssgLevel = 3
-                if self.growerStream: self.grower.enableStreaming()
-                self.sendLog(mssg, mssgLevel)
+            check = self.grower.thermalPhoto(Name)
+            if(check):
+                mssg = "Thermal Photo taken - name={}".format(Name)
+                mssgLevel = 0
             else:
-                mssg = "Error in thermalPhoto function: Parameter incorrect"
-                self.sendLog(mssg, 3)
+                mssg = "Thermal Photo cannot be taken"
+                mssgLevel = 3
+            if self.growerStream: self.grower.enableStreaming()
+            self.sendLog(mssg, mssgLevel)
                 
         elif(message.startswith("photoSequence")):
             param = message.split(',')
-            picName = param[1]
+            if(len(param)>1): Name = param[1]
+            else: Name = "photoSequence()"
             
-            if(picName!=""):
-                if self.growerStream: self.grower.disableStreaming()
-                param = message.split(',')
-                check = self.grower.photoSequence(picName)
-                if(check==0):
-                    mssg = "Photo Sequence cannot be taken"
-                    mssgLevel = 3
-                elif(check==1):
-                    mssg = "Thermal Photo taken... Normal Photos cannot be taken"
-                    mssgLevel = 2
-                elif(check==2):
-                    mssg = "Normal Photos taken... Thermal Photo cannot be taken"
-                    mssgLevel = 2
-                else:    
-                    mssg = "Photo Sequence taken - name={}".format(picName)
-                    mssgLevel = 0
-                if self.growerStream: self.grower.enableStreaming()
-                self.sendLog(mssg, mssgLevel)
-            else:
-                mssg = "Error in photoSequence function: Parameter incorrect"
-                self.sendLog(mssg, 3)
+            if self.growerStream: self.grower.disableStreaming()
+            param = message.split(',')
+            check = self.grower.photoSequence(Name)
+            if(check==0):
+                mssg = "Photo Sequence cannot be taken"
+                mssgLevel = 3
+            elif(check==1):
+                mssg = "Thermal Photo taken... Normal Photo cannot be taken"
+                mssgLevel = 2
+            elif(check==2):
+                mssg = "Normal Photo taken... Thermal Photo cannot be taken"
+                mssgLevel = 2
+            else:    
+                mssg = "Photo Sequence taken - name={}".format(Name)
+                mssgLevel = 0
+            if self.growerStream: self.grower.enableStreaming()
+            self.sendLog(mssg, mssgLevel)
         
         elif(message == "DisableStream"):
             self.growerStream = False
             self.grower.disableStreaming()
-            self.sendLog("Stream Disable", 2)
+            if(self.grower.cam == None): self.sendLog("Camera Unavailable", 3)
+            else: self.sendLog("Stream Disable", 2)
         
         elif(message == "EnableStream"):
             self.growerStream = True

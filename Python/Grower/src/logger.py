@@ -54,3 +54,6 @@ class logger:
 
         # Add the handler to the logger
         self.logger.addHandler(handler)
+    
+    def shutdown(self):
+        logging.shutdown()
