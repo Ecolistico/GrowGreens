@@ -1,0 +1,10 @@
+# All temporary folders
+**/temp
+**/__pycache__
+
+# Data folders
+Python/Master/data/
+
+# Config Files
+Python/Master/state.json
+Python/Master/bootConfig/

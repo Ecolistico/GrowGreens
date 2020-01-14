@@ -1,1 +1,0 @@
-En esta carpeta se guardaran todas las fotos capturadas por los Growers dentro del contenedor
