@@ -1,0 +1,3 @@
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", ATTRS{serial}=="557363137373516050F1", SYMLINK+="generalControl", GROUP="dialout", MODE="0664"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", ATTRS{serial}=="55736313737351807051", SYMLINK+="motorsGrower", GROUP="dialout", MODE="0664"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", ATTRS{serial}=="55739323237351301081", SYMLINK+="solutionMaker", GROUP="dialout", MODE="0664"

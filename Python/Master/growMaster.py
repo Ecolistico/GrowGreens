@@ -34,6 +34,8 @@ print("\033[0;37;40m")
     
 # Check if temp dir exists, if not then create it
 if not os.path.exists('temp/'): os.makedirs('temp/')
+# Check if data dir exists, if not then create it
+if not os.path.exists('data/'): os.makedirs('data/')
     
 # Charge logger parameters
 log = logger()
