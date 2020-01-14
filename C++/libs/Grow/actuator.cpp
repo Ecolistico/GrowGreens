@@ -914,6 +914,7 @@ void asyncActuator::turnOn()
       __State = HIGH;
       printAction(F("Turn On"), 0);
     }
+    __Counter = 0;
   }
 
 void asyncActuator::turnOff()
