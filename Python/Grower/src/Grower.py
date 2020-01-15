@@ -304,7 +304,7 @@ class Grower:
             return False
     
     def photoSequence(self, name = "testing_photoSequence()"):
-        if(self.thermalCam1!=None and self.thermalCam2!=None): thermalStatus = True
+        if(self.thermalCam1!=None or self.thermalCam2!=None): thermalStatus = True
         else: thermalStatus = False
         totalShoots = 0
         
