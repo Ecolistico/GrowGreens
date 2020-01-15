@@ -33,7 +33,8 @@ static const char AUX_TIMEZONE[] PROGMEM = R"(
       "name": "timezone",
       "type": "ACSelect",
       "label": "Select TZ name",
-      "option": []
+      "option": [],
+      "selected": 10
     },
     {
       "name": "newline",
@@ -98,6 +99,9 @@ void rootPage() {
     "<html>"
     "<head>"
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+    "<script type=\"text/javascript\">"
+    "setTimeout(\"location.reload()\", 1000);"
+    "</script>"
     "</head>"
     "<body>"
     "<h2 align=\"center\" style=\"color:blue;margin:20px;\">Hello, world</h2>"
@@ -158,7 +162,7 @@ void setup() {
   Timezone.load(AUX_TIMEZONE);
   // Retrieve the select element that holds the time zone code and
   // register the zone mnemonic in advance.
-  AutoConnectSelect&  tz = Timezone.getElement<AutoConnectSelect>("timezone");
+  AutoConnectSelect&  tz = Timezone["timezone"].as<AutoConnectSelect>();
   for (uint8_t n = 0; n < sizeof(TZ) / sizeof(Timezone_t); n++) {
     tz.add(String(TZ[n].zone));
   }

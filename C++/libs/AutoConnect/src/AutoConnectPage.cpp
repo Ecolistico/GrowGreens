@@ -2,8 +2,8 @@
  *  AutoConnect portal site web page implementation.
  *  @file   AutoConnectPage.h
  *  @author hieromon@gmail.com
- *  @version    0.9.7
- *  @date   2019-01-23
+ *  @version    1.1.3
+ *  @date   2019-11-08
  *  @copyright  MIT license.
  */
 
@@ -29,45 +29,45 @@ const char AutoConnect::_CSS_BASE[] PROGMEM = {
     "-ms-text-size-adjust:100%;"
     "-webkit-text-size-adjust:100%;"
     "-moz-osx-font-smoothing:grayscale;"
-    "-webkit-font-smoothing:antialiased;"
+    "-webkit-font-smoothing:antialiased"
   "}"
   "body{"
     "margin:0;"
-    "padding:0;"
+    "padding:0"
   "}"
   ".base-panel{"
-    "margin:0 22px 0 22px;"
+    "margin:0 22px 0 22px"
   "}"
-  ".base-panel>*>label{"
+  ".base-panel * label :not(.bins){"
     "display:inline-block;"
     "width:3.0em;"
-    "text-align:right;"
+    "text-align:right"
   "}"
-  ".base-panel>*>label.slist{"
+  ".base-panel * .slist{"
     "width:auto;"
     "font-size:0.9em;"
     "margin-left:10px;"
-    "text-align:left;"
+    "text-align:left"
   "}"
   "input{"
     "-moz-appearance:none;"
     "-webkit-appearance:none;"
     "font-size:0.9em;"
-    "margin:8px 0 auto;"
+    "margin:8px 0 auto"
   "}"
   ".lap{"
-    "visibility:collapse;"
+    "visibility:collapse"
   "}"
   ".lap:target{"
-    "visibility:visible;"
+    "visibility:visible"
   "}"
   ".lap:target .overlap{"
     "opacity:0.7;"
-    "transition:0.3s;"
+    "transition:0.3s"
   "}"
   ".lap:target .modal_button{"
     "opacity:1;"
-    "transition:0.3s;"
+    "transition:0.3s"
   "}"
   ".overlap{"
     "top:0;"
@@ -77,7 +77,7 @@ const char AutoConnect::_CSS_BASE[] PROGMEM = {
     "position:fixed;"
     "opacity:0;"
     "background:#000;"
-    "z-index:1000;"
+    "z-index:1000"
   "}"
   ".modal_button{"
     "border-radius:13px;"
@@ -94,33 +94,40 @@ const char AutoConnect::_CSS_BASE[] PROGMEM = {
     "width:20%;"
     "position:fixed;"
     "opacity:0;"
-    "z-index:1001;"
+    "z-index:1001"
   "}"
 };
 
 /**< non-marked list for UL */
 const char AutoConnect::_CSS_UL[] PROGMEM = {
-  "ul.noorder{"
+  ".noorder,.exp{"
     "padding:0;"
     "list-style:none;"
+    "display:table"
   "}"
-  "ul.noorder>*>label{"
-    "display:inline-block;"
-    "width:86px;"
-    "margin-right:10px;"
+  ".noorder li,.exp{"
+    "display:table-row-group"
+  "}"
+  ".noorder li label, .exp li *{"
+    "display:table-cell;"
+    "width:auto;"
     "text-align:right;"
+    "padding:10px 0.5em"
   "}"
-  "ul.noorder>input[type=\"checkbox\"]{"
+  ".noorder input[type=\"checkbox\"]{"
     "-moz-appearance:checkbox;"
-    "-webkit-appearance:checkbox;"
+    "-webkit-appearance:checkbox"
   "}"
-  "ul.noorder>input[type=\"radio\"]{"
+  ".noorder input[type=\"radio\"]{"
     "margin-right:0.5em;"
     "-moz-appearance:radio;"
-    "-webkit-appearance:radio;"
+    "-webkit-appearance:radio"
   "}"
-  "ul.noorder>input[type=\"text\"]:invalid{"
-    "background:#fce4d6;"
+  ".noorder input[type=\"text\"]{"
+    "width:auto"
+  "}"
+  ".noorder input[type=\"text\"]:invalid{"
+    "background:#fce4d6"
   "}"
 };
 
@@ -132,43 +139,44 @@ const char AutoConnect::_CSS_ICON_LOCK[] PROGMEM = {
     "height:22px;"
     "margin-top:14px;"
     "float:right;"
-    "background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAB1ElEQVRIibWVu0scURTGf3d2drBQFAWbbRQVCwuVLIZdi2gnWIiF/4GtKyuJGAJh8mgTcU0T8T8ICC6kiIVu44gvtFEQQWwsbExQJGHXmZtiZsOyzCN3Vz+4cDjfvec7j7l3QAF95onRZ54YKmdE1IbnS0c9mnAyAjkBxDy3LRHrjtRyu7OD52HntTAyvbw/HxP2hkCearrRb2WSCSuTTGi60S+QpzFhbwznDl/VVMHw0sF7hEjFbW2qkB38lfp8nNDipWcATil+uDM3cDWyeNRSijnfkHJnezb5Vkkgvbg3IOXD2e1ts93S+icnkZOAVaalZK3YQMa4L+pC6L1WduhYSeCf0PLBdxzOjZ93Lwvm6APAiLmlF1ubPiHotmaS41ExQjH0ZbfNM1NAFpgD0lVcICIrANqAVaAd+AFIYAy4BqaBG+Wsq5AH3vgk8xpYrzf4KLAZwhe8PYEIvQe4vc6H8Hnc2dQs0AFchvAXQGdEDF8s4A5TZS34BQqqQNaS1WMI3KD4WUbNoBJfce9CO7BSr4BfBe8A21vmUwh0VdjdTyHwscL+UK+AHxoD7FDoAX6/Cnpxn4ay/egCjcCL/w1chkqLakLQ/6ABhT57uAd+Vzv/Ara3iY6fK4WxAAAAAElFTkSuQmCC) no-repeat;"
+    "background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAB1ElEQVRIibWVu0scURTGf3d2drBQFAWbbRQVCwuVLIZdi2gnWIiF/4GtKyuJGAJh8mgTcU0T8T8ICC6kiIVu44gvtFEQQWwsbExQJGHXmZtiZsOyzCN3Vz+4cDjfvec7j7l3QAF95onRZ54YKmdE1IbnS0c9mnAyAjkBxDy3LRHrjtRyu7OD52HntTAyvbw/HxP2hkCearrRb2WSCSuTTGi60S+QpzFhbwznDl/VVMHw0sF7hEjFbW2qkB38lfp8nNDipWcATil+uDM3cDWyeNRSijnfkHJnezb5Vkkgvbg3IOXD2e1ts93S+icnkZOAVaalZK3YQMa4L+pC6L1WduhYSeCf0PLBdxzOjZ93Lwvm6APAiLmlF1ubPiHotmaS41ExQjH0ZbfNM1NAFpgD0lVcICIrANqAVaAd+AFIYAy4BqaBG+Wsq5AH3vgk8xpYrzf4KLAZwhe8PYEIvQe4vc6H8Hnc2dQs0AFchvAXQGdEDF8s4A5TZS34BQqqQNaS1WMI3KD4WUbNoBJfce9CO7BSr4BfBe8A21vmUwh0VdjdTyHwscL+UK+AHxoD7FDoAX6/Cnpxn4ay/egCjcCL/w1chkqLakLQ/6ABhT57uAd+Vzv/Ara3iY6fK4WxAAAAAElFTkSuQmCC) no-repeat"
   "}"
 };
 
 /**< INPUT button and submit style */
 const char AutoConnect::_CSS_INPUT_BUTTON[] PROGMEM = {
-  "input[type=\"button\"],input[type=\"submit\"]{"
-    "padding:8px 30px;"
+  "input[type=\"button\"],input[type=\"submit\"],button[type=\"submit\"],button[type=\"button\"]{"
+    "padding:8px 0.5em;"
     "font-weight:bold;"
     "letter-spacing:0.8px;"
     "color:#fff;"
     "border:1px solid;"
     "border-radius:2px;"
-    "margin-top:12px;"
+    "margin-top:12px"
   "}"
-  "input[type=\"button\"]{"
-    "background-color:#81BB27;"
-    "border-color:#81BB27;"
-    "width:15em;"
+  "input[type=\"button\"],button[type=\"button\"]{"
+    "background-color:#1b5e20;"
+    "border-color:#1b5e20;"
+    "width:15em"
   "}"
-  ".aux-page input[type=\"button\"]{"
+  ".aux-page input[type=\"button\"],button[type=\"button\"]{"
     "font-weight:normal;"
     "padding:8px 14px;"
     "margin:12px;"
-    "width:auto;"
+    "width:auto"
   "}"
   "input#sb[type=\"submit\"]{"
-    "width:15em;"
+    "width:15em"
   "}"
-  "input[type=\"submit\"]{"
-    "background-color:#575756;"
-    "border-color:#575756;"
+  "input[type=\"submit\"],button[type=\"submit\"]{"
+    "padding:8px 30px;"
+    "background-color:#006064;"
+    "border-color:#006064"
   "}"
-  "input[type=\"button\"],input[type=\"submit\"]:focus,"
-  "input[type=\"button\"],input[type=\"submit\"]:active{"
+  "input[type=\"button\"],input[type=\"submit\"],button[type=\"submit\"]:focus,"
+  "input[type=\"button\"],input[type=\"submit\"],button[type=\"submit\"]:active{"
     "outline:none;"
-    "text-decoration:none;"
+    "text-decoration:none"
   "}"
 };
 
@@ -180,47 +188,41 @@ const char AutoConnect::_CSS_INPUT_TEXT[] PROGMEM = {
     "border-radius:2px;"
     "color:#444;"
     "margin:8px 0 8px 0;"
-    "padding:10px;"
+    "padding:10px"
   "}"
   "input[type=\"text\"],input[type=\"password\"]{"
     "font-weight:300;"
-    "width:calc(100% - 124px);"
+    "width:auto;"
     "-webkit-transition:all 0.20s ease-in;"
     "-moz-transition:all 0.20s ease-in;"
     "-o-transition:all 0.20s ease-in;"
     "-ms-transition:all 0.20s ease-in;"
-    "transition:all 0.20s ease-in;"
+    "transition:all 0.20s ease-in"
   "}"
   "input[type=\"text\"]:focus,input[type=\"password\"]:focus{"
     "outline:none;"
-    "border-color:#369040;"
-    "box-shadow:0 0 3px #00793F;"
+    "border-color:#5C9DED;"
+    "box-shadow:0 0 3px #4B8CDC"
   "}"
-  "input.error, input.error:focus{"
+  "input.error,input.error:focus{"
     "border-color:#ED5564;"
     "color:#D9434E;"
-    "box-shadow:0 0 3px #D9434E;"
+    "box-shadow:0 0 3px #D9434E"
   "}"
   "input:disabled{"
     "opacity:0.6;"
-    "background-color:#f7f7f7;"
+    "background-color:#f7f7f7"
   "}"
   "input:disabled:hover{"
-    "cursor:not-allowed;"
+    "cursor:not-allowed"
   "}"
-    "input.error::-webkit-input-placeholder{"
-    "color:#D9434E;"
-  "}"
-  "input.error:-moz-placeholder{"
-    "color:#D9434E;"
-  "}"
-  "input.error::-moz-placeholder{"
-    "color:#D9434E;"
-  "}"
-  "input.error:-ms-input-placeholder{"
-    "color:#D9434E;"
+  "input.error::-webkit-input-placeholder,"
+  "input.error::-moz-placeholder,"
+  "input.error::-ms-input-placeholder{"
+    "color:#D9434E"
   "}"
   ".aux-page label{"
+    "display:inline;"
     "padding:10px 0.5em;"
   "}"
 };
@@ -233,49 +235,49 @@ const char AutoConnect::_CSS_TABLE[] PROGMEM = {
     "border:1px solid #ddd;"
     "color:#444;"
     "background-color:#fff;"
-    "margin-bottom:20px;"
+    "margin-bottom:20px"
   "}"
   "table.info,"
   "table.info>tfoot,"
   "table.info>thead{"
     "width:100%;"
-    "border-color:#00793F;"
+    "border-color:#5C9DED"
   "}"
   "table.info>thead{"
-    "background-color:#00793F;"
+    "background-color:#5C9DED"
   "}"
   "table.info>thead>tr>th{"
-    "color:#fff;"
+    "color:#fff"
   "}"
   "td,"
   "th{"
-    "padding:10px 22px;"
+    "padding:10px 22px"
   "}"
   "thead{"
     "background-color:#f3f3f3;"
-    "border-bottom:1px solid #ddd;"
+    "border-bottom:1px solid #ddd"
   "}"
   "thead>tr>th{"
     "font-weight:400;"
-    "text-align:left;"
+    "text-align:left"
   "}"
   "tfoot{"
-    "border-top:1px solid #ddd;"
+    "border-top:1px solid #ddd"
   "}"
   "tbody,"
   "tbody>tr:nth-child(odd){"
-    "background-color:#fff;"
+    "background-color:#fff"
   "}"
   "tbody>tr>td,"
   "tfoot>tr>td{"
     "font-weight:300;"
-    "font-size:.88em;"
+    "font-size:.88em"
   "}"
   "tbody>tr:nth-child(even){"
-    "background-color:#f7f7f7;"
+    "background-color:#f7f7f7"
   "}"
     "table.info tbody>tr:nth-child(even){"
-    "background-color:#B5E173;"
+    "background-color:#EFF5FD"
   "}"
 };
 
@@ -285,23 +287,23 @@ const char AutoConnect::_CSS_SPINNER[] PROGMEM = {
     "width:40px;"
     "height:40px;"
     "position:relative;"
-    "margin:100px auto;"
+    "margin:100px auto"
   "}"
-  ".double-bounce1, .double-bounce2{"
+  ".dbl-bounce1, .dbl-bounce2{"
     "width:100%;"
     "height:100%;"
     "border-radius:50%;"
-    "background-color:#00793F;"
+    "background-color:#a3cccc;"
     "opacity:0.6;"
     "position:absolute;"
     "top:0;"
     "left:0;"
     "-webkit-animation:sk-bounce 2.0s infinite ease-in-out;"
-    "animation:sk-bounce 2.0s infinite ease-in-out;"
+    "animation:sk-bounce 2.0s infinite ease-in-out"
   "}"
-  ".double-bounce2{"
+  ".dbl-bounce2{"
     "-webkit-animation-delay:-1.0s;"
-    "animation-delay:-1.0s;"
+    "animation-delay:-1.0s"
   "}"
   "@-webkit-keyframes sk-bounce{"
     "0%, 100%{-webkit-transform:scale(0.0)}"
@@ -321,105 +323,105 @@ const char AutoConnect::_CSS_SPINNER[] PROGMEM = {
 /**< Common menu bar. This style quotes LuxBar. */
 /**< balzss/luxbar is licensed under the MIT License https://github.com/balzss/luxbar */
 const char AutoConnect::_CSS_LUXBAR[] PROGMEM = {
-  ".luxbar-fixed{"
+  ".lb-fixed{"
     "width:100%;"
     "position:fixed;"
     "top:0;"
     "left:0;"
     "z-index:1000;"
-    "box-shadow:0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);"
+    "box-shadow:0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)"
   "}"
-  ".luxbar-hamburger span,"
-  ".luxbar-hamburger span::before,"
-  ".luxbar-hamburger span::after{"
+  ".lb-burger span,"
+  ".lb-burger span::before,"
+  ".lb-burger span::after{"
     "display:block;"
     "height:2px;"
     "width:26px;"
-    "transition:0.6s ease;"
+    "transition:0.6s ease"
   "}"
-  ".luxbar-checkbox:checked~.luxbar-menu li .luxbar-hamburger span{"
-    "background-color:transparent;"
+  ".lb-cb:checked~.lb-menu li .lb-burger span{"
+    "background-color:transparent"
   "}"
-  ".luxbar-checkbox:checked~.luxbar-menu li .luxbar-hamburger span::before,"
-  ".luxbar-checkbox:checked~.luxbar-menu li .luxbar-hamburger span::after{"
-    "margin-top:0;"
+  ".lb-cb:checked~.lb-menu li .lb-burger span::before,"
+  ".lb-cb:checked~.lb-menu li .lb-burger span::after{"
+    "margin-top:0"
   "}"
-  ".luxbar-header{"
+  ".lb-header{"
     "display:flex;"
     "flex-direction:row;"
     "justify-content:space-between;"
     "align-items:center;"
-    "height:58px;"
+    "height:58px"
   "}"
-  ".luxbar-menu-right .luxbar-hamburger{"
-    "margin-left:auto;"
+  ".lb-menu-right .lb-burger{"
+    "margin-left:auto"
   "}"
-  ".luxbar-brand{"
+  ".lb-brand{"
     "font-size:1.6em;"
-    "padding:18px 24px 18px 24px;"
+    "padding:18px 24px 18px 24px"
   "}"
-  ".luxbar-menu{"
+  ".lb-menu{"
     "min-height:58px;"
     "transition:0.6s ease;"
-    "width:100%;"
+    "width:100%"
   "}"
-  ".luxbar-navigation{"
+  ".lb-navigation{"
     "display:flex;"
     "flex-direction:column;"
     "list-style:none;"
     "padding-left:0;"
-    "margin:0;"
+    "margin:0"
   "}"
-  ".luxbar-menu a,"
-  ".luxbar-item a{"
+  ".lb-menu a,"
+  ".lb-item a{"
     "text-decoration:none;"
     "color:inherit;"
-    "cursor:pointer;"
+    "cursor:pointer"
   "}"
-  ".luxbar-item{"
-    "height:58px;"
+  ".lb-item{"
+    "height:58px"
   "}"
-  ".luxbar-item a{"
+  ".lb-item a{"
     "padding:18px 24px 18px 24px;"
-    "display:block;"
+    "display:block"
   "}"
-  ".luxbar-hamburger{"
+  ".lb-burger{"
     "padding:18px 24px 18px 24px;"
     "position:relative;"
-    "cursor:pointer;"
+    "cursor:pointer"
   "}"
-  ".luxbar-hamburger span::before,"
-  ".luxbar-hamburger span::after{"
+  ".lb-burger span::before,"
+  ".lb-burger span::after{"
     "content:'';"
-    "position:absolute;"
+    "position:absolute"
   "}"
-  ".luxbar-hamburger span::before{"
-    "margin-top:-8px;"
+  ".lb-burger span::before{"
+    "margin-top:-8px"
   "}"
-  ".luxbar-hamburger span::after{"
-    "margin-top:8px;"
+  ".lb-burger span::after{"
+    "margin-top:8px"
   "}"
-  ".luxbar-checkbox{"
-    "display:none;"
+  ".lb-cb{"
+    "display:none"
   "}"
-  ".luxbar-checkbox:not(:checked)~.luxbar-menu{"
+  ".lb-cb:not(:checked)~.lb-menu{"
     "overflow:hidden;"
-    "height:58px;"
+    "height:58px"
   "}"
-  ".luxbar-checkbox:checked~.luxbar-menu{"
+  ".lb-cb:checked~.lb-menu{"
     "transition:height 0.6s ease;"
     "height:100vh;"
-    "overflow:auto;"
+    "overflow:auto"
   "}"
   ".dropdown{"
     "position:relative;"
     "height:auto;"
-    "min-height:58px;"
+    "min-height:58px"
   "}"
   ".dropdown:hover>ul{"
     "position:relative;"
     "display:block;"
-    "min-width:100%;"
+    "min-width:100%"
   "}"
   ".dropdown>a::after{"
     "position:absolute;"
@@ -428,42 +430,42 @@ const char AutoConnect::_CSS_LUXBAR[] PROGMEM = {
     "top:25px;"
     "border-width:5px 5px 0;"
     "border-color:transparent;"
-    "border-style:solid;"
+    "border-style:solid"
   "}"
   ".dropdown>ul{"
     "display:block;"
     "overflow-x:hidden;"
     "list-style:none;"
-    "padding:0;"
+    "padding:0"
   "}"
-  ".dropdown>ul .luxbar-item{"
+  ".dropdown>ul .lb-item{"
     "min-width:100%;"
     "height:29px;"
-    "padding:5px 10px 5px 40px;"
+    "padding:5px 10px 5px 40px"
   "}"
-  ".dropdown>ul .luxbar-item a{"
+  ".dropdown>ul .lb-item a{"
     "min-height:29px;"
     "line-height:29px;"
-    "padding:0;"
+    "padding:0"
   "}"
   "@media screen and (min-width:768px){"
-    ".luxbar-navigation{"
+    ".lb-navigation{"
       "flex-flow:row;"
       "justify-content:flex-end;"
     "}"
-    ".luxbar-hamburger{"
+    ".lb-burger{"
       "display:none;"
     "}"
-    ".luxbar-checkbox:not(:checked)~.luxbar-menu{"
+    ".lb-cb:not(:checked)~.lb-menu{"
       "overflow:visible;"
     "}"
-    ".luxbar-checkbox:checked~.luxbar-menu{"
+    ".lb-cb:checked~.lb-menu{"
       "height:58px;"
     "}"
-    ".luxbar-menu .luxbar-item{"
+    ".lb-menu .lb-item{"
       "border-top:0;"
     "}"
-    ".luxbar-menu-right .luxbar-header{"
+    ".lb-menu-right .lb-header{"
       "margin-right:auto;"
     "}"
     ".dropdown{"
@@ -478,32 +480,32 @@ const char AutoConnect::_CSS_LUXBAR[] PROGMEM = {
     ".dropdown>ul{"
       "display:none;"
     "}"
-    ".dropdown>ul .luxbar-item{"
+    ".dropdown>ul .lb-item{"
       "padding:5px 10px;"
     "}"
-    ".dropdown>ul .luxbar-item a{"
+    ".dropdown>ul .lb-item a{"
       "white-space:nowrap;"
     "}"
   "}"
-  ".luxbar-checkbox:checked+.luxbar-menu .luxbar-hamburger-doublespin span::before{"
-    "transform:rotate(225deg);"
+  ".lb-cb:checked+.lb-menu .lb-burger-dblspin span::before{"
+    "transform:rotate(225deg)"
   "}"
-  ".luxbar-checkbox:checked+.luxbar-menu .luxbar-hamburger-doublespin span::after{"
-    "transform:rotate(-225deg);"
+  ".lb-cb:checked+.lb-menu .lb-burger-dblspin span::after{"
+    "transform:rotate(-225deg)"
   "}"
-  ".luxbar-menu-material-bluegrey,"
-  ".luxbar-menu-material-bluegrey .dropdown ul{"
-    "background-color:#002514;"
-    "color:#C6C6C6;"
+  ".lb-menu-material,"
+  ".lb-menu-material .dropdown ul{"
+    "background-color:" AUTOCONNECT_MENUCOLOR_BACKGROUND ";"
+    "color:" AUTOCONNECT_MENUCOLOR_TEXT
   "}"
-  ".luxbar-menu-material-bluegrey .active,"
-  ".luxbar-menu-material-bluegrey .luxbar-item:hover{"
-    "background-color:#3C3C3B;"
+  ".lb-menu-material .active,"
+  ".lb-menu-material .lb-item:hover{"
+    "background-color:" AUTOCONNECT_MENUCOLOR_ACTIVE
   "}"
-  ".luxbar-menu-material-bluegrey .luxbar-hamburger span,"
-  ".luxbar-menu-material-bluegrey .luxbar-hamburger span::before,"
-  ".luxbar-menu-material-bluegrey .luxbar-hamburger span::after{"
-    "background-color:#fff;"
+  ".lb-menu-material .lb-burger span,"
+  ".lb-menu-material .lb-burger span::before,"
+  ".lb-menu-material .lb-burger span::after{"
+    "background-color:" AUTOCONNECT_MENUCOLOR_TEXT
   "}"
 };
 
@@ -517,18 +519,18 @@ const char AutoConnect::_ELM_HTML_HEAD[] PROGMEM = {
 
 /**< LuxBar menu element. */
 const char  AutoConnect::_ELM_MENU_PRE[] PROGMEM = {
-  "<header id=\"luxbar\" class=\"luxbar-fixed\">"
-    "<input type=\"checkbox\" class=\"luxbar-checkbox\" id=\"luxbar-checkbox\"/>"
-    "<div class=\"luxbar-menu luxbar-menu-right luxbar-menu-material-bluegrey\">"
-      "<ul class=\"luxbar-navigation\">"
-        "<li class=\"luxbar-header\">"
-          "<a href=\"" AUTOCONNECT_URI "\" class=\"luxbar-brand\">MENU_TITLE</a>"
-          "<label class=\"luxbar-hamburger luxbar-hamburger-doublespin\" id=\"luxbar-hamburger\" for=\"luxbar-checkbox\"><span></span></label>"
+  "<header id=\"lb\" class=\"lb-fixed\">"
+    "<input type=\"checkbox\" class=\"lb-cb\" id=\"lb-cb\"/>"
+    "<div class=\"lb-menu lb-menu-right lb-menu-material\">"
+      "<ul class=\"lb-navigation\">"
+        "<li class=\"lb-header\">"
+          "<a href=\"" AUTOCONNECT_URI "\" class=\"lb-brand\">MENU_TITLE</a>"
+          "<label class=\"lb-burger lb-burger-dblspin\" id=\"lb-burger\" for=\"lb-cb\"><span></span></label>"
         "</li>"
-        "<li class=\"luxbar-item\"><a href=\"" AUTOCONNECT_URI_CONFIG "\">Configure new AP</a></li>"
-        "<li class=\"luxbar-item\"><a href=\"" AUTOCONNECT_URI_OPEN "\">Open SSIDs</a></li>"
-        "<li class=\"luxbar-item\"><a href=\"" AUTOCONNECT_URI_DISCON "\">Disconnect</a></li>"
-        "<li class=\"luxbar-item\" id=\"reset\"><a href=\"#rdlg\">Reset...</a></li>"
+        "<li class=\"lb-item\"><a href=\"" AUTOCONNECT_URI_CONFIG "\">" AUTOCONNECT_MENULABEL_CONFIGNEW "</a></li>"
+        "<li class=\"lb-item\"><a href=\"" AUTOCONNECT_URI_OPEN "\">" AUTOCONNECT_MENULABEL_OPENSSIDS "</a></li>"
+        "<li class=\"lb-item\"><a href=\"" AUTOCONNECT_URI_DISCON "\">" AUTOCONNECT_MENULABEL_DISCONNECT "</a></li>"
+        "<li class=\"lb-item\" id=\"reset\"><a href=\"#rdlg\">" AUTOCONNECT_MENULABEL_RESET "</a></li>"
 };
 
 const char  AutoConnect::_ELM_MENU_AUX[] PROGMEM = {
@@ -536,11 +538,11 @@ const char  AutoConnect::_ELM_MENU_AUX[] PROGMEM = {
 };
 
 const char  AutoConnect::_ELM_MENU_POST[] PROGMEM = {
-        "<li class=\"luxbar-item\"><a href=\"HOME_URI\">HOME</a></li>"
+        "<li class=\"lb-item\"><a href=\"HOME_URI\">" AUTOCONNECT_MENULABEL_HOME "</a></li>"
       "</ul>"
     "</div>"
     "<div class=\"lap\" id=\"rdlg\"><a href=\"#reset\" class=\"overlap\"></a>"
-      "<div class=\"modal_button\"><h2><a href=\"" AUTOCONNECT_URI_RESET "\" class=\"modal_button\">RESET</a></h2></div>"
+      "<div class=\"modal_button\"><h2><a href=\"" AUTOCONNECT_URI_RESET "\" class=\"modal_button\">" AUTOCONNECT_BUTTONLABEL_RESET "</a></h2></div>"
     "</div>"
   "</header>"
 };
@@ -670,8 +672,9 @@ const char  AutoConnect::_PAGE_CONFIGNEW[] PROGMEM = {
       "{{MENU_POST}}"
       "<div class=\"base-panel\">"
         "<form action=\"" AUTOCONNECT_URI_CONNECT "\" method=\"post\">"
+          "<button style=\"width:0;height:0;padding:0;border:0;margin:0\" aria-hidden=\"true\" tabindex=\"-1\" type=\"submit\" name=\"apply\" value=\"apply\"></button>"
           "{{LIST_SSID}}"
-          "<div style=\"margin:16px 0 8px 0;border-bottom:solid 1px #002514;\">Hidden:{{HIDDEN_COUNT}}</div>"
+          "<div style=\"margin:16px 0 8px 0;border-bottom:solid 1px #263238;\">Total:{{SSID_COUNT}} Hidden:{{HIDDEN_COUNT}}</div>"
           "<ul class=\"noorder\">"
             "<li>"
               "<label for=\"ssid\">SSID</label>"
@@ -681,11 +684,28 @@ const char  AutoConnect::_PAGE_CONFIGNEW[] PROGMEM = {
               "<label for=\"passphrase\">Passphrase</label>"
               "<input id=\"passphrase\" type=\"password\" name=\"" AUTOCONNECT_PARAMID_PASS "\" placeholder=\"Passphrase\">"
             "</li>"
-            "<br><li><input type=\"submit\" value=\"apply\"></li>"
+            "<li>"
+              "<label for=\"dhcp\">Enable DHCP</label>"
+              "<input id=\"dhcp\" type=\"checkbox\" name=\"dhcp\" value=\"en\" checked onclick=\"vsw(this.checked);\">"
+            "</li>"
+            "{{CONFIG_IP}}"
+            "<li><input type=\"submit\" name=\"apply\" value=\"Apply\"></li>"
           "</ul>"
         "</form>"
       "</div>"
     "</div>"
+  "<script type=\"text/javascript\">"
+    "window.onload=function(){"
+      "['" AUTOCONNECT_PARAMID_STAIP "','" AUTOCONNECT_PARAMID_GTWAY "','" AUTOCONNECT_PARAMID_NTMSK "','" AUTOCONNECT_PARAMID_DNS1 "','" AUTOCONNECT_PARAMID_DNS2 "'].forEach(function(n,o,t){"
+        "io=document.getElementById(n),io.placeholder='0.0.0.0',io.pattern='^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'});"
+      "vsw(true)};"
+    "function onFocus(e){"
+      "document.getElementById('ssid').value=e,document.getElementById('passphrase').focus()"
+    "}"
+    "function vsw(e){"
+      "var t;t=e?'none':'table-row';for(const e of document.getElementsByClassName('exp'))e.style.display=t;e||document.getElementById('sip').focus()"
+    "}"
+  "</script>"
   "</body>"
   "</html>"
 };
@@ -732,8 +752,8 @@ const char  AutoConnect::_PAGE_CONNECTING[] PROGMEM = {
       "{{MENU_PRE}}"
       "{{MENU_POST}}"
       "<div class=\"spinner\">"
-        "<div class=\"double-bounce1\"></div>"
-        "<div class=\"double-bounce2\"></div>"
+        "<div class=\"dbl-bounce1\"></div>"
+        "<div class=\"dbl-bounce2\"></div>"
         "<div style=\"position:absolute;left:-100%;right:-100%;text-align:center;margin:10px auto;font-weight:bold;color:#0b0b33;\">{{CUR_SSID}}</div>"
       "</div>"
     "</div>"
@@ -847,6 +867,25 @@ const char  AutoConnect::_PAGE_DISCONN[] PROGMEM = {
   "</html>"
 };
 
+// Each page of AutoConnect is http transferred by the content transfer
+// mode of Page Builder. The default transfer mode is
+// AUTOCONNECT_HTTP_TRANSFER defined in AutoConnectDefs.h. The page to
+// which default transfer mode is not applied, specifies the enumeration
+// value of PageBuilder::TransferEncoding_t. The content construction
+// buffer can be reserved with the chunked transfer, and its size is
+// macro defined by AUTOCONNECT_CONTENTBUFFER_SIZE.
+const AutoConnect::PageTranserModeST AutoConnect::_pageBuildMode[] = {
+  { AUTOCONNECT_URI,         AUTOCONNECT_HTTP_TRANSFER, 0 },
+  { AUTOCONNECT_URI_CONFIG,  PB_Chunk, AUTOCONNECT_CONTENTBUFFER_SIZE },
+  { AUTOCONNECT_URI_CONNECT, AUTOCONNECT_HTTP_TRANSFER, 0 },
+  { AUTOCONNECT_URI_RESULT,  AUTOCONNECT_HTTP_TRANSFER, 0 },
+  { AUTOCONNECT_URI_OPEN,    AUTOCONNECT_HTTP_TRANSFER, 0 },
+  { AUTOCONNECT_URI_DISCON,  AUTOCONNECT_HTTP_TRANSFER, 0 },
+  { AUTOCONNECT_URI_RESET,   AUTOCONNECT_HTTP_TRANSFER, 0 },
+  { AUTOCONNECT_URI_SUCCESS, AUTOCONNECT_HTTP_TRANSFER, 0 },
+  { AUTOCONNECT_URI_FAIL,    AUTOCONNECT_HTTP_TRANSFER, 0 }
+};
+
 uint32_t AutoConnect::_getChipId() {
 #if defined(ARDUINO_ARCH_ESP8266)
   return ESP.getChipId();
@@ -906,10 +945,9 @@ String AutoConnect::_token_HEAD(PageArgument& args) {
 }
 
 String AutoConnect::_token_MENU_PRE(PageArgument& args) {
-  AC_UNUSED(args);
   String  currentMenu = FPSTR(_ELM_MENU_PRE);
   currentMenu.replace(String(F("MENU_TITLE")), _menuTitle);
-  // currentMenu.replace(String(F("HOME_URI")), _apConfig.homeUri);
+  currentMenu.replace(String(F("{{CUR_SSID}}")), _token_ESTAB_SSID(args));
   return currentMenu;
 }
 
@@ -969,15 +1007,17 @@ String AutoConnect::_token_WIFI_STATUS(PageArgument& args) {
 
 String AutoConnect::_token_STATION_STATUS(PageArgument& args) {
   AC_UNUSED(args);
-  const char* wlStatusSymbol ="";
-  static const char* wlStatusSymbols[] = {
+  PGM_P wlStatusSymbol = PSTR("");
+  // const char* wlStatusSymbol ="";
+  PGM_P wlStatusSymbols[] = {
+  // static const char* wlStatusSymbols[] = {
 #if defined(ARDUINO_ARCH_ESP8266)
-    "IDLE",
-    "CONNECTING",
-    "WRONG_PASSWORD",
-    "NO_AP_FOUND",
-    "CONNECT_FAIL",
-    "GOT_IP"
+    PSTR("IDLE"),
+    PSTR("CONNECTING"),
+    PSTR("WRONG_PASSWORD"),
+    PSTR("NO_AP_FOUND"),
+    PSTR("CONNECT_FAIL"),
+    PSTR("GOT_IP")
   };
   switch (wifi_station_get_connect_status()) {
   case STATION_IDLE:
@@ -999,14 +1039,14 @@ String AutoConnect::_token_STATION_STATUS(PageArgument& args) {
     wlStatusSymbol = wlStatusSymbols[5];
     break;
 #elif defined(ARDUINO_ARCH_ESP32)
-    "IDLE",
-    "NO_SSID_AVAIL",
-    "SCAN_COMPLETED",
-    "CONNECTED",
-    "CONNECT_FAILED",
-    "CONNECTION_LOST",
-    "DISCONNECTED",
-    "NO_SHIELD"
+    PSTR("IDLE"),
+    PSTR("NO_SSID_AVAIL"),
+    PSTR("SCAN_COMPLETED"),
+    PSTR("CONNECTED"),
+    PSTR("CONNECT_FAILED"),
+    PSTR("CONNECTION_LOST"),
+    PSTR("DISCONNECTED"),
+    PSTR("NO_SHIELD")
   };
   switch (_rsConnect) {
   case WL_IDLE_STATUS:
@@ -1035,7 +1075,7 @@ String AutoConnect::_token_STATION_STATUS(PageArgument& args) {
     break;
 #endif
   }
-  return String("(") + String(_rsConnect) + String(") ") + String(wlStatusSymbol);
+  return String("(") + String(_rsConnect) + String(") ") + String(FPSTR(wlStatusSymbol));
 }
 
 String AutoConnect::_token_LOCAL_IP(PageArgument& args) {
@@ -1104,25 +1144,78 @@ String AutoConnect::_token_FREE_HEAP(PageArgument& args) {
 }
 
 String AutoConnect::_token_LIST_SSID(PageArgument& args) {
-  AC_UNUSED(args);
-  String ssidList = String("");
+  // Obtain the page number to display.
+  // When the display request is the first page, it will be obtained
+  // from the scan results of the WiFiScan class if it has already been
+  // scanned.
+  uint8_t page = 0;
+  if (args.hasArg(String(F("page"))))
+    page = args.arg("page").toInt();
+  else {
+    // Scan at a first time
+    WiFi.scanDelete();
+    _scanCount = WiFi.scanNetworks(false, true);
+    AC_DBG("%d network(s) found\n", (int)_scanCount);
+  }
+  // Preapre SSID list content building buffer
+  size_t  bufSize = sizeof('\0') + 192 * (_scanCount > AUTOCONNECT_SSIDPAGEUNIT_LINES ? AUTOCONNECT_SSIDPAGEUNIT_LINES : _scanCount);
+  bufSize += 88 * (_scanCount > AUTOCONNECT_SSIDPAGEUNIT_LINES ? (_scanCount > (AUTOCONNECT_SSIDPAGEUNIT_LINES * 2) ? 2 : 1) : 0);
+  char* ssidList = (char*)malloc(bufSize);
+  if (!ssidList) {
+    AC_DBG("ssidList buffer(%d) allocation failed\n", (int)bufSize);
+    return _emptyString;
+  }
+  AC_DBG_DUMB("\n");
+  // Locate to the page and build SSD list content.
+  static const char _ssidList[] PROGMEM =
+    "<input type=\"button\" onClick=\"onFocus(this.getAttribute('value'))\" value=\"%s\">"
+    "<label class=\"slist\">%d&#037;&ensp;Ch.%d</label>%s<br>";
+  static const char _ssidEnc[] PROGMEM =
+    "<span class=\"img-lock\"></span>";
+  static const char _ssidPage[] PROGMEM =
+    "<button type=\"submit\" name=\"page\" value=\"%d\" formaction=\"" AUTOCONNECT_URI_CONFIG "\">%s</button>&emsp;";
   _hiddenSSIDCount = 0;
-  WiFi.scanDelete();
-  _scanCount = WiFi.scanNetworks(false, true);
-  AC_DBG("%d network(s) found\n", (int)_scanCount);
+  uint8_t validCount = 0;
+  uint8_t dispCount = 0;
+  char* slBuf = ssidList;
+  *slBuf = '\0';
   for (uint8_t i = 0; i < _scanCount; i++) {
     String ssid = WiFi.SSID(i);
     if (ssid.length() > 0) {
-      ssidList += String(F("<input type=\"button\" onClick=\"document.getElementById('ssid').value=this.getAttribute('value');document.getElementById('passphrase').focus()\" value=\"")) + ssid + String("\">");
-      ssidList += String(F("<label class=\"slist\">")) + String(AutoConnect::_toWiFiQuality(WiFi.RSSI(i))) + String(F("&#037;&ensp;Ch.")) + String(WiFi.channel(i)) + String(F("</label>"));
-      if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
-        ssidList += String(F("<span class=\"img-lock\"></span>"));
-      ssidList += String(F("<br>"));
+      // An available SSID may be listed.
+      // AUTOCONNECT_SSIDPAGEUNIT_LINES determines the number of lines
+      // per page in the available SSID list.
+      if (validCount >= page * AUTOCONNECT_SSIDPAGEUNIT_LINES && validCount <= (page + 1) * AUTOCONNECT_SSIDPAGEUNIT_LINES - 1) {
+        if (++dispCount <= AUTOCONNECT_SSIDPAGEUNIT_LINES) {
+          snprintf_P(slBuf, bufSize - (slBuf - ssidList), (PGM_P)_ssidList, ssid.c_str(), AutoConnect::_toWiFiQuality(WiFi.RSSI(i)), WiFi.channel(i), WiFi.encryptionType(i) != ENC_TYPE_NONE ? (PGM_P)_ssidEnc : "");
+          slBuf += strlen(slBuf);
+        }
+      }
+      // The validCount counts the found SSIDs that is not the Hidden
+      // attribute to determines the next button should be displayed.
+      validCount++;
     }
     else
       _hiddenSSIDCount++;
   }
-  return ssidList;
+  // Prepare perv. button
+  if (page >= 1) {
+    snprintf_P(slBuf, bufSize - (slBuf - ssidList), (PGM_P)_ssidPage, page - 1, PSTR("Prev."));
+    slBuf = ssidList + strlen(ssidList);
+  }
+  // Prepare next button
+  if (validCount > (page + 1) * AUTOCONNECT_SSIDPAGEUNIT_LINES) {
+    snprintf_P(slBuf, bufSize - (slBuf - ssidList), (PGM_P)_ssidPage, page + 1, PSTR("Next"));
+  }
+  // return ssidList;
+  String ssidListStr = String(ssidList);
+  free(ssidList);
+  return ssidListStr;
+}
+
+String AutoConnect::_token_SSID_COUNT(PageArgument& args) {
+  AC_UNUSED(args);
+  return String(_scanCount);
 }
 
 String AutoConnect::_token_HIDDEN_COUNT(PageArgument& args) {
@@ -1130,12 +1223,57 @@ String AutoConnect::_token_HIDDEN_COUNT(PageArgument& args) {
   return String(_hiddenSSIDCount);
 }
 
+String AutoConnect::_token_CONFIG_STAIP(PageArgument& args) {
+  AC_UNUSED(args);
+  static const char _configIPList[] PROGMEM =
+    "<li class=\"exp\">"
+    "<label for=\"%s\">%s</label>"
+    "<input id=\"%s\" type=\"text\" name=\"%s\" value=\"%s\">"
+    "</li>";
+  struct _reps {
+    PGM_P lid;
+    PGM_P lbl;
+  } static const reps[]  = {
+    { PSTR(AUTOCONNECT_PARAMID_STAIP), PSTR("IP Address") },
+    { PSTR(AUTOCONNECT_PARAMID_GTWAY), PSTR("Gateway") },
+    { PSTR(AUTOCONNECT_PARAMID_NTMSK), PSTR("Netmask") },
+    { PSTR(AUTOCONNECT_PARAMID_DNS1), PSTR("DNS1") },
+    { PSTR(AUTOCONNECT_PARAMID_DNS2), PSTR("DNS2") }
+  };
+  char  liCont[600];
+  char* liBuf = liCont;
+
+  for (uint8_t i = 0; i < 5; i++) {
+    IPAddress*  ip;
+    if (i == 0)
+      ip = &_apConfig.staip;
+    else if (i == 1)
+      ip = &_apConfig.staGateway;
+    else if (i == 2)
+      ip = &_apConfig.staNetmask;
+    else if (i == 3)
+      ip = &_apConfig.dns1;
+    else if (i == 4)
+      ip = &_apConfig.dns2;
+    String  ipStr = *ip ? ip->toString() : String(F("0.0.0.0"));
+    snprintf_P(liBuf, sizeof(liCont) - (liBuf - liCont), (PGM_P)_configIPList, reps[i].lid, reps[i].lbl, reps[i].lid, reps[i].lid, ipStr.c_str());
+    liBuf += strlen(liBuf);
+  }
+  return String(liCont);
+}
+
 String AutoConnect::_token_OPEN_SSID(PageArgument& args) {
   AC_UNUSED(args);
-  AutoConnectCredential credit(_apConfig.boundaryOffset);
-  struct station_config entry;
+  static const char _ssidList[] PROGMEM = "<input id=\"sb\" type=\"submit\" name=\"%s\" value=\"%s\"><label class=\"slist\">%s</label>%s<br>";
+  static const char _ssidRssi[] PROGMEM = "%d&#037;&ensp;Ch.%d";
+  static const char _ssidNA[]   PROGMEM = "N/A";
+  static const char _ssidLock[] PROGMEM = "<span class=\"img-lock\"></span>";
+  static const char _ssidNull[] PROGMEM = "";
   String ssidList;
-  String rssiSym;
+  station_config_t  entry;
+  char  slCont[176];
+  char  rssiCont[32];
+  AutoConnectCredential credit(_apConfig.boundaryOffset);
 
   uint8_t creEntries = credit.entries();
   if (creEntries > 0) {
@@ -1146,20 +1284,23 @@ String AutoConnect::_token_OPEN_SSID(PageArgument& args) {
     ssidList = String(F("<p><b>No saved credentials.</b></p>"));
 
   for (uint8_t i = 0; i < creEntries; i++) {
+    rssiCont[0] = '\0';
+    PGM_P rssiSym = _ssidNA;
+    PGM_P ssidLock = _ssidNull;
     credit.load(i, &entry);
     AC_DBG("A credential #%d loaded\n", (int)i);
-    ssidList += String(F("<input id=\"sb\" type=\"submit\" name=\"" AUTOCONNECT_PARAMID_CRED "\" value=\"")) + String(reinterpret_cast<char*>(entry.ssid)) + String(F("\"><label class=\"slist\">"));
-    rssiSym = String(F("N/A</label>"));
     for (int8_t sc = 0; sc < (int8_t)_scanCount; sc++) {
-      if (!memcmp(entry.bssid, WiFi.BSSID(sc), sizeof(station_config::bssid))) {
+      if (!memcmp(entry.bssid, WiFi.BSSID(sc), sizeof(station_config_t::bssid))) {
         _connectCh = WiFi.channel(sc);
-        rssiSym = String(AutoConnect::_toWiFiQuality(WiFi.RSSI(sc))) + String(F("&#037;&ensp;Ch.")) + String(_connectCh) + String(F("</label>"));
+        snprintf_P(rssiCont, sizeof(rssiCont), (PGM_P)_ssidRssi, AutoConnect::_toWiFiQuality(WiFi.RSSI(sc)), _connectCh);
+        rssiSym = rssiCont;
         if (WiFi.encryptionType(sc) != ENC_TYPE_NONE)
-          rssiSym += String(F("<span class=\"img-lock\"></span>"));
+          ssidLock = _ssidLock;
         break;
       }
     }
-    ssidList += rssiSym + String(F("<br>"));
+    snprintf_P(slCont, sizeof(slCont), (PGM_P)_ssidList, AUTOCONNECT_PARAMID_CRED, reinterpret_cast<char*>(entry.ssid), rssiSym, ssidLock);
+    ssidList += String(slCont);
   }
   return ssidList;
 }
@@ -1181,7 +1322,10 @@ String AutoConnect::_token_BOOTURI(PageArgument& args) {
 
 String AutoConnect::_token_CURRENT_SSID(PageArgument& args) {
   AC_UNUSED(args);
-  String  ssid = reinterpret_cast<char*>(_credential.ssid);
+  char  ssid_c[sizeof(station_config_t::ssid) + 1];
+  *ssid_c = '\0';
+  strncat(ssid_c, reinterpret_cast<char*>(_credential.ssid), sizeof(ssid_c) - 1);
+  String  ssid = String(ssid_c);
   return ssid;
 }
 
@@ -1243,7 +1387,9 @@ PageElement* AutoConnect::_setupPage(String uri) {
     elm->addToken(String(FPSTR("MENU_AUX")), std::bind(&AutoConnect::_token_MENU_AUX, this, std::placeholders::_1));
     elm->addToken(String(FPSTR("MENU_POST")), std::bind(&AutoConnect::_token_MENU_POST, this, std::placeholders::_1));
     elm->addToken(String(FPSTR("LIST_SSID")), std::bind(&AutoConnect::_token_LIST_SSID, this, std::placeholders::_1));
+    elm->addToken(String(FPSTR("SSID_COUNT")), std::bind(&AutoConnect::_token_SSID_COUNT, this, std::placeholders::_1));
     elm->addToken(String(FPSTR("HIDDEN_COUNT")), std::bind(&AutoConnect::_token_HIDDEN_COUNT, this, std::placeholders::_1));
+    elm->addToken(String(FPSTR("CONFIG_IP")), std::bind(&AutoConnect::_token_CONFIG_STAIP, this, std::placeholders::_1));
   }
   else if (uri == String(AUTOCONNECT_URI_CONNECT)) {
 
@@ -1337,6 +1483,18 @@ PageElement* AutoConnect::_setupPage(String uri) {
   else {
     delete elm;
     elm = nullptr;
+  }
+
+  // Restore the page transfer mode and the content build buffer
+  // reserved size corresponding to each URI defined in structure
+  // _pageBuildMode.
+  if (elm) {
+    for (uint8_t n = 0; n < sizeof(_pageBuildMode) / sizeof(PageTranserModeST); n++)
+      if (!strcmp(_pageBuildMode[n].uri, uri.c_str())) {
+        _responsePage->reserve(_pageBuildMode[n].rSize);
+        _responsePage->chunked(_pageBuildMode[n].transMode);
+        break;
+      }
   }
 
   return elm;

@@ -5,15 +5,22 @@ Representative HTML elements for making the custom Web page are provided as Auto
 - [AutoConnectButton](#autoconnectbutton): Labeled action button
 - [AutoConnectCheckbox](#autoconnectcheckbox): Labeled checkbox
 - [AutoConnectElement](#autoconnectelement-a-basic-class-of-elements): General tag
+- [AutoConnectFile](#autoconnectfile): File uploader
 - [AutoConnectInput](#autoconnectinput): Labeled text input box
 - [AutoConnectRadio](#autoconnectradio): Labeled radio button
 - [AutoConnectSelect](#autoconnectselect): Selection list
+- [AutoConnectStyle](#autoconnectstyle): Custom CSS code
 - [AutoConnectSubmit](#autoconnectsubmit): Submit button
 - [AutoConnectText](#autoconnecttext): Style attributed text
 
 ## Layout on a custom Web page
 
-The elements of the page created by AutoConnectElements are aligned vertically exclude the [AutoConnectRadio](#autoconnectradio). You can specify the direction to arrange the radio buttons as AutoConnectRadio vertically or horizontally. This basic layout depends on the CSS of the AutoConnect menu so you can not change drastically.
+AutoConnect will not actively be involved in the layout of custom Web pages generated from AutoConnectElements. However, each element has [an attribute to arrange placement](#post) on a custom web page by horizontally or vertically.
+
+## Custom CSS for a custom Web page
+
+All custom Web page styles are limited to the built-in unique CSS embedded in the library code. Direct modification of the CSS affects AutoConnect behavior. You can use dedicated elements to relatively safely modify the style of your custom Web page.
+The [AutoConnectStyle](#autoconnectstyle) will insert the raw CSS code into the style block in HTML of the custom Web page.
 
 ## Form and AutoConnectElements
 
@@ -31,7 +38,7 @@ AutoConnectElement is a base class for other element classes and has common attr
 ### <i class="fa fa-edit"></i> Constructor
 
 ```cpp
-AutoConnectElement(const char* name, const char* value)
+AutoConnectElement(const char* name, const char* value, const ACPosterior_t post)
 ```
 
 ### <i class="fa fa-caret-right"></i> name
@@ -41,6 +48,29 @@ Each element has a name. The **name** is the String data type. You can identify 
 ### <i class="fa fa-caret-right"></i> value
 
 The **value** is the string which is a source to generate an HTML code. Characteristics of Value vary depending on the element. The value of AutoConnectElement is native HTML code. A string of value is output as HTML as it is.
+
+### <i class="fa fa-caret-right"></i> post
+
+The **post** specifies a tag to add behind the HTML code generated from the element. Its purpose is to place elements on the custom Web page as intended by the user sketch.
+AutoConnect will not actively be involved in the layout of custom Web pages generated from AutoConnectElements. Each element follows behind the previous one, with the exception of some elements. You can use the **post** value to arrange vertically or horizontal when the elements do not have the intended position on the custom Web Page specifying the following enumeration value as **ACPosterior_t** type for the **post**.
+
+- **`AC_Tag_None`** : No generate additional tags.
+- **`AC_Tag_BR`** : Add a `<br>` tag to the end of the element.
+- **`AC_Tag_P`** : Include the element in the `<p> ~ </p>` tag.
+
+The default interpretation of the post value is specific to each element.
+
+AutoConnectElements | Default interpretation of the post value
+----|----
+AutoConnectElement | AC_Tag_None
+AutoConnectButton | AC_Tag_None
+AutoConnectCheckBox | AC_Tag_BR
+AutoConnectFile | AC_Tag_BR
+AutoConnectInput | AC_Tag_BR
+AutoConnectRadio | AC_Tag_BR
+AutoConnectSelect | AC_Tag_BR
+AutoConnectSubmit | AC_Tag_None
+AutoConnectText | AC_Tag_None
 
 ### <i class="fa fa-caret-right"></i> type
 
@@ -63,14 +93,30 @@ The enumerators for *ACElement_t* are as follows:
 -  AutoConnectButton: **AC_Button**
 -  AutoConnectCheckbox: **AC_Checkbox** 
 -  AutoConnectElement: **AC_Element**
+-  AutoConnectFile: **AC_File**
 -  AutoConnectInput: **AC_Input**
 -  AutoConnectRadio: **AC_Radio**
 -  AutoConnectSelect: **AC_Select**
+-  AutoConnectStyle: **AC_Style**
 -  AutoConnectSubmit: **AC_Submit**
 -  AutoConnectText: **AC_Text**
 -  Uninitialized element: **AC_Unknown**
 
-Furthermore, to convert an entity that is not an AutoConnectElement to its native type, you must [re-interpret](https://en.cppreference.com/w/cpp/language/reinterpret_cast) that type with c++.
+Furthermore, to convert an entity that is not an AutoConnectElement to its native type, you must [re-interpret](https://en.cppreference.com/w/cpp/language/reinterpret_cast) that type with c++. Or, you can be coding the sketch more easily with using the [**as<T\>**](apielements.md#ast62) function.
+
+```cpp hl_lines="6"
+AutoConnectAux  customPage;
+
+AutoConnectElementVT& elements = customPage.getElements();
+for (AutoConnectElement& elm : elements) {
+  if (elm.type() == AC_Text) {
+    AutoConnectText& text = customPage[elm.name].as<AutoConnectText>();
+    text.style = "color:gray;";
+    // Or, it is also possible to write the code further reduced as follows.
+    // customPage[elm.name].as<AutoConnectText>().style = "color:gray;";
+  }
+}
+```
 
 ## AutoConnectButton
 
@@ -84,7 +130,7 @@ AutoConnectButton generates an HTML `#!html <button type="button">` tag and loca
 ### <i class="fa fa-edit"></i> Constructor
 
 ```cpp
-AutoConnectButton(const char* name, const char* value, const String& action)
+AutoConnectButton(const char* name, const char* value, const String& action, const ACPosterior_t post)
 ```
 
 ### <i class="fa fa-caret-right"></i> name
@@ -115,6 +161,10 @@ ACButton(Button, "COPY", "CopyText()");
 ACElement(TextCopy, scCopyText);
 ```
 
+### <i class="fa fa-caret-right"></i> post
+
+Specifies a tag to add behind the HTML code generated from the element. The default values is `AC_Tag_None`.
+
 ## AutoConnectCheckbox
 
 AutoConnectCheckbox generates an HTML `#!html <input type="checkbox">` tag and a `#!html <label>` tag. It places horizontally on a custom Web page by default.
@@ -127,7 +177,7 @@ AutoConnectCheckbox generates an HTML `#!html <input type="checkbox">` tag and a
 ### <i class="fa fa-edit"></i> Constructor
 
 ```cpp
-AutoConnectCheckbox(const char* name, const char* value, const char* label, const bool checked)
+AutoConnectCheckbox(const char* name, const char* value, const char* label, const bool checked, const ACPosition_t labelPosition, const ACPosterior_t post)
 ```
 
 ### <i class="fa fa-caret-right"></i> name
@@ -147,6 +197,59 @@ Only <i class="far fa-square"></i> will be displayed if a label is not specified
 
 A checked is a Boolean value and indicates the checked status of the checkbox. The value of the checked checkbox element is packed in the query string and sent.
 
+### <i class="fa fa-caret-right"></i> labelPosition
+
+The position of the label belonging to the checkbox can be specified around the element. The labelPosition specifies the position of the label to generate with **ACPostion_t** enumeration value. The default value is `AC_Behind`.
+
+- **`AC_Infront`** : Place a label in front of the check box.
+- **`AC_Behind`** : Place a label behind the check box.
+
+### <i class="fa fa-caret-right"></i> post
+
+Specifies a tag to add behind the HTML code generated from the element. The default values is `AC_Tag_BR`.
+
+## AutoConnectFile
+
+AutoConnectFile generates an HTML `#!html <input type="file">` tag and a `#!html <label>` tag. AutoConnectFile enables file upload from the client through the web browser to ESP8266/ESP32 module. You can select the flash in the module, external SD device or any output destination as the storage of the uploaded file.
+
+<i class="fa fa-eye"></i> **Sample**<br>
+<small>**`AutoConnectFile file("file", "", "Upload:", AC_File_FS)`**</small>
+
+<small>On the page:</small><br><img src="images/acfile.png">
+
+### <i class="fa fa-edit"></i> Constructor
+
+```cpp
+AutoConnectFile(const char* name, const char* value, const char* label, const ACFile_t store, const ACPosterior_t post)
+```
+
+### <i class="fa fa-caret-right"></i> name
+
+It is the `name` of the AutoConnectFile element and matches the name attribute of the input tag. It also becomes the parameter name of the query string when submitted.
+
+### <i class="fa fa-caret-right"></i> value
+
+File name to be upload. The value contains the value entered by the client browser to the `#!html <input type="file">` tag and is read-only. Even If you give a value to the constructor, it does not affect as an initial value like a default file name.
+
+### <i class="fa fa-caret-right"></i> label
+
+A `label` is an optional string. A label is always arranged on the left side of the input box. Specification of a label will generate an HTML `#!html <label>` tag with an id attribute. The input box and the label are connected by the id attribute.
+
+### <i class="fa fa-caret-right"></i> store
+
+Specifies the destination to save the uploaded file. The destination can be specified the following values ​​in the *ACFile_t* enumeration type.
+
+- **`AC_File_FS`** : Save as the SPIFFS file in flash of ESP8266/ESP32 module.
+- **`AC_File_SD`** : Save to an external SD device connected to ESP8266/ESP32 module.
+- **`AC_File_Extern`** : Pass the content of the uploaded file to the uploader which is declared by the sketch individually. Its uploader must inherit [**AutoConnectUploadHandler**](acupload.md#to-upload-to-a-device-other-than-flash-or-sd) class and implements *_open*, *_write* and *_close* function.
+
+!!! note "Built-in uploader is ready."
+    AutoConnect already equips the built-in uploader for saving to the SPIFFS as AC_File_FS and the external SD as AC_File_SD. It is already implemented inside AutoConnect and will store uploaded file automatically.
+
+### <i class="fa fa-caret-right"></i> post
+
+Specifies a tag to add behind the HTML code generated from the element. The default values is `AC_Tag_BR`.
+
 ## AutoConnectInput
 
 AutoConnectInput generates an HTML `#!html <input type="text">` tag and a `#!html <label>` tag. It can also have a placeholder. The value of the input box is passed to the destination in the query string and can be retrieved programmatically. You can also update from the sketches.
@@ -159,7 +262,7 @@ AutoConnectInput generates an HTML `#!html <input type="text">` tag and a `#!htm
 ### <i class="fa fa-edit"></i> Constructor
 
 ```cpp
-AutoConnectInput(const char* name, const char* value, const char* label, const char* pattern, const char* placeholder)
+AutoConnectInput(const char* name, const char* value, const char* label, const char* pattern, const char* placeholder, const ACPosterior_t post)
 ```
 
 ### <i class="fa fa-caret-right"></i> name
@@ -193,6 +296,10 @@ A `pattern` specifies a [regular expression](https://www.w3schools.com/js/js_reg
 
 A placeholder is an option string. Specification of a placeholder will generate a `placeholder` attribute for the input tag.
 
+### <i class="fa fa-caret-right"></i> post
+
+Specifies a tag to add behind the HTML code generated from the element. The default values is `AC_Tag_BR`.
+
 ## AutoConnectRadio
 
 AutoConnectRadio generates few HTML `#!html <input type="radio">` tags as grouped and the same number of `#!html <label>` tags. AutoConnectRadio can keep the value of a radio button as a collection. The grouped values will be placed in the custom Web page to select only one exclusively.
@@ -205,7 +312,7 @@ AutoConnectRadio generates few HTML `#!html <input type="radio">` tags as groupe
 ### <i class="fa fa-edit"></i> Constructor
 
 ```cpp
-AutoConnectRadio(const char* name, std::vector<String> const& values, const char* label, const ACArrange_t order, const uint8_t checked)
+AutoConnectRadio(const char* name, std::vector<String> const& values, const char* label, const ACArrange_t order, const uint8_t checked, const ACPosterior_t post)
 ```
 
 ### <i class="fa fa-caret-right"></i> name
@@ -233,6 +340,32 @@ A label will place in the left or the top according to the **order**.
 
 A `checked` specifies the index number (1-based) of the **values** to be checked. If this parameter is not specified neither item is checked.
 
+### <i class="fa fa-caret-right"></i> post
+
+Specifies a tag to add behind the HTML code generated from the element. The default values is `AC_Tag_BR`.
+
+## AutoConnectStyle
+
+AutoConnectStyle inserts the string given by the **value** into the style block of a custom Web page as it is raw.
+
+!!! warning "The validity as CSS will not be checked"
+    AutoConnectStyle does not do syntax checking and semantic analysis of value. Insert the specified string into the style block of the custom Web page without processing it.
+    Therefore, specifying the wrong CSS will modulate the behavior of the custom Web page.
+
+### <i class="fa fa-code"></i> Constructor
+
+```cpp
+AutoConnectStyle(const char* name, const char* value)
+```
+
+### <i class="fa fa-caret-right"></i> name
+
+It is the `name` of the AutoConnectStyle element and is useful only to access this element from the sketch. It does not affect the generated HTML code.
+
+### <i class="fa fa-caret-right"></i> value
+
+The raw CSS code. It is not necessary to write `<style>` `</style>` tags.
+
 ## AutoConnectSelect
 
 AutoConnectSelect generates an HTML `#!html <select>` tag (drop-down list) and few `#!html <option>` tags.
@@ -245,7 +378,7 @@ AutoConnectSelect generates an HTML `#!html <select>` tag (drop-down list) and f
 ### <i class="fa fa-edit"></i> Constructor
 
 ```cpp
-AutoConnectSelect(const char* name, std::vector<String> const& options, const char* label)
+AutoConnectSelect(const char* name, std::vector<String> const& options, const char* label, const uint8_t selected, const ACPosterior_t post)
 ```
 
 ### <i class="fa fa-caret-right"></i> name
@@ -260,6 +393,14 @@ An `options` is an array of String type for the options which as actually [std::
 
 A `label` is an optional string. A label is always arranged on the left side of the drop-down list. Specification of a label will generate an HTML `#!html <label>` tag with an id attribute. The select tag and the label are connected by the id attribute.
 
+### <i class="fa fa-caret-right"></i> selected
+
+A `selected` is an optional value. Specifies that an option should be pre-selected when the page loads.
+
+### <i class="fa fa-caret-right"></i> post
+
+Specifies a tag to add behind the HTML code generated from the element. The default values is `AC_Tag_BR`.
+
 ## AutoConnectSubmit
 
 AutoConnectSubmit generates an HTML `#!html <input type="button">` tag attached `#!html onclick` attribute. The native code of the `#!html onclick` attribute is the submission of the form with the **POST** method.
@@ -272,7 +413,7 @@ AutoConnectSubmit generates an HTML `#!html <input type="button">` tag attached 
 ### <i class="fa fa-edit"></i> Constructor
 
 ```cpp
-AutoConnectSubmit(const char* name, const char* value, const char* uri)
+AutoConnectSubmit(const char* name, const char* value, const char* uri, const ACPosterior_t post)
 ```
 
 ### <i class="fa fa-caret-right"></i> name
@@ -291,6 +432,10 @@ The query string of the form data sent with AutoConnectSubmit contains the URI o
 
 \_acuri=**CALLER_URI**
 
+### <i class="fa fa-caret-right"></i> post
+
+Specifies a tag to add behind the HTML code generated from the element. The default values is `AC_Tag_None`.
+
 ## AutoConnectText
 
 AutoConnectText generates an HTML `#!html <div>` tag. A `#!html style` attribute will be attached if a [style](#style) parameter is passed.
@@ -303,7 +448,7 @@ AutoConnectText generates an HTML `#!html <div>` tag. A `#!html style` attribute
 ### <i class="fa fa-edit"></i> Constructor
 
 ```cpp
-AutoConnectText(const char* name, const char* value, const char* style)
+AutoConnectText(const char* name, const char* value, const char* style, const char* format, const ACPosterior_t post)
 ```
 
 ### <i class="fa fa-caret-right"></i> name
@@ -318,6 +463,14 @@ It becomes content and also can contain the native HTML code, but remember that 
 
 A `style` specifies the qualification style to give to the content and can use the style attribute format as it is.
 
+### <i class="fa fa-caret-right"></i> format
+
+A `format` is a pointer to a null-terminated multi byte string specifying how to interpret the value. It specifies the conversion format when outputting values. The format string conforms to C-style printf library functions, but depends on the Espressif's SDK implementation. The conversion specification is valid only in **%s** format. (Left and Right justification, width are also valid.)
+
+### <i class="fa fa-caret-right"></i> post
+
+Specifies a tag to add behind the HTML code generated from the element. The default values is `AC_Tag_None`.
+
 ## How to coding for the elements
 
 ### <i class="fa fa-edit"></i> Declaration for the elements in Sketches
@@ -326,21 +479,25 @@ Variables of each AutoConnetElement can be declared with macros. By using the ma
 
 [^2]: The square brackets in the syntax are optional parameters, the stroke is a selection parameter, the bold fonts are literal.
 
-ACElement ( *name* <small>\[</small> , *value* <small>\]</small> )
+ACElement ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , <small>**AC\_Tag\_None**</small> | <small>**AC\_Tag\_BR**</small> | <small>**AC\_Tag\_P**</small> <small>\]</small> )
 
-ACButton ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *action* <small>\]</small> )
+ACButton ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *action* <small>\]</small> <small>\[</small> , <small>**AC\_Tag\_None**</small> | <small>**AC\_Tag\_BR**</small> | <small>**AC\_Tag\_P**</small> <small>\]</small> )
  
-ACCheckbox ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *label* <small>\]</small> <small>\[</small> , **true** | **false** <small>\]</small> )
+ACCheckbox ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *label* <small>\]</small> <small>\[</small> , <small>**true**</small> | <small>**false**</small> <small>\]</small> <small>\[</small> , <small>**AC_Infront**</small> | <small>**AC_Behind**</small> <small>\]</small> <small>\[</small> , <small>**AC\_Tag\_None**</small> | <small>**AC\_Tag\_BR**</small> | <small>**AC\_Tag\_P**</small> <small>\]</small> )
 
-ACInput ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *label* <small>\]</small> <small>\[</small> , *pattern* <small>\]</small> <small>\[</small> , *placeholder* <small>\]</small> )
+ACFile ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *label* <small>\]</small> <small>\[</small> , <small>**AC\_File\_FS**</small> | <small>**AC\_File\_SD**</small> | <small>**AC\_File\_Extern**</small> <small>\]</small> <small>\[</small> , <small>**AC\_Tag\_None**</small> | <small>**AC\_Tag\_BR**</small> | <small>**AC\_Tag\_P**</small> <small>\]</small> )
 
-ACRadio ( *name* <small>\[</small> , *values* <small>\]</small> <small>\[</small> , *label* <small>\]</small> <small>\[</small> , **AC\_Horizontal** | **AC\_Vertical** <small>\]</small> <small>\[</small> , *checked* <small>\]</small> )
+ACInput ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *label* <small>\]</small> <small>\[</small> , *pattern* <small>\]</small> <small>\[</small> , *placeholder* <small>\]</small> <small>\[</small> , <small>**AC\_Tag\_None**</small> | <small>**AC\_Tag\_BR**</small> | <small>**AC\_Tag\_P**</small> <small>\]</small> )
 
-ACSelect ( *name* <small>\[</small> , *options* <small>\]</small> <small>\[</small> , *label* <small>\]</small> )
+ACRadio ( *name* <small>\[</small> , *values* <small>\]</small> <small>\[</small> , *label* <small>\]</small> <small>\[</small> , <small>**AC\_Horizontal</small>** | <small>**AC\_Vertical**</small> <small>\]</small> <small>\[</small> , *checked* <small>\]</small> <small>\[</small> , <small>**AC\_Tag\_None**</small> | <small>**AC\_Tag\_BR**</small> | <small>**AC\_Tag\_P**</small> <small>\]</small> )
 
-ACSubmit ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *uri* <small>\]</small> )
+ACSelect ( *name* <small>\[</small> , *options* <small>\]</small> <small>\[</small> , *label* <small>\]</small> <small>\[</small> , <small>**AC\_Tag\_None**</small> | <small>**AC\_Tag\_BR**</small> | <small>**AC\_Tag\_P**</small> <small>\]</small> )
 
-ACText ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *style* <small>\]</small> )
+ACStyle ( *name* <small>\[</small> , *value* <small>\]</small> )
+
+ACSubmit ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *uri* <small>\]</small> <small>\[</small> , <small>**AC\_Tag\_None**</small> | <small>**AC\_Tag\_BR**</small> | <small>**AC\_Tag\_P**</small> <small>\]</small> )
+
+ACText ( *name* <small>\[</small> , *value* <small>\]</small> <small>\[</small> , *style* <small>\]</small> <small>\[</small> , *format* <small>\]</small> <small>\[</small> , <small>**AC\_Tag\_None**</small> | <small>**AC\_Tag\_BR**</small> | <small>**AC\_Tag\_P**</small> <small>\]</small> )
 
 !!! memo "Declaration macro usage"
     For example, *AutoConnectText* can be declared using macros.
@@ -360,6 +517,6 @@ Some AutoConnectAux APIs specify AutoConnectElements as an argument. There are a
 AutoConnectAux aux;
 ACText(Text1, "hello, world");
 aux.add(Text1);
-AutoConnectText* text_p = reinterpret_cast<AutoConnectText>(aux.getElement("Text1"));
+AutoConnectText* text_p = reinterpret_cast<AutoConnectText*>(aux.getElement("Text1"));
 AutoConnectText& text = aux.getElement<AutoConnectText>("Text1");
 ```

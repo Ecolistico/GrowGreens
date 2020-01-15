@@ -15,6 +15,18 @@ AutoConnectAux(const String& uri = String(""), const String& title = String(""),
 
 ## <i class="fa fa-code"></i> Public member functions
 
+### <i class="fa fa-caret-right"></i> operator [ ]
+
+```cpp
+AutoConnectElement& operator[](const String& name)
+```
+Returns a reference to the element specified by **name**. An operator `[]` is a shortcut for [getElement](apiaux.md#getelement) function with the reference casting. Unlike getElement, which returns a pointer to that element, an operator `[]` returns a reference to that element. You also need to cast the return value to the actual type, just like the getElement function.
+<dl class="apidl">
+    <dt>**Parameter**</dt>
+    <dd><span class="apidef">name</span><span class="apidesc">Name of the AutoConnectElements to be retrieved.</span></dd>
+    <dt>**Return value**</dt><dd>A reference to AutoConnectElement. It is different from the actual element type.</dd>
+</dl>
+
 ### <i class="fa fa-caret-right"></i> add
 
 ```cpp
@@ -27,8 +39,15 @@ Add an element to the AutoConnectAux. An added element is displayed on the custo
 <dl class="apidl">
     <dt>**Parameters**</dt>
     <dd><span class="apidef">addon</span><span class="apidesc">Reference of AutoConnectElements. Specifies one of the AutoConnectElements classes.</span></dd>
-    <dd><span class="apidef">addons</span><span class="apidesc">An array list of reference of AutoConnectElements. An [list initialization](https://en.cppreference.com/w/cpp/language/list_initialization) of the [std::vector](https://en.cppreference.com/w/cpp/container/vector) can be used for the addons parameter cause the actual definition of type **AutoConnectElementVT** is `std::vector<std::reference_wrapper<AutoConnectElement>>`.</span></dd>
+    <dd><span class="apidef">addons</span><span class="apidesc">An array list of reference of AutoConnectElements. The [list initialization](https://en.cppreference.com/w/cpp/language/list_initialization) with braced-init-list of the [std::vector](https://en.cppreference.com/w/cpp/container/vector) can be used for the addons parameter cause the actual definition of type **AutoConnectElementVT** is `std::vector<std::reference_wrapper<AutoConnectElement>>`.</span></dd>
 </dl>
+
+### <i class="fa fa-caret-right"></i> fetchElement
+
+```cpp
+void fetchElement(void)
+```
+Retrieve the values of the AutoConnectElements on the custom Web page. Refer to [how to use the fetchElement](achandling.md#retrieve-the-values-with-webserveron-handler).
 
 ### <i class="fa fa-caret-right"></i> getElement
 
@@ -41,7 +60,7 @@ AutoConnectElement* getElement(const String& name)
 Get a registered AutoConnectElement as specified name. If **T** is specified as an actual type of AutoConnectElements, it returns a reference to that instance.
 <dl class="apidl">
     <dt>**Parameters**</dt>
-    <dd><span class="apidef">T</span><span class="apidesc">Actual type name of AutoConnectElements as [AutoConnectButton](apielements.md#autoconnectbutton), [AutoConnectCheckbox](apielements.md#autoconnectcheckbox), [AutoConnectElement](apielements.md#autoconnectelement), [AutoConnectInput](apielements.md#autoconnectinput), [AutoConnectRadio](apielements.md#autoconnectradio), [AutoConnectSelect](apielements.md#autoconnectselect), [AutoConnectSubmit](apielements.md#autoconnectsubmit), [AutoConnectText](apielements.md#autoconnecttext).</span></dd>
+    <dd><span class="apidef">T</span><span class="apidesc">Actual type name of AutoConnectElements as [AutoConnectButton](apielements.md#autoconnectbutton), [AutoConnectCheckbox](apielements.md#autoconnectcheckbox), [AutoConnectElement](apielements.md#autoconnectelement), [AutoConnectFile](apielements.md#autoconnectfile), [AutoConnectInput](apielements.md#autoconnectinput), [AutoConnectRadio](apielements.md#autoconnectradio), [AutoConnectSelect](apielements.md#autoconnectselect), [AutoConnectSubmit](apielements.md#autoconnectsubmit), [AutoConnectText](apielements.md#autoconnecttext).</span></dd>
     <dd><span class="apidef">name</span><span class="apidesc">Name of the AutoConnectElements to be retrieved.</span></dd>
     <dt>**Return value**</dt><dd>A reference of the AutoConnectElements. If a type is not specified returns a pointer.</dd>
 </dl>
@@ -69,10 +88,37 @@ for (AutoConnectElement& elm : elements) {
 }
 ```
 
+### <i class="fa fa-caret-right"></i> isMenu
+
+```cpp
+bool isMenu(void)
+```
+Returns whether embedded in the menu or not. The isMenu is a function that complements the [menu](apiaux.md#menu) function.
+<dl class="apidl">
+    <dt>**Return value**</dt>
+    <dd><span class="apidef">true</span><span class="apidesc">The custom Web page has been incorporated into the AutoConnect menu as a menu item.</span></dd>
+    <dd><span class="apidef">false</span><span class="apidesc">This custom Web page is not currently a menu item.</span></dd>
+</dl>
+
+### <i class="fa fa-caret-right"></i> isValid
+
+```cpp
+bool isValid(void)
+```
+Performs [validation](apielements.md#isvalid) of all [AutoConnectInput](apielements.md#autoconnectinput) elements owned by AutoConnectAux and returns the result. The isValid function will return the true even if the AutoConnectAux does not own AutoConnectInputs.
+<dl class="apidl">
+    <dt>**Return value**</dt>
+    <dd><span class="apidef">true</span><span class="apidesc">Validation is successful. A value of all AutoConnectInputs match with each pattern.</span></dd>
+    <dd><span class="apidef">false</span><span class="apidesc">Some elements failed validation.</span></dd>
+</dl>
+
 ### <i class="fa fa-caret-right"></i> load
 
 ```cpp
 bool load(const String& in)
+```
+```cpp
+bool load(PGM_P in)
 ```
 ```cpp
 bool load(const __FlashStringHelper* in)
@@ -82,7 +128,7 @@ bool load(Stream& in)
 ```
 Load all AutoConnectElements elements from JSON document into AutoConnectAux as custom Web pages. The JSON document specified by the load function must be the [document structure](acjson.md#json-objects-elements-for-the-custom-web-page) of AutoConnectAux. Its JSON document can describe multiple pages as an array.
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">in</span><span class="apidesc">Specifies the JSON document to be load. The load function can input the following objects.
 
 - String : Read-only String
@@ -103,10 +149,25 @@ Load all AutoConnectElements elements from JSON document into AutoConnectAux as 
 bool loadElement(const String& in, const String& name = String(""))
 ```
 ```cpp
+bool loadElement(const String& in, std::vector<String> const& names)
+```
+```cpp
+bool loadElement(PGM_P in, const String& name = String(""))
+```
+```cpp
+bool loadElement(PGM_P in, std::vector<String> const& names)
+```
+```cpp
 bool loadElement(const __FlashStringHelper* in, const String& name = String(""))
 ```
 ```cpp
+bool loadElement(const __FlashStringHelper* in, std::vector<String> const& names)
+```
+```cpp
 bool loadElement(Stream& in, const String& name = String(""))
+```
+```cpp
+bool loadElement(Stream& in, std::vector<String> const& names)
 ```
 Load specified element from JSON document into AutoConnectAux. The JSON document specified by the loadElement function must be the [AutoConnectElement document structure](acjson.md#json-object-for-autoconnectelements). When loading from a JSON document that describes multiple elements, its description must be an array syntax.
 <dl class="apidl">
@@ -118,6 +179,7 @@ Load specified element from JSON document into AutoConnectAux. The JSON document
 - Stream : An entity that inherits stream class, generally SPIFFS or SD.
     </span></dd>
     <dd><span class="apidef">name</span><span class="apidesc">Specifies the name to be load. If the name is not specified, the loadElement function will load all elements contained in the JSON document.</span></dd>
+    <dd><span class="apidef">names</span><span class="apidesc"> Spefifies an array list of String indicating the name of the element to be loaded. The [list initialization](https://en.cppreference.com/w/cpp/language/list_initialization) with braced-init-list of the [std::vector](https://en.cppreference.com/w/cpp/container/vector) can be used.</span></dd>
     <dt>**Return value**</dt>
     <dd><span class="apidef">true</span><span class="apidesc">Specified AutoConnectElements successfully loaded.</span></dd>
     <dd><span class="apidef">false</span><span class="apidesc">JSON document loading failed.</span></dd>
@@ -145,9 +207,9 @@ Load specified element from JSON document into AutoConnectAux. The JSON document
 ```cpp
 void menu(const bool post)
 ```
-Set or reset the display as menu item for this AutoConnectAux. This function programmatically manipulates the menu parameter of the [AutoConenctAux constructor](apiaux.md#autoconnectaux).
+Set or reset the display as menu item for this AutoConnectAux. This function programmatically manipulates the menu parameter of the [AutoConnectAux constructor](apiaux.md#autoconnectaux).
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">true</span><span class="apidesc">Show on the menu.</span></dd>
     <dd><span class="apidef">false</span><span class="apidesc">Hidden on the menu.</span></dd>
 </dl>
@@ -170,14 +232,44 @@ Register the handler function of the AutoConnectAux.
     Called even before generating HTML and after generated.</dd>
 </dl>
 
+### <i class="fa fa-caret-right"></i> onUpload
+
+```cpp
+void onUpload<T&>(T handler)
+```
+```cpp
+void onUpload(PageBuilder::UploadFuncT uploadFunc)
+```
+Register the upload handler of the AutoConnectAux.
+<dl class="apidl">
+    <dt>**Parameters**</dt>
+    <dd><span class="apidef">T</span><span class="apidesc">Specifies a class name of the custom uploader inherited from [AutoConnectUploadHandler](acupload.md#upload-handler-base-class) class. Refer to the [appendix](acupload.md#to-upload-to-a-device-other-than-flash-or-sd) for details.</span></dd>
+    <dd><span class="apidef">handler</span><span class="apidesc">Specifies the custom uploader inherited from [AutoConnectUploadHandler](acupload.md#upload-handler-base-class) class. Refer to the [appendix](acupload.md#to-upload-to-a-device-other-than-flash-or-sd) for details.</span></dd>
+    <dd><span class="apidef">uploadFunc</span><span class="apidesc">A function that behaves when request to upload with the AutoConnectAux page. UploadFuncT type is defined by the following declaration.<p class="apidesc">`void(const String&, const HTTPUpload&)`</p><p>A data structure of the upload file as HTTPUpload. It is defined in the ESP8266WebServer (the WebServer for ESP32) library as follows:
+
+```cpp
+typedef struct {
+  HTTPUploadStatus status;
+  String  filename;
+  String  name;
+  String  type;
+  size_t  totalSize;
+  size_t  currentSize;
+  size_t  contentLength;
+  uint8_t buf[HTTP_UPLOAD_BUFLEN];
+} HTTPUpload;
+```
+</p>Refer to '[To upload to a device other than Flash or SD](acupload.md#to-upload-to-a-device-other-than-flash-or-sd)' in section [appendix](acupload.md) for details.</span></dd>
+</dl>
+
 ### <i class="fa fa-caret-right"></i> release
 
 ```cpp
 bool release(const String& name)
 ```
-Release a specified AutoConnectElement from AutoConenctAux. The release function is provided to dynamically change the structure of the custom Web pages with the sketch. By combining the release function and the [add](apiaux.md#add) function or the [loadElement](apiaux.md#loadelement) function, the sketch can change the style of the custom Web page according to its behavior.
+Release a specified AutoConnectElement from AutoConnectAux. The release function is provided to dynamically change the structure of the custom Web pages with the sketch. By combining the release function and the [add](apiaux.md#add) function or the [loadElement](apiaux.md#loadelement) function, the sketch can change the style of the custom Web page according to its behavior.
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">name</span><span class="apidesc">Specifies the name of AutoConnectElements to be released.</span></dd>
     <dt>**Return value**</dt>
     <dd><span class="apidef">true</span><span class="apidesc">The AutoConnectElement successfully released.</span></dd>
@@ -189,7 +281,7 @@ Release a specified AutoConnectElement from AutoConenctAux. The release function
 ```cpp
 size_t saveElement(Stream& out, std::vector<String> const& names = {})
 ```
-Write elements of AutoConnectAux to the stream. The saveElement function outputs the specified AutoConenctElements as a JSON document using the [prettyPrintTo](https://arduinojson.org/v5/api/jsonobject/prettyprintto/) function of the [ArduinoJson](https://arduinojson.org/) library.
+Write elements of AutoConnectAux to the stream. The saveElement function outputs the specified AutoConnectElements as a JSON document using the [prettyPrintTo](https://arduinojson.org/v5/api/jsonobject/prettyprintto/) function of the [ArduinoJson](https://arduinojson.org/) library.
 <dl class="apidl">
     <dt>**Parameters**</dt>
     <dd><span class="apidef">out</span><span class="apidesc">Output stream to be output. SPIFFS, SD also Serial can be specified generally.</span></dd>
@@ -200,6 +292,9 @@ Write elements of AutoConnectAux to the stream. The saveElement function outputs
 
 !!! note "The output format is pretty"
     The saveElement function outputs a prettified JSON document.
+
+!!! Info "It is not complementary with loadElement"
+    The saveElement function which missing the names parameter without name list to be saved that saves an entire AutoConnectAux element, not just AutoConnectElements. Its saved JSON document is not a complementary input to the loadElement function. The JSON document describing AutoConnectAux saved without the names parameter must be loaded by the [AutoConnectAux::load](apiaux.md#load) function or [AutoConnect::load](api.md#load) function.
 
 ### <i class="fa fa-caret-right"></i> setElementValue
 

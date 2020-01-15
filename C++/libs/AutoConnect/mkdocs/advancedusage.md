@@ -2,15 +2,23 @@
 
 ### <i class="fa fa-caret-right"></i> 404 handler
 
-Registering the "not found" handler is a different way than ESP8266WebServer/WebServer. The *onNotFound* of ESP8266WebServer/WebServer does not work with AutoConnect. AutoConnect overrides *ESP8266WebServer::onNotFound*/*WebServer::onNotFound* to handle a captive portal. To register "not found" handler, use [*AutoConnect::onNotFound*](api.md#onnotfound).
+Registering the "not found" handler is a different way than ESP8266WebServer (WebServer as ESP32). The *onNotFound* of ESP8266WebServer/WebServer does not work with AutoConnect. AutoConnect overrides *ESP8266WebServer::onNotFound*/*WebServer::onNotFound* to handle a captive portal. To register "not found" handler, use [*AutoConnect::onNotFound*](api.md#onnotfound).
+
+### <i class="fa fa-caret-right"></i> Access to saved credentials
+
+AutoConnect stores the established WiFi connection in the flash of the ESP8266/ESP32 module and equips the class to access it from the sketch. You can read, write or erase the credentials using this class individually. It's [AutoConnectCredential](credit.md#autoconnectcredential) class which provides the access method to the saved credentials in the flash. Refer to section [Saved credentials access](credit.md) for details.
+
+!!! note "Where to store credentials in ESP32 with AutoConnect v1.0.0 or later"
+    Since v1.0.0, credentials are stored in nvs of ESP32. AutoConnect v1.0.0 or later accesses the credentials area using the **Preferences** class with the arduino esp-32 core. So in ESP32, the credentials are not in the EEPROM, it is in the namespace **AC_CREDT** of the nvs. See [Saved credentials access](credit.md) for details.  
+    In ESP8266, it is saved in EEPROM as is conventionally done.
 
 ### <i class="fa fa-caret-right"></i> Automatic reconnect
 
 When the captive portal is started, SoftAP starts and the STA is disconnected. The current SSID setting memorized in ESP8266 will be lost but then the reconnect behavior of ESP32 is somewhat different from this.
 
-The [WiFiSTAClass::disconnect](https://github.com/espressif/arduino-esp32/blob/a0f0bd930cfd2d607bf3d3288f46e2d265dd2e11/libraries/WiFi/src/WiFiSTA.h#L46) function implemented in the arduino-esp32 has extended parameters than the ESP8266's arduino-core. The second parameter of WiFi.disconnect on the arduino-esp32 core that does not exist in the [ESP8266WiFiSTAClass](https://github.com/esp8266/Arduino/blob/7e1bdb225da8ab337373517e6a86a99432921a86/libraries/ESP8266WiFi/src/ESP8266WiFiSTA.cpp#L296) has the effect of deleting the currently connected WiFi configuration and its default value is "false". On the ESP32 platform, even if WiFi.disconnect is executed, WiFi.begin() without the parameters in the next turn will try to connect to that AP. That is, automatic reconnection is implemented in arduino-esp32 already. Although this behavior appears seemingly competent, it is rather a disadvantage in scenes where you want to change the access point each time. When explicitly disconnecting WiFi from the Disconnect menu, AutoConnect will erase the AP connection settings saved by arduino-esp32 core. AutoConnect's automatic reconnection is a mechanism independent from the automatic reconnection of the arduino-esp32 core.
+The [*WiFiSTAClass::disconnect*](https://github.com/espressif/arduino-esp32/blob/a0f0bd930cfd2d607bf3d3288f46e2d265dd2e11/libraries/WiFi/src/WiFiSTA.h#L46) function implemented in the arduino-esp32 has extended parameters than the ESP8266's arduino-core. The second parameter of WiFi.disconnect on the arduino-esp32 core that does not exist in the [ESP8266WiFiSTAClass](https://github.com/esp8266/Arduino/blob/7e1bdb225da8ab337373517e6a86a99432921a86/libraries/ESP8266WiFi/src/ESP8266WiFiSTA.cpp#L296) has the effect of deleting the currently connected WiFi configuration and its default value is "false". On the ESP32 platform, even if WiFi.disconnect is executed, WiFi.begin() without the parameters in the next turn will try to connect to that AP. That is, automatic reconnection is implemented in arduino-esp32 already. Although this behavior appears seemingly competent, it is rather a disadvantage in scenes where you want to change the access point each time. When explicitly disconnecting WiFi from the Disconnect menu, AutoConnect will erase the AP connection settings saved by arduino-esp32 core. AutoConnect's automatic reconnection is a mechanism independent from the automatic reconnection of the arduino-esp32 core.
 
-If the [**autoReconnect**](api.md#autoreconnect) option of the [**AutoConnectConfig**](api.md#autoconnectconfig-api) class is enabled, it automatically attempts to reconnect to the disconnected past access point. When the autoReconnect option is specified, AutoConnect will not start SoftAP immediately if the first WiFi.begin fails. It will scan WiFi signal and the same connection information as the detected BSSID is stored in EEPROM as AutoConnect's credentials, explicitly apply it with WiFi.begin and rerun.
+If the [**autoReconnect**](apiconfig.md#autoreconnect) option of the [AutoConnectConfig](apiconfig.md) class is enabled, it automatically attempts to reconnect to the disconnected past access point. When the autoReconnect option is specified, AutoConnect will not start SoftAP immediately if the first WiFi.begin fails. It will scan WiFi signal and the same connection information as the detected BSSID is stored in the flash as AutoConnect's credentials, explicitly apply it with WiFi.begin and rerun.
 
 ```cpp hl_lines="3"
 AutoConnect       Portal;
@@ -20,14 +28,15 @@ Portal.config(Config);
 Portal.begin();
 ```
 
-An autoReconnect option is available to *AutoConnect::begin* without SSID and pass passphrase.
+An autoReconnect option is available to *AutoConnect::begin* without SSID and pass Passphrase.
 
 !!! caution "An autoReconnect will work if SSID detection succeeded"
     An autoReconnect will not effect if the SSID which stored credential to be connected is a hidden access point.
 
 ### <i class="fa fa-caret-right"></i> Auto save Credential
 
-By default, AutoConnect saves the credentials of the established connection in EEPROM. You can disable it with the [**autoSave**](api.md#autosave) parameter specified by [**AutoConnectConfig**](api.md#autoconnectconfig).
+By default, AutoConnect saves the credentials of the established connection to the flash. You can disable it with the [**autoSave**](apiconfig.md#autosave) parameter specified by [AutoConnectConfig](apiconfig.md).  
+See the [Saved credentials access](credit.md) chapter for details on accessing stored credentials.
 
 ```cpp hl_lines="3"
 AutoConnect       Portal;
@@ -37,8 +46,30 @@ Portal.config(Config);
 Portal.begin();
 ```
 
-!!! note "In ESP32, the credentials for AutoConnect are not in NVS"
-    The credentials used by AutoConnect are not saved in NVS on ESP32 module. ESP-IDF saves the WiFi connection configuration to NVS, but AutoConnect stores it on the EEPROM partition. You can find the partition table for default as [default.csv](https://github.com/espressif/arduino-esp32/blob/master/tools/partitions/default.csv)
+!!! note "Credentials storage location"
+    The location where AutoConnect saves credentials depends on the module type and the AutoConnect library version, also arduino-esp32 core version.
+    <table>
+      <tr>
+        <th rowspan="2" style="vertical-align:bottom">AutoConnect</th>
+        <th rowspan="2" style="vertical-align:bottom">Arduino core<br>for ESP8266</th>
+        <th colspan="2" style="text-align:center;vertical-align:bottom">Arduino core for ESP32</th>
+      </tr>
+      <tr>
+        <th style="text-align:center;vertical-align:bottom">1.0.2 earlier</td>
+        <th style="text-align:center;vertical-align:bottom">1.0.3 later</td>
+      </tr>
+      <tr>
+        <td>v0.9.12 earlier</td>
+        <td rowspan="2" style="text-align:center;vertical-align:middle">EEPROM</td>
+        <td>EEPROM (partition)</td>
+        <td>Not supported</td>
+      </tr>
+      <tr>
+        <td>v1.0.0 later</td>
+        <td>Preferences (nvs)<p>(Can be used EEPROM with turning off AUTOCONNECT_USE_PREFERENCES macro)</p></td>
+        <td>Preferences (nvs)</td>
+      </tr>
+    </table>
 
 ### <i class="fa fa-caret-right"></i> Captive portal start detection
 
@@ -74,7 +105,7 @@ AutoConnect has two parameters for timeout control. One is a timeout value used 
 
 The other timeout control is for the captive portal itself. It is useful when you want to continue sketch execution with offline even if the WiFi connection is not possible. You can also combine it with the [**immediateStart**](#on-demand-start-the-captive-portal) option to create sketches with high mobility.
 
-The timeout of the captive portal is specified together with [**AutoConnectConfig::portalTimeout**](apiconfig.md#portaltimeout) as follows.
+The timeout of the captive portal is specified together with [*AutoConnectConfig::portalTimeout*](apiconfig.md#portaltimeout) as follows.
 
 ```cpp hl_lines="9"
 #include <ESP8266WiFi.h>
@@ -100,7 +131,7 @@ void loop() {
   portal.handleClient();
 }
 ```
-Also, if you want to stop AutoConnect completely when the captive portal is timed out, you need to call the [**AutoConnect::end**](api.md#end) function. It looks like the following code:
+Also, if you want to stop AutoConnect completely when the captive portal is timed out, you need to call the [*AutoConnect::end*](api.md#end) function. It looks like the following code:
 
 ```cpp
 bool acEnable;
@@ -127,7 +158,7 @@ void loop() {
 }
 ```
 
-There is another option related to timeout in AutoConnectConfig. It can make use of the captive portal function even after a timeout. The [**AutoConnectConfig::retainPortal**](apiconfig.md#retainlportal) option will not stop the SoftAP when the captive portal is timed out. If you enable the ratainPortal option, you can try to connect to the AP at any time while continuing to sketch execution with offline even after the captive portal timed-out. Compared to the above code specified no option with the following example code, the captive portal will remain available even after a timeout without changing the logic of the sketch.
+There is another option related to timeout in AutoConnectConfig. It can make use of the captive portal function even after a timeout. The [*AutoConnectConfig::retainPortal*](apiconfig.md#retainportal) option will not stop the SoftAP when the captive portal is timed out. If you enable the ratainPortal option, you can try to connect to the AP at any time while continuing to sketch execution with offline even after the captive portal timed-out. Compared to the above code specified no option with the following example code, the captive portal will remain available even after a timeout without changing the logic of the sketch.
 
 ```cpp hl_lines="10"
 #include <ESP8266WiFi.h>
@@ -159,7 +190,7 @@ void loop() {
 
 If your sketch handles web pages, you can embed the pages into the AutoConnect menu in continuance enjoying the utility of the WiFi connection feature. Unlike the custom Web pages by [AutoConnectElements](acelements.md), this allows to legacy web pages registered by *ESP8266WebServer::on* or *WebServer::on* function.
 
-You can use AutoConnectAux only constructed with the URI of the page to be embedding. AutoConnectElements is not required. The basic procedure for this as follows:
+To implement embedding your legacy web pages to the AutoConnect menu, you can use AutoConnectAux only constructed with the URI of the page to be embedding. AutoConnectElements is not required. The basic procedure for this as follows:
 
 1. Declare AutoConnectAux for each legacy page. It includes the URI of the page and item string which will display in the AutoConnect menu.
 2. Sketch the legacy page handlers.
@@ -172,7 +203,7 @@ For details, see section [Constructing the menu](menuize.md) of Examples page.
 
 ### <i class="fa fa-caret-right"></i> Change menu title
 
-Although the default menu title is **AutoConnect**, you can change the title by setting [AutoConnectConfig::title](apiconfig.md#title). To set the menu title properly, you must set before calling [*AutoConnect::begin*](api.md#begin).
+Although the default menu title is **AutoConnect**, you can change the title by setting [*AutoConnectConfig::title*](apiconfig.md#title). To set the menu title properly, you must set before calling [*AutoConnect::begin*](api.md#begin).
 
 ```cpp hl_lines="6 7"
 AutoConnect       Portal;
@@ -190,6 +221,19 @@ Executing the above sketch will rewrite the menu title for the **FSBrowser** as 
 
 <div style="float:left;width:40%;height:470px;overflow:hidden;"><img src="images/fsbmenu.png"></div>
 <img style="margin-left:70px;width:40%;height:470px;" src="images/fsbmenu_expand.png">
+
+### <i class="fa fa-caret-right"></i> Change the menu labels
+
+You can change the label of the AutoConnect menu item by rewriting the default label letter in [AutoConnectLabels.h](https://github.com/Hieromon/AutoConnect/blob/master/src/AutoConnectLabels.h) macros. However, changing menu items letter influences all the sketch's build scenes.
+
+```cpp
+#define AUTOCONNECT_MENULABEL_CONFIGNEW   "Configure new AP"
+#define AUTOCONNECT_MENULABEL_OPENSSIDS   "Open SSIDs"
+#define AUTOCONNECT_MENULABEL_DISCONNECT  "Disconnect"
+#define AUTOCONNECT_MENULABEL_RESET       "Reset..."
+#define AUTOCONNECT_MENULABEL_HOME        "HOME"
+#define AUTOCONNECT_BUTTONLABEL_RESET     "RESET"
+```
 
 ### <i class="fa fa-caret-right"></i> Combination with mDNS
 
@@ -228,20 +272,20 @@ You can output AutoConnect monitor messages to the **Serial**. A monitor message
 
 It can also prevent the captive portal from starting even if the connection at the first *WiFi.begin* fails. In this case, [*AutoConnect::begin*](api.md#begin) behaves same as *WiFi.begin*.
 
-For disabling the captive portal, [**autoRise**](api.md#autorise) sets to false with [**AutoConnectConfig**](api.md#autoconnectconfig-api).
+For disabling the captive portal, [**autoRise**](apiconfig.md#autorise) sets to false with [AutoConnectConfig](apiconfig.md).
 
 ```cpp hl_lines="4"
 AutoConnect       portal;
 AutoConnectConfig acConfig;
 
-acConfig.autoRaise = false;
+acConfig.autoRise = false;
 portal.config(acConfig);
 portal.begin();
 ```
 
 ### <i class="fa fa-caret-right"></i> Make SSID of SoftAP unique
 
-You can change SoftAP's SSID and password programmatically when the captive portal starts up. By using chip specific ID of esp8266/esp32 you can make SSID of SoftAP unique. SSID and password for SoftAP is [**AutoConnectConfig::apid**](apiconfig.md#apid) and [**AutoConnectConfig::psk**](apiconfig.md#psk).
+You can change SoftAP's SSID and password programmatically when the captive portal starts up. By using chip specific ID of esp8266/esp32 you can make SSID of SoftAP unique. SSID and password for SoftAP is [*AutoConnectConfig::apid*](apiconfig.md#apid) and [*AutoConnectConfig::psk*](apiconfig.md#psk).
 
 ```cpp
 AutoConnect       portal;
@@ -273,13 +317,16 @@ and
 
 > EEPROM library uses one sector of flash located [just after the SPIFFS](http://arduino-esp8266.readthedocs.io/en/latest/libraries.html?highlight=SPIFFS#eeprom).
 
-Also, the placement of the EEPROM area of ESP32 is described in the [partition table](https://github.com/espressif/arduino-esp32/blob/master/tools/partitions/default.csv). So in the default state, the credential storage area used by AutoConnect conflicts with data owned by the user sketch. It will be destroyed together saved data in EEPROM by user sketch and AutoConnect each other. But you can move the storage area to avoid this.
+Also, in ESP32 arduino core 1.0.2 earlier, the placement of the EEPROM area of ESP32 is described in the [partition table](https://github.com/espressif/arduino-esp32/blob/master/tools/partitions/default.csv). So in the default state, the credential storage area used by AutoConnect conflicts with data owned by the user sketch. It will be destroyed together saved data in EEPROM by user sketch and AutoConnect each other. But you can move the storage area to avoid this.
 
-The [**boundaryOffset**](api.md#boundaryoffset) in [**AutoConnectConfig**](api.md#autoconnectconfig-api) specifies the start offset of the credentials storage area. The default value is 0.
+The [**boundaryOffset**](apiconfig.md#boundaryoffset) in [AutoConnectConfig](apiconfig.md) specifies the start offset of the credentials storage area. The default value is 0.
+
+!!! info "The boundaryOffset ignored with AutoConnect v1.0.0 later on ESP32 arduino core 1.0.3 later"
+    For ESP32 arduino core 1.0.3 and later, AutoConnect will store credentials to Preferences in the nvs. Since it is defined as the namespace dedicated to AutoConnect and separated from the area used for user sketches. Therefore, the [boundaryOffset](apiconfig.md#boundaryoffset) is ignored with the combination of AutoConnect v1.0.0 or later and the arduino-esp32 1.0.3 or later.
 
 ### <i class="fa fa-caret-right"></i> On-demand start the captive portal
 
-If you do not usually connect to WiFi and need to establish a WiFi connection if necessary, you can combine the [**autoRise**](api.md#autorise) option with the [**immediateStart**](api.md#immediatestart) option to achieve on-demand connection. This behavior is similar to the [WiFiManager's startConfigPortal](https://github.com/tzapu/WiFiManager#on-demand-configuration-portal) function. In order to do this, you usually configure only with AutoConnectConfig in *setup()* and [*AutoConnect::begin*](api.md#begin) handles in *loop()*.
+If you do not usually connect to WiFi and need to establish a WiFi connection if necessary, you can combine the [**autoRise**](apiconfig.md#autorise) option with the [**immediateStart**](apiconfig.md#immediatestart) option to achieve on-demand connection. This behavior is similar to the [WiFiManager's startConfigPortal](https://github.com/tzapu/WiFiManager#on-demand-configuration-portal) function. In order to do this, you usually configure only with AutoConnectConfig in *setup()* and [*AutoConnect::begin*](api.md#begin) handles in *loop()*.
 
 ```cpp hl_lines="5 6"
 AutoConnect       Portal;
@@ -374,7 +421,7 @@ An example sketch used with the PageBuilder as follows and it explains how it ai
 
 ### <i class="fa fa-caret-right"></i> Configuration for Soft AP and captive portal
 
-AutoConnect will activate SoftAP at failed the first *WiFi.begin*. It SoftAP settings are stored in [**AutoConnectConfig**](api.md#autoconnectconfig) as the following parameters. The sketch could be configured SoftAP using these parameters, refer the [AutoConnectConfig API](api.md#autoconnectconfig-api) for details.
+AutoConnect will activate SoftAP at failed the first *WiFi.begin*. It SoftAP settings are stored in [**AutoConnectConfig**](apiconfig.md#autoconnectconfig) as the following parameters. The sketch could be configured SoftAP using these parameters, refer the [AutoConnectConfig API](apiconfig.md#public-member-variables) for details.
 
 - IP address of SoftAP activated.
 - Gateway IP address.
@@ -395,6 +442,7 @@ AutoConnect will activate SoftAP at failed the first *WiFi.begin*. It SoftAP set
 - Auto reset after connection establishment.
 - Home URL of the user sketch application.
 - Menu title.
+- Ticker signal output.
 
 !!! note "AutoConnect::config before AutoConnect::begin"
     *AutoConnect::config* must be executed before *AutoConnect::begin*.
@@ -405,9 +453,40 @@ AutoConnect will activate SoftAP at failed the first *WiFi.begin*. It SoftAP set
 
 <img src="images/menu_home.png" />
 
+### <i class="fa fa-caret-right"></i> Change SSID and Password for SoftAP
+
+An **esp8266ap** is default SSID name for SoftAP of captive portal and password is **12345678** for ESP8266. Similarly, **esp32ap** and **12345678** for ESP32. You can change both by setting [apid](apiconfig.md#apid) and [psk](apiconfig.md#psk).
+
+```cpp hl_lines="5 6"
+AutoConnect portal;
+AutoConnectConfig config;
+
+void setup() {
+  config.apid = "ap_portal";
+  config.psk  = "new_password";
+  portal.config(config);
+  portal.begin();
+}
+```
+
+Also, you can specify the SSID, password for SoftAP with the constructor of the AutoConnectConfig as below.
+
+```cpp hl_lines="2"
+AutoConnect portal;
+AutoConnectConfig config("ap_portal", "new_passwrod");
+
+void setup() {
+  portal.config(config);
+  portal.begin();
+}
+```
+
+You can also assign no password to SoftAP launched as a captive portal. Assigning a null string as `String("")` to [AutoConnectConfig::psk](apiconfig.md#psk) does not require a password when connecting to SoftAP.  
+But this method is not recommended. The broadcast radio of SSID emitted from SoftAP will leak and reach several tens of meters.
+
 ### <i class="fa fa-caret-right"></i> Relocate the AutoConnect home path
 
-A home path of AutoConnect is **/\_ac** by default. You can access from the browser with http://IPADDRESS/\_ac. You can change the home path by revising [**AUTOCONNECT_URI**](https://github.com/Hieromon/AutoConnect/blob/master/src/AutoConnect.h#L58) macro in the include header file as [AutoConnect.h](https://github.com/Hieromon/AutoConnect/blob/master/src/AutoConnect.h).
+A home path of AutoConnect is **/\_ac** by default. You can access from the browser with http://IPADDRESS/\_ac. You can change the home path by revising [**AUTOCONNECT_URI**](https://github.com/Hieromon/AutoConnect/blob/master/src/AutoConnectDefs.h#L62) macro in the include header file as [AutoConnectDef.h](https://github.com/Hieromon/AutoConnect/blob/master/src/AutoConnectDef.h).
 
 ```cpp
 #define AUTOCONNECT_URI         "/_ac"
@@ -425,7 +504,7 @@ To assign a static IP to ESP8266/ESP32 with WIFI\_MODE\_STA, the following param
 - Primary DNS server.
 - Secondary DNS server. (optional)
 
-The above parameters must be executed before *AutoConnect::begin* as [arguments of AutoConnectConfig](api.md#staip).
+The above parameters must be executed before *AutoConnect::begin* as [arguments of AutoConnectConfig](apiconfig.md#staip).
 
 ```cpp
 AutoConnect        portal;
@@ -447,3 +526,58 @@ portal.begin();
 - Up to 24 characters
 - Only the alphabet (a-z, A-Z), digits (0-9), minus sign (-)
 - No '-' as last character
+
+### <i class="fa fa-caret-right"></i> Ticker for WiFi status
+
+Flicker signal can be output from the ESP8266/ESP32 module according to WiFi connection status. If you connect the LED to the signal output pin, you can know the WiFi connection status during behavior inside AutoConnect::begin through the LED blink.
+
+[AutoConnectConfig::ticker](apiconfig.md#ticker) option specifies flicker signal output. The following sketch is an example of flashing the active-high LED connected to pin #16 according to WiFi connection during the AutoConnect::begin.
+
+```cpp
+AutoConnect        portal;
+AutoConnectConfig  Config;
+Config.ticker = true;
+config.tickerPort = 16;
+Config.tickerOn = HIGH;
+portal.config(Config);
+portal.begin();
+```
+
+The AutoConnect ticker indicates the WiFi connection status in the following three flicker patterns:
+
+- Short blink: The ESP module stays in APSTA mode.
+- Short-on and long-off: No STA connection state. (i.e. WiFi.status != WL_CONNECTED)
+- No blink: WiFi connection with access point established and data link enabled. (i.e. WiFi.status = WL_CONNECTED)
+
+The flicker cycle length is defined by some macros in `AutoConnectDefs.h` header file.
+
+```cpp
+#define AUTOCONNECT_FLICKER_PERIODAP  1000 // [ms]
+#define AUTOCONNECT_FLICKER_PERIODDC  (AUTOCONNECT_FLICKER_PERIODAP << 1) // [ms]
+#define AUTOCONNECT_FLICKER_WIDTHAP   96  // (8 bit resolution)
+#define AUTOCONNECT_FLICKER_WIDTHDC   16  // (8 bit resolution)
+```
+
+- `AUTOCONNECTT_FLICKER_PERIODAP`:  
+  Assigns a flicker period when the ESP module stays in APSTA mode.
+- `AUTOCONNECT_FLICKER_PERIODDC`:  
+  Assigns a flicker period when WiFi is disconnected.
+- `AUTOCONNECT_FLICKER_WIDTHAP` and `AUTOCONNECT_FLICKER_WIDTHDC`:  
+  Specify the duty rate for each period[ms] in 8-bit resolution.
+
+[AutoConnectConfig::tickerPort](apiconfig.md#tickerport) specifies a port that outputs the flicker signal. If you are using an LED-equipped ESP module board, you can assign a LED pin to the tick-port for the WiFi connection monitoring without the external LED. The default pin is arduino valiant's **LED\_BUILTIN**. You can refer to the Arduino IDE's variant information to find out which pin actually on the module assign to **LED\_BUILTIN**.[^3]
+
+[^3]: It's defined in the `pins_arduino.h` file, located in the sub-folder named **variants** wherein Arduino IDE installed folder.
+
+[AutoConnectConfig::tickerOn](apiconfig.md#tickeron) specifies the active logic level of the flicker signal. This value indicates the active signal level when driving the ticker. For example, if the LED connected to tickPort lights by LOW, the tickerOn is **LOW**. The logic level of LED_BUILTIN for popular modules are as follows:
+
+module | Logic level | LED_BUILTIN Pin | Arduino alias
+----|----|:---:|----
+NodeMCU V1.0 | Active-low | 16 | D0
+WEMOS D1 mini | Active-low | 2 | D4
+SparkFun ESP8266 Thing | Active-high | 5 |
+Adafruit Feather HUZZAH ESP8266 | Active-low | 0 |
+NodeMCU 32s | Active-high | 2 | T2
+LOLIN32 Pro | Active-low | 5 | SS
+SparkFun ESP32 Thing | Active-high | 5
+Adafruit Feather HUZZAH32 | Active-high | 13 | A12

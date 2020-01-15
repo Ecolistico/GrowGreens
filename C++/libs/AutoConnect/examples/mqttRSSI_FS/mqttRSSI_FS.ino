@@ -5,7 +5,7 @@
   In order to execute this example, the ThingSpeak account is needed. Sing up
   for New User Account and create a New Channel via My Channels.
   For details, please refer to the project page.
-  https://hieromon.github.io/AutoConnect/examples/index.html#used-with-mqtt-as-a-client-application
+  https://hieromon.github.io/AutoConnect/howtoembed.html#used-with-mqtt-as-a-client-application
 
   Also, this example uses AutoConnectAux menu customization which stored in SPIFFS.
   To evaluate this example, you upload the contents as mqtt_setting.json of
@@ -149,7 +149,7 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   param.close();
 
   // Echo back saved parameters to AutoConnectAux page.
-  AutoConnectText&  echo = aux.getElement<AutoConnectText>("parameters");
+  AutoConnectText&  echo = aux["parameters"].as<AutoConnectText>();
   echo.value = "Server: " + serverName + "<br>";
   echo.value += "Channel ID: " + channelId + "<br>";
   echo.value += "User Key: " + userKey + "<br>";
@@ -231,9 +231,10 @@ void setup() {
   AutoConnectAux* setting = portal.aux(AUX_MQTTSETTING);
   if (setting) {
     PageArgument  args;
-    loadParams(*setting, args);
-    AutoConnectCheckbox&  uniqueidElm = setting->getElement<AutoConnectCheckbox>("uniqueid");
-    AutoConnectInput&     hostnameElm = setting->getElement<AutoConnectInput>("hostname");
+    AutoConnectAux& mqtt_setting = *setting;
+    loadParams(mqtt_setting, args);
+    AutoConnectCheckbox&  uniqueidElm = mqtt_setting["uniqueid"].as<AutoConnectCheckbox>();
+    AutoConnectInput&     hostnameElm = mqtt_setting["hostname"].as<AutoConnectInput>();
     if (uniqueidElm.checked) {
       config.apid = String("ESP") + "-" + String(GET_CHIPID(), HEX);
       Serial.println("apid set to " + config.apid);

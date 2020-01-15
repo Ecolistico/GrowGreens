@@ -19,7 +19,7 @@ Easy implementing the Web interface constituting the WLAN for ESP8266/ESP32 WiFi
 
 ### <i class="fa fa-arrow-circle-right" aria-hidden="true"></i> Store the established connection
 
-<span class="lead">The connection authentication data as credentials are saved automatically in EEPROM of ESP8266/ESP32 and You can select the past SSID from the [AutoConnect menu](menu.md).</span>
+<span class="lead">The connection authentication data as credentials are saved automatically in the flash of ESP8266/ESP32 and You can select the past SSID from the [AutoConnect menu](menu.md).</span>
 
 ### <i class="fa fa-arrow-circle-right" aria-hidden="true"></i> Easy to embed in
 
@@ -38,6 +38,12 @@ Easy implementing the Web interface constituting the WLAN for ESP8266/ESP32 WiFi
 <img style="float:left;margin-top:200px;margin-left:10px;margin-right:10px;width:32px;" src="images/arrow_right.png">
 <span style="float:left;width:242px;height:425px;border:1px solid lightgrey;"><img data-gifffer="images/aux_ov.gif" data-gifffer-width="240" data-gifffer-height="423" /></span>
 </div>
+
+### <i class="fa fa-arrow-circle-right" aria-hidden="true"></i> Quick and easy to equip the [OTA update feature](otaupdate.md) <sup><sub>ENHANCED w/v1.0.0</sub></sup>
+
+<span class="lead">You can quickly and easily equip the OTA update feature to your sketch and also you can operate the firmware update process via OTA from AutoConnect menu.</span>
+
+<span style="display:block;margin-left:auto;margin-right:auto;width:282px;height:362px;border:1px solid lightgrey;"><img data-gifffer="images/webupdate.gif" data-gifffer-height="360" data-gifffer-width="280" /></span>
 
 ## Installation
 
@@ -82,21 +88,21 @@ Install third-party platform using the *Boards Manager* of Arduino IDE. Package 
 Also, to apply AutoConnect to ESP32, the [arduino-esp32 core](https://github.com/espressif/arduino-esp32) provided by Espressif is needed. Stable 1.0.1 or required and the [latest release](https://github.com/espressif/arduino-esp32/releases/latest) is recommended.  
 Install third-party platform using the *Boards Manager* of Arduino IDE. You can add multiple URLs into *Additional Board Manager URLs* field, separating them with commas. Package URL is https://dl.espressif.com/dl/package_esp32_index.json for ESP32.
 
+!!! info "Arduino core for ESP32 1.0.3 or later"
+    For ESP32, AutoConnect v1.0.0 later is required for arduino-esp32 1.0.3 or later.
+
 <i class="fa fa-download"></i> <strong>Additional library (Required)</strong>
 
 The [PageBuilder](https://github.com/Hieromon/PageBuilder) library to build HTML for ESP8266WebServer is needed.  
-To install the PageBuilder library into your Arduino IDE, you can use the *Library Manager*. Select the board of ESP8266 series in the Arduino IDE, open the library manager and search keyword '**PageBuilder**' with the topic '**Communication**', then you can see the *PageBuilder*. The latest version is required **1.3.2** **later**.[^1]
-[^1]:Since AutoConnect v0.9.7, PageBuilder v1.3.2 later is required.
+To install the PageBuilder library into your Arduino IDE, you can use the *Library Manager*. Select the board of ESP8266 series in the Arduino IDE, open the library manager and search keyword '**PageBuilder**' with the topic '**Communication**', then you can see the *PageBuilder*. The latest version is required **1.3.6** **later**.[^1]
+[^1]:Since AutoConnect v1.1.3, PageBuilder v1.3.6 later is required.
 
 <img src="images/lm.png" width="640"/>
 
 <i class="fa fa-download"></i> <strong>Additional library (Optional)</strong>
 
-By adding the [ArduinoJson](https://github.com/bblanchon/ArduinoJson) library, AutoConnect will be able to handle the [**custom Web pages**](acintro.md) described with JSON. With AutoConnect v0.9.7 you can insert user-owned web pages that can consist of representative HTML elements as styled TEXT, INPUT, BUTTON, CHECKBOX, SELECT, SUBMIT and invoke them from the AutoConnect menu. These HTML elements can be added by sketches using the AutoConnect API. Further it possible importing the custom Web pages declarations described with JSON which stored in PROGMEM, SPIFFS, or SD. [ArduinoJson version 5](https://arduinojson.org/v5/doc/) is required to use this feature.[^2]
+By adding the [ArduinoJson](https://github.com/bblanchon/ArduinoJson) library, AutoConnect will be able to handle the [**custom Web pages**](acintro.md) described with JSON. Since AutoConnect v0.9.7 you can insert user-owned web pages that can consist of representative HTML elements as styled TEXT, INPUT, BUTTON, CHECKBOX, SELECT, SUBMIT and invoke them from the AutoConnect menu. These HTML elements can be added by sketches using the AutoConnect API. Further it possible importing the custom Web pages declarations described with JSON which stored in PROGMEM, SPIFFS, or SD. [ArduinoJson](https://arduinojson.org/) is required to use this feature.[^2] AutoConnect can work with ArduinoJson both [version 5](https://arduinojson.org/v5/doc/) and [version 6](https://arduinojson.org/v6/doc/).
 [^2]:Using the AutoConnect API natively allows you to sketch custom Web pages without JSON.
-
-!!! info "AutoConnect supports ArduinoJson version 5 only"
-    ArduinoJson version 6 is still in beta, but Arduino Library Manager installs the ArduinoJson version 6 by default. Open the Arduino Library Manager and make sure that ArduinoJson version 5 is installed.
 
 ### Install the AutoConnect
 

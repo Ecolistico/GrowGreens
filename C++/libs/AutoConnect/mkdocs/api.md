@@ -57,7 +57,7 @@ Run the AutoConnect site using the externally ensured ESP8266WebServer for ESP82
 
 The [**handleClient**](api.md#handleclient) function of AutoConnect can include the response of the URI handler added by the user using the "*on*" function of ESP8266WebServer/WebServer. If ESP8266WebServer/WebServer is assigned internally by AutoConnect, the sketch can obtain that reference with the [**host**](api.md#host) function.
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">webServer</span><span class="apidesc">A reference of ESP8266WebServer or WebServer instance.</span></dd>
 </dl>
 
@@ -70,7 +70,7 @@ AutoConnectAux* aux(const String& uri) const
 ```
 Returns a pointer to AutoConnectAux with the URI specified by *uri*. If AutoConnectAux with that URI is not bound, it returns **nullptr**.
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">uri</span><span class="apidesc">A string of the URI.</span></dd>
     <dt>**Return value**</dt>
     <dd>A Pointer of the AutoConnectAux instance.</dd>
@@ -124,7 +124,7 @@ Set SoftAP's WiFi configuration and static IP configuration.
 ### <i class="fa fa-caret-right"></i> end
 
 ```cpp
-void end()
+void end(void)
 ```
 
 Stops AutoConnect captive portal service. Release ESP8266WebServer/WebServer and DNSServer. 
@@ -135,7 +135,7 @@ Stops AutoConnect captive portal service. Release ESP8266WebServer/WebServer and
 ### <i class="fa fa-caret-right"></i> handleClient
 
 ```cpp
-void handleClient()
+void handleClient(void)
 ```
 
 Process the AutoConnect menu interface. The handleClient() function of the ESP8266WebServer/WebServer hosted by AutoConnect is also called from within AutoConnect, and the client request handlers contained in the user sketch are also handled.
@@ -143,7 +143,7 @@ Process the AutoConnect menu interface. The handleClient() function of the ESP82
 ### <i class="fa fa-caret-right"></i> handleRequest
 
 ```cpp
-void handleRequest()
+void handleRequest(void)
 ```
 
 Handling for the AutoConnect menu request.
@@ -159,7 +159,7 @@ void home(String& uri)
 
 Put a user site's home URI. The URI specified by home is linked from "HOME" in the AutoConnect menu.
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">uri</span><span class="aidesc">A URI string of user site's home path.</span></dd>
 </dl>
 
@@ -168,13 +168,13 @@ Put a user site's home URI. The URI specified by home is linked from "HOME" in t
 - For ESP8266
 
 ```cpp
-ESP8266WebServer& host()
+ESP8266WebServer& host(void)
 ```
 
 - For ESP32
 
 ```cpp
-WebServer& host()
+WebServer& host(void)
 ```
 
 Returns the reference of the ESP8266WebServer/WebServer which is allocated in AutoConnect automatically.
@@ -204,7 +204,7 @@ void join(std::vector<std::reference_wrapper<AutoConnectAux>> aux)
 ```
 Join the AutoConnectAux object to AutoConnect. AutoConnectAux objects can be joined one by one, or joined altogether. The AutoConnectAux object joined by the join function can be handled from the AutoConnect menu.
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">aux</span><span class="apidesc">Reference to AutoConnectAux. It can be std::vector of std::reference_wrapper of AutoConnectAux with [list initialization](https://en.cppreference.com/w/cpp/language/list_initialization).</span></dd>
 </dl>
 
@@ -214,6 +214,9 @@ Join the AutoConnectAux object to AutoConnect. AutoConnectAux objects can be joi
 bool load(const String& aux)
 ```
 ```cpp
+bool load(PGM_P aux)
+```
+```cpp
 bool load(const __FlashStringHelper* aux)
 ```
 ```cpp
@@ -221,7 +224,7 @@ bool load(Stream& aux)
 ```
 Load JSON document of AutoConnectAux which contains AutoConnectElements. If there is a syntax error in the JSON document, false is returned.
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">aux</span><span class="apidesc">The input string to be loaded.</span></dd>
     <dt>**Return value**</dt>
     <dd><span class="apidef">true</span><span class="apidesc">The JSON document as AutoConnectAux successfully loaded.</span></dd>
@@ -257,7 +260,7 @@ void onDetect(DetectExit_ft fn)
 ```
 Register the function which will call from AutoConnect at the start of the captive portal.
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">fn</span><span class="apidesc">Function called at the captive portal start.</span></dd>
 
 </dl>
@@ -268,7 +271,7 @@ An *fn* specifies the function called when the captive portal starts. Its protot
 typedef std::function<bool(IPAddress softapIP)>  DetectExit_ft
 ```
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">softapIP</span><span class="apidesc">An IP address of SoftAP for the captive portal.</span></dd>
     <dt>**Return value**</dt>
     <dd><span class="apidef">true</span><span class="apidesc">Continues captive portal handling.</span></dd>
@@ -290,20 +293,20 @@ void onNotFound(WebServer::THandlerFunction fn)
 ```
 Register the handler function for undefined URL request detected.
 <dl class="apidl">
-    <dt>**Parameters**</dt>
+    <dt>**Parameter**</dt>
     <dd><span class="apidef">fn</span><span class="apidesc">A function of the "not found" handler.</span></dd>
 </dl>
 
 ### <i class="fa fa-caret-right"></i> where
 ```cpp
-AutoConenctAux* where(void)
+String where(void)
 ```
-Returns a pointer to the AutoConnectAux object of the custom Web page that caused the request to the page.<br>
+Returns an uri string of the AutoConnectAux uri object of the custom Web page that caused the request to the page.<br>
 AutoConnect identifies the URI (ie. the referrer URI) that caused the request each time from the client occurs and will save the URI If the request source is a custom Web page of AutoConnectAux. The **where** function returns a pointer of AutoConnectAux which is a URI of a least recent request from the custom Web page.<br>
 This function is provided to access the fields (ie. the AutoConnectElements) with a custom Web page handler of a page and is available only for request source that is the custom Web pages. It is invalid for HTTP requests from individual pages registered with the **on** handler of ESP8266WebServer/WebServer for ESP32. In other words, this function only returns the AutoConnecAux page which is a least recently displayed.
 <dl class="apidl">
     <dt>**Return value**</dt>
-    <dd>A pointer to the AutoConnectAux that caused the request the page.</dd>
+    <dd>An uri string of the AutoConnectAux that caused the request the page.</dd>
 </dl>
 
 The **where** function usage is described in the section [*Where to pick up the values*](achandling.md#where-to-pick-up-the-values).

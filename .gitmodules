@@ -1,0 +1,3 @@
+[submodule "C++/AutoConnect"]
+	path = C++/AutoConnect
+	url = https://github.com/Hieromon/AutoConnect.git
