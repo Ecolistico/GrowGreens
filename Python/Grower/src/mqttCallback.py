@@ -231,15 +231,23 @@ class mqttController:
         elif(message == "updateGrowerDate"):
             self.grower.getDateFormat()
             self.sendLog("Updating Date Format")
-            
-        elif(message == "reboot"):
-            self.sendLog("Rebooting", 2)
-            sysGrower.runShellCommand('sudo reboot')
         
         elif(message == "forgetWiFi"):
             self.sendLog("Forgeting WiFi Credentials", 2)
             sysGrower.runShellCommand('sudo python ./src/forgetWiFi.py')
             sysGrower.runShellCommand('sudo python ./src/APconfig.py')
+        
+        elif(message == "get_throttled"):
+            mssg = sysGrower.getOutput_ShellCommand("/opt/vc/bin/vcgencmd get_throttled")
+            self.sendLog(mssg[:-1], 1)
+            
+        elif(message == "reboot"):
+            self.sendLog("Rebooting", 2)
+            sysGrower.runShellCommand('reboot')
+        
+        elif(message == "shutdown"):
+            self.sendLog("Shutting down", 2)
+            sysGrower.runShellCommand('shutdown -h now')
             
         else:
             self.sendLog("MQTT command unknown", 3)
