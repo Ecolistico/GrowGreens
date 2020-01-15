@@ -31,7 +31,9 @@ Functions resume:
     * close() - Cleanup the GPIO´s
 """
 class Grower:
-    def __init__(self, logger, ir = 22, led = 23, xenon = 26, en1 = 4, en2 = 27, in1 = 24, in2 = 18, in3 = 17, in4 = 10, thermal1Addr = 0x69, thermal2Addr = 0x68, ircut = 0):
+    def __init__(self, logger, ir = 22, led = 23, xenon = 26,
+                 en1 = 4, en2 = 27, in1 = 24, in2 = 18, in3 = 17, in4 = 10,
+                 thermal1Addr = 0x69, thermal2Addr = 0x68, ircut = 0):
         self.log = logger
         
         self.day = 0
@@ -71,15 +73,24 @@ class Grower:
         self.camEnable = False
         # Set stream as false by default
         self.stream = False
+        
         # Setting Up Cozir
         self.coz = cozir.Cozir(self.log)
-            # For now just stable in polling mode
+        checkCozir = 0
+        # For now just stable in polling mode
         if(self.coz.opMode(self.coz.polling)):
             self.log.info("Cozir: Set Mode = K{0}".format(self.coz.act_OpMode))
-            # Get hum, temp and co2_filter        
+        else: checkCozir +=1
+        # Get hum, temp and co2_filter        
         if(self.coz.setData_output(self.coz.Hum + self.coz.Temp + self.coz.CO2_filt)):
             self.log.info("Cozir: Data Mode = M{}".format(self.coz.act_OutMode))
-    
+        else: checkCozir +=1
+        if checkCozir == 2:
+            self.coz.close()
+            self.coz = None
+            self.log.critical("Cozir not found: sensor disconnected")
+
+        # Setting Up GPIO
         GPIO.setmode(GPIO.BCM)
 
         GPIO.setup(self.IR, GPIO.OUT)
@@ -199,7 +210,7 @@ class Grower:
         self.camEnable = False
         self.log.info("Camera Stopped")
         
-    def thermalPhoto(self, name):
+    def thermalPhoto(self, name = "testing_thermalPhoto()"):
         if(self.thermalCam1!=None or self.thermalCam2!=None):
             # Check if directory exist, if not create it
             if not self.checkDayDirectory(): self.createDayDirectory()
@@ -235,37 +246,38 @@ class Grower:
             self.log.critical("Thermal Cams Unavailable")
             return False
         
-    def takePicture(self, name, ledMode, irMode, Photo, Thermal, Cozir):
+    def takePicture(self, name = "testing_takePicture()" , ledMode = 2,
+                    irMode = True, Photo = True, Thermal = True, Cozir = True):
+        if(self.thermalCam1!=None or self.thermalCam2!=None): thermalStatus = True
+        else: thermalStatus = False
+        
+        if(Thermal and not thermalStatus):
+            self.log.error("Cannot take Thermal Data: Thermal Cams Unavailable")
+            Thermal = False
+        
+        if(Photo and not self.camEnable):
+            self.log.error("Cannot take Photo: Camera Unavailable")
+            Photo = False
+            
         if(Photo or Thermal):
-            if(self.thermalCam1!=None or self.thermalCam2!=None): thermalStatus = True
-            else: thermalStatus = False
+            # Check if directory exist, if not create it
+            if not self.checkDayDirectory(): self.createDayDirectory()
             
-            if(Thermal and not thermalStatus):
-                self.log.error("Cannot take Thermal Data: Thermal Cams Unavailable")
-                Thermal = False
+            if(ledMode == 0):
+                self.turnOff(self.LED)
+                self.turnOff(self.XENON)
+            elif(ledMode == 1):
+                self.turnOn(self.LED)
+                self.turnOff(self.XENON)
+            else:
+                self.turnOn(self.LED)
+                self.turnOn(self.XENON)
+                
+            if(irMode): self.turnOn(self.IR)
+            else: self.turnOff(self.IR)
             
-            if(Photo and not self.camEnable):
-                self.log.error("Cannot take Photo: Camera Unavailable")
-                Photo = False
-                
-            if(Photo or Thermal):
-                # Check if directory exist, if not create it
-                if not self.checkDayDirectory(): self.createDayDirectory()
-                
-                if(ledMode == 0):
-                    self.turnOff(self.LED)
-                    self.turnOff(self.XENON)
-                elif(ledMode == 1):
-                    self.turnOn(self.LED)
-                    self.turnOff(self.XENON)
-                else:
-                    self.turnOn(self.LED)
-                    self.turnOn(self.XENON)
-                    
-                if(irMode): self.turnOn(self.IR)
-                else: self.turnOff(self.IR)
-                    
-                if(Cozir):
+            if(Cozir):
+                if(self.coz != None):
                     # Get Cozir data
                     hum, temp, co2 = self.coz.getData()
                     # Adjust data
@@ -273,27 +285,25 @@ class Grower:
                     temp = int(temp * 10)
                     co2 = int(co2)
                     name = name + "-{}-{}-{}".format(temp, hum, co2)
+                else:
+                    self.log.error("Cozir disconnected: ignore data request")
                     
-                self.wait(2) # Wait 2 seconds
-                
-                if(Photo):
-                    self.cam.capture("data/{}-{}-{}/manual/{}.png".format(
-                    self.day, self.month, self.year, name), "png") # Take photo and give it a name
-                if(Thermal):
-                    self.thermalPhoto("{}".format(name)) #get thermal cam readings
-                
-                self.wait(0.1) # Wait 100ms
-                self.turnOff(self.LED)
-                self.turnOff(self.IR)
-                self.turnOff(self.XENON)
-                return True
-            else:
-                return False     
+            self.wait(2) # Wait 2 seconds
+            if(Photo):
+                self.cam.capture("data/{}-{}-{}/manual/{}.png".format(
+                self.day, self.month, self.year, name), "png") # Take photo and give it a name
+            if(Thermal):
+                self.thermalPhoto("{}".format(name)) #get thermal cam readings
+            
+            self.wait(0.1) # Wait 100ms
+            self.turnOff(self.LED)
+            self.turnOff(self.IR)
+            self.turnOff(self.XENON)
+            return True
         else:
-            self.log.error("You must enable Photo or Thermal parameter")
             return False
     
-    def photoSequence(self, name):
+    def photoSequence(self, name = "testing_photoSequence()"):
         if(self.thermalCam1!=None and self.thermalCam2!=None): thermalStatus = True
         else: thermalStatus = False
         totalShoots = 0
@@ -301,14 +311,18 @@ class Grower:
         if(self.camEnable or thermalStatus):
             # Check if directory exist, if not create it
             if not self.checkDayDirectory(): self.createDayDirectory()
-            # Get Cozir data
-            hum, temp, co2 = self.coz.getData()
-            # Adjust data
-            hum = int(hum * 10)
-            temp = int(temp * 10)
-            co2 = int(co2)
-            name = name + "-{}-{}-{}".format(temp, hum, co2)
             
+            if(self.coz != None):
+                # Get Cozir data
+                hum, temp, co2 = self.coz.getData()
+                # Adjust data
+                hum = int(hum * 10)
+                temp = int(temp * 10)
+                co2 = int(co2)
+                name = name + "-{}-{}-{}".format(temp, hum, co2)
+            else:
+                self.log.error("Cozir disconnected: ignore data request")
+
             self.turnOn(self.IR)
             self.turnOn(self.LED)
             self.turnOn(self.XENON)
@@ -410,5 +424,6 @@ class Grower:
         
     def close(self):
         GPIO.cleanup() # Clean GPIO
+        if(self.coz != None): self.coz.close() # Close serial Cozir port
         if self.camEnable: self.cam_stop() # Disconnecting cam from this program
 

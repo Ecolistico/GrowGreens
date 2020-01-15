@@ -66,7 +66,7 @@ class Cozir:
                 self.log.debug("Cozir: Mode set {}".format(mode))
                 return True
             else:
-                self.log.error("Cozir: Time limit exceed witouth response")
+                self.log.error("Cozir: Time limit exceed without response")
                 return False
             
         else: # Parameter wrong
@@ -336,3 +336,7 @@ class Cozir:
         else:
             self.log.error("Cozir: In recalibrate() some parameter wrong")
             return False
+    
+    # Finish serial port
+    def close(self):
+        if self.ser.is_open: self.ser.close()

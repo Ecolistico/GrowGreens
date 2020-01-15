@@ -4,6 +4,7 @@
 
 # Data folders
 Python/Master/data/
+Python/Grower/data/
 
 # Config Files
 Python/Master/*.json

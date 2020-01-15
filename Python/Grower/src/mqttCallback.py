@@ -121,44 +121,42 @@ class mqttController:
             self.sendLog("Led2 Off")
         
         elif(message.startswith("takePicture")):
-            param = message.split(',')
-            if(len(param)>1): Name = param[1]
-            else: Name = "testing_takePicture()"
-            if(len(param)>2): ledMode = int(param[1])
-            else: ledMode = 2
-            if(len(param)>3): irMode = int(param[2])
-            else: irMode = True
-            if(len(param)>4): Photo = int(param[3])
-            else: Photo = True
-            if(len(param)>5): Thermal = int(param[4])
-            else: Thermal = True
-            if(len(param)>6): Cozir = int(param[5])
-            else: Cozir = True
+            param = message.split(',')            
             
-            if not Photo and not Thermal:
-                Photo = True
-                Thermal = True
-                self.sendLog("Taking both photo and thermal (Next time you must specify at least 1)", 2) # Warning
-                
-            if self.growerStream and picMode!=0: self.grower.disableStreaming()
-            check = self.grower.takePicture(Name, ledMode, irMode, Photo, Thermal, Cozir)
+            if self.growerStream: self.grower.disableStreaming()
+            if(len(param)>6):
+                Name = param[1]
+                ledMode = int(param[2])
+                irMode = int(param[3])
+                Photo = int(param[4])
+                Thermal = int(param[5])
+                Cozir = int(param[6])
+
+                if not Photo and not Thermal:
+                    Photo = True
+                    Thermal = True
+                    self.sendLog("Taking both photo and thermal (Next time you must specify at least 1)", 2) # Warning
+                check = self.grower.takePicture(Name, ledMode, irMode, Photo, Thermal, Cozir)
+            else: check = self.grower.takePicture()
             if(check):
-                mssg = "Picture taken - name={}".format(Name)
+                if(len(param)>6): mssg = "Picture taken - name={}".format(Name)
+                else: mssg = "Picture taken"
                 mssgLevel = 0
             else:
                 mssg = "Photo cannot be taken"
                 mssgLevel = 3
-            if self.growerStream and picMode!=0: self.grower.enableStreaming()
+            if self.growerStream: self.grower.enableStreaming()
             self.sendLog(mssg, mssgLevel)
         
         elif(message.startswith("thermalPhoto")):
             param = message.split(',')
-            if(len(param)>1): Name = param[1]
-            else: Name = "testing_thermalPhoto()"
-            
-            check = self.grower.thermalPhoto(Name)
+            if(len(param)>1):
+                Name = param[1]            
+                check = self.grower.thermalPhoto(Name)
+            else: check = self.grower.thermalPhoto()
             if(check):
-                mssg = "Thermal Photo taken - name={}".format(Name)
+                if(len(param)>1): mssg = "Thermal Photo taken - name={}".format(Name)
+                else: mssg = "Thermal Photo taken"
                 mssgLevel = 0
             else:
                 mssg = "Thermal Photo cannot be taken"
@@ -168,12 +166,14 @@ class mqttController:
                 
         elif(message.startswith("photoSequence")):
             param = message.split(',')
-            if(len(param)>1): Name = param[1]
-            else: Name = "photoSequence()"
             
             if self.growerStream: self.grower.disableStreaming()
-            param = message.split(',')
-            check = self.grower.photoSequence(Name)
+            
+            if(len(param)>1):
+                Name = param[1]
+                check = self.grower.photoSequence(Name)
+            else: check = self.grower.photoSequence()
+            
             if(check==0):
                 mssg = "Photo Sequence cannot be taken"
                 mssgLevel = 3
@@ -184,7 +184,8 @@ class mqttController:
                 mssg = "Normal Photo taken... Thermal Photo cannot be taken"
                 mssgLevel = 2
             else:    
-                mssg = "Photo Sequence taken - name={}".format(Name)
+                if(len(param)>1): mssg = "Photo Sequence taken - name={}".format(Name)
+                else: mssg = "Photo Sequence taken"
                 mssgLevel = 0
             if self.growerStream: self.grower.enableStreaming()
             self.sendLog(mssg, mssgLevel)
@@ -221,9 +222,11 @@ class mqttController:
                 self.sendLog(mssg, 3)
         
         elif(message == "cozirData"):
-            hum, temp, co2 = self.grower.coz.getData()
-            mssg = "cozir,{},{},{}".format(hum, temp, co2)
-            self.sendLog(mssg)
+            if(self.grower.coz != None):
+                hum, temp, co2 = self.grower.coz.getData()
+                mssg = "cozir,{},{},{}".format(hum, temp, co2)
+                self.sendLog(mssg)
+            else: self.sendLog("Cozir disconnected: ignore data request", 3)
         
         elif(message == "updateGrowerDate"):
             self.grower.getDateFormat()
