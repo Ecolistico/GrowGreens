@@ -1,0 +1,10 @@
+# All temporary folders
+**/temp
+**/__pycache__
+
+# Data folders
+Python/Master/data/
+Python/Grower/data/
+
+# Config Files
+Python/Master/*.json

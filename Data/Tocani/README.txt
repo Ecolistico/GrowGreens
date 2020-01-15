@@ -1,1 +1,0 @@
-El archivo "tocani_pos" contiene las posiciones del tocani en las cuales se desea realizar mediciones cada x tiempo.

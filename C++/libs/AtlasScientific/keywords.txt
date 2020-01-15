@@ -1,0 +1,45 @@
+#######################################
+# Syntax Coloring Map For Grow
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+EZO	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+toFloat	KEYWORD2
+
+init	KEYWORD2
+isEnable	KEYWORD2
+getValue	KEYWORD2
+calibration	KEYWORD2
+exportCal	KEYWORD2
+importCalibration	KEYWORD2
+reboot	KEYWORD2
+find	KEYWORD2
+information	KEYWORD2
+changeI2Caddress	KEYWORD2
+led	KEYWORD2
+plock	KEYWORD2
+read	KEYWORD2
+readWithTempCompensation	KEYWORD2
+sleep	KEYWORD2
+infoStatus	KEYWORD2
+tempCompensation	KEYWORD2
+slope	KEYWORD2
+setProbe	KEYWORD2
+enableParameters	KEYWORD2
+run	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+EZO_PH	LITERAL1
+EZO_EC	LITERAL1
+PH_I2C_ADDRESS	LITERAL1
+EC_I2C_ADDRESS	LITERAL1
