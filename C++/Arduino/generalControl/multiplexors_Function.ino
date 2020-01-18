@@ -43,7 +43,7 @@ void codification_Multiplexer(){
   bool ID12[8] = {VHum1.getState(), VHum2.getState(), VHum3.getState(), VHum4.getState(), 
                  busy, busy, Recirculation.getFPump(), LOW};
   bool ID13[8] = {LOW, LOW, LOW, LOW, 
-                 LOW, LOW, LOW, LOW};
+                 LOW, LOW, EV3A3.getState(), EV3A4.getState()};
   bool ID14[8] = {LOW, LOW, LOW, LOW, 
                  LOW, LOW, LOW, LOW};
   bool ID15[8] = {LOW, LOW, LOW, LOW, 
