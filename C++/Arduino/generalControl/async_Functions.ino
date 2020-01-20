@@ -290,7 +290,7 @@ void runIPC(){
 
   else if(IPC.state==20){ // Depressurize nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
-    if(p1<=10){
+    if(p1<=free_pressure){
       uint8_t resp = Recirculation.moveOut(litersRequire(), NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(250); // Check IPC Process 250
@@ -411,7 +411,7 @@ void runIPC(){
   else if(IPC.state==35){ // Getting out solution from nutrition kegs to recirculation
     // the sensor is desactivated, we are going to wait until the pressure goes down
     float p1 = pressureSensorNutrition.getValue();
-    if(p1<5){ // Pressure low then
+    if(p1<=free_pressure){ // Pressure low then
       Recirculation.resetVolKnut(); // Volumen in nutrition kegs is 0
       Recirculation.finishRelease(true); // Get out the solution from nutrition kegs
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
@@ -434,7 +434,7 @@ void runIPC(){
       IPC.setState(20); // Check IPC Process 20
       updateSystemState();
     }
-    else if(p1<=10){
+    else if(p1<=free_pressure){
       uint8_t resp = Recirculation.moveOut(litersRequire(), NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(251); // Check IPC Process 251
@@ -597,7 +597,7 @@ void runIPC(){
       updateSystemState();
     }
     // the sensor is desactivated, we are going to wait until the pressure goes down
-    else if(p1<5){
+    else if(p1<=free_pressure){
       Recirculation.resetVolKnut(); // Volumen in nutrition kegs is 0
       Recirculation.finishRelease(true); // Get out the solution from nutrition kegs
       Compressor.openFreeNut(); // Depressurize Nutrition Kegs
@@ -650,7 +650,7 @@ void runIPC(){
 
   else if(IPC.state==71){ // Emergency: Air in line. Depressurize Nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
-    if(p1<=10){
+    if(p1<=free_pressure){
       uint8_t resp = Recirculation.moveOut(litersRequire(), NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(252); // Check IPC Process 252
@@ -779,7 +779,7 @@ void runMPC(){
 
   else if(MPC.state==20){ // Depressurize Water Kegs
     float p3 = pressureSensorWater.getValue();
-    if(p3<=10){
+    if(p3<=free_pressure){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
       uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
@@ -866,7 +866,7 @@ void runMPC(){
 
   else if(MPC.state==71){ // Emergency: Air in line. Depressurize Water Kegs
     float p3 = pressureSensorWater.getValue();
-    if(p3<=10){
+    if(p3<=free_pressure){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
       uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);

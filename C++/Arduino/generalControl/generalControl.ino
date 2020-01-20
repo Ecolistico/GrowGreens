@@ -124,6 +124,7 @@ bool emergency = false;
 float max_pressure = 100; // Default Maximum Pressure in the system (psi)
 float min_pressure = 80; // Minimun Pressure in the system to start a new irrigation cycle (psi)
 float critical_pressure = 60; // Default Critical Pressure in the system (psi)
+float free_pressure = 15; // Set pressure to free air in kegs
 
 // Control Solution and refill process
 /* The next variables need to be register in raspberry in case that arduino turn off */
