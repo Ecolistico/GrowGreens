@@ -6,9 +6,12 @@ import PySimpleGUI as sg
 
 # Pendiente integrar serialController to manage connection between devices
 class GUI:
-    def __init__(self, logger = None):
+    def __init__(self, logger = None, serialControl = None):
         # Logger
         self.log = logger
+        # Serial controller
+        self.ser = serialControl
+
         # Colors
         self.black90 = '#3c3c3b'
         self.green1 = '#00783e'
@@ -34,6 +37,7 @@ class GUI:
 
         # Main Window
         self.window = None
+        self.isOpen = True
 
         # Add your new theme colors and settings
         sg.LOOK_AND_FEEL_TABLE['GrowGreens'] = {'BACKGROUND': self.black90,
@@ -57,6 +61,34 @@ class GUI:
             elif (level==4 or level=='CRITICAL'): self.log.critical(msg)
         else:
             print(msg)
+
+    def serialMsg(self, msg):
+        if self.ser != None:
+            self.ser.write(self.ser.generalControl, msg)
+        else:
+            self.str2log(msg, 3)
+
+    def str2UpdateCycle(self, valor):
+        msg = 'solenoid,setCycleTime,'
+        msg += str(valor)
+        return msg
+
+    def str2UpdateEV(self, piso, lado, etapa, solucion, valor):
+        if(lado=='A'): ladoInt = 0
+        else: ladoInt = 4
+        if(solucion=='H2O'): sol = 0
+        else: sol = int(solucion)
+
+        msg = 'solenoid,setTimeOn,'
+        msg += str(int(piso)-1)
+        msg += ','
+        msg += str(etapa+ladoInt-1)
+        msg += ','
+        msg += str(sol)
+        msg += ','
+        msg += str(valor)
+
+        return msg
 
     def getEVlimits(self, cycle, etapa):
         evNumber = 32
@@ -156,9 +188,10 @@ class GUI:
                   sg.Button('Actualizar', size=(8, 1), key="Actualizar", pad=(10,10), disabled=True)],
                  ], title='Configuración de riego', relief=sg.RELIEF_SUNKEN)],
              [sg.Text('_' * 66)],
+             [sg.Text(' ' * 85), sg.Button('Cerrar', size=(8, 1), key="Cerrar", pad=(10,10), button_color=('white', 'red') )]
          ]
 
-         self.window = sg.Window('Main', layout,
+         self.window = sg.Window('Main', layout, no_titlebar=True,
                             auto_size_text=True, finalize=True)
 
     def run(self):
@@ -203,6 +236,7 @@ class GUI:
                 self.total = self.getTotalIrrigationTIme(self.data)
                 self.window['cycleTime'].Update(range=(int(self.total/30)+1, 20))
                 self.rewriteCSV(self.filename, self.header_list, self.data)
+                self.serialMsg(self.str2UpdateEV(int(self.piso), self.lado, int(self.etapa), self.solucion, self.evTime))
                 self.str2log("Update Success")
             else: self.str2log("Update Failed")
 
@@ -213,6 +247,7 @@ class GUI:
                 self.window['Table'].Update(values=self.data)
                 self.window['Actualizar Ciclo'].Update(disabled=True)
                 self.rewriteCSV(self.filename, self.header_list, self.data)
+                self.serialMsg(self.str2UpdateCycle(self.cycleTime))
                 if self.piso!='' and self.lado!='' and self.etapa!='' and self.solucion!='':
                     val = self.getEVvalue(int(self.piso), self.lado, int(self.etapa), self.solucion, self.data)
                     self.window['evTime'].Update(range=(evMin, evMax))
@@ -220,15 +255,16 @@ class GUI:
             else:
                 self.str2log("Update Cycle Failed")
 
-        if event in ('Quit', None):
-            self.str2log("QUIT")
+        if event in ('Cerrar', None):
+            self.str2log("GUI Closed", 2)
             self.window.close()
+            self.isOpen = False
 
 
 def main():
     gui = GUI()
     gui.begin()
-    while True:
+    while gui.isOpen:
         gui.run()
 
 if __name__ == '__main__':
