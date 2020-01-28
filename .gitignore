@@ -8,3 +8,4 @@ Python/Grower/data/
 
 # Config Files
 Python/Master/*.json
+Python/Master/src/*.csv
