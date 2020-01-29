@@ -14,6 +14,7 @@ from time import time, sleep, strftime, localtime
 sys.path.insert(0, './src/')
 import security
 import EnvControl
+from gui import GUI
 from smtp import Mail
 from logger import logger
 from sensor import BME680
@@ -50,6 +51,9 @@ serialControl = serialController(mGrower,
                                  log.logger_motorsGrower,
                                  log.logger_solutionMaker,
                                  "state.json")
+
+# Charge GUI parameters and connect logger and serialControl
+gui = GUI(log.logger, serialControl)
 
 # Define functions
 def mainClose(): # When program is finishing
@@ -116,7 +120,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
                                  log.logger_esp32back)
 
     # From inputHandler
-    inputControl = inputHandler(log.logger, serialControl, mqttControl)
+    inputControl = inputHandler(log.logger, serialControl, mqttControl, gui)
 
     try:
         # Define MQTT communication
@@ -140,7 +144,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     serialControl.open()
     log.logger.info("Devices ready")
     mail.sendMail("Ecolistico Alerta", "GrowGreens acaba de iniciar")
-
+    gui.begin()
 else:
     run = False
     log.logger.warning("Permission to start GrowGreens refused")
@@ -148,6 +152,7 @@ else:
 try:
     # Main program
     while run:
+        if gui.isOpen: gui.run()
         serialControl.loop()
         inputControl.loop()
         now = datetime.now()

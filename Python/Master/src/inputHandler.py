@@ -6,12 +6,14 @@ import select
 import paho.mqtt.publish as publish
 
 class inputHandler:
-    def __init__(self, logger, serialController, mqttController):
+    def __init__(self, logger, serialController, mqttController, gui):
         # Define logger
         self.log = logger
         # Define communication controllers
         self.serialControl = serialController
         self.mqttControl = mqttController
+        # Define connection with gui
+        self.gui = gui
         # Aux Variables
         self.exit = False
         
@@ -71,7 +73,49 @@ class inputHandler:
                 if(param[1]=="generalControl" and self.valLenList1(param, 3)):
                     cmd = ",".join(param[2:])
                     self.writeGC(cmd)
-                    self.log.info("inputHandler-[generalControl] Raw Command={}".format(cmd))          
+                    self.log.info("inputHandler-[generalControl] Raw Command={}".format(cmd))
+                    
+                    if(cmd.startswith("solenoid,setCycleTime,")):
+                        try:
+                            val = param[-1]
+                            self.gui.total = self.gui.getTotalIrrigationTime(self.gui.data)
+                            if self.gui.total<=(int(self.gui.cycleTime)*60):
+                                self.gui.data[-1][1] = str(self.gui.cycleTime)
+                                self.gui.window['Table'].Update(values=self.gui.data)
+                                self.gui.window['Actualizar Ciclo'].Update(button_color=self.gui.disable_color, disabled=True)
+                                self.gui.rewriteCSV(self.gui.filename, self.gui.header_list, self.gui.data)
+                                if self.gui.piso!='' and self.gui.lado!='' and self.gui.etapa!='' and self.gui.solucion!='':
+                                    evMin, evMax = self.gui.getEVlimits(self.gui.cycleTime, int(self.gui.etapa))
+                                    val = self.gui.getEVvalue(int(self.gui.piso), self.gui.lado, int(self.gui.etapa), self.gui.solucion, self.gui.data)
+                                    self.gui.window['evTime'].Update(range=(evMin, evMax))
+                            else: self.log.error("inputHandler Error: GUI not allow changes")
+                        except: self.log.error("inputHandler Error: Connecction with GUI failed")
+                        
+                    elif(cmd.startswith("solenoid,setTimeOn,")):
+                        try:
+                            floor = int(param[4])+1
+                            region = int(param[5])
+                            if(region<4):
+                                side = 'A'
+                                region += 1
+                            else:
+                                side = 'B'
+                                region -= 3
+                            sol = int(param[6])
+                            if sol == 0: solution = 'H2O'
+                            else: solution = str(sol)
+                            val = param[7]
+                            resp = self.gui.changeEVvalue(floor, side, region, solution,
+                                                          self.gui.data, self.gui.cycleTime, int(val), factor=1)
+                            if(resp):
+                                self.gui.window['Table'].Update(values=self.gui.data)
+                                self.gui.window['Actualizar'].Update(button_color=self.gui.disable_color, disabled=True)
+                                self.gui.total = self.gui.getTotalIrrigationTime(self.gui.data)
+                                self.gui.window['cycleTime'].Update(range=(int(self.gui.total/30)+1, 20))
+                                self.gui.rewriteCSV(self.gui.filename, self.gui.header_list, self.gui.data)
+                            else: self.log.error("inputHandler Error: GUI not allow changes")
+                        except: self.log.error("inputHandler Error: Connecction with GUI failed")                      
+                             
                 elif(param[1]=="motorsGrower" and self.valLenList1(param, 3)):
                     cmd = ",".join(param[2:])
                     self.writeMG(cmd)

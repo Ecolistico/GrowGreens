@@ -92,7 +92,7 @@ class serialController:
         
     def updateSystemState(self, index):
         param = self.respLine[index].split(",")
-        if(len(param)>=11):
+        if(len(param)>=11 and param[-1]!=''):
             if(self.system.update("solution", int(param[1]))):
                 self.logMain.debug("System Solution Updated")
             else: self.logMain.error("Cannot Update Solution State")
