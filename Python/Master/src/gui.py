@@ -197,7 +197,9 @@ class GUI:
 
          self.window = sg.Window('Main', layout, no_titlebar=True,
                             auto_size_text=True, finalize=True)
-
+         
+         self.str2log('GUI started correctly', level = 1)
+         
     def run(self):
         event, values = self.window.read(timeout=0, timeout_key='timeout')
 
@@ -254,7 +256,6 @@ class GUI:
                 self.serialMsg(self.str2UpdateCycle(self.cycleTime))
                 if self.piso!='' and self.lado!='' and self.etapa!='' and self.solucion!='':
                     evMin, evMax = self.getEVlimits(self.cycleTime, int(self.etapa))
-                    val = self.getEVvalue(int(self.piso), self.lado, int(self.etapa), self.solucion, self.data)
                     self.window['evTime'].Update(range=(evMin, evMax))
                 self.str2log("Update Cycle Success")
             else:
