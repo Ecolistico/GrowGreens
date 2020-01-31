@@ -80,7 +80,7 @@ class inputHandler:
                             evMin, evMax = self.gui.getEVlimits(self.gui.cycleTime, int(self.gui.etapa))
                             self.gui.window['evTime'].Update(range=(evMin, evMax))
                     else: self.log.error("inputHandler Error: GUI not allow changes")
-                except: self.log.error("inputHandler Error: Connecction with GUI failed")
+                except Exception as e: self.log.error("inputHandler Error: Connecction with GUI failed [{}]".format(e))
                         
             elif(command.startswith("solenoid,setTimeOn,") and len(parameters)>=8):
                 try:
@@ -108,7 +108,7 @@ class inputHandler:
                         self.gui.window['cycleTime'].Update(range=(int(self.gui.total/30)+1, 20))
                         self.gui.rewriteCSV(self.gui.filename, self.gui.header_list, self.gui.data)
                     else: self.log.error("inputHandler Error: GUI not allow changes")
-                except: self.log.error("inputHandler Error: Connecction with GUI failed")
+                except Exception as e: self.log.error("inputHandler Error: Connecction with GUI failed [{}]".format(e))
     
     def handleInput(self, line):
         if(line.lower()=="exit"):
