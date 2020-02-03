@@ -2,8 +2,8 @@ import imaplib
 import email
 
 imap_host = 'imap.yandex.com'
-imap_user = 'jmcasimar@sippys.com.mx'
-imap_pass = 'predatoR15'
+imap_user = 'USER@DOMAIN'
+imap_pass = 'PASSWORD'
 
 # connect to host using SSL
 imap = imaplib.IMAP4_SSL(imap_host, 993)
