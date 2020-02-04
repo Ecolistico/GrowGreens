@@ -371,7 +371,9 @@ class GUI:
 
          self.window = sg.Window('Main', layout, no_titlebar=False,
                             auto_size_text=True, finalize=True)
-
+         
+         self.str2log('GUI started correctly', level = 1)
+         
     def run(self):
         try:
             event, values = self.window.read(timeout=0, timeout_key='timeout')
@@ -388,6 +390,7 @@ class GUI:
             if int(values['evTime']) != self.evTime:
                 self.evTime = int(values['evTime'])
                 if self.piso!='' and self.lado!='' and self.etapa!='' and self.solucion!='':
+<<<<<<< HEAD
                     ev = self.getEVvalue(int(self.piso), self.lado, int(self.etapa), self.solucion, self.data)
                     if (int(ev) == self.evTime): self.window['Actualizar'].Update(button_color=self.disable_color, disabled=True)
                     else: self.window['Actualizar'].Update(button_color=('black', self.green1), disabled=False)
@@ -555,6 +558,15 @@ class GUI:
                 self.timerAux = False
 
         except Exception as e:
+=======
+                    evMin, evMax = self.getEVlimits(self.cycleTime, int(self.etapa))
+                    self.window['evTime'].Update(range=(evMin, evMax))
+                self.str2log("Update Cycle Success")
+            else:
+                self.str2log("Update Cycle Failed")
+
+        if event in ('Cerrar', None):
+>>>>>>> 9b17b069d6fbea979a30304549753241c4afd66f
             self.str2log("GUI Closed", 2)
             self.isOpen = False
             #print(e)

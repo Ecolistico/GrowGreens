@@ -782,7 +782,7 @@ void runMPC(){
     if(p3<=free_pressure){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
-      uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
+      uint8_t resp = Recirculation.moveOut(75, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
         MPC.setState(250); // Check MPC Process 250
@@ -869,7 +869,7 @@ void runMPC(){
     if(p3<=free_pressure){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
-      uint8_t resp = Recirculation.moveOut(100, WATER_KEGS);
+      uint8_t resp = Recirculation.moveOut(75, WATER_KEGS);
       Recirculation.setOut(lastOut);
       if(resp==0){
         MPC.setState(252); // Check MPC Process 252
