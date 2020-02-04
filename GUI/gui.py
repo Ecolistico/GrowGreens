@@ -19,12 +19,12 @@ class GUI:
         self.green3 = '#00b44f'
         self.green4 = '#82bc00'
         self.disable_color = (self.black90, self.black90)
-        
+
         # Tables variables
         actualDirectory = os.getcwd()
         if actualDirectory.endswith('src'): self.filename = 'config.csv'
-        else: self.filename = './src/config.csv'
-        
+        else: self.filename = 'config.csv'
+
         self.data = []
         self.header_list = []
 
@@ -116,7 +116,7 @@ class GUI:
         else: sol = int(solucion) + 1
         columna = ((piso-1)*8) + (etapa+ladoInt) - 1
         return dataSource[columna][sol]
-        
+
     def changeEVvalue(self, piso, lado, etapa, solucion, dataSource, cycleTime, value, factor = 0.5):
         if(lado=='A'): ladoInt = 0
         else: ladoInt = 4
@@ -266,7 +266,7 @@ class GUI:
             self.isOpen = False
 
 # Debug
-"""
+
 def main():
     gui = GUI()
     gui.begin()
@@ -275,4 +275,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-"""
