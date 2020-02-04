@@ -72,13 +72,13 @@ class inputHandler:
                     if self.gui.total<=(int(val)*60):
                         self.gui.cycleTime = int(val)
                         self.gui.data[-1][1] = str(self.gui.cycleTime)
-                        self.gui.window['Table'].Update(values=self.gui.data)
                         self.gui.window['cycleTime'].Update(value=self.gui.cycleTime)
                         self.gui.window['Actualizar Ciclo'].Update(button_color=self.gui.disable_color, disabled=True)
                         self.gui.rewriteCSV(self.gui.filename, self.gui.header_list, self.gui.data)
                         if self.gui.piso!='' and self.gui.lado!='' and self.gui.etapa!='' and self.gui.solucion!='':
                             evMin, evMax = self.gui.getEVlimits(self.gui.cycleTime, int(self.gui.etapa))
                             self.gui.window['evTime'].Update(range=(evMin, evMax))
+                            self.gui.window['TiempoCiclo'].Update(self.gui.data[-1][1]+' min')
                     else: self.log.error("inputHandler Error: GUI not allow changes")
                 except Exception as e: self.log.error("inputHandler Error: Connecction with GUI failed [{}]".format(e))
                         
@@ -102,11 +102,11 @@ class inputHandler:
                         if(floor==int(self.gui.piso) and side==self.gui.lado and region==int(self.gui.etapa) and solution==self.gui.solucion):
                             self.gui.evTime = int(val)
                             self.gui.window['evTime'].Update(value=self.gui.evTime)
-                        self.gui.window['Table'].Update(values=self.gui.data)
                         self.gui.window['Actualizar'].Update(button_color=self.gui.disable_color, disabled=True)
                         self.gui.total = self.gui.getTotalIrrigationTime(self.gui.data)
                         self.gui.window['cycleTime'].Update(range=(int(self.gui.total/30)+1, 20))
                         self.gui.rewriteCSV(self.gui.filename, self.gui.header_list, self.gui.data)
+                        self.gui.updateCurrentTimeValues()
                     else: self.log.error("inputHandler Error: GUI not allow changes")
                 except Exception as e: self.log.error("inputHandler Error: Connecction with GUI failed [{}]".format(e))
     

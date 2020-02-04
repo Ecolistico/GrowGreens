@@ -148,7 +148,8 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     serialControl.open()
     log.logger.info("Devices ready")
     mail.sendMail("Ecolistico Alerta", "GrowGreens acaba de iniciar")
-    mail.sendMail(growCal.getEmail())
+    sub, msg = growCal.getEmail()
+    mail.sendMail(sub, msg)
     gui.begin()
 else:
     run = False

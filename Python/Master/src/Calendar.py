@@ -42,7 +42,7 @@ class Calendar():
             elif cmd[0] == 'TWICE' and cmd[1] == 'MONTH':
                 compare1 = self.cal.find_following_working_day(date(now.year, now.month, 1))
                 compare2 = self.cal.find_following_working_day(date(now.year, now.month, 15))
-                if compare1 == now or compare2 == now: now: todayReminders.append(rem[1])
+                if compare1 == now or compare2 == now: todayReminders.append(rem[1])
 
         return todayReminders
 

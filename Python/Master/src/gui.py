@@ -390,12 +390,9 @@ class GUI:
             if int(values['evTime']) != self.evTime:
                 self.evTime = int(values['evTime'])
                 if self.piso!='' and self.lado!='' and self.etapa!='' and self.solucion!='':
-<<<<<<< HEAD
                     ev = self.getEVvalue(int(self.piso), self.lado, int(self.etapa), self.solucion, self.data)
                     if (int(ev) == self.evTime): self.window['Actualizar'].Update(button_color=self.disable_color, disabled=True)
                     else: self.window['Actualizar'].Update(button_color=('black', self.green1), disabled=False)
-
-
 
             #if values['Piso'] != self.piso:
             #    self.piso = values['Piso']
@@ -421,7 +418,6 @@ class GUI:
                     self.piso = 4
                     self.checkEV()
                     self.updateCurrentTimeValues()
-
 
             #if values['Lado'] != self.lado:
             #    self.lado = values['Lado']
@@ -471,7 +467,6 @@ class GUI:
                     self.lado = 'B'
                     self.etapa = 4
                     self.checkEV()
-
 
             #if values['Sol'] != self.solucion:
             #    self.solucion = values['Sol']
@@ -553,26 +548,17 @@ class GUI:
                 else:
                     if self.SeedValues[txtSeedValueKey]>0: self.SeedValues[txtSeedValueKey]=self.SeedValues[txtSeedValueKey]-1
                     self.window[txtBKey].Update(value=self.SeedValues[txtSeedValueKey])
-            if (time.time()-self.timer>0.3 and self.timerAux == True):
+            if (time.time()-self.timer>1 and self.timerAux == True):
                 self.window['siembra'].Update(data=self.get_img_data(self.paths[0], maxsize=(380,443), first=True))
                 self.timerAux = False
 
         except Exception as e:
-=======
-                    evMin, evMax = self.getEVlimits(self.cycleTime, int(self.etapa))
-                    self.window['evTime'].Update(range=(evMin, evMax))
-                self.str2log("Update Cycle Success")
-            else:
-                self.str2log("Update Cycle Failed")
-
-        if event in ('Cerrar', None):
->>>>>>> 9b17b069d6fbea979a30304549753241c4afd66f
             self.str2log("GUI Closed", 2)
             self.isOpen = False
             #print(e)
 
 # Debug
-
+"""
 def main():
     gui = GUI()
     gui.begin()
@@ -581,3 +567,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+"""
