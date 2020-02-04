@@ -369,7 +369,7 @@ class GUI:
 
          layout = [[col1],[col2, col3]]
 
-         self.window = sg.Window('Main', layout, no_titlebar=False,
+         self.window = sg.Window('GG GUI', layout, no_titlebar=False,
                             auto_size_text=True, finalize=True)
          
          self.str2log('GUI started correctly', level = 1)
