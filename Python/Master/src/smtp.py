@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 from credentials import email
 
 class Mail:
-    def __init__(self, logger, loggerMail, city, state, ID):
+    def __init__(self, loggerMail, city, state, ID, logger = None):
         self.log = logger
         self.logMail = loggerMail
         self.city = city
@@ -27,8 +27,10 @@ class Mail:
             server.login(email['username'], email['password'])
             server.sendmail(email['username'], recipients, msg.as_string())
             server.close()
-            self.log.debug("Email sent to {}, Subject={}, Message={}".format(self.logMail, subject,mssg))
+            if self.log != None:
+                self.log.debug("Email sent to {}, Subject={}, Message={}".format(self.logMail, subject,mssg))
             return True
         except:
-            self.log.critical("Email Error, cannot send the email", exc_info=True)
+            if self.log != None:
+                self.log.critical("Email Error, cannot send the email", exc_info=True)
             return False

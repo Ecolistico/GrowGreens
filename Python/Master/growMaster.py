@@ -66,8 +66,8 @@ def mainClose(): # When program is finishing
     conn.close() # Database pointer
     serialControl.close()
     log.logger.info("GrowGreens Finished")
-    if run: mail.sendMail("Ecolistico Alerta", "GrowGreens se detuvo")
-    else: mail.sendMail("Ecolistico Alerta", "GrowGreens fue detenido por el operador")
+    if run: mail.sendMail("ALERTA", "GrowGreens se detuvo")
+    else: mail.sendMail("ALERTA", "GrowGreens fue detenido por el operador")
 
 def mqttDisconnect(cliente, mqttObj):
     cliente.disconnect()
@@ -106,7 +106,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     # Define Mail object
     #mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
     # Main logger, me and @IFTTT
-    mail = Mail(log.logger, ["jmcasimar@sippys.com.mx", "trigger@applet.ifttt.com"], city, state, ID)
+    mail = Mail(["jmcasimar@sippys.com.mx", "trigger@applet.ifttt.com"], city, state, ID, log.logger)
 
     # Define variables imported form other files
     # From MQTT Callback
@@ -147,7 +147,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     log.logger.info("Setting up devices...")
     serialControl.open()
     log.logger.info("Devices ready")
-    mail.sendMail("Ecolistico Alerta", "GrowGreens acaba de iniciar")
+    mail.sendMail("ALERTA", "GrowGreens acaba de iniciar")
     gui.begin()
 else:
     run = False
