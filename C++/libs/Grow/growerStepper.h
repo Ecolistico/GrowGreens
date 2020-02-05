@@ -41,10 +41,10 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define DEFAULT_MICROSTEP 8 // By default we use configuration of 1/8 microSteps
 #define DEFAULT_PULLEY_TEETH 20 // By default we use pulley of 20 teeth
 #define DEFAULT_X_MM_TOOTH 2 // By default we use toothed tape of 2mm in X
-#define DEFAULT_Y_MM_TOOTH 3 // By default we use toothed tape of 3mm in Y
+#define DEFAULT_Y_MM_TOOTH 2 // By default we use toothed tape of 2mm in Y
 #define MOTOR_STEP_PER_REV 200 // By default we use motors of 200 steps/rev
 #define DEFAULT_MAX_X_DISTANCE_MM 11573 // By default the max distance are 11.785m
-#define DEFAULT_MAX_Y_DISTANCE_MM 1914 // By  default the max distance are 1.914m
+#define DEFAULT_MAX_Y_DISTANCE_MM 1700 // By  default the max distance are 1.7m
 #define X_HOME_DISTANCE_MM 12500 // The max distance to get home in x
 #define Y_HOME_DISTANCE_MM 2500 // The max distance to get home in y
 #define WAIT_TIME_FOR_GO_HOME 1800000 // By default 30min the value is given in ms
