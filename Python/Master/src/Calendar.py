@@ -34,8 +34,9 @@ class Calendar():
                 compare = self.cal.find_following_working_day(now)
                 if compare == now: todayReminders.append(rem[1])
             elif cmd[0] == 'EVERY' and cmd[1] == 'WEEK':
-                compare = self.cal.find_following_working_day(now).weekday()
-                if compare == +now.weekday(): todayReminders.append(rem[1])
+                Monday = self.cal.get_first_weekday_after(now, CalCore.MON)
+                compare = self.cal.find_following_working_day(Monday)
+                if compare == now: todayReminders.append(rem[1])
             elif cmd[0] == 'EVERY' and cmd[1] == 'MONTH':
                 compare = self.cal.find_following_working_day(date(now.year, now.month, 1))
                 if compare == now: todayReminders.append(rem[1])
@@ -49,9 +50,6 @@ class Calendar():
     def getEmail(self):
         rem = self.checkReminders()
         subject = 'Tareas del día'
-        msg = '\n'
-        for i, task in enumerate(rem):
-            if i<len(rem): msg += '{}- {}\n'.format(i+1, task)
-            else: msg += '{}- {}'.format(i+1, task)
-
+        msg = ' '*15
+        for i, task in enumerate(rem): msg += '{}-{}     '.format(i+1, task)
         return subject, msg

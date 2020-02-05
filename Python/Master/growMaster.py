@@ -12,7 +12,6 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 from time import time, sleep, strftime, localtime
 sys.path.insert(0, './src/')
-import security
 import EnvControl
 from gui import GUI
 from smtp import Mail
@@ -20,6 +19,7 @@ from logger import logger
 from sensor import BME680
 from asciiART import asciiArt
 from Calendar import Calendar
+from credentials import broker
 from growerData import multiGrower
 from inputHandler import inputHandler
 from mqttCallback import mqttController
@@ -148,8 +148,6 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     serialControl.open()
     log.logger.info("Devices ready")
     mail.sendMail("Ecolistico Alerta", "GrowGreens acaba de iniciar")
-    sub, msg = growCal.getEmail()
-    mail.sendMail(sub, msg)
     gui.begin()
 else:
     run = False
@@ -261,8 +259,12 @@ try:
                 serialControl.write(serialControl.motorsGrower, mssg)
                 mGrower.Gr3.serialReq(mssg)
                 log.logger.info("Checking Grower4 status to start sequence")
-            elif(hour==0 and minute==0): # Update Plant database and restart GUI
-                pass
+            elif(hour==15 and minute==0): # Update Plant database and restart GUI
+                gui.ResetSeedValues()
+            elif(hour==16 and minute==0): # Send Dayly tasks
+                sub, msg = growCal.getEmail()
+                mail.sendMail(sub, msg)
+
         # Resend serial messages without response in 20s for Growers
         if(mGrower.Gr1.serialRequest!="" and time()-mGrower.Gr1.actualTime>20):
             serialControl.write(serialControl.motorsGrower, mGrower.Gr1.serialRequest)
@@ -281,7 +283,7 @@ try:
         if(mGrower.Gr1.mqttRequest!="" and time()-mGrower.Gr1.actualTime>20):
             if mGrower.Gr1.mqttRequest=="sendPhotos":
                 mssg = "{},{},{},{}".format(mGrower.Gr1.mqttRequest, brokerIP,
-                    security.decode(security.hostName), security.decode(security.passw))
+                    broker['username'] , broker['password'])
             else: mssg = mGrower.Gr1.mqttRequest
             if(mqttControl.clientConnected):
                 try:
@@ -293,7 +295,7 @@ try:
         if(mGrower.Gr2.mqttRequest!="" and time()-mGrower.Gr2.actualTime>20):
             if mGrower.Gr2.mqttRequest=="sendPhotos":
                 mssg = "{},{},{},{}".format(mGrower.Gr2.mqttRequest, brokerIP,
-                    security.decode(security.hostName), security.decode(security.passw))
+                    broker['username'] , broker['password'])
             else: mssg = mGrower.Gr2.mqttRequest
             if(mqttControl.clientConnected):
                 try:
@@ -305,7 +307,7 @@ try:
         if(mGrower.Gr3.mqttRequest!="" and time()-mGrower.Gr3.actualTime>20):
             if mGrower.Gr3.mqttRequest=="sendPhotos":
                 mssg = "{},{},{},{}".format(mGrower.Gr3.mqttRequest, brokerIP,
-                    security.decode(security.hostName), security.decode(security.passw))
+                    broker['username'] , broker['password'])
             else: mssg = mGrower.Gr3.mqttRequest
             if(mqttControl.clientConnected):
                 try:
@@ -316,8 +318,8 @@ try:
             mGrower.Gr3.actualTime = time()
         if(mGrower.Gr4.mqttRequest!="" and time()-mGrower.Gr4.actualTime>20):
             if mGrower.Gr4.mqttRequest=="sendPhotos":
-                mssg = "{},{},{},{}".format(mGrower.Gr4.mqttRequest, brokerIP,
-                    security.decode(security.hostName), security.decode(security.passw))
+                mssg = "{},{},{},{}".format(mGrower.Gr2.mqttRequest, brokerIP,
+                    broker['username'] , broker['password'])
             else: mssg = mGrower.Gr4.mqttRequest
             if(mqttControl.clientConnected):
                 try:
