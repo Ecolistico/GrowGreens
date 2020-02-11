@@ -6,7 +6,10 @@ import select
 import paho.mqtt.publish as publish
 
 class inputHandler:
-    def __init__(self, logger, serialController, mqttController, gui):
+    def __init__(self, systemID, brokerIP, logger, serialController, mqttController, gui):
+        # Publish require varaibles
+        self.ID = systemID
+        self.IP = brokerIP
         # Define logger
         self.log = logger
         # Define communication controllers
@@ -122,7 +125,6 @@ class inputHandler:
                     self.writeGC(cmd)
                     self.log.info("inputHandler-[generalControl] Raw Command={}".format(cmd))
                     self.handleGUI(cmd, param)
-                             
                 elif(param[1]=="motorsGrower" and self.valLenList1(param, 3)):
                     cmd = ",".join(param[2:])
                     self.writeMG(cmd)
@@ -134,9 +136,12 @@ class inputHandler:
                 elif( (param[1]=="esp32" or param[1]=="Grower") and self.valLenList1(param, 4)):
                     cmd = ",".join(param[3:])
                     topic = "{}/{}{}".format(self.mqttControl.ID, param[1], param[2])
-                    publish.single(topic, "{}".format(cmd), hostname = self.mqttControl.brokerIP)
-                    self.log.info("inputHandler-[mqtt] Raw Command Topic={} Message={}".format(
-                        topic,cmd))
+                    try:
+                        publish.single(topic, "{}".format(cmd), hostname = self.mqttControl.brokerIP)
+                        self.log.info("inputHandler-[mqtt] Raw Command Topic={} Message={}".format(
+                            topic,cmd))
+                    except Exception as e:
+                        self.log.error("LAN/WLAN not found- Impossible use publish() [{}]".format(e))
                 else: self.log.info("inputHandler- {} Command Unknown".format(line))
         elif(line.startswith("irr")):
             param = self.valSplit(line)
@@ -176,6 +181,51 @@ class inputHandler:
                     self.writeGC("debug,irrigation,getEC")
                     self.log.debug("Asking for the actual EC parameter")
                 else: self.log.error("inputHandler- {} Command Unknown".format(line))
+        
+        elif(line.startswith("startRoutine")):
+            param = self.valSplit(line)
+            if(param!=None and len(param)>=2):
+                fl = param[1]
+                if(len(param)==4):
+                    x = param[2]
+                    y = param[3]
+                elif(len(param)==3): x = y = param[2]
+                else: x = y = 0
+                
+                if(fl=='1'):
+                    if(x!=0 and y!=0):
+                        self.serialControl.mGrower.Gr1.xSeq = x
+                        self.serialControl.mGrower.Gr1.ySeq = y
+                    mssg = self.serialControl.mGrower.Gr1.time2Move()
+                elif(fl=='2'):
+                    if(x!=0 and y!=0):
+                        self.serialControl.mGrower.Gr2.xSeq = x
+                        self.serialControl.mGrower.Gr2.ySeq = y
+                    mssg = self.serialControl.mGrower.Gr2.time2Move()
+                elif(fl=='3'):
+                    if(x!=0 and y!=0):
+                        self.serialControl.mGrower.Gr3.xSeq = x
+                        self.serialControl.mGrower.Gr3.ySeq = y
+                    mssg = self.serialControl.mGrower.Gr3.time2Move()
+                elif(fl=='4'):
+                    if(x!=0 and y!=0):
+                        self.serialControl.mGrower.Gr4.xSeq = x
+                        self.serialControl.mGrower.Gr4.ySeq = y
+                    mssg = self.serialControl.mGrower.Gr4.time2Move()
+                else:
+                    mssg = ''
+                    self.log.error("Please provide a valid floor to start Grower sequence")
+                if mssg != '':
+                    try:
+                        top = "{}/Grower{}".format(self.ID,fl)
+                        msgs = [{"topic": top, "payload": "OnLED1"},
+                                {"topic": top, "payload": "OnLED2"},
+                                {"topic": top, "payload": "DisableStream"}]
+                        publish.multiple(msgs, hostname = self.IP)
+                        self.log.info("Checking Grower{} status to start sequence".format(fl))
+                    except Exception as e:
+                        self.log.error("LAN/WLAN not found- Impossible use publish() [{}]".format(e))
+                else: self.log.error("Please provide a valid floor to start Grower sequence")
         else: self.log.error("inputHandler- {} Command Unknown".format(line))
             
     def loop(self):

@@ -4,7 +4,6 @@
 from time import time
 import paho.mqtt.publish as publish
 import ESPdata
-import growerData
 
 class mqttController:
     def __init__(self,
@@ -36,14 +35,10 @@ class mqttController:
         # Define ESP32´s object
         self.ESP32 = ESPdata.multiESP(self.logFront, self.logCenter, self.logBack)
         # Define multiGrower´s object
-        self.mGrower = growerData.multiGrower(self.logGr1, self.logGr2, self.logGr3, self.logGr4)
+        self.mGrower = multiGrower
         # Define aux variables
         self.clientConnected = False
         self.actualTime = time()
-        self.requestGr1 = False
-        self.requestGr2 = False
-        self.requestGr3 = False
-        self.requestGr4 = False
         
     def update(self, ID, brokerIP, connector):
         self.ID = ID
@@ -62,6 +57,14 @@ class mqttController:
         elif(mssg.split(",")[1]=="critical"): logger.critical(mssg.split(",")[0])
         elif(mssg.endswith(",critical")): logger.critical(mssg.replace(",critical", ""))
         else: logger.debug(mssg)
+    
+    def onGrowerMsg(self, grower, message):
+        grower.connected = True
+        if(message.startswith("Photo Sequence taken") and grower.inRoutine):
+            grower.mqttReq("")
+            grower.serialReq("continueSequence,{}".format(grower.floor))
+            grower.actualTime = time()-120   
+        elif(message.startswith("cozir")): grower.str2array(message)
         
     # Callback fires when conected to MQTT broker.
     def on_connect(self, client, userdata, flags, rc):
@@ -94,43 +97,19 @@ class mqttController:
             if(device == "Grower1"):
                 self.Msg2Log(self.logGr1, message)
                 self.requestGr1 = False
-                self.mGrower.Gr1.connected = True
-                if(message.startswith("Photo Sequence taken")):
-                    self.mGrower.Gr1.mqttReq("")
-                    self.mGrower.Gr1.serialReq("available,1")
-                    self.mGrower.Gr1.actualTime = time()-20
-                elif(message.startswith("cozir")):
-                    self.mGrower.Gr1.str2array(message)
+                self.onGrowerMsg(self.mGrower.Gr1, message)
             elif(device == "Grower2"):
                 self.Msg2Log(self.logGr2, message)
                 self.requestGr2 = False
-                self.mGrower.Gr2.connected = True
-                if(message.startswith("Photo Sequence taken")):
-                    self.mGrower.Gr2.mqttReq("")
-                    self.mGrower.Gr2.serialReq("available,2")
-                    self.mGrower.Gr2.actualTime = time()-20
-                elif(message.startswith("cozir")):
-                    self.mGrower.Gr2.str2array(message)
+                self.onGrowerMsg(self.mGrower.Gr2, message)
             elif(device == "Grower3"):
                 self.Msg2Log(self.logGr3, message)
                 self.requestGr3 = False
-                self.mGrower.Gr3.connected = True
-                if(message.startswith("Photo Sequence taken")):
-                    self.mGrower.Gr3.mqttReq("")
-                    self.mGrower.Gr3.serialReq("available,3")
-                    self.mGrower.Gr3.actualTime = time()-20
-                elif(message.startswith("cozir")):
-                    self.mGrower.Gr3.str2array(message)
+                self.onGrowerMsg(self.mGrower.Gr3, message)
             elif(device == "Grower4"):
                 self.Msg2Log(self.logGr4, message)
                 self.requestGr4 = False
-                self.mGrower.Gr4.connected = True
-                if(message.startswith("Photo Sequence taken")):
-                    self.mGrower.Gr4.mqttReq("")
-                    self.mGrower.Gr4.serialReq("available,4")
-                    self.mGrower.Gr4.actualTime = time()-20
-                elif(message.startswith("cozir")):
-                    self.mGrower.Gr4.str2array(message)
+                self.onGrowerMsg(self.mGrower.Gr4, message)
                     
             elif(device == "esp32front"): self.logFront.debug(message)
             elif(device == "esp32center"): self.logCenter.debug(message)
