@@ -7,52 +7,69 @@ from systemState import systemState
 
 class serialController:
     def __init__(self, multiGrower, loggerMain, loggerGC, loggerMG, loggerSM, stateFile):
+        # Define loggers
+        self.logMain = loggerMain
+        self.logGC = loggerGC
+        self.logMG = loggerMG
+        self.logSM = loggerSM
+        
         # Define microcontrolers
-        self.generalControl = Serial('/dev/generalControl', 115200, timeout=0)
-        self.generalControl.dtr = False # Reset
-        self.generalControl.close()
-        self.motorsGrower = Serial('/dev/motorsGrower', 115200, timeout=0)
-        self.motorsGrower.dtr = False # Reset
-        self.motorsGrower.close()
-        self.solutionMaker = Serial('/dev/solutionMaker', 115200, timeout=0)
-        self.solutionMaker.dtr = False # Reset
-        self.solutionMaker.close()
+        try:
+            self.generalControl = Serial('/dev/generalControl', 115200, timeout=0)
+            self.generalControl.dtr = False # Reset
+            self.generalControl.close()
+            self.gcIsConnected = True
+        except Exception as e:
+            self.gcIsConnected = False
+            raise Exception("Communication with generalControl device cannot be stablished. [{}]".format(e))
+        try:
+            self.motorsGrower = Serial('/dev/motorsGrower', 115200, timeout=0)
+            self.motorsGrower.dtr = False # Reset
+            self.motorsGrower.close()
+            self.mgIsConnected = True
+        except Exception as e:
+            self.mgIsConnected = False
+            self.logMain.error("Communication with motorsGrower device cannot be stablished. [{}]".format(e))
+        try:
+            self.solutionMaker = Serial('/dev/solutionMaker', 115200, timeout=0)
+            self.solutionMaker.dtr = False # Reset
+            self.solutionMaker.close()
+            self.smIsConnected = True
+        except Exception as e:
+            self.smIsConnected = False
+            self.logMain.error("Communication with solutionMaker device cannot be stablished. [{}]".format(e))
         # Define multiGrower variables with mqtt module
         self.mGrower = multiGrower
         # Define responses auxVariables
         self.resp = []
         self.respLine = []
         self.respTime = time()
-        # Define loggers
-        self.logMain = loggerMain
-        self.logGC = loggerGC
-        self.logMG = loggerMG
-        self.logSM = loggerSM
+        # Charge system state
         self.system = systemState(stateFile)
         if(self.system.load()): self.logMain.info("System State charged")
-        else: self.logMain.error("[ERROR-1] Cannot charge System State because it does not exist")
+        else: self.logMain.error("Cannot charge System State because it does not exist")
         
     def open(self):
-        if not self.generalControl.is_open:
+        if self.gcIsConnected and not self.generalControl.is_open:
             self.generalControl.open()
             sleep(0.33)
             self.generalControl.reset_input_buffer()
             self.generalControl.dtr = True
-        if not self.motorsGrower.is_open:
+        if self.mgIsConnected and not self.motorsGrower.is_open:
             self.motorsGrower.open()
             sleep(0.33)
             self.motorsGrower.reset_input_buffer()
             self.motorsGrower.dtr = True
-        if not self.solutionMaker.is_open:
+        if self.smIsConnected and not self.solutionMaker.is_open:
             self.solutionMaker.open()
             sleep(0.33)
             self.solutionMaker.reset_input_buffer()
             self.solutionMaker.dtr = True
     
     def close(self):
-        if self.generalControl.is_open: self.generalControl.close()
-        if self.motorsGrower.is_open: self.motorsGrower.close()
-        if self.solutionMaker.is_open:self.solutionMaker.close()
+        if self.gcIsConnected and self.generalControl.is_open: self.generalControl.close()
+        if self.mgIsConnected and self.motorsGrower.is_open: self.motorsGrower.close()
+        if self.smIsConnected and self.solutionMaker.is_open:self.solutionMaker.close()
     
     def Msg2Log(self, logger, mssg):
         if(mssg.startswith("debug,")): logger.debug(mssg.split(",")[1])
@@ -63,9 +80,14 @@ class serialController:
         else: logger.debug(mssg)
 
     def write(self, serialObject, mssg):
-        serialObject.write(bytes(mssg, "utf-8"))
-        serialObject.flush()
-        
+        if serialObject == self.generalControl and self.gcIsConnected: aux = True
+        elif serialObject == self.motorsGrower and self.mgIsConnected: aux = True
+        elif serialObject == self.solutionMaker and self.smIsConnected: aux = True
+        if aux:
+            serialObject.write(bytes(mssg, "utf-8"))
+            serialObject.flush()
+        else: self.logMain.error("Cannot write to serial device. It is disconnected.")
+            
     def cleanLine(self, line):
         resp = line.split(",")
         if len(resp)>1: return resp[1]
@@ -265,7 +287,7 @@ class serialController:
                     else: self.logGC.error("solutionMaker ph out of range [0-14]")
                 else: self.logGC.error("solutionMaker solution out of range [0-3]")
             else: self.logGC.error("solutionMaker liters has to be positive")
-        else: self.logMain.error("Line incomplete - {}".format(self.respLine[index]))
+        else: self.logMain.error("Line incomplete - {}".format(self.respLine[index]))            
         
     def concatResp(self, resp, line):
         # If that request is not save
@@ -275,11 +297,13 @@ class serialController:
             self.respTime = time() # Restart timer
             
     def response(self):
-        if(time()-self.respTime>1 and
-           self.generalControl.in_waiting==0 and
-           self.motorsGrower.in_waiting==0 and
-           self.solutionMaker.in_waiting==0 and
-           len(self.resp)>0):
+        if not self.gcIsConnected or self.generalControl.in_waiting==0: gControl = True
+        else: gControl = False
+        if not self.mgIsConnected or self.motorsGrower.in_waiting==0: motorG = True
+        else: motorG = False
+        if not self.smIsConnected or self.solutionMaker.in_waiting==0: sMaker = True
+        else: sMaker = False
+        if(time()-self.respTime>1 and gControl and motorG and sMaker and len(self.resp)>0):
             for i, resp in enumerate(self.resp):
                 # generalControl is requesting the necessary booting parameters
                 if(resp == "boot"): self.sendBootParams()            
@@ -290,8 +314,7 @@ class serialController:
                 # generalControl ask if sMaker finished to prepare the solution
                 elif(resp == "askSolFinished"): self.write(self.solutionMaker, "?solutionFinished")
                 # solutionMaker accepts to prepare a new solution
-                elif(resp == "requestAccepted"):
-                    self.write(self.generalControl, "solutionMaker,accept")
+                elif(resp == "requestAccepted"): self.write(self.generalControl, "solutionMaker,accept")
                 # solutionMaker finished to prepare the solution
                 elif(resp == "solutionFinished"): self.write(self.generalControl, "solutionMaker,finished")
                     
@@ -301,135 +324,139 @@ class serialController:
             self.respLine = []           
             
     def loop(self):
-        # If bytes available in generalControl
-        while self.generalControl.in_waiting>0:
-            line1 = str(self.generalControl.readline(), "utf-8")[0:-1]
-            self.Msg2Log(self.logGC, line1)
-            
-            if(line1.startswith("?boot")):
-                self.concatResp("boot", line1)
-            elif(line1.startswith("updateSystemState")):
-                self.concatResp("updateSystemState", line1)
-            elif(line1.startswith("?solutionMaker")):
-                self.concatResp("requestSolution", line1)
-            elif(line1.startswith("?solutionFinished")):
-                self.concatResp("askSolFinished", line1)
-                    
-        # If bytes available in motorsGrower
-        while self.motorsGrower.in_waiting>0:
-            line2 = str(self.motorsGrower.readline(), "utf-8")[0:-1]
-            self.Msg2Log(self.logMG, line2)
-            
-            decition = False
-            # If we are waiting for a particular response from Grower1
-            if(self.mGrower.Gr1.serialRequest!="" and not decition):
-                decition = self.decideStartOrStopGrower(self.cleanLine(line2))
+        if self.gcIsConnected:
+            # If bytes available in generalControl
+            while self.generalControl.in_waiting>0:
+                line1 = str(self.generalControl.readline(), "utf-8")[0:-1]
+                self.Msg2Log(self.logGC, line1)
+                if(line1.startswith("?boot")):
+                    self.concatResp("boot", line1)
+                elif(line1.startswith("updateSystemState")):
+                    self.concatResp("updateSystemState", line1)
+                elif(line1.startswith("?solutionMaker")):
+                    if self.smIsConnected: self.concatResp("requestSolution", line1)
+                    else: self.concatResp("requestAccepted", line1)
+                elif(line1.startswith("?solutionFinished")):
+                    if self.smIsConnected: self.concatResp("askSolFinished", line1)
+                    else: self.concatResp("solutionFinished", line1)
+        
+        if self.mgIsConnected:
+            # If bytes available in motorsGrower
+            while self.motorsGrower.in_waiting>0:
+                line2 = str(self.motorsGrower.readline(), "utf-8")[0:-1]
+                self.Msg2Log(self.logMG, line2)
                 
-            # If we are waiting for a particular response from Grower2
-            if(self.mGrower.Gr2.serialRequest!="" and not decition):
-                decition = self.decideStartOrStopGrower(self.cleanLine(line2))
-                        
-            # If we are waiting for a particular response from Grower3
-            if(self.mGrower.Gr3.serialRequest!="" and not decition):
-                decition = self.decideStartOrStopGrower(self.cleanLine(line2))
+                decition = False
+                # If we are waiting for a particular response from Grower1
+                if(self.mGrower.Gr1.serialRequest!="" and not decition):
+                    decition = self.decideStartOrStopGrower(self.cleanLine(line2))
                     
-            # If we are waiting for a particular response from Grower4
-            if(self.mGrower.Gr4.serialRequest!="" and not decition):
-                decition = self.decideStartOrStopGrower(self.cleanLine(line2))
-            
-            # If we are waiting Gr1 to reach home and start the sequence
-            if(self.mGrower.Gr1.serialRequest=="" and self.mGrower.Gr1.startRoutine and not decition):
-                resp, num = self.getGrowerLine(line2)
-                if(num==1):
-                    resp = self.cleanGrowerLine(resp)
-                    if resp.startswith("Starting Routine Stage 2"):
-                        decition = True
-                        self.GrowerInRoutine(num)
+                # If we are waiting for a particular response from Grower2
+                if(self.mGrower.Gr2.serialRequest!="" and not decition):
+                    decition = self.decideStartOrStopGrower(self.cleanLine(line2))
+                            
+                # If we are waiting for a particular response from Grower3
+                if(self.mGrower.Gr3.serialRequest!="" and not decition):
+                    decition = self.decideStartOrStopGrower(self.cleanLine(line2))
                         
-            # If we are waiting Gr2 to reach home and start the sequence
-            if(self.mGrower.Gr2.serialRequest=="" and self.mGrower.Gr2.startRoutine and not decition):
-                resp, num = self.getGrowerLine(line2)
-                if(num==2):
-                    resp = self.cleanGrowerLine(resp)
-                    if resp.startswith("Starting Routine Stage 2"):
-                        decition = True
-                        self.GrowerInRoutine(num)
-                        
-            # If we are waiting Gr3 to reach home and start the sequence
-            if(self.mGrower.Gr3.serialRequest=="" and self.mGrower.Gr3.startRoutine and not decition):
-                resp, num = self.getGrowerLine(line2)
-                if(num==3):
-                    resp = self.cleanGrowerLine(resp)
-                    if resp.startswith("Starting Routine Stage 2"):
-                        decition = True
-                        self.GrowerInRoutine(num)
-                        
-            # If we are waiting Gr4 to reach home and start the sequence
-            if(self.mGrower.Gr4.serialRequest=="" and self.mGrower.Gr4.startRoutine and not decition):
-                resp, num = self.getGrowerLine(line2)
-                if(num==4):
-                    resp = self.cleanGrowerLine(resp)
-                    if resp.startswith("Starting Routine Stage 2"):
-                        decition = True
-                        self.GrowerInRoutine(num)
+                # If we are waiting for a particular response from Grower4
+                if(self.mGrower.Gr4.serialRequest!="" and not decition):
+                    decition = self.decideStartOrStopGrower(self.cleanLine(line2))
                 
-            # If we are waiting Gr1 to reach next sequence position
-            if(self.mGrower.Gr1.inRoutine and not decition):
-                resp, num = self.getGrowerLine(line2)
-                if(num==1):
-                    resp = self.cleanGrowerLine(resp)
-                    if resp.startswith("In Position"):
-                        decition = True
-                        self.GrowerInPosition(num)
-                    elif resp.startswith("Routine Finished"):
-                        decition = True
-                        self.GrowerRoutineFinish(num)
-                        
-            # If we are waiting Gr2 to reach next sequence position
-            if(self.mGrower.Gr2.inRoutine and not decition):
-                resp, num = self.getGrowerLine(line2)
-                if(num==2):
-                    resp = self.cleanGrowerLine(resp)
-                    if resp.startswith("In Position"):
-                        decition = True
-                        self.GrowerInPosition(num)
-                    elif resp.startswith("Routine Finished"):
-                        decition = True
-                        self.GrowerRoutineFinish(num)
-                        
-            # If we are waiting Gr3 to reach next sequence position
-            if(self.mGrower.Gr3.inRoutine  and not decition):
-                resp, num = self.getGrowerLine(line2)
-                if(num==3):
-                    resp = self.cleanGrowerLine(resp)
-                    if resp.startswith("In Position"):
-                        decition = True
-                        self.GrowerInPosition(num)
-                    elif resp.startswith("Routine Finished"):
-                        decition = True
-                        self.GrowerRoutineFinish(num)
-                        
-            # If we are waiting Gr4 to reach next sequence position
-            if(self.mGrower.Gr4.inRoutine and not decition):
-                resp, num = self.getGrowerLine(line2)
-                if(num==4):
-                    resp = self.cleanGrowerLine(resp)
-                    if resp.startswith("In Position"):
-                        decition = True
-                        self.GrowerInPosition(num)
-                    elif resp.startswith("Routine Finished"):
-                        decition = True
-                        self.GrowerRoutineFinish(num)
-                        
-        # If bytes available in solutionMaker
-        while self.solutionMaker.in_waiting>0:
-            line3 = str(self.solutionMaker.readline(), "utf-8")[0:-1]
-            self.Msg2Log(self.logSM, line3)
-            self.respTime = time()
-            if(line3.startswith("Request accepted")):
-                self.concatResp("requestAccepted", line3)
-            elif(line3.startswith("Solution Finished")):
-                self.concatResp("solutionFinished", line3)
+                # If we are waiting Gr1 to reach home and start the sequence
+                if(self.mGrower.Gr1.serialRequest=="" and self.mGrower.Gr1.startRoutine and not decition):
+                    resp, num = self.getGrowerLine(line2)
+                    if(num==1):
+                        resp = self.cleanGrowerLine(resp)
+                        if resp.startswith("Starting Routine Stage 2"):
+                            decition = True
+                            self.GrowerInRoutine(num)
+                            
+                # If we are waiting Gr2 to reach home and start the sequence
+                if(self.mGrower.Gr2.serialRequest=="" and self.mGrower.Gr2.startRoutine and not decition):
+                    resp, num = self.getGrowerLine(line2)
+                    if(num==2):
+                        resp = self.cleanGrowerLine(resp)
+                        if resp.startswith("Starting Routine Stage 2"):
+                            decition = True
+                            self.GrowerInRoutine(num)
+                            
+                # If we are waiting Gr3 to reach home and start the sequence
+                if(self.mGrower.Gr3.serialRequest=="" and self.mGrower.Gr3.startRoutine and not decition):
+                    resp, num = self.getGrowerLine(line2)
+                    if(num==3):
+                        resp = self.cleanGrowerLine(resp)
+                        if resp.startswith("Starting Routine Stage 2"):
+                            decition = True
+                            self.GrowerInRoutine(num)
+                            
+                # If we are waiting Gr4 to reach home and start the sequence
+                if(self.mGrower.Gr4.serialRequest=="" and self.mGrower.Gr4.startRoutine and not decition):
+                    resp, num = self.getGrowerLine(line2)
+                    if(num==4):
+                        resp = self.cleanGrowerLine(resp)
+                        if resp.startswith("Starting Routine Stage 2"):
+                            decition = True
+                            self.GrowerInRoutine(num)
+                    
+                # If we are waiting Gr1 to reach next sequence position
+                if(self.mGrower.Gr1.inRoutine and not decition):
+                    resp, num = self.getGrowerLine(line2)
+                    if(num==1):
+                        resp = self.cleanGrowerLine(resp)
+                        if resp.startswith("In Position"):
+                            decition = True
+                            self.GrowerInPosition(num)
+                        elif resp.startswith("Routine Finished"):
+                            decition = True
+                            self.GrowerRoutineFinish(num)
+                            
+                # If we are waiting Gr2 to reach next sequence position
+                if(self.mGrower.Gr2.inRoutine and not decition):
+                    resp, num = self.getGrowerLine(line2)
+                    if(num==2):
+                        resp = self.cleanGrowerLine(resp)
+                        if resp.startswith("In Position"):
+                            decition = True
+                            self.GrowerInPosition(num)
+                        elif resp.startswith("Routine Finished"):
+                            decition = True
+                            self.GrowerRoutineFinish(num)
+                            
+                # If we are waiting Gr3 to reach next sequence position
+                if(self.mGrower.Gr3.inRoutine  and not decition):
+                    resp, num = self.getGrowerLine(line2)
+                    if(num==3):
+                        resp = self.cleanGrowerLine(resp)
+                        if resp.startswith("In Position"):
+                            decition = True
+                            self.GrowerInPosition(num)
+                        elif resp.startswith("Routine Finished"):
+                            decition = True
+                            self.GrowerRoutineFinish(num)
+                            
+                # If we are waiting Gr4 to reach next sequence position
+                if(self.mGrower.Gr4.inRoutine and not decition):
+                    resp, num = self.getGrowerLine(line2)
+                    if(num==4):
+                        resp = self.cleanGrowerLine(resp)
+                        if resp.startswith("In Position"):
+                            decition = True
+                            self.GrowerInPosition(num)
+                        elif resp.startswith("Routine Finished"):
+                            decition = True
+                            self.GrowerRoutineFinish(num)
+        
+        if self.smIsConnected:
+            # If bytes available in solutionMaker
+            while self.solutionMaker.in_waiting>0:
+                line3 = str(self.solutionMaker.readline(), "utf-8")[0:-1]
+                self.Msg2Log(self.logSM, line3)
+                self.respTime = time()
+                if(line3.startswith("Request accepted")):
+                    self.concatResp("requestAccepted", line3)
+                elif(line3.startswith("Solution Finished")):
+                    self.concatResp("solutionFinished", line3)
         
         # Send all responses
         self.response()
