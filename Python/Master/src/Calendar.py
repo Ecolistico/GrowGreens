@@ -50,6 +50,7 @@ class Calendar():
     def getEmail(self):
         rem = self.checkReminders()
         subject = 'Tareas del día'
-        msg = ' '*15
+        msg = ''
         for i, task in enumerate(rem): msg += '{}-{}     '.format(i+1, task)
+            if i == 0: msg = ' '*15
         return subject, msg
