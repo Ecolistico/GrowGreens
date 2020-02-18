@@ -16,10 +16,10 @@ import EnvControl
 from gui import GUI
 from smtp import Mail
 from logger import logger
-from sensor import BME680
+from sensor import BMP280, BME680
 from asciiART import asciiArt
 from Calendar import Calendar
-from credentials import broker
+from credentials import broker, sensor
 from growerData import multiGrower
 from inputHandler import inputHandler
 from mqttCallback import mqttController
@@ -76,17 +76,19 @@ def mqttDisconnect(cliente, mqttObj):
     mqttObj.actualTime = time()
 
 def startRoutine(grower):
-    # Check if Grower is available
-    if grower.failedConnection == 0:
-        # It is time to move Grower
-        grower.time2Move()
-        top = "{}/Grower{}".format(ID, grower.floor)
-        msgs = [{"topic": top, "payload": "OnLED1"},
-                {"topic": top, "payload": "OnLED2"},
-                {"topic": top, "payload": "DisableStream"}]
-        publish.multiple(msgs, hostname = brokerIP)
-        log.logger.info("Checking Grower{} status to start sequence".format(grower.floor))
-
+    if serialControl.mgIsConnected:
+        # Check if Grower is available
+        if grower.failedConnection == 0:
+            # It is time to move Grower
+            grower.time2Move()
+            top = "{}/Grower{}".format(ID, grower.floor)
+            msgs = [{"topic": top, "payload": "OnLED1"},
+                    {"topic": top, "payload": "OnLED2"},
+                    {"topic": top, "payload": "DisableStream"}]
+            publish.multiple(msgs, hostname = brokerIP)
+            log.logger.info("Checking Grower{} status to start sequence".format(grower.floor))
+    else: log.logger.error("Cannot start sequence. Serial device [motorsGrower] is disconnected.")
+    
 def checkSerialMsg(grower):
     # Resend serial messages without response for Growers
     if(grower.serialRequest!=""):
@@ -186,7 +188,8 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".format(e))
 
     # Setting up
-    bme = BME680(log.logger) # Start bme680 sensor
+    if sensor['external'] == 'BMP280': bme = BMP280(log.logger) # Start bmp280 sensor
+    else: bme = BME680(log.logger) # Start bme680 sensor
     day = 0
     hour = 0
     minute = 0
@@ -280,7 +283,7 @@ try:
 
             # Request bme data
             if bme.read(): bme.logData()
-            else: log.logger.warning("BME680 sensor cannot take reading")
+            else: log.logger.warning("{} sensor cannot take reading".format(sensor['external']))
 
             # Coordinate Grower routines
             if(hour==6 and minute==0): # At 6am
