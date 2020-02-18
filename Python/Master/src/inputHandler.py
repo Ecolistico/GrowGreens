@@ -26,14 +26,17 @@ class inputHandler:
           return input()
     
     def writeGC(self, mssg): # Write in generalControl
-        self.serialControl.write(self.serialControl.generalControl, mssg)
-    
+        if self.serialControl.gcIsConnected: self.serialControl.write(self.serialControl.generalControl, mssg)
+        else: self.log.error("Cannot write to serial device [generalControl]. It is disconnected.")
+            
     def writeMG(self, mssg): # Write in motorsGrower
-        self.serialControl.write(self.serialControl.motorsGrower, mssg)
-        
+        if self.serialControl.mgIsConnected: self.serialControl.write(self.serialControl.motorsGrower, mssg)
+        else: self.log.error("Cannot write to serial device [motorsGrower]. It is disconnected.")
+            
     def writeSM(self, mssg): # Write in solutionMaker
-        self.serialControl.write(self.serialControl.solutionMaker, mssg)
-    
+        if self.serialControl.smIsConnected: self.serialControl.write(self.serialControl.solutionMaker, mssg)
+        else: self.log.error("Cannot write to serial device [solutionMaker]. It is disconnected.")
+            
     def valInteger(self, integer):
         try:
             val = int(integer)
@@ -120,16 +123,16 @@ class inputHandler:
         elif(line.startswith("raw")):
             param = self.valSplit(line)
             if(param!=None):
-                if(param[1]=="generalControl" and self.valLenList1(param, 3)):
+                if(param[1]=="generalControl" and self.valLenList1(param, 3) and self.serialControl.gcIsConnected):
                     cmd = ",".join(param[2:])
                     self.writeGC(cmd)
                     self.log.info("inputHandler-[generalControl] Raw Command={}".format(cmd))
                     self.handleGUI(cmd, param)
-                elif(param[1]=="motorsGrower" and self.valLenList1(param, 3)):
+                elif(param[1]=="motorsGrower" and self.valLenList1(param, 3) and self.serialControl.mgIsConnected):
                     cmd = ",".join(param[2:])
                     self.writeMG(cmd)
                     self.log.info("inputHandler-[motorsGrower] Raw Command={}".format(cmd)) 
-                elif(param[1]=="solutionMaker" and self.valLenList1(param, 3)):
+                elif(param[1]=="solutionMaker" and self.valLenList1(param, 3) and self.serialControl.smIsConnected):
                     cmd = ",".join(param[2:])
                     self.writeSM(cmd)
                     self.log.info("inputHandler-[solutionMaker] Raw Command={}".format(cmd))
@@ -183,49 +186,52 @@ class inputHandler:
                 else: self.log.error("inputHandler- {} Command Unknown".format(line))
         
         elif(line.startswith("startRoutine")):
-            param = self.valSplit(line)
-            if(param!=None and len(param)>=2):
-                fl = param[1]
-                if(len(param)==4):
-                    x = param[2]
-                    y = param[3]
-                elif(len(param)==3): x = y = param[2]
-                else: x = y = 0
-                
-                if(fl=='1'):
-                    if(x!=0 and y!=0):
-                        self.serialControl.mGrower.Gr1.xSeq = x
-                        self.serialControl.mGrower.Gr1.ySeq = y
-                    mssg = self.serialControl.mGrower.Gr1.time2Move()
-                elif(fl=='2'):
-                    if(x!=0 and y!=0):
-                        self.serialControl.mGrower.Gr2.xSeq = x
-                        self.serialControl.mGrower.Gr2.ySeq = y
-                    mssg = self.serialControl.mGrower.Gr2.time2Move()
-                elif(fl=='3'):
-                    if(x!=0 and y!=0):
-                        self.serialControl.mGrower.Gr3.xSeq = x
-                        self.serialControl.mGrower.Gr3.ySeq = y
-                    mssg = self.serialControl.mGrower.Gr3.time2Move()
-                elif(fl=='4'):
-                    if(x!=0 and y!=0):
-                        self.serialControl.mGrower.Gr4.xSeq = x
-                        self.serialControl.mGrower.Gr4.ySeq = y
-                    mssg = self.serialControl.mGrower.Gr4.time2Move()
-                else:
-                    mssg = ''
-                    self.log.error("Please provide a valid floor to start Grower sequence")
-                if mssg != '':
-                    try:
-                        top = "{}/Grower{}".format(self.ID,fl)
-                        msgs = [{"topic": top, "payload": "OnLED1"},
-                                {"topic": top, "payload": "OnLED2"},
-                                {"topic": top, "payload": "DisableStream"}]
-                        publish.multiple(msgs, hostname = self.IP)
-                        self.log.info("Checking Grower{} status to start sequence".format(fl))
-                    except Exception as e:
-                        self.log.error("LAN/WLAN not found- Impossible use publish() [{}]".format(e))
-                else: self.log.error("Please provide a valid floor to start Grower sequence")
+            if self.serialControl.mgIsConnected:
+                param = self.valSplit(line)
+                if(param!=None and len(param)>=2):
+                    fl = param[1]
+                    if(len(param)==4):
+                        x = param[2]
+                        y = param[3]
+                    elif(len(param)==3): x = y = param[2]
+                    else: x = y = 0
+                    
+                    if(fl=='1'):
+                        if(x!=0 and y!=0):
+                            self.serialControl.mGrower.Gr1.xSeq = x
+                            self.serialControl.mGrower.Gr1.ySeq = y
+                        mssg = self.serialControl.mGrower.Gr1.time2Move()
+                    elif(fl=='2'):
+                        if(x!=0 and y!=0):
+                            self.serialControl.mGrower.Gr2.xSeq = x
+                            self.serialControl.mGrower.Gr2.ySeq = y
+                        mssg = self.serialControl.mGrower.Gr2.time2Move()
+                    elif(fl=='3'):
+                        if(x!=0 and y!=0):
+                            self.serialControl.mGrower.Gr3.xSeq = x
+                            self.serialControl.mGrower.Gr3.ySeq = y
+                        mssg = self.serialControl.mGrower.Gr3.time2Move()
+                    elif(fl=='4'):
+                        if(x!=0 and y!=0):
+                            self.serialControl.mGrower.Gr4.xSeq = x
+                            self.serialControl.mGrower.Gr4.ySeq = y
+                        mssg = self.serialControl.mGrower.Gr4.time2Move()
+                    else:
+                        mssg = ''
+                        self.log.error("Please provide a valid floor to start Grower sequence")
+                    if mssg != '':
+                        try:
+                            top = "{}/Grower{}".format(self.ID,fl)
+                            msgs = [{"topic": top, "payload": "OnLED1"},
+                                    {"topic": top, "payload": "OnLED2"},
+                                    {"topic": top, "payload": "DisableStream"}]
+                            publish.multiple(msgs, hostname = self.IP)
+                            self.log.info("Checking Grower{} status to start sequence".format(fl))
+                        except Exception as e:
+                            self.log.error("LAN/WLAN not found- Impossible use publish() [{}]".format(e))
+                    else: self.log.error("Please provide a valid floor to start Grower sequence")
+                else: self.log.error("Please provide valid arguments to start Grower sequence")
+            else: self.log.error("motorsGrower device is disconnected. It is impossible to start a routine or sequence.")
         else: self.log.error("inputHandler- {} Command Unknown".format(line))
             
     def loop(self):
