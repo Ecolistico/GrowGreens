@@ -51,6 +51,7 @@ class Calendar():
         rem = self.checkReminders()
         subject = 'Tareas del día'
         msg = ''
-        for i, task in enumerate(rem): msg += '{}-{}     '.format(i+1, task)
+        for i, task in enumerate(rem):
             if i == 0: msg = ' '*15
+            msg += '{}-{}     '.format(i+1, task)
         return subject, msg
