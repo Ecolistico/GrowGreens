@@ -39,6 +39,8 @@ class mqttController:
         # Define aux variables
         self.clientConnected = False
         self.actualTime = time()
+        # Communication with MongoDB-Parse Server
+        self.serverIP = ''
         
     def update(self, ID, brokerIP, connector):
         self.ID = ID
@@ -136,7 +138,11 @@ class mqttController:
             self.ESP32.back.str2array(message)
             self.ESP32.back.connected = True
             # Ask again for the data if not complete
-
+        
+        # Communication withb MongoDB-Parse Server
+        if(device == 'Server' and not message.startswith('whatIsMyIP')):
+            self.serverIP = message
+            
     def on_publish(client, userdata, mid):
         self.logMain.debug("Message delivered")
 

@@ -298,10 +298,20 @@ try:
             elif(hour==12 and minute==0): # At 12pm
                 #startRoutine(mGrower.Gr4)                
                 log.logger.info("Checking Grower4 status to start sequence")
+            elif(hour==23 and minute==59): # At 11:59pm
+                # Request mongoDB-Parse Server IP
+                publish.single("{}/Server".format(ID), 'whatIsMyIP', hostname = brokerIP)
             elif(hour==0 and minute==0): # At 0am
                 # Update Plant database and restart GUI
+                if mqttControl.serverIP != '':
+                    try:
+                        gui.Seed2DB(mqttControl.serverIP)
+                        log.logger.info("PLANTA DATABASE UPDATED")
+                    except Exceptions as e: log.logger.error("PLANTA DATABASE FAILED TO UPDATE.\n{}".format(e))
+                else: log.logger.warning("PARSE SERVER DISCONNECTED")
                 gui.ResetSeedValues()
-                log.logger.info("PLANTA DATABASE UPDATED")
+                mqttControl.serverIP = ''
+                
             elif(hour==7 and minute==0): # At 7am
                 # Send Dayly tasks
                 sub, msg = growCal.getEmail()
