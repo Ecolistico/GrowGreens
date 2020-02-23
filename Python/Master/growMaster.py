@@ -306,11 +306,12 @@ try:
                 if mqttControl.serverIP != '':
                     try:
                         gui.Seed2DB(mqttControl.serverIP)
+                        gui.ResetSeedValues()
+                        mqttControl.serverIP = ''
                         log.logger.info("Plant Database Updated")
                     except Exceptions as e: log.logger.error("Plant Database failed to update.\n{}".format(e))
                 else: log.logger.warning("Parse Server Disconnected")
-                gui.ResetSeedValues()
-                mqttControl.serverIP = ''
+                
             elif(hour==7 and minute==0): # At 7am
                 # Send Dayly tasks
                 sub, msg = growCal.getEmail()
