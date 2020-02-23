@@ -410,10 +410,7 @@ class GUI:
                     if (int(ev) == self.evTime): self.window['Actualizar'].Update(button_color=self.disable_color, disabled=True)
                     else: self.window['Actualizar'].Update(button_color=('black', self.green1), disabled=False)
 
-            #if values['Piso'] != self.piso:
-            #    self.piso = values['Piso']
-            #    self.checkEV()
-
+            # Check floor
             if values['Piso1']:
                 if (self.piso!=1):
                     self.piso = 1
@@ -430,19 +427,12 @@ class GUI:
                     self.checkEV()
                     self.updateCurrentTimeValues()
             if values['Piso4']:
-                if (self.piso!=1):
+                if (self.piso!=4):
                     self.piso = 4
                     self.checkEV()
                     self.updateCurrentTimeValues()
-
-            #if values['Lado'] != self.lado:
-            #    self.lado = values['Lado']
-            #    self.checkEV()
-
-            #if values['Etapa'] != self.etapa:
-            #    self.etapa = values['Etapa']
-            #    self.checkEV()
-
+            
+            # Check Region
             if values['GerminacionA']:
                 if (self.lado!='A' or self.etapa!=1):
                     self.lado = 'A'
@@ -483,11 +473,8 @@ class GUI:
                     self.lado = 'B'
                     self.etapa = 4
                     self.checkEV()
-
-            #if values['Sol'] != self.solucion:
-            #    self.solucion = values['Sol']
-            #    self.checkEV()
-
+            
+            # Check solution
             if values['H2O']:
                 if (self.solucion!='H2O'):
                     self.solucion = 'H2O'
