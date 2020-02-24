@@ -81,5 +81,4 @@ def getData_JSON(path):
             return data['containerID'], data['floor'], data['mqttIP']
     else: return "", "", ""
 
-def getMacAddr():
-    return getnode()
+def getMacAddr(): return getnode()

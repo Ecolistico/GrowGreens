@@ -1,6 +1,7 @@
 import os
-import subprocess
 import json
+import subprocess
+from uuid import getnode
 from datetime import datetime
     
 MQTT_PATH = '/var/www/html/data/data.json'
@@ -96,3 +97,4 @@ def photoPath():
     path = "//{}/{}/{}/sequence".format(ip_str[:-2], growy_name, date) 
     return path
     
+def getMacAddr(): return getnode()

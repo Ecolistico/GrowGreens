@@ -2,10 +2,10 @@ import sys
 import os
 actualDirectory = os.getcwd()
 if not actualDirectory.endswith('src'): sys.path.insert(0, './src/')
-from sysGrower import getSerial
+from sysGrower import getMacAddr
 import shutil
 
-SSID = "ssid=tocani-"+ getSerial() + "\n"
+SSID = "ssid=tocani-"+ getMacAddr() + "\n"
 
 filename = "hostapd.conf.ap"
 with open(filename, "w") as f:
