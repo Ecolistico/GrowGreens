@@ -165,6 +165,6 @@ b = encryptedHum(101,5)
 
 
 
-print a
-print b
-print c
+print(a)
+print(b)
+print(c)
