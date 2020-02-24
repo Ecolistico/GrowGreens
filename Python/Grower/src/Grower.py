@@ -76,21 +76,25 @@ class Grower:
         self.stream = False
         
         # Setting Up Cozir
-        self.coz = cozir.Cozir(self.log)
-        checkCozir = 0
-        # For now just stable in polling mode
-        if(self.coz.opMode(self.coz.polling)):
-            self.log.info("Cozir: Set Mode = K{0}".format(self.coz.act_OpMode))
-        else: checkCozir +=1
-        # Get hum, temp and co2_filter        
-        if(self.coz.setData_output(self.coz.Hum + self.coz.Temp + self.coz.CO2_filt)):
-            self.log.info("Cozir: Data Mode = M{}".format(self.coz.act_OutMode))
-        else: checkCozir +=1
-        if checkCozir == 2:
-            self.coz.close()
+        try:
+            self.coz = cozir.Cozir(self.log)
+            checkCozir = 0
+            # For now just stable in polling mode
+            if(self.coz.opMode(self.coz.polling)):
+                self.log.info("Cozir: Set Mode = K{0}".format(self.coz.act_OpMode))
+            else: checkCozir +=1
+            # Get hum, temp and co2_filter        
+            if(self.coz.setData_output(self.coz.Hum + self.coz.Temp + self.coz.CO2_filt)):
+                self.log.info("Cozir: Data Mode = M{}".format(self.coz.act_OutMode))
+            else: checkCozir +=1
+            if checkCozir == 2:
+                self.coz.close()
+                self.coz = None
+                self.log.critical("Cozir not found: sensor disconnected")
+        except Exception as e:
             self.coz = None
-            self.log.critical("Cozir not found: sensor disconnected")
-
+            self.log.critical("Cozir not found: sensor disconnected. {}".format(e))
+            
         # Setting Up GPIO
         GPIO.setmode(GPIO.BCM)
 
