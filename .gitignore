@@ -8,3 +8,8 @@ Python/Grower/data/
 
 # Config Files
 Python/Master/*.json
+Python/Master/src/*.csv
+GUI/*.csv
+
+# Security files
+Python/Master/src/credentials.py

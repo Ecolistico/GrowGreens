@@ -415,7 +415,7 @@ void serialEvent(){                                  //if the hardware serial po
         float missedNut = parameter[9].toFloat();
         float missedH2O = parameter[10].toFloat();
         
-        if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>=0 && h2oCons>=0 && pumpInState>0 &&
+        if(lastSol>=0 && lastSol<4 && vnut>=0 && vh2o>=0 && solCons>=0 && h2oCons>=0 && pumpInState>=0 &&
         ipc>=0 && mpc>=0 && missedNut>=0 && missedH2O>=0){
           bootParameters = true; // Set bootParameters as true
           lastSolution = lastSol+1; // solution using for irrigation class

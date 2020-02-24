@@ -4,29 +4,33 @@
 import smtplib
 from time import strftime, localtime
 from email.mime.text import MIMEText
+from credentials import email
 
 class Mail:
-    def __init__(self, logger, loggerMail, city, state, ID):
+    def __init__(self, loggerMail, city, state, ID, logger = None):
         self.log = logger
         self.logMail = loggerMail
         self.city = city
         self.state = state
         self.ID = ID
-        
+
     def sendMail(self, subject, mssg):
-        infoMail = "info@sippys.com.mx"
         msg = MIMEText("Ubicación: {0}, {1}\nContainer:{2}\n{3} - {4}".format(
             self.city, self.state, self.ID,strftime("%Y-%m-%d %H:%M:%S", localtime()),
             mssg))
         recipients = self.logMail
         msg['Subject'] = "#{} {}".format(self.ID, subject)
-        msg['From'] = infoMail
+        msg['From'] = email['username']
         msg['To'] = ", ".join(recipients)
         try:
-            server = smtplib.SMTP_SSL("smtp.yandex.com.tr", 465)
-            server.login(infoMail, "Kale5elak.")
-            server.sendmail(infoMail, recipients, msg.as_string())
+            server = smtplib.SMTP_SSL(email['server'], email['port'])
+            server.login(email['username'], email['password'])
+            server.sendmail(email['username'], recipients, msg.as_string())
             server.close()
-            self.log.debug("Email sent to {}, Subject={}, Message={}".format(self.logMail, subject,mssg))
+            if self.log != None:
+                self.log.debug("Email sent to {}, Subject={}, Message={}".format(self.logMail, subject,mssg))
+            return True
         except:
-            self.log.critical("Email Error, cannot send the email", exc_info=True)
+            if self.log != None:
+                self.log.critical("Email Error, cannot send the email", exc_info=True)
+            return False

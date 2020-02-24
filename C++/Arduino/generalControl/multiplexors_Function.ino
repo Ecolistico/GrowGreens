@@ -28,10 +28,10 @@ void codification_Multiplexer(){
                  EV1B1.getState(), EV1B2.getState(), EV1B3.getState(), EV1B4.getState()};
   bool ID6[8] = {EV2A1.getState(), EV2A2.getState(), EV2A3.getState(), EV2A4.getState(),
                  EV2B1.getState(), EV2B2.getState(), EV2B3.getState(), EV2B4.getState()};
-  bool ID7[8] = {EV3A1.getState(), EV3A2.getState(), EV3A3.getState(), EV3A4.getState(), 
+  bool ID7[8] = {EV3A1.getState(), EV3A2.getState(), EV3A3.getState(), EV3A3.getState(), 
                  EV3B1.getState(), EV3B2.getState(), EV3B3.getState(), EV3B4.getState()};
   bool ID8[8] = {EV4A1.getState(), EV4A2.getState(), EV4A3.getState(), EV4A4.getState(),
-                 EV4B1.getState(), EV4B2.getState(), EV4B3.getState(), EV4B4.getState()};
+                 EV4B1.getState(), EV4B2.getState(), EV4B4.getState(), EV4B4.getState()};
   bool ID9[8] = {Recirculation.getInValve(0), Recirculation.getInValve(1), Recirculation.getInValve(2), Recirculation.getInValve(3), 
                  Recirculation.getInValve(4), Recirculation.getOutValve(0), Recirculation.getOutValve(1), Recirculation.getOutValve(2)};
   bool ID10[8] = {Recirculation.getOutValve(3), Recirculation.getOutValve(4), 
@@ -42,8 +42,8 @@ void codification_Multiplexer(){
                  Compressor.getValveTank(), Compressor.getValveH2O(), Compressor.getFreeValveNut(), Compressor.getFreeValveH2O()};      
   bool ID12[8] = {VHum1.getState(), VHum2.getState(), VHum3.getState(), VHum4.getState(), 
                  busy, busy, Recirculation.getFPump(), LOW};
-  bool ID13[8] = {LOW, LOW, LOW, LOW, 
-                 LOW, LOW, LOW, LOW};
+  bool ID13[8] = {LOW, LOW, EV4B3.getState(), LOW, 
+                 LOW, LOW, LOW, EV3A4.getState()};
   bool ID14[8] = {LOW, LOW, LOW, LOW, 
                  LOW, LOW, LOW, LOW};
   bool ID15[8] = {LOW, LOW, LOW, LOW, 

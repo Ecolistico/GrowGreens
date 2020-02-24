@@ -3,9 +3,6 @@
 # Import modules
 import base64
 
-hostName = "cGk="
-passw = "S2FsZTFlbGFrLg=="
-
 def encode(string2Encode):
     encodedBytes = base64.b64encode(string2Encode.encode("utf-8"))
     encodedString = str(encodedBytes, "utf-8")

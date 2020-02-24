@@ -6,10 +6,11 @@ from numpy import isnan
 from datetime import datetime
 
 class grower:
-    def __init__(self, logger): # Constructor
+    def __init__(self, fl, logger): # Constructor
+        self.floor = fl
         self.inRoutine = False
         self.startRoutine = False
-        self.count = 0
+        self.count = 1
         self.serialRequest = ""
         self.mqttRequest = ""
         self.actualTime = time()
@@ -19,15 +20,17 @@ class grower:
         self.CO2 = 0
         self.connected = False
         self.failedConnection = 0
-        self.IP = ""
         self.log = logger
         
+        self.xSeq = 500
+        self.ySeq = 500
+        
     def serialReq(self, req):
-        self.serialRequest = ""
+        self.serialRequest = req
         self.actualTime = time()
         
     def mqttReq(self, req):
-        self.mqttRequest = ""
+        self.mqttRequest = req
         self.actualTime = time()
     
     def checkValue(self, val, variable):
@@ -50,19 +53,28 @@ class grower:
         
     def connectionFailed(self):
         self.failedConnection += 1
-        if(self.failedConnection>=5):
-            self.failedConnection = 0
+        if(self.failedConnection>=6):
+            self.failedConnection = 1
             self.log.error("Device disconnected")
             
     def connectionSuccess(self):
         self.failedConnection = 0
-        
+    
+    def time2Move(self):
+        self.startRoutine = True
+        msg = "available,{}".format(self.floor)
+        self.serialReq(msg)
+        return msg
+    
+    def getSequenceParameters(self):
+        return self.xSeq, self.ySeq
+    
 class multiGrower:
     def __init__(self, logger1, logger2, logger3, logger4):
-        self.Gr1 = grower(logger1)
-        self.Gr2 = grower(logger2)
-        self.Gr3 = grower(logger3)
-        self.Gr4 = grower(logger4)
+        self.Gr1 = grower(1, logger1)
+        self.Gr2 = grower(2, logger2)
+        self.Gr3 = grower(3, logger3)
+        self.Gr4 = grower(4, logger4)
     
     def updateStatus(self):
         if(self.Gr1.connected == False): self.Gr1.connectionFailed()
@@ -77,7 +89,7 @@ class multiGrower:
         if(self.Gr4.connected == False): self.Gr4.connectionFailed()
         else: self.Gr4.connectionSuccess()
         self.Gr4.connected = False
-        
+    
     def upload2DB(self, dbConnector):
         # Create cursor
         c = dbConnector.cursor()

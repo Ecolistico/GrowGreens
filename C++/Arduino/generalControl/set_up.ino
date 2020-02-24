@@ -225,7 +225,7 @@ void rememberState(int ipc, int mpc, int pumpIn, float missedNut, float missedH2
   else if(ipc==21 || ipc==22){
     Compressor.openFreeNut(); // Depressurize Nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
-    if(p1<=10){
+    if(p1<=free_pressure){
       uint8_t resp = Recirculation.moveOut(missedNut, NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(250); // Check IPC Process 250
@@ -286,7 +286,7 @@ void rememberState(int ipc, int mpc, int pumpIn, float missedNut, float missedH2
     Compressor.openFreeNut(); // Depressurize Nutrition Kegs
     Compressor.compressTank(); // Compress air tank
     float p1 = pressureSensorNutrition.getValue();
-    if(p1<=10){
+    if(p1<=free_pressure){
       uint8_t resp = Recirculation.moveOut(missedNut, NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(251); // Check IPC Process 251
@@ -334,7 +334,7 @@ void rememberState(int ipc, int mpc, int pumpIn, float missedNut, float missedH2
   else if(ipc==72 || ipc==73){
     Compressor.openFreeNut(); // Depressurize Nutrition Kegs
     float p1 = pressureSensorNutrition.getValue();
-    if(p1<=10){
+    if(p1<=free_pressure){
       uint8_t resp = Recirculation.moveOut(missedNut, NUTRITION_KEGS);
       if(resp==0){
         IPC.setState(252); // Check IPC Process 252
@@ -369,7 +369,7 @@ void rememberState(int ipc, int mpc, int pumpIn, float missedNut, float missedH2
   else if(mpc==21 || mpc==22){
     Compressor.openFreeH2O();
     float p3 = pressureSensorWater.getValue();
-    if(p3<=10){
+    if(p3<=free_pressure){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
       uint8_t resp = Recirculation.moveOut(missedH2O, WATER_KEGS);
@@ -416,7 +416,7 @@ void rememberState(int ipc, int mpc, int pumpIn, float missedNut, float missedH2
   else if(mpc==72 || mpc==73){
     Compressor.openFreeH2O(); // Depressurize Water Kegs
     float p3 = pressureSensorWater.getValue();
-    if(p3<=10){
+    if(p3<=free_pressure){
       uint8_t lastOut = Recirculation.getOut();
       Recirculation.setOut(WATER);
       uint8_t resp = Recirculation.moveOut(missedH2O, WATER_KEGS);
