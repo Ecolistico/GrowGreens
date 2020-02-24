@@ -248,7 +248,10 @@ class mqttController:
         elif(message == "shutdown"):
             self.sendLog("Shutting down", 2)
             sysGrower.runShellCommand('shutdown -h now')
-            
+        
+        elif(message == "photoPath"):
+            resp = sysGrower.photoPath()
+            publish.single("{}/Growy".format(self.containerID), resp, hostname=self.brokerIP)
         else:
             self.sendLog("MQTT command unknown", 3)
 

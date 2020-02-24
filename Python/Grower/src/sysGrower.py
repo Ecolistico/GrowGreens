@@ -1,7 +1,8 @@
 import os
 import subprocess
 import json
-
+from datetime import datetime
+    
 MQTT_PATH = '/var/www/html/data/data.json'
 
 def getIPaddr():
@@ -79,3 +80,19 @@ def getData_JSON(path):
             data = json.load(json_file)
             return data['containerID'], data['floor'], data['mqttIP']
     else: return "", "", ""
+
+def photoPath():
+    """"""
+    wifi_ip = subprocess.check_output(['hostname', '-I'])
+    ip_str = str(wifi_ip,'utf-8')
+    growy_name = 'Growy'
+    now = datetime.now()
+    if now.day<10: day = "0{}".format(now.day)
+    else: day = "{}".format(now.day) 
+    if now.month<10: month = "0{}".format(now.month)
+    else: month = "{}".format(now.month)
+    year = now.year
+    date = "{}-{}-{}".format(day, month, year)
+    path = "//{}/{}/{}/sequence".format(ip_str[:-2], growy_name, date) 
+    return path
+    

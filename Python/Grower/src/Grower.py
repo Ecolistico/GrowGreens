@@ -30,6 +30,7 @@ Functions resume:
     * sendPhotos(host, name, password, floor) - sendPhotos to server
     * close() - Cleanup the GPIO´s
 """
+
 class Grower:
     def __init__(self, logger, ir = 22, led = 23, xenon = 26,
                  en1 = 4, en2 = 27, in1 = 24, in2 = 18, in3 = 17, in4 = 10,
@@ -112,7 +113,7 @@ class Grower:
         GPIO.output(self.In2, GPIO.LOW)
         GPIO.output(self.In3, GPIO.LOW)
         GPIO.output(self.In4, GPIO.LOW)
-
+        
     def getState(self, gpio):
         return GPIO.input(gpio)
 
@@ -167,7 +168,7 @@ class Grower:
         os.makedirs('data/{}-{}-{}/sequence'.format(self.day, self.month, self.year))
         os.makedirs('data/{}-{}-{}/thermal'.format(self.day, self.month, self.year))
         os.makedirs('data/{}-{}-{}/manual'.format(self.day, self.month, self.year))
-    
+
     def getDateFormat(self):
         now = datetime.now()
         if now.day<10: self.day = "0{}".format(now.day)
@@ -187,24 +188,30 @@ class Grower:
         try:
             self.cam = PiCamera()
             self.camEnable = True
-            redAWB = 2.26
-            blueAWB = 0.74
+            
+            redAWB = 1.5
+            blueAWB = 0.5
             customGains = (redAWB, blueAWB)
             self.cam.awb_mode = "off"
             self.cam.awb_gains = customGains
+            
             #self.cam.hflip = True
             #self.cam.vflip = True
+            
+            
             self.cam.resolution = (1920, 1080)
-            #self.cam.framerate = Fraction(1,6)
+            self.cam.framerate = 30
             #self.cam.shutter_speed = 6000000
-            #self.cam.exposure_mode = "off"
-            #self.cam.iso = 800
+            self.cam.shutter_speed = self.cam.exposure_speed
+            #self.cam.exposure_mode = 'off'
+            self.cam.iso = 200
             self.log.info("Camera Started")
+            
         except:
             self.camEnable = False
             self.log.critical("Camera Error: Device not found")
-            
-
+    
+        
     def cam_stop(self):
         self.cam.close()
         self.camEnable = False
@@ -247,7 +254,7 @@ class Grower:
             return False
         
     def takePicture(self, name = "testing_takePicture()" , ledMode = 2,
-                    irMode = True, Photo = True, Thermal = True, Cozir = True):
+                    irMode = True, Photo = True, Thermal = True):
         if(self.thermalCam1!=None or self.thermalCam2!=None): thermalStatus = True
         else: thermalStatus = False
         
@@ -275,18 +282,6 @@ class Grower:
                 
             if(irMode): self.turnOn(self.IR)
             else: self.turnOff(self.IR)
-            
-            if(Cozir):
-                if(self.coz != None):
-                    # Get Cozir data
-                    hum, temp, co2 = self.coz.getData()
-                    # Adjust data
-                    hum = int(hum * 10)
-                    temp = int(temp * 10)
-                    co2 = int(co2)
-                    name = name + "-{}-{}-{}".format(temp, hum, co2)
-                else:
-                    self.log.error("Cozir disconnected: ignore data request")
                     
             self.wait(2) # Wait 2 seconds
             if(Photo):
@@ -303,6 +298,7 @@ class Grower:
         else:
             return False
     
+   
     def photoSequence(self, name = "testing_photoSequence()"):
         if(self.thermalCam1!=None or self.thermalCam2!=None): thermalStatus = True
         else: thermalStatus = False
@@ -311,22 +307,10 @@ class Grower:
         if(self.camEnable or thermalStatus):
             # Check if directory exist, if not create it
             if not self.checkDayDirectory(): self.createDayDirectory()
-            
-            if(self.coz != None):
-                # Get Cozir data
-                hum, temp, co2 = self.coz.getData()
-                # Adjust data
-                hum = int(hum * 10)
-                temp = int(temp * 10)
-                co2 = int(co2)
-                name = name + "-{}-{}-{}".format(temp, hum, co2)
-            else:
-                self.log.error("Cozir disconnected: ignore data request")
-
-            self.turnOn(self.IR)
-            self.turnOn(self.LED)
-            self.turnOn(self.XENON)
-            self.wait(2) # Wait 2 seconds
+            #self.turnOn(self.IR)
+            #self.turnOn(self.LED)
+            #self.turnOn(self.XENON)
+            #self.wait(2) # Wait 2 seconds
             if(self.camEnable):
                 self.cam.capture("data/{}-{}-{}/sequence/{}.png".format(
                     self.day, self.month, self.year, name), "png") # Take photo and give it a name
@@ -337,9 +321,9 @@ class Grower:
                 totalShoots += 1
                 
             self.wait(0.1) # Wait 100ms
-            self.turnOff(self.IR)
-            self.turnOff(self.LED)
-            self.turnOff(self.XENON)
+            #self.turnOff(self.IR)
+            #self.turnOff(self.LED)
+            #self.turnOff(self.XENON)
             
         return totalShoots
     
@@ -421,7 +405,7 @@ class Grower:
                 else: return False
         except:
             return False
-        
+
     def close(self):
         GPIO.cleanup() # Clean GPIO
         if(self.coz != None): self.coz.close() # Close serial Cozir port
