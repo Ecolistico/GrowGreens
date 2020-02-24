@@ -67,7 +67,7 @@ PyJWT==1.4.2
 pylint==1.6.5
 pyluach==1.0.1
 pynput==1.4.2
-pyOpenSSL==16.2.0
+pyOpenSSL==17.5.0
 pyperclip==1.5.27
 pyserial==3.2.1
 PySimpleGUI==4.15.2
