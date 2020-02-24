@@ -1,6 +1,7 @@
 import os
-import subprocess
 import json
+import subprocess
+from uuid import getnode
 
 MQTT_PATH = '/var/www/html/data/data.json'
 
@@ -79,3 +80,6 @@ def getData_JSON(path):
             data = json.load(json_file)
             return data['containerID'], data['floor'], data['mqttIP']
     else: return "", "", ""
+
+def getMacAddr():
+    return getnode()
