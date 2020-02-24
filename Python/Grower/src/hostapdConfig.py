@@ -8,7 +8,7 @@ import shutil
 SSID = "ssid=tocani-"+ getSerial() + "\n"
 
 filename = "hostapd.conf.ap"
-with file = open(filename, "w") as f:
+with open(filename, "w") as f:
     f.write("interface=wlan0\n")
     f.write("driver=nl80211\n")
     f.write("hw_mode=g\n")
