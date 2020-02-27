@@ -5,7 +5,7 @@ if not actualDirectory.endswith('src'): sys.path.insert(0, './src/')
 from sysGrower import getMacAddr
 import shutil
 
-SSID = "ssid=tocani-"+ getMacAddr() + "\n"
+SSID = "ssid=tocani-{}\n".format(getMacAddr())
 
 filename = "hostapd.conf.ap"
 with open(filename, "w") as f:

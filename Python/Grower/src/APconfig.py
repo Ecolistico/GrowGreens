@@ -27,7 +27,9 @@ else: print("Error: restarting hostpad service")
 # Check if hostapd.conf exist
 if(existFile('/etc/hostapd/hostapd.conf.ap')==False):
     # Create file
-    if(runShellCommand('sudo python hostapdConfig.py')):
+    if actualDirectory.endswith('src'): req = 'sudo python hostapdConfig.py'
+    else: req = 'sudo python src/hostapdConfig.py'
+    if(runShellCommand(req)):
         print("File: hostapd.conf created")
     else: print("Error: creating hostpad.conf")
     
