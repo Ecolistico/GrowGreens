@@ -218,6 +218,7 @@ void serialEvent(){                                  //if the hardware serial po
         if(dateHour!=hr || dateMinute!=mn){
           dateHour = hr;
           dateMinute = mn;
+          fixD.updateLedState(dateHour);
           Serial.println(F("Hour updated"));
           if(!firstHourUpdate){
             firstHourUpdate = true;

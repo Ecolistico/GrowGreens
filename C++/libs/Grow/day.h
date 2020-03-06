@@ -106,5 +106,5 @@ class fixDay {
         bool getLed3();
         bool getLed4();
         void updateLedState(uint8_t hour);
-}
+};
   #endif

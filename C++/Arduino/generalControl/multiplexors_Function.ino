@@ -15,11 +15,16 @@ void allMultiplexerOff() {
 
 void codification_Multiplexer(){
   const bool busy = LOW;
-  
+  /*
   bool ID1[8] = {L1S1.getState(), L1S2.getState(), L1S3.getState(), L1S4.getState(),
                  L2S1.getState(), L2S2.getState(), L2S3.getState(), L2S4.getState()};
   bool ID2[8] = {L3S1.getState(), L3S2.getState(), L3S3.getState(), L3S4.getState(),
-                 L4S1.getState(), L4S2.getState(), L4S3.getState(), L4S4.getState()};               
+                 L4S1.getState(), L4S2.getState(), L4S3.getState(), L4S4.getState()};
+  */
+  bool ID1[8] = {fixD.getLed1(), fixD.getLed1(), fixD.getLed1(), fixD.getLed1(),
+                 fixD.getLed2(), fixD.getLed2(), fixD.getLed2(), fixD.getLed2()};
+  bool ID2[8] = {fixD.getLed3(), fixD.getLed3(), fixD.getLed3(), fixD.getLed3(),
+                 fixD.getLed4(), fixD.getLed4(), fixD.getLed4(), fixD.getLed4()};
   bool ID3[8] = {VFan1.getState(), VFan2.getState(), VFan3.getState(), VFan4.getState(),
                  IFan1.getState(), IFan2.getState(), IFan3.getState(), IFan4.getState()};
   bool ID4[8] = {OFan1.getState(), OFan2.getState(), OFan3.getState(), OFan4.getState(),
