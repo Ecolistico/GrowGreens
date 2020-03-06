@@ -65,7 +65,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower3.calibration();
           break;
         case 4:
-          grower3.calibration();
+          grower4.calibration();
           break;
         default:
           Serial.println(F("error,calibration(): Grower number do not exist"));
@@ -203,7 +203,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower3.continueSequence();
           break;
         case 4:
-          grower3.continueSequence();
+          grower4.continueSequence();
           break;
         default:
           Serial.println(F("error,continueSequence(): Grower number do not exist"));
@@ -225,7 +225,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower3.stopSequence();
           break;
         case 4:
-          grower3.stopSequence();
+          grower4.stopSequence();
           break;
         default:
           Serial.println(F("error,stopSequence(): Grower number do not exist"));
@@ -247,7 +247,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower3.stop();
           break;
         case 4:
-          grower3.stop();
+          grower4.stop();
           break;
         default:
           Serial.println(F("error,stop(): Grower number do not exist"));
