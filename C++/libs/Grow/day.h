@@ -93,4 +93,18 @@ class LED_Mod
         static void enable(uint8_t floor, uint8_t region);
    };
 
+// Class to reduce power problems reducing LED Time Module to the half of the time
+class fixDay {
+    private:
+        bool __Led1, __Led2, __Led3, __Led4; // One Variable per floor
+        void printAction(String act, uint8_t level=0);
+        
+    public:
+        fixDay(); // Constructor
+        bool getLed1();
+        bool getLed2();
+        bool getLed3();
+        bool getLed4();
+        void updateLedState(uint8_t hour);
+}
   #endif

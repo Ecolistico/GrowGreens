@@ -194,3 +194,107 @@ void LED_Mod::enable(uint8_t floor, uint8_t region)
       }
     }
   }
+
+/***   fixDay   ***/
+fixDay::fixDay() // Constructor
+  { __Led1 = LOW;
+    __Led2 = LOW;
+    __Led3 = LOW;
+    __Led4 = LOW;
+   }
+   
+void fixDay::printAction(String act, uint8_t level=0)
+  { if(level==0){ Serial.print(F("debug,")); } // Debug
+    else if(level==1){ Serial.print(F("info,")); } // Info
+    else if(level==2){ Serial.print(F("warning,")); } // Warning
+    else if(level==3){ Serial.print(F("error,")); } // Error
+    else if(level==4){ Serial.print(F("critical,")); } // Error
+    Serial.println(act);
+  }
+
+bool fixDay::getLed1()
+  { return __Led1; }
+  
+bool fixDay::getLed2()
+  { return __Led2; }
+  
+bool fixDay::getLed3()
+  { return __Led3; }
+  
+bool fixDay::getLed4()
+  { return __Led4; }
+  
+void fixDay::updateLedState(uint8_t hour)
+  { if(hour==0 || hour==1) {
+      __Led1 = LOW;
+      __Led2 = LOW;
+      __Led3 = HIGH;
+      __Led4 = HIGH;
+    } 
+    else if(hour==2 || hour==3){
+      __Led1 = HIGH;
+      __Led2 = LOW;
+      __Led3 = LOW;
+      __Led4 = HIGH;
+    }
+    else if(hour==4 || hour==5){
+      __Led1 = HIGH;
+      __Led2 = HIGH;
+      __Led3 = LOW;
+      __Led4 = LOW;
+    }
+    else if(hour==6 || hour==7){
+      __Led1 = LOW;
+      __Led2 = HIGH;
+      __Led3 = HIGH;
+      __Led4 = LOW;
+    }
+    else if(hour==8 || hour==9){
+      __Led1 = LOW;
+      __Led2 = LOW;
+      __Led3 = HIGH;
+      __Led4 = HIGH;
+    }
+    else if(hour==10 || hour==11){
+      __Led1 = HIGH;
+      __Led2 = LOW;
+      __Led3 = LOW;
+      __Led4 = HIGH;
+    }
+    else if(hour==12 || hour==13){
+      __Led1 = HIGH;
+      __Led2 = HIGH;
+      __Led3 = LOW;
+      __Led4 = LOW;
+    }
+    else if(hour==14 || hour==15){
+      __Led1 = LOW;
+      __Led2 = HIGH;
+      __Led3 = HIGH;
+      __Led4 = LOW;
+    }
+    else if(hour==16 || hour==17){
+      __Led1 = LOW;
+      __Led2 = LOW;
+      __Led3 = HIGH;
+      __Led4 = HIGH;
+    }
+    else if(hour==18 || hour==19){
+      __Led1 = HIGH;
+      __Led2 = LOW;
+      __Led3 = LOW;
+      __Led4 = HIGH;
+    }
+    else if(hour==20 || hour==21){
+      __Led1 = HIGH;
+      __Led2 = HIGH;
+      __Led3 = LOW;
+      __Led4 = LOW;
+    }
+    else if(hour==22 || hour==23){
+      __Led1 = LOW;
+      __Led2 = HIGH;
+      __Led3 = HIGH;
+      __Led4 = LOW;
+    }
+  }
