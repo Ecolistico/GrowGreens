@@ -9,17 +9,23 @@ class Calendar():
         self.reminders = []
 
         # All day reminders
-        self.addReminder('EVERY DAY', 'Revisión General')
-        self.addReminder('EVERY DAY', 'Rellenar Sales')
+        self.addReminder('EVERY DAY', 'Revisión general del sistema')
         self.addReminder('EVERY DAY', 'Sembrar')
+        self.addReminder('EVERY DAY', 'Cosechar')
+        self.addReminder('EVERY DAY', 'Mediciones a plantas')
+        self.addReminder('EVERY DAY', 'Empaquetar producto')
+        self.addReminder('EVERY DAY', 'Rellenar sales')
+        self.addReminder('EVERY DAY', 'Limpiar canastillas')
+        self.addReminder('EVERY DAY', 'Limpiar área de trabajo')
+        
         # Weekly reminders
-        self.addReminder('EVERY WEEK', 'Drenar Compresor')
-        self.addReminder('EVERY WEEK', 'Limpiar Tanques Recirculado')
-        self.addReminder('EVERY WEEK', 'Nutrir Tanques Recirculado')
+        self.addReminder('EVERY WEEK', 'Drenar compresor')
         # Half of month reminders
-        self.addReminder('TWICE MONTH', 'TESTING')
+        self.addReminder('TWICE MONTH', 'Limpiar filtros (electroválvulas)')
         # Months reminders
         self.addReminder('EVERY MONTH', 'Cambiar aceite compresor')
+        self.addReminder('EVERY MONTH', 'Lavado de tanques de agua')
+        self.addReminder('EVERY MONTH', 'Preparar soluciones de riego')
 
     def addReminder(self, type, reminder):
         self.reminders.append((type, reminder))
