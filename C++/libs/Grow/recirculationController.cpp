@@ -47,7 +47,7 @@ void recirculationController::countPulses()
   {  __NumPulses++; }
 
 void recirculationController::getVolume()
-  { if(__ActualTime-millis()>1000){
+  { if(millis()-__ActualTime>1000){
       __ActualTime = millis();
       noInterrupts(); // Disable Interrupts
       float newVolume = __NumPulses/(60*__K);
@@ -111,6 +111,7 @@ void recirculationController::begin(
     __Level[5] = &level5;
     __Level[6] = &level6;
     __ActualTime = millis();
+    __PrintTimer = millis();
   }
 
 void recirculationController::flowSensorBegin()
@@ -283,7 +284,10 @@ bool recirculationController::moveIn()
         // There is not release valve installed yet, not use rigth now
         // __InPump = HIGH;
         // __ReleaseValve = HIGH;
-        printAction(F("Releasing water outside the system"), 3);
+        if (millis()-__PrintTimer>1000){
+          __PrintTimer = millis();
+          printAction(F("Releasing water outside the system"), 3);
+        } 
       }
       return true;
     }
