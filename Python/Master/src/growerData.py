@@ -22,8 +22,8 @@ class grower:
         self.failedConnection = 0
         self.log = logger
         
-        self.xSeq = 500
-        self.ySeq = 500
+        self.xSeq = 155
+        self.ySeq = 200
         
     def serialReq(self, req):
         self.serialRequest = req
