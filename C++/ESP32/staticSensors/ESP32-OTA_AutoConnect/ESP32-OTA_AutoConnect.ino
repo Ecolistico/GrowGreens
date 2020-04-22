@@ -31,8 +31,8 @@ AutoConnect Portal;
 AutoConnectConfig Config;
 WiFiClient esp32Client;
 PubSubClient mqttClient(esp32Client);
-station_config AC_credential_config;
-station_config *AC_credential = &AC_credential_config;
+station_config_t AC_credential_config;
+station_config_t *AC_credential = &AC_credential_config;
 IPAddress addr;
 String mqttBrokerIp;
 String container_ID;
@@ -79,6 +79,34 @@ float kalman_err; // = 1; // Error in Kalman Filter. uint8_8 divided by 100
 unsigned long update_time;
 uint8_t update_constant; // Update time every X seconds
 
+/*** Name functions ***/
+// AutoConnect Functions
+void loadSettings();
+String loadParams(AutoConnectAux& aux, PageArgument& args);
+String clearParams(AutoConnectAux& aux, PageArgument& args);
+String saveParams(AutoConnectAux& aux, PageArgument& args);
+bool loadAux(const String auxName); // OK
+void setup_AutoConnect(AutoConnect &Portal, AutoConnectConfig &Config);
+bool testContainerId(String ID);
+// Memory
+void memorySetup();
+void memorySave(uint8_t par);
+void memoryGet(uint8_t par);
+// Sensors
+bool setExponentialFilter(uint8_t alpha);
+float exponential_filter(uint8_t alpha, float t, float t_1);
+bool setKalmanFilter(uint8_t noise);
+float kalman_filter(float t, float t_1);
+TempAndHumidity getData(DHTesp &dht, TempAndHumidity &input_data);
+void updateData();
+void setupSensors();
+// MQTT
+bool mqttConnect();
+void mqttPublish(String top, String msg);
+void callback(char* topic, byte* message, unsigned int length);
+void sendData();
+void resetCredentials();
+
 void setup() {
   Serial.begin(115200);
   Serial.println(F("Initial setup"));
@@ -113,6 +141,7 @@ void setup() {
   }
   
   Serial.print(F("WiFi "));
+  
   if (Portal.begin()) {
     Serial.println("connected:" + WiFi.SSID());
     Serial.println("IP:" + WiFi.localIP().toString());
@@ -125,7 +154,7 @@ void setup() {
       yield();
     }
   }
-
+  
   memorySetup();
   setupSensors();
   update_time = millis();  
@@ -133,15 +162,15 @@ void setup() {
 
 void loop() {
     Portal.handleClient();
-
+    
     if (!mqttClient.connected()) {
       mqttConnect();
     }
-
+    
     if(millis()-update_time>update_constant*1000){
       updateData();
       update_time = millis();
     }
-
+    
     mqttClient.loop();
 }

@@ -587,7 +587,7 @@ void runIPC(){
     }
   }
 
-  else if(IPC.state==55){ // Getting out solution from nutrition kegs to recirculation
+  else if(IPC.state==55){ // Getting out solution from nutrition kegs to recirculation/Compress air tank
     float p1 = pressureSensorNutrition.getValue();
     float p2 = pressureSensorTank.getValue();
     if(p2>=max_pressure){
