@@ -28,7 +28,7 @@ idna==2.2
 isort==4.2.5
 itsdangerous==0.24
 jedi==0.10.2
-Jinja2==2.8
+Jinja2>=2.10.1
 jplephem==2.12
 keyboard==0.13.3
 keyring==10.1
@@ -54,7 +54,7 @@ picamera==1.13
 picraft==1.0
 piglow==1.2.5
 pigpio==1.38
-Pillow==6.2.0
+Pillow>=6.2.0
 pimoroni-bme280==0.0.2
 pyasn1==0.1.9
 pyCalverter==1.6.1
