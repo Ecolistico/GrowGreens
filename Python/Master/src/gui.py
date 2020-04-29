@@ -242,7 +242,7 @@ class GUI:
         self.window['B_B3'].Update(value=self.SeedValues['SB3'])
         self.window['B_B2'].Update(value=self.SeedValues['SB2'])
         self.window['B_B1'].Update(value=self.SeedValues['SB1'])
-    
+
     def Seed2DB(self, hostname):
         numberSeeds = '{}{}{}{}{}{}{}{}'.format(self.SeedValues['SA1'],
                                                 self.SeedValues['SB1'],
@@ -257,17 +257,63 @@ class GUI:
             runShellCommand('python plant2DB.py {} {}'.format(hostname, numberSeeds))
         else:
             runShellCommand('python src/plant2DB.py {} {}'.format(hostname, numberSeeds))
-        
+
     def begin(self):
          if self.filename is not None:
-             with open(self.filename, "r") as infile:
-                 reader = csv.reader(infile)
-                 self.header_list = next(reader)
-                 try:
-                     self.data = list(reader)  # read everything else into a list of rows
-                 except:
-                     sg.popup_error('Error reading file')
-                     return
+             if os.path.exists(self.filename):
+                 with open(self.filename, "r") as infile:
+                     reader = csv.reader(infile)
+                     self.header_list = next(reader)
+                     try:
+                         self.data = list(reader)  # read everything else into a list of rows
+                     except:
+                         sg.popup_error('Error reading file')
+                         return
+             else:
+                 with open(self.filename, 'w', encoding="utf-8", newline='') as infile:
+                     infile_writer = csv.writer(infile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                     infile_writer.writerow(['﻿EV','H2O','Sol1','Sol2','Sol3','Sol4'])
+                     infile_writer.writerow(['1A1','5','5','5','5','5'])
+                     infile_writer.writerow(['1A2','5','5','5','5','5'])
+                     infile_writer.writerow(['1A3','5','5','5','5','5'])
+                     infile_writer.writerow(['1A4','5','5','5','5','5'])
+                     infile_writer.writerow(['1B1','5','5','5','5','5'])
+                     infile_writer.writerow(['1B2','5','5','5','5','5'])
+                     infile_writer.writerow(['1B3','5','5','5','5','5'])
+                     infile_writer.writerow(['1B4','5','5','5','5','5'])
+                     infile_writer.writerow(['2A1','5','5','5','5','5'])
+                     infile_writer.writerow(['2A2','5','5','5','5','5'])
+                     infile_writer.writerow(['2A3','5','5','5','5','5'])
+                     infile_writer.writerow(['2A4','5','5','5','5','5'])
+                     infile_writer.writerow(['2B1','5','5','5','5','5'])
+                     infile_writer.writerow(['2B2','5','5','5','5','5'])
+                     infile_writer.writerow(['2B3','5','5','5','5','5'])
+                     infile_writer.writerow(['2B4','5','5','5','5','5'])
+                     infile_writer.writerow(['3A1','5','5','5','5','5'])
+                     infile_writer.writerow(['3A2','5','5','5','5','5'])
+                     infile_writer.writerow(['3A3','5','5','5','5','5'])
+                     infile_writer.writerow(['3A4','5','5','5','5','5'])
+                     infile_writer.writerow(['3B1','5','5','5','5','5'])
+                     infile_writer.writerow(['3B2','5','5','5','5','5'])
+                     infile_writer.writerow(['3B3','5','5','5','5','5'])
+                     infile_writer.writerow(['3B4','5','5','5','5','5'])
+                     infile_writer.writerow(['4A1','5','5','5','5','5'])
+                     infile_writer.writerow(['4A2','5','5','5','5','5'])
+                     infile_writer.writerow(['4A3','5','5','5','5','5'])
+                     infile_writer.writerow(['4A4','5','5','5','5','5'])
+                     infile_writer.writerow(['4B1','5','5','5','5','5'])
+                     infile_writer.writerow(['4B2','5','5','5','5','5'])
+                     infile_writer.writerow(['4B3','5','5','5','5','5'])
+                     infile_writer.writerow(['4B4','5','5','5','5','5'])
+                     infile_writer.writerow(['Ciclo (Min)','15','','','',''])
+                 with open(self.filename, "r") as infile:
+                     reader = csv.reader(infile)
+                     self.header_list = next(reader)
+                     try:
+                         self.data = list(reader)  # read everything else into a list of rows
+                     except:
+                         sg.popup_error('Error reading file')
+                         return
 
          self.total = self.getTotalIrrigationTime(self.data)
          self.cycleTime = self.data[-1][1]
@@ -387,9 +433,9 @@ class GUI:
 
          self.window = sg.Window('GG GUI', layout, no_titlebar=False,
                             auto_size_text=True, finalize=True)
-         
+
          self.str2log('GUI started correctly', level = 1)
-         
+
     def run(self):
         try:
             event, values = self.window.read(timeout=0, timeout_key='timeout')
@@ -431,7 +477,7 @@ class GUI:
                     self.piso = 4
                     self.checkEV()
                     self.updateCurrentTimeValues()
-            
+
             # Check Region
             if values['GerminacionA']:
                 if (self.lado!='A' or self.etapa!=1):
@@ -473,7 +519,7 @@ class GUI:
                     self.lado = 'B'
                     self.etapa = 4
                     self.checkEV()
-            
+
             # Check solution
             if values['H2O']:
                 if (self.solucion!='H2O'):
@@ -556,12 +602,11 @@ class GUI:
                 self.timerAux = False
 
         except Exception as e:
-            self.str2log("GUI Closed", 2)
+            self.str2log("GUI Closed: {}".format(e), 2)
             self.isOpen = False
             #print(e)
 
 # Debug
-"""
 def main():
     gui = GUI()
     gui.begin()
@@ -570,4 +615,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-"""
