@@ -98,9 +98,10 @@ class fixDay {
     private:
         bool __Led1, __Led2, __Led3, __Led4; // One Variable per floor
         void printAction(String act, uint8_t level=0);
+        uint8_t __Config; // Select differents configuration to fix LED´s
         
     public:
-        fixDay(); // Constructor
+        fixDay(uint8_t config); // Constructor
         bool getLed1();
         bool getLed2();
         bool getLed3();

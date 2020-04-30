@@ -196,11 +196,12 @@ void LED_Mod::enable(uint8_t floor, uint8_t region)
   }
 
 /***   fixDay   ***/
-fixDay::fixDay() // Constructor
+fixDay::fixDay(uint8_t config) // Constructor
   { __Led1 = LOW;
     __Led2 = LOW;
     __Led3 = LOW;
     __Led4 = LOW;
+    __Config = config;
    }
    
 void fixDay::printAction(String act, uint8_t level=0)
@@ -225,76 +226,154 @@ bool fixDay::getLed4()
   { return __Led4; }
   
 void fixDay::updateLedState(uint8_t hour)
-  { if(hour==0 || hour==1) {
-      __Led1 = LOW;
-      __Led2 = LOW;
-      __Led3 = HIGH;
-      __Led4 = HIGH;
-    } 
-    else if(hour==2 || hour==3){
-      __Led1 = HIGH;
-      __Led2 = LOW;
-      __Led3 = LOW;
-      __Led4 = HIGH;
+  { if (__Config==0){ // 4 floors with light/night cycle 50/50. Each floor turn on 2 hours and turn off 2 hours
+      if(hour==0 || hour==1) {
+        __Led1 = LOW;
+        __Led2 = LOW;
+        __Led3 = HIGH;
+        __Led4 = HIGH;
+      } 
+      else if(hour==2 || hour==3){
+        __Led1 = HIGH;
+        __Led2 = LOW;
+        __Led3 = LOW;
+        __Led4 = HIGH;
+      }
+      else if(hour==4 || hour==5){
+        __Led1 = HIGH;
+        __Led2 = HIGH;
+        __Led3 = LOW;
+        __Led4 = LOW;
+      }
+      else if(hour==6 || hour==7){
+        __Led1 = LOW;
+        __Led2 = HIGH;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      }
+      else if(hour==8 || hour==9){
+        __Led1 = LOW;
+        __Led2 = LOW;
+        __Led3 = HIGH;
+        __Led4 = HIGH;
+      }
+      else if(hour==10 || hour==11){
+        __Led1 = HIGH;
+        __Led2 = LOW;
+        __Led3 = LOW;
+        __Led4 = HIGH;
+      }
+      else if(hour==12 || hour==13){
+        __Led1 = HIGH;
+        __Led2 = HIGH;
+        __Led3 = LOW;
+        __Led4 = LOW;
+      }
+      else if(hour==14 || hour==15){
+        __Led1 = LOW;
+        __Led2 = HIGH;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      }
+      else if(hour==16 || hour==17){
+        __Led1 = LOW;
+        __Led2 = LOW;
+        __Led3 = HIGH;
+        __Led4 = HIGH;
+      }
+      else if(hour==18 || hour==19){
+        __Led1 = HIGH;
+        __Led2 = LOW;
+        __Led3 = LOW;
+        __Led4 = HIGH;
+      }
+      else if(hour==20 || hour==21){
+        __Led1 = HIGH;
+        __Led2 = HIGH;
+        __Led3 = LOW;
+        __Led4 = LOW;
+      }
+      else if(hour==22 || hour==23){
+        __Led1 = LOW;
+        __Led2 = HIGH;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      }
     }
-    else if(hour==4 || hour==5){
-      __Led1 = HIGH;
-      __Led2 = HIGH;
-      __Led3 = LOW;
-      __Led4 = LOW;
+    
+    else if(__Config==1){ // Floor 4 always off. The other 3 with day/night cycle 66/33
+      if(hour==0 || hour==1) {
+        __Led1 = HIGH;
+        __Led2 = LOW;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      } 
+      else if(hour==2 || hour==3){
+        __Led1 = HIGH;
+        __Led2 = HIGH;
+        __Led3 = LOW;
+        __Led4 = LOW;
+      }
+      else if(hour==4 || hour==5){
+        __Led1 = LOW;
+        __Led2 = HIGH;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      }
+      else if(hour==6 || hour==7){
+        __Led1 = HIGH;
+        __Led2 = LOW;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      }
+      else if(hour==8 || hour==9){
+        __Led1 = HIGH;
+        __Led2 = HIGH;
+        __Led3 = LOW;
+        __Led4 = LOW;
+      }
+      else if(hour==10 || hour==11){
+        __Led1 = LOW;
+        __Led2 = HIGH;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      }
+      else if(hour==12 || hour==13){
+        __Led1 = HIGH;
+        __Led2 = LOW;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      }
+      else if(hour==14 || hour==15){
+        __Led1 = HIGH;
+        __Led2 = HIGH;
+        __Led3 = LOW;
+        __Led4 = LOW;
+      }
+      else if(hour==16 || hour==17){
+        __Led1 = LOW;
+        __Led2 = HIGH;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      }
+      else if(hour==18 || hour==19){
+        __Led1 = HIGH;
+        __Led2 = LOW;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      }
+      else if(hour==20 || hour==21){
+        __Led1 = HIGH;
+        __Led2 = HIGH;
+        __Led3 = LOW;
+        __Led4 = LOW;
+      }
+      else if(hour==22 || hour==23){
+        __Led1 = LOW;
+        __Led2 = HIGH;
+        __Led3 = HIGH;
+        __Led4 = LOW;
+      }
     }
-    else if(hour==6 || hour==7){
-      __Led1 = LOW;
-      __Led2 = HIGH;
-      __Led3 = HIGH;
-      __Led4 = LOW;
-    }
-    else if(hour==8 || hour==9){
-      __Led1 = LOW;
-      __Led2 = LOW;
-      __Led3 = HIGH;
-      __Led4 = HIGH;
-    }
-    else if(hour==10 || hour==11){
-      __Led1 = HIGH;
-      __Led2 = LOW;
-      __Led3 = LOW;
-      __Led4 = HIGH;
-    }
-    else if(hour==12 || hour==13){
-      __Led1 = HIGH;
-      __Led2 = HIGH;
-      __Led3 = LOW;
-      __Led4 = LOW;
-    }
-    else if(hour==14 || hour==15){
-      __Led1 = LOW;
-      __Led2 = HIGH;
-      __Led3 = HIGH;
-      __Led4 = LOW;
-    }
-    else if(hour==16 || hour==17){
-      __Led1 = LOW;
-      __Led2 = LOW;
-      __Led3 = HIGH;
-      __Led4 = HIGH;
-    }
-    else if(hour==18 || hour==19){
-      __Led1 = HIGH;
-      __Led2 = LOW;
-      __Led3 = LOW;
-      __Led4 = HIGH;
-    }
-    else if(hour==20 || hour==21){
-      __Led1 = HIGH;
-      __Led2 = HIGH;
-      __Led3 = LOW;
-      __Led4 = LOW;
-    }
-    else if(hour==22 || hour==23){
-      __Led1 = LOW;
-      __Led2 = HIGH;
-      __Led3 = HIGH;
-      __Led4 = LOW;
-    }
+  
   }
