@@ -41,6 +41,7 @@ class GUI:
                           './GUI_Pics/Tina.png',
                           './GUI_Pics/minus.png',
                           './GUI_Pics/plus.png']
+            self.timeout = 200;
         else:
             self.filename = './src/config.csv'
             self.paths = ['./src/GUI_Pics/Siembra.png',
@@ -55,6 +56,7 @@ class GUI:
                           './src/GUI_Pics/Tina.png',
                           './src/GUI_Pics/minus.png',
                           './src/GUI_Pics/plus.png']
+            self.timeout = 0;
 
         self.data = []
         self.header_list = []
@@ -438,7 +440,7 @@ class GUI:
 
     def run(self):
         try:
-            event, values = self.window.read(timeout=0, timeout_key='timeout')
+            event, values = self.window.read(timeout=self.timeout, timeout_key='timeout')
             regex = re.findall('B_[AB][1-4][+-]', event)
 
             if int(values['cycleTime']) != self.cycleTime:
