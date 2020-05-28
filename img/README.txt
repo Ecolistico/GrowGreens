@@ -1,1 +1,0 @@
-Aquí están todos las imagenes usadas en este proyecto.

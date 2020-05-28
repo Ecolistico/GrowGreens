@@ -1,0 +1,1 @@
+Desarrollar módulo de control de acceso con WiFi para actualizar ingreso de personal en base de datos de manera automática.

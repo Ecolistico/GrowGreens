@@ -44,6 +44,5 @@ Funciones a través de MQTT:
 	La X debe ser un valor entre [0-200]
 
 PENDIENTES/LIMITANTES:
-* Agregar programación OTA (Over The Air)
 * Funciones pendientes MQTT: TBD
 * Sensores por añadir: TBD
