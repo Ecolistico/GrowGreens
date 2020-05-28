@@ -139,7 +139,7 @@ void setup_AutoConnect(AutoConnect &Portal, AutoConnectConfig &Config){
   Config.autoReconnect = false;                  // Disable auto-reconnect (prevents save credentials even if they are erased)
   Config.homeUri = "/_ac";  // Sets home path
   Config.bootUri = AC_ONBOOTURI_HOME; // Reboot path
-  Config.title = "GrowGreens Access Point by SIPPYS";
+  Config.title = "GrowGreens Access Point by Ecolistico";
   Config.ota = AC_OTA_BUILTIN; // Enable OTA Feature
   Portal.config(Config);                        // Configure AutoConnect
 }
