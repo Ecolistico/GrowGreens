@@ -11,6 +11,7 @@
 #include <AutoConnect.h>
 #include <AutoConnectCredential.h>
 #include <Preferences.h>
+#include <esp_now.h>
 
 /*** Include files ***/
 // All files are stored in flash memory
