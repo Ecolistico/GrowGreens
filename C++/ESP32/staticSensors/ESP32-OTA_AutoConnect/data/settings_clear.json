@@ -1,12 +1,12 @@
 {
-  "title": "MQTT Settings",
-  "uri": "/mqtt_settings",
-  "menu": true,
+  "title": "Mqtt-Now",
+  "uri": "/settings_clear",
+  "menu": false,
   "element": [
     {
       "name": "header",
       "type": "ACText",
-      "value": "<h2>MQTT Broker settings</h2>",
+      "value": "<h2>Communication settings</h2>",
       "style": "text-align:center;color:#3C3C3B;"
     },
     {
@@ -17,7 +17,7 @@
     {
       "name": "caption",
       "type": "ACText",
-      "value": "<p>Save your MQTT server credential to connect with the central computer<br></p>",
+      "value": "<p>Save your credentials to connect with the central computer<br></p>",
       "style": "font-family:serif;color:#002514;text-align:center;"
     },
     {
@@ -45,6 +45,14 @@
       "pattern": "(front|back|center)"
     },
     {
+      "name": "mac_address",
+      "type": "ACInput",
+      "value": "",
+      "placeholder": "FF:FF:FF:FF:FF:FF",
+      "label": "What is the MAC address of your master ESP?",
+      "pattern": "^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})"
+    },
+    {
       "name": "newline1",
       "type": "ACElement",
       "value": "<hr>"
@@ -53,7 +61,7 @@
       "name": "save",
       "type": "ACSubmit",
       "value": "Save",
-      "uri": "/mqtt_save"
+      "uri": "/param_save"
     },
     {
       "name": "discard",
@@ -65,7 +73,7 @@
       "name": "reset",
       "type": "ACSubmit",
       "value": "Reset",
-      "uri": "/mqtt_clear"
+      "uri": "/param_clear"
     }
   ]
 }

@@ -1,12 +1,12 @@
 {
-  "title": "MQTT Settings",
-  "uri": "/mqtt_save",
+  "title": "Mqtt-Now",
+  "uri": "/param_clear",
   "menu": false,
   "element": [
     {
       "name": "caption",
       "type": "ACText",
-      "value": "<h4>Parameters saved as:</h4>",
+      "value": "<h4>Parameters delated:</h4>",
       "style": "text-align:center;color:#002514;padding:10px;"
     },
     {
@@ -16,8 +16,8 @@
     {
       "name": "clear",
       "type": "ACSubmit",
-      "value": "Clear channel",
-      "uri": "/mqtt_clear"
+      "value": "Return",
+      "uri": "/settings"
     }
   ]
 }

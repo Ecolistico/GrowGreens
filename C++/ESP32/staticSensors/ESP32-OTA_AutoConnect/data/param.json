@@ -22,5 +22,13 @@
     "placeholder": "front, center or back",
     "label": "What ESP32 are you setting?",
     "pattern": "(front|back|center)"
+  },
+  {
+    "name": "mac_address",
+    "type": "ACInput",
+    "value": "",
+    "placeholder": "FF:FF:FF:FF:FF:FF",
+    "label": "What is the MAC address of your master ESP?",
+    "pattern": "^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})"
   }
 ]
