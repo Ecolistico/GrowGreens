@@ -16,17 +16,20 @@ void loadSettings(){
     JsonObject root_0 = jsonBuffer[0];
     JsonObject root_1 = jsonBuffer[1];
     JsonObject root_2 = jsonBuffer[2];
+    JsonObject root_3 = jsonBuffer[3];
 
     mqttBrokerIp = root_0["value"].as<String>();
     container_ID = root_1["value"].as<String>();
     esp32Type = root_2["value"].as<String>();
+    MACstr = root_3["value"].as<String>();
 
     file.close();
-    if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length ){
+    if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length){
       Serial.println(F("Uploading Settings..."));
       Serial.print(F("MQTT Broker Ip: ")); Serial.println(mqttBrokerIp);
       Serial.print(F("Container ID: ")); Serial.println(container_ID);
       Serial.print(F("ESP32 Type: ")); Serial.println(esp32Type);
+      Serial.print(F("ESP-NOW MAC: ")); Serial.println(MACstr);
     }else{
       Serial.println(F("Settings are wrong\nReseting credentials and rebooting..."));
       resetCredentials();
@@ -51,12 +54,13 @@ String clearParams(AutoConnectAux& aux, PageArgument& args) {
   mqttBrokerIp = "";
   container_ID = "";
   esp32Type = "";
+  MACstr = "";
   
-  // The entered value is owned by AutoConnectAux of /mqtt_setting.
-  // To retrieve the elements of /mqtt_setting, it is necessary to get
-  // the AutoConnectAux object of /mqtt_setting.
+  // The entered value is owned by AutoConnectAux of /settinga.
+  // To retrieve the elements of /setting, it is necessary to get
+  // the AutoConnectAux object of /setting.
   File param1 = SPIFFS.open(PARAM_FILE, "w");
-  Portal.aux("/mqtt_settings_clear")->saveElement(param1, { "ip_mqttServer", "containerID", "esp32Type" });
+  Portal.aux(AUX_SETTING_CLEAR)->saveElement(param1, { "ip_mqttServer", "containerID", "esp32Type", "mac_address" });
   param1.close();
 
   // Echo back saved parameters to AutoConnectAux page.
@@ -64,6 +68,7 @@ String clearParams(AutoConnectAux& aux, PageArgument& args) {
   echo.value = "MQTT Broker IP: " + mqttBrokerIp + "<br>";
   echo.value += "Container ID: " + container_ID + "<br>";
   echo.value += "ESP32 Type: " + esp32Type + "<br>";
+  echo.value += "MAC address: " + MACstr + "<br>";
   
   return String("");
 }
@@ -78,16 +83,21 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   esp32Type = args.arg("esp32Type");
   esp32Type.trim();
 
+  MACstr = args.arg("mac_address");
+  MACstr.trim();
+
   bool testContID = testContainerId(container_ID);
+
   if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && testContID ) {
-    // The entered value is owned by AutoConnectAux of /mqtt_setting.
-    // To retrieve the elements of /mqtt_setting, it is necessary to get
-    // the AutoConnectAux object of /mqtt_setting.
+    // The entered value is owned by AutoConnectAux of /settings
+    // To retrieve the elements of /settings, it is necessary to get
+    // the AutoConnectAux object of /settings.
     File param = SPIFFS.open(PARAM_FILE, "w");
-    Portal.aux("/mqtt_settings")->saveElement(param, { "ip_mqttServer", "containerID", "esp32Type" });
+    if (testMAC(MACstr)) Portal.aux(AUX_SETTING)->saveElement(param, { "ip_mqttServer", "containerID", "esp32Type", "mac_address" });
+    else Portal.aux(AUX_SETTING)->saveElement(param, { "ip_mqttServer", "containerID", "esp32Type" });
     param.close();
   }
-  
+
   // Echo back saved parameters to AutoConnectAux page.
   AutoConnectText&  echo = aux.getElement<AutoConnectText>("parameters");
   if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && testContID ) {
@@ -110,6 +120,11 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
     echo.value += "ESP32 Type: " + esp32Type + "<br>";
   }else{
     echo.value += "ESP32 Type: <p style='color:red;'>It has to be 'front', 'center' or 'back'</p><br>";
+  }
+  if (testMAC(MACstr)){
+    echo.value += "Master MAC address: " + MACstr + "<br>";
+  } else {
+    echo.value += "Master MAC address: <p style='color:red;'>You did not provide a correct MAC Address</p><br>";
   }
   
   return String("");
@@ -135,13 +150,15 @@ void setup_AutoConnect(AutoConnect &Portal, AutoConnectConfig &Config){
   Config.apip = IPAddress(192,168,10,1);      // Sets SoftAP IP address
   Config.gateway = IPAddress(192,168,10,1);     // Sets WLAN router IP address
   Config.netmask = IPAddress(255,255,255,0);    // Sets WLAN scope
-  //Config.autoReconnect = true;                  // Enable auto-reconnect
   Config.autoReconnect = false;                  // Disable auto-reconnect (prevents save credentials even if they are erased)
   Config.homeUri = "/_ac";  // Sets home path
   Config.bootUri = AC_ONBOOTURI_HOME; // Reboot path
   Config.title = "GrowGreens Access Point by Ecolistico";
   Config.ota = AC_OTA_BUILTIN; // Enable OTA Feature
-  Portal.config(Config);                        // Configure AutoConnect
+  Config.portalTimeout = 1000;  // It will set a timeout for the portal
+  Config.retainPortal = true; // Handle the portal even after timeout
+  Portal.config(Config); // Configure AutoConnect
+  Portal.onDetect(startCP); // Callback function when Portal Active
 }
 
 bool testContainerId(String ID){
@@ -184,4 +201,40 @@ bool testContainerId(String ID){
   if(cont==container_ID_length){resp=true;}
   
   return resp;
+}
+
+bool testMAC(String MAC){
+  bool resp = false;
+  uint8_t count = 0;
+  
+  if(MAC.length()==17){
+    for(int i=0; i<17; i++){
+      // Check for the double points or dash
+      if ((i+1)%3==0 && (int(MAC[i])==58 || int(MAC[i])==45)){ count++; }
+      else if((int(MAC[i])>=48 && int(MAC[i])<=57) || (int(MAC[i])>=65 && int(MAC[i])<=70)){ count++; }
+    }
+  }
+  
+  if(count==17){resp=true;}
+  
+  return resp;
+}
+
+bool startCP(IPAddress ip) {
+  Serial.println("C.P. started, IP:" + WiFi.localIP().toString());
+  startPortalAux = true;
+  return true;
+}
+
+void startPortal(bool start) {
+  Config.immediateStart = start;
+  Portal.config(Config); // Configure AutoConnect
+  if (Portal.begin()) {
+    Serial.print(F("WiFi "));
+    Serial.println("connected:" + WiFi.SSID());
+    Serial.println("IP:" + WiFi.localIP().toString());
+  } else {
+    Serial.print(F("WiFi "));
+    Serial.println("connection failed:" + String(WiFi.status()));
+  }
 }

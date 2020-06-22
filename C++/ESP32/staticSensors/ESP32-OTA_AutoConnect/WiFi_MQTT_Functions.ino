@@ -28,6 +28,7 @@ bool mqttConnect() {
       char charTopic[subscribeTopic.length()+1];
       subscribeTopic.toCharArray(charTopic,subscribeTopic.length()+1);
       mqttClient.subscribe(charTopic);
+      mqttAttempt = 0;
       return true;
     } else {
       Serial.println("Connection failed: " + String(mqttClient.state()));
@@ -75,6 +76,12 @@ void callback(char* topic, byte* message, unsigned int length) {
       mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Rebooting...");
       ESP.restart();
       delay(1000);
+    }
+
+    else if(messageTemp == "portalOn") { // Disconnect WiFi and open Portal
+      portalAux = true;
+      Serial.println(F("Enable Portal"));
+      WiFi.disconnect(true);
     }
     
     else if(messageTemp.startsWith("updateConstant")){ // Change update constant to get measurements from the sensor at different frequency
