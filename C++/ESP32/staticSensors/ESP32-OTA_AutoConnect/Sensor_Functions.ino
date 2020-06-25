@@ -66,14 +66,14 @@ TempAndHumidity getData(DHTesp &dht, TempAndHumidity &input_data){
 
 // Updata sensor data
 void updateData(){
-  getData(dht_1R, data_1R);
-  getData(dht_1L, data_1L);
-  getData(dht_2R, data_2R);
-  getData(dht_2L, data_2L);
-  getData(dht_3R, data_3R);
-  getData(dht_3L, data_3L);
-  getData(dht_4R, data_4R);
-  getData(dht_4L, data_4L);
+  envData.R1 = getData(dht_1R, data_1R);
+  envData.L1 = getData(dht_1L, data_1L);
+  envData.R2 = getData(dht_2R, data_2R);
+  envData.L2 = getData(dht_2L, data_2L);
+  envData.R3 = getData(dht_3R, data_3R);
+  envData.L3 = getData(dht_3L, data_3L);
+  envData.R4 = getData(dht_4R, data_4R);
+  envData.L4 = getData(dht_4L, data_4L);
   Serial.print(data_1R.temperature); Serial.print(F(",")); Serial.print(data_1R.humidity); Serial.print(F(",")); Serial.print(data_1L.temperature); Serial.print(F(",")); Serial.print(data_1L.humidity); Serial.print(F(","));
   Serial.print(data_2R.temperature); Serial.print(F(",")); Serial.print(data_2R.humidity); Serial.print(F(",")); Serial.print(data_2L.temperature); Serial.print(F(",")); Serial.print(data_2L.humidity); Serial.print(F(","));
   Serial.print(data_3R.temperature); Serial.print(F(",")); Serial.print(data_3R.humidity); Serial.print(F(",")); Serial.print(data_3L.temperature); Serial.print(F(",")); Serial.print(data_3L.humidity); Serial.print(F(","));

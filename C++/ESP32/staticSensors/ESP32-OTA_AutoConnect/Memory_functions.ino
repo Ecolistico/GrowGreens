@@ -25,7 +25,6 @@ void memorySetup(){
   Serial.print(F("Alpha = ")); Serial.println(exp_alpha);
   Serial.print(F("Kalman Noise = ")); Serial.println(kalman_noise);
   Serial.print(F("Update = ")); Serial.println(update_constant);
-  Serial.println(); 
 }
 
 void memorySave(uint8_t par){

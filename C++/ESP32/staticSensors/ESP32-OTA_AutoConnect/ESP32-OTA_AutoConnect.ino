@@ -40,7 +40,6 @@ String mqttBrokerIp;
 String container_ID;
 String esp32Type;
 String MACstr; // MAC in string format
-//uint8_t masterMAC[] = {0XFF, 0XFF, 0xFF, 0xFF, 0xFF, 0xFF}; // MAC Address of Master
 uint8_t container_ID_length = 10;
 uint8_t mqttAttempt = 0;
 
@@ -75,7 +74,8 @@ TempAndHumidity data_4R;
 TempAndHumidity data_4L;
 
 /****** Variables to use esp-now communication ******/
-// Environmental structure
+// It is necesary that all the structures used to transmit info via ESP-NOW have differentes sizes
+// Environmental structure (64 bytes)
 typedef struct env_message {
     TempAndHumidity R1;
     TempAndHumidity L1;
@@ -86,7 +86,8 @@ typedef struct env_message {
     TempAndHumidity R4;
     TempAndHumidity L4;
 } env_message;
-// Door structure
+
+// Door structure (8 bytes)
 typedef struct door_message {
     bool R1;
     bool L1;
@@ -97,27 +98,43 @@ typedef struct door_message {
     bool R4;
     bool L4;
 } door_message;
-// Identifier structure
+
+// Identifier structure (32 bytes)
 typedef struct identifier_message {
   String container_ID;
   String esp32Type;
+  uint8_t mqttBrokerIp[4];
+  bool help;
+  bool active;
 } identifier_message;
+
 // ESP-NOW commands
 typedef enum nowState{
-  SEND_DATA, 
-  SEND_DOOR, 
-  PORTAL_ON, 
-  PORTAL_OFF, 
-  REBOOT, 
-  HARD_RESET
+  SEND_DATA,                // Send sensor data 
+  SEND_DOOR,                // Send door state data
+  SEND_ID,                  // Send MQTT configuration
+  UPDATE_CONSTANT,          // Update time constant
+  NOT_FILTER,               // Set not filter for sensor data
+  SET_EXPONENTIAL_FILTER,   // Set an exponential filter for sensor data
+  SET_KALMAN_FILTER,        // Set a Kalman filter got sensor data
+  FORGET_MAC,               // Forget MAC address
+  REBOOT,                   // Reboot esp
+  HARD_RESET                // Delete all WiFi credential then restart esp
 };
-// Incoming message
+
+// Incoming message (12 bytes)
 typedef struct incoming_message {
     nowState cmd;
+    uint8_t param;
+    float notNeeded;
 } incoming_message;
 
-env_message envData;
-incoming_message inc_msg;
+env_message envData;        // To send
+door_message doorData;      // To send
+identifier_message idData;  // To send/recieve
+incoming_message incData;   // To recieve
+bool activeESPNOW = false;  // Variable to know if ESPNOW is active
+esp_now_peer_info_t masterInfo; // Peer info
 
 // Filter Settings
 uint8_t filter; // = 0; // Set filter to use: 0=none, 1=exponential, 2=kalman
@@ -135,7 +152,7 @@ bool startPortalAux = false;
 
 /*** Name functions ***/
 // AutoConnect Functions
-void loadSettings();
+void loadSettings(bool check);
 String loadParams(AutoConnectAux& aux, PageArgument& args);
 String clearParams(AutoConnectAux& aux, PageArgument& args);
 String saveParams(AutoConnectAux& aux, PageArgument& args);
@@ -150,9 +167,15 @@ void memorySetup();
 void memorySave(uint8_t par);
 void memoryGet(uint8_t par);
 // ESP-NOW
-void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);
+void parseBytes(const char* str, char sep, byte* bytes, int maxBytes, int base);
+void saveConfig(uint8_t ip[4], String type, String id, String mac_add, const uint8_t *mac); //DEBUG function
+void clearMAC(); // Delete MAC address from filesystem
+void OnDataSent(const uint8_t *mac, esp_now_send_status_t status);
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len);
 void InitESPNow();
+void DeinitESPNow();
+void registerPeer(String MAC);
+void debugNowSend(esp_err_t result);
 // Sensors
 bool setExponentialFilter(uint8_t alpha);
 float exponential_filter(uint8_t alpha, float t, float t_1);
@@ -210,7 +233,6 @@ void setup() {
   else {
     Serial.print(F("WiFi "));
     Serial.println("connection failed:" + String(WiFi.status()));
-    InitESPNow();
   }
   
   memorySetup();
@@ -223,6 +245,7 @@ void loop() {
       if (startPortalAux){ // If Portal is enable
         portalAux = false;
         startPortalAux = false;
+        DeinitESPNow();
         Serial.println(F("Disable Portal"));
         WiFi.disconnect(true);
       }else { // If portal disable manage MQTT 

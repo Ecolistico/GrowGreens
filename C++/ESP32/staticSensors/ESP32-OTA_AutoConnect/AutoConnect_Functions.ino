@@ -1,4 +1,4 @@
-void loadSettings(){
+void loadSettings(bool check){
   File file = SPIFFS.open(PARAM_FILE, "r");
   
   size_t size = file.size();
@@ -24,13 +24,19 @@ void loadSettings(){
     MACstr = root_3["value"].as<String>();
 
     file.close();
-    if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length){
+    if (check && addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length){
       Serial.println(F("Uploading Settings..."));
       Serial.print(F("MQTT Broker Ip: ")); Serial.println(mqttBrokerIp);
       Serial.print(F("Container ID: ")); Serial.println(container_ID);
       Serial.print(F("ESP32 Type: ")); Serial.println(esp32Type);
       Serial.print(F("ESP-NOW MAC: ")); Serial.println(MACstr);
-    }else{
+    } else if (!check) {
+      Serial.println(F("Uploading Settings without format check..."));
+      Serial.print(F("MQTT Broker Ip: ")); Serial.println(mqttBrokerIp);
+      Serial.print(F("Container ID: ")); Serial.println(container_ID);
+      Serial.print(F("ESP32 Type: ")); Serial.println(esp32Type);
+      Serial.print(F("ESP-NOW MAC: ")); Serial.println(MACstr);
+    } else{
       Serial.println(F("Settings are wrong\nReseting credentials and rebooting..."));
       resetCredentials();
     }
@@ -123,6 +129,7 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   }
   if (testMAC(MACstr)){
     echo.value += "Master MAC address: " + MACstr + "<br>";
+    registerPeer(MACstr);
   } else {
     echo.value += "Master MAC address: <p style='color:red;'>You did not provide a correct MAC Address</p><br>";
   }
@@ -223,6 +230,7 @@ bool testMAC(String MAC){
 bool startCP(IPAddress ip) {
   Serial.println("C.P. started, IP:" + WiFi.localIP().toString());
   startPortalAux = true;
+  InitESPNow();
   return true;
 }
 
