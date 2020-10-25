@@ -8,14 +8,18 @@ void parseBytes(const char* str, char sep, byte* bytes, int maxBytes, int base) 
         str++;                                // Point to next character after separator
     }
 }
-
+/*DEBUG*/
 void saveConfig(uint8_t ip[4], String type, String id, String mac_add, const uint8_t *mac){
   IPAddress auxIp(ip[0], ip[1], ip[2], ip[3]);
   if (addr.fromString(auxIp.toString()) && (type=="front" || type=="center" || type=="back") && testContainerId(id) && testMAC(mac_add)) {
     mqttBrokerIp = auxIp.toString();
     esp32Type = type;
     container_ID = id;
-    MACstr = mac_add;
+    if(MACstr!=mac_add){
+      
+      MACstr = mac_add;
+      registerPeer(MACstr); // Register the new MAC address
+    }
     // The entered value is owned by AutoConnectAux of /settings
     // To retrieve the elements of /settings, it is necessary to get
     // the AutoConnectAux object of /settings.
@@ -27,14 +31,14 @@ void saveConfig(uint8_t ip[4], String type, String id, String mac_add, const uin
     parseBytes(mqttBrokerIp.c_str(), '.', idData.mqttBrokerIp, 4, 10); // Convert IP string to uint8_t array
     idData.help = false;
     idData.active = true;
-    esp_err_t result = esp_now_send(mac, (uint8_t *) &idData, sizeof(idData));
-    debugNowSend(result);
+    debugNowSend(esp_now_send(mac, (uint8_t *) &idData, sizeof(idData)));
     Serial.println(F("[ESP-NOW] new ID data sent to Master"));
   } 
   else Serial.println(F("[ESP-NOW] Error: Settings recieved are wrong, ignoring data"));
 }
-
-void clearMAC() {
+/*DEBUG*/
+void clearMAC(const uint8_t *mac) {
+  Serial.println(F("[ESP-NOW] Forgeting actual Master MAC direction..."));
   MACstr = "";
   // The entered value is owned by AutoConnectAux of /settings
   // To retrieve the elements of /settings, it is necessary to get
@@ -43,6 +47,13 @@ void clearMAC() {
   Portal.aux(AUX_SETTING)->saveElement(param, { "ip_mqttServer", "containerID", "esp32Type", "mac_address" });
   param.close();
   Serial.println(F("[ESP-NOW] Master MAC address was erased"));
+  idData.container_ID = container_ID;
+  idData.esp32Type = esp32Type;
+  parseBytes(mqttBrokerIp.c_str(), '.', idData.mqttBrokerIp, 4, 10); // Convert IP string to uint8_t array
+  idData.help = true;
+  idData.active = true;
+  debugNowSend(esp_now_send(mac, (uint8_t *) &idData, sizeof(idData)));
+  Serial.println(F("[ESP-NOW] Asking for configuration id data to Master"));
 }
 
 // Callback when data is sent
@@ -77,21 +88,18 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
             parseBytes(mqttBrokerIp.c_str(), '.', idData.mqttBrokerIp, 4, 10); // Convert IP string to uint8_t array
             idData.help = false;
             idData.active = true;
-            esp_err_t result = esp_now_send(mac, (uint8_t *) &idData, sizeof(idData));
-            debugNowSend(result);
+            debugNowSend(esp_now_send(mac, (uint8_t *) &idData, sizeof(idData)));
             Serial.println(F("[ESP-NOW] ID data sent to Master"));
           }
         }   
       } else if (len == sizeof(incData)){
         memcpy(&incData, incomingData, sizeof(incData));
         if (incData.cmd==SEND_DATA){
-          esp_err_t result = esp_now_send(mac, (uint8_t *) &envData, sizeof(envData));
-          debugNowSend(result);
+          debugNowSend(esp_now_send(mac, (uint8_t *) &envData, sizeof(envData)));
           Serial.println(F("[ESP-NOW] sensor data sent to Master"));
         } else if (incData.cmd==SEND_DOOR){
           // updateDoor data
-          esp_err_t result = esp_now_send(mac, (uint8_t *) &doorData, sizeof(doorData));
-          debugNowSend(result);
+          debugNowSend(esp_now_send(mac, (uint8_t *) &doorData, sizeof(doorData)));
           Serial.println(F("[ESP-NOW] door data sent to Master"));
         } else if (incData.cmd==SEND_ID){
           idData.container_ID = container_ID;
@@ -99,8 +107,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
           parseBytes(mqttBrokerIp.c_str(), '.', idData.mqttBrokerIp, 4, 10); // Convert IP string to uint8_t array
           idData.help = false;
           idData.active = true;
-          esp_err_t result = esp_now_send(mac, (uint8_t *) &idData, sizeof(idData));
-          debugNowSend(result);
+          debugNowSend(esp_now_send(mac, (uint8_t *) &idData, sizeof(idData)));
           Serial.println(F("[ESP-NOW] ID data sent to Master"));
         } else if (incData.cmd==UPDATE_CONSTANT){
           if(incData.param>=2){
@@ -125,24 +132,15 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
             Serial.print(F("[ESP-NOW] Attempt to set Kalman Filter succeeded, New Kalman Noise = ")); Serial.println(incData.param);
           }
           else Serial.println(F("[ESP-NOW] Attemp to set Kalman Filter failed,Kalman Noise parameter is wrong"));
-        } else if (incData.cmd==FORGET_MAC){
-          Serial.println(F("[ESP-NOW] Forgeting actual Master MAC direction..."));
-          MACstr = "";
-          // DEBUG FORGET_MAC
-          clearMAC();
-          idData.container_ID = container_ID;
-          idData.esp32Type = esp32Type;
-          parseBytes(mqttBrokerIp.c_str(), '.', idData.mqttBrokerIp, 4, 10); // Convert IP string to uint8_t array
-          idData.help = true;
-          idData.active = true;
-          esp_err_t result = esp_now_send(mac, (uint8_t *) &idData, sizeof(idData));
-          debugNowSend(result);
-          Serial.println(F("[ESP-NOW] Asking for configuration id data to Master"));
+        } else if (incData.cmd==FORGET_MAC) {
+          clearMAC(mac); // DEBUG FORGET_MAC clearMAC()
         } else if (incData.cmd==REBOOT){
+          DeinitESPNow();
           Serial.println(F("[ESP-NOW] Rebooting..."));
           ESP.restart();
           delay(1000);
         } else if (incData.cmd==HARD_RESET){
+          DeinitESPNow();
           Serial.println(F("[ESP-NOW] Deleting WiFi credentials and rebooting..."));
           resetCredentials();
         } else Serial.println(F("[ESP-NOW] Error: Command not recognized"));
@@ -152,18 +150,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
       if (len==sizeof(incData)){ // Only listen to FORGET_MAC command
         memcpy(&incData, incomingData, sizeof(incData));
         if (incData.cmd==FORGET_MAC){
-          Serial.println(F("[ESP-NOW] Forgeting actual Master MAC direction..."));
-          MACstr = "";
-          // DEBUG FORGET_MAC save new config
-          clearMAC();
-          idData.container_ID = container_ID;
-          idData.esp32Type = esp32Type;
-          parseBytes(mqttBrokerIp.c_str(), '.', idData.mqttBrokerIp, 4, 10); // Convert IP string to uint8_t array
-          idData.help = true;
-          idData.active = true;
-          esp_err_t result = esp_now_send(mac, (uint8_t *) &idData, sizeof(idData));
-          debugNowSend(result);
-          Serial.println(F("[ESP-NOW] Asking for configuration id data to Master"));
+          clearMAC(mac); // DEBUG FORGET_MAC clearMAC()
         } else Serial.println(F("[ESP-NOW] Error: MAC address does not match with master"));
       } else Serial.println(F("[ESP-NOW] Error: MAC address does not match with master"));
     }
@@ -171,7 +158,23 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     if (len == sizeof(idData)){ // If configuration info is recieved
       memcpy(&idData, incomingData, sizeof(idData)); 
       if (idData.help) saveConfig(idData.mqttBrokerIp, idData.container_ID, idData.esp32Type, String(macStr), mac); // Validate the info and save it
-      else Serial.println(F("[ESP-NOW] Error: Cannot send credentials because MAC address does not match with master"));
+      else if(MACstr == ""){ // If MAC is empty then send the info to device that is asking. It Could be the master.
+        bool createPeer = false;
+        idData.container_ID = container_ID;
+        idData.esp32Type = esp32Type;
+        parseBytes(mqttBrokerIp.c_str(), '.', idData.mqttBrokerIp, 4, 10); // Convert IP string to uint8_t array
+        idData.help = false;
+        idData.active = true;
+        if(!esp_now_is_peer_exist(mac)) createPeer = true;
+        if(createPeer) {
+          for(int i=0; i<6;i++) auxPeer.peer_addr[i] = mac[i];
+          auxPeer.channel = 0;
+          auxPeer.encrypt = 0;
+          debugNow(esp_now_add_peer(&auxPeer), "Add temporary peer");
+        }
+        debugNowSend(esp_now_send(mac, (uint8_t *) &idData, sizeof(idData))); // Send and debug
+        if(createPeer) debugNow(esp_now_del_peer(mac), "Delete temporary peer");
+      } else Serial.println(F("[ESP-NOW] Error: Cannot send credentials because MAC address does not match with master"));
     }
   }
 }
@@ -190,9 +193,6 @@ void InitESPNow() {
     }
     else {
       Serial.println(F("[ESP-NOW] Error: Init Failed"));
-      // Retry InitESPNow, add a counte and then restart?
-      // InitESPNow();
-      // or Simply Restart
       ESP.restart();
     }
   } else Serial.println(F("[ESP-NOW] Error: Protocol has been initialized before"));
@@ -209,14 +209,11 @@ void DeinitESPNow() { // Turn off ESP-NOW
       parseBytes(mqttBrokerIp.c_str(), '.', idData.mqttBrokerIp, 4, 10); // Convert IP string to uint8_t array
       idData.help = false;
       idData.active = false;
-      esp_err_t result = esp_now_send(mac, (uint8_t *) &idData, sizeof(idData));
-      debugNowSend(result);
+      debugNowSend(esp_now_send(mac, (uint8_t *) &idData, sizeof(idData)));
     }
-    if (esp_now_deinit()==0) {
-      esp_now_unregister_recv_cb();
-      esp_now_unregister_send_cb();
-      Serial.println(F("[ESP-NOW] Turn off conection"));
-    }
+    esp_now_unregister_recv_cb();
+    esp_now_unregister_send_cb();
+    if (esp_now_deinit()==0) Serial.println(F("[ESP-NOW] Turn off conection"));
     else Serial.println(F("[ESP-NOW] Error: Cannot turn of conection"));
   } else Serial.println(F("[ESP-NOW] Error: Protocol has not been  initialized before"));
 }
@@ -230,39 +227,40 @@ void registerPeer(String MAC) {
     memcpy(masterInfo.peer_addr, mac, 6);
     masterInfo.channel = 0;  
     masterInfo.encrypt = false;  
-    if (esp_now_add_peer(&masterInfo) != ESP_OK){
-      Serial.println(F("[ESP-NOW] Failed to add peer"));
-      return;
-    } else {
-      Serial.println(F("[ESP-NOW] Master peer registered"));
+    debugNow(esp_now_add_peer(&masterInfo), "Add peer");
+    if(esp_now_is_peer_exist(masterInfo.peer_addr)) {
+      Serial.println(F("[ESP-NOW] Master peer was registered"));
       idData.container_ID = container_ID;
       idData.esp32Type = esp32Type;
       parseBytes(mqttBrokerIp.c_str(), '.', idData.mqttBrokerIp, 4, 10); // Convert IP string to uint8_t array
       idData.help = false;
       idData.active = true;
-      esp_err_t result = esp_now_send(mac, (uint8_t *) &idData, sizeof(idData));
-      debugNowSend(result);
+      debugNowSend(esp_now_send(mac, (uint8_t *) &idData, sizeof(idData)));
     }
   }
   else Serial.println(F("[ESP-NOW] MAC address from master has not been registered yet"));  
 }
 
-void debugNowSend(esp_err_t result) {
-  Serial.print(F("[ESP-NOW] Send Status: "));
-  if (result == ESP_OK) {
-    Serial.println(F("Success"));
-  } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-    // How did we get so far!!
-    Serial.println(F("ESPNOW not Init."));
-  } else if (result == ESP_ERR_ESPNOW_ARG) {
-    Serial.println(F("Invalid Argument"));
-  } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-    Serial.println(F("Internal Error"));
-  } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-    Serial.println(F("ESP_ERR_ESPNOW_NO_MEM"));
-  } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-    Serial.println(F("Peer not found."));
-  } else {
-    Serial.println(F("[ESP-NOW] Not sure what happened"));
-  }
+void unregisterPeer(String MAC) {
+  // Unregister peer if we have the MAC address
+  if(MAC.length()>0){
+    uint8_t mac[] = {0X00, 0X00, 0X00, 0X00, 0X00, 0X00}; // Aux variable to compare MAC
+    parseBytes(MAC.c_str(), ':', mac, 6, 16); // Convert MAC string to uint8_t array
+    debugNow(esp_now_del_peer(mac), "Unregister peer");
+  } else Serial.println(F("[ESP-NOW] MAC address format is wrong"));  
+}
+
+void debugNowSend(esp_err_t result) { debugNow(result, "Send"); }
+
+void debugNow(esp_err_t result, String action) {
+  Serial.print(F("[ESP-NOW] ")); Serial.print(action); Serial.print(F(" Status: "));
+  if (result == ESP_OK) Serial.println(F("Success"));
+  else if (result == ESP_ERR_ESPNOW_NOT_INIT) Serial.println(F("ESPNOW not Init"));  // How did we get so far!!
+  else if (result == ESP_ERR_ESPNOW_ARG) Serial.println(F("Invalid Argument")); 
+  else if (result == ESP_ERR_ESPNOW_INTERNAL) Serial.println(F("Internal Error")); 
+  else if (result == ESP_ERR_ESPNOW_NO_MEM) Serial.println(F("Out of memory"));
+  else if (result == ESP_ERR_ESPNOW_NOT_FOUND) Serial.println(F("Peer not found"));
+  else if (result == ESP_ERR_ESPNOW_FULL) Serial.println(F("Peer list is full"));
+  else if (result == ESP_ERR_ESPNOW_EXIST) Serial.println(F("Peer has existed"));
+  else Serial.println(F("Not sure what happened"));
 }

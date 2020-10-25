@@ -40,7 +40,7 @@ String mqttBrokerIp;
 String container_ID;
 String esp32Type;
 String MACstr; // MAC in string format
-uint8_t container_ID_length = 10;
+const uint8_t container_ID_length = 10;
 uint8_t mqttAttempt = 0;
 
 /***** Sensors Definitions *****/
@@ -129,12 +129,13 @@ typedef struct incoming_message {
     float notNeeded;
 } incoming_message;
 
-env_message envData;        // To send
-door_message doorData;      // To send
-identifier_message idData;  // To send/recieve
-incoming_message incData;   // To recieve
-bool activeESPNOW = false;  // Variable to know if ESPNOW is active
+env_message envData;            // To send
+door_message doorData;          // To send
+identifier_message idData;      // To send/recieve
+incoming_message incData;       // To recieve
+bool activeESPNOW = false;      // Variable to know if ESPNOW is active
 esp_now_peer_info_t masterInfo; // Peer info
+esp_now_peer_info_t auxPeer;    // Aux peer to send info to potential Masters
 
 // Filter Settings
 uint8_t filter; // = 0; // Set filter to use: 0=none, 1=exponential, 2=kalman
@@ -169,13 +170,15 @@ void memoryGet(uint8_t par);
 // ESP-NOW
 void parseBytes(const char* str, char sep, byte* bytes, int maxBytes, int base);
 void saveConfig(uint8_t ip[4], String type, String id, String mac_add, const uint8_t *mac); //DEBUG function
-void clearMAC(); // Delete MAC address from filesystem
+void clearMAC(const uint8_t *mac); // DEBUG Delete MAC address from filesystem
 void OnDataSent(const uint8_t *mac, esp_now_send_status_t status);
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len);
 void InitESPNow();
 void DeinitESPNow();
 void registerPeer(String MAC);
+void unregisterPeer(String MAC);
 void debugNowSend(esp_err_t result);
+void debugNow(esp_err_t result, String action);
 // Sensors
 bool setExponentialFilter(uint8_t alpha);
 float exponential_filter(uint8_t alpha, float t, float t_1);
