@@ -19,24 +19,24 @@ class inputHandler:
         self.gui = gui
         # Aux Variables
         self.exit = False
-        
+
     # Get an Input Line it consumes between 20-30% of the processor capacity
     def getLine(self, Block=False):
       if Block or select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
           return input()
-    
+
     def writeGC(self, mssg): # Write in generalControl
         if self.serialControl.gcIsConnected: self.serialControl.write(self.serialControl.generalControl, mssg)
         else: self.log.error("Cannot write to serial device [generalControl]. It is disconnected.")
-            
+
     def writeMG(self, mssg): # Write in motorsGrower
         if self.serialControl.mgIsConnected: self.serialControl.write(self.serialControl.motorsGrower, mssg)
         else: self.log.error("Cannot write to serial device [motorsGrower]. It is disconnected.")
-            
+
     def writeSM(self, mssg): # Write in solutionMaker
         if self.serialControl.smIsConnected: self.serialControl.write(self.serialControl.solutionMaker, mssg)
         else: self.log.error("Cannot write to serial device [solutionMaker]. It is disconnected.")
-            
+
     def valInteger(self, integer):
         try:
             val = int(integer)
@@ -44,31 +44,31 @@ class inputHandler:
         except:
             self.log.error("inputHandler- {} is not an integer".format(integer))
             return False
-    
+
     def valGreater0(self, number):
         if(number>0): return True
         else:
             self.log.error("inputHandler- {} is not greater than 0".format(number))
             return False
-    
+
     def valLenList(self, myList, reqLen):
         if(len(myList)==reqLen): return True
         else:
             self.log.error("inputHandler- {} does not have the correct length".format(myList))
             return False
-    
+
     def valLenList1(self, myList, minLen):
         if(len(myList)>=minLen): return True
         else:
             self.log.error("inputHandler- {} does not have the minimun length".format(myList))
             return False
-        
+
     def valSplit(self, strLine):
         splitLine = strLine.split(",")
         if(len(splitLine)>1):
             return splitLine
         else: self.log.error("inputHandler- {} needs more arguments".format(strLine))
-    
+
     def handleGUI(self, command, parameters):
         if self.gui.isOpen:
             if(command.startswith("solenoid,setCycleTime,")):
@@ -87,7 +87,7 @@ class inputHandler:
                             self.gui.window['TiempoCiclo'].Update(self.gui.data[-1][1]+' min')
                     else: self.log.error("inputHandler Error: GUI not allow changes")
                 except Exception as e: self.log.error("inputHandler Error: Connecction with GUI failed [{}]".format(e))
-                        
+
             elif(command.startswith("solenoid,setTimeOn,") and len(parameters)>=8):
                 try:
                     floor = int(parameters[4])+1
@@ -115,7 +115,7 @@ class inputHandler:
                         self.gui.updateCurrentTimeValues()
                     else: self.log.error("inputHandler Error: GUI not allow changes")
                 except Exception as e: self.log.error("inputHandler Error: Connecction with GUI failed [{}]".format(e))
-    
+
     def handleInput(self, line):
         if(line.lower()=="exit"):
             self.log.debug("Exit command activated")
@@ -131,7 +131,7 @@ class inputHandler:
                 elif(param[1]=="motorsGrower" and self.valLenList1(param, 3) and self.serialControl.mgIsConnected):
                     cmd = ",".join(param[2:])
                     self.writeMG(cmd)
-                    self.log.info("inputHandler-[motorsGrower] Raw Command={}".format(cmd)) 
+                    self.log.info("inputHandler-[motorsGrower] Raw Command={}".format(cmd))
                 elif(param[1]=="solutionMaker" and self.valLenList1(param, 3) and self.serialControl.smIsConnected):
                     cmd = ",".join(param[2:])
                     self.writeSM(cmd)
@@ -173,7 +173,7 @@ class inputHandler:
                         self.log.warning("Irrigation- Solenoid of fl {}, reg {} change time to {}s with sol {}".format(
                             fl, reg, time_s, sol))
                 else: self.log.error("inputHandler- {} Command Unknown".format(line))
-        
+
         elif(line.startswith("debug")):
             param = self.valSplit(line)
             if(param!=None):
@@ -184,7 +184,7 @@ class inputHandler:
                     self.writeGC("debug,irrigation,getEC")
                     self.log.debug("Asking for the actual EC parameter")
                 else: self.log.error("inputHandler- {} Command Unknown".format(line))
-        
+
         elif(line.startswith("startRoutine")):
             if self.serialControl.mgIsConnected:
                 param = self.valSplit(line)
@@ -195,7 +195,7 @@ class inputHandler:
                         y = param[3]
                     elif(len(param)==3): x = y = param[2]
                     else: x = y = 0
-                    
+
                     if(fl=='1'):
                         if(x!=0 and y!=0):
                             self.serialControl.mGrower.Gr1.xSeq = x
@@ -233,8 +233,47 @@ class inputHandler:
                 else: self.log.error("Please provide valid arguments to start Grower sequence")
             else: self.log.error("motorsGrower device is disconnected. It is impossible to start a routine or sequence.")
         else: self.log.error("inputHandler- {} Command Unknown".format(line))
-            
+
+    def startRoutine(self):
+        if self.serialControl.mgIsConnected:
+            self.serialControl.mGrower.Gr3.time2Move()
+            try:
+                top = "{}/Grower{}".format(self.ID,fl)
+                msgs = [{"topic": top, "payload": "OnLED1"},
+                        {"topic": top, "payload": "OnLED2"},
+                        {"topic": top, "payload": "DisableStream"}]
+                publish.multiple(msgs, hostname = self.IP)
+                self.log.info("Checking Grower{} status to start sequence".format(fl))
+                return True
+            except Exception as e:
+                self.log.error("LAN/WLAN not found- Impossible use publish() [{}]".format(e))
+                return False
+        else:
+            self.log.error("motorsGrower device is disconnected. It is impossible to start a routine or sequence.")
+            return False
+
+    def stopRoutine(self):
+        if self.serialControl.mgIsConnected:
+            cmd = 'stopSequence,3'
+            self.writeMG(cmd)
+            self.serialControl.mGrower.Gr3.mqttReq("")
+            try:
+                mssg = [{"topic": "{}/Grower{}".format(ID, grower.floor), "payload": "OffLED1"},
+                        {"topic": "{}/Grower{}".format(ID, grower.floor), "payload": "OffLED2"},
+                        {"topic": "{}/Grower{}".format(ID, grower.floor), "payload": "EnableStream"}]
+                publish.multiple(mssg, hostname = self.IP)
+                return True
+            except Exception as e:
+                self.log.error("LAN/WLAN not found- Impossible use publish() [{}]".format(e))
+                return False
+        self.log.warning('Routine Stopped')
+        return True
+
     def loop(self):
         line = self.getLine()
         if line!=None:
             self.handleInput(line)
+        if self.gui.rut3==True and self.gui.controlRut==False:
+            if self.startRoutine(): self.gui.controlRut = True
+        else if rut3==False and self.gui.controlRut==True:
+            if self.stopRoutine(): self.gui.controlRut = False

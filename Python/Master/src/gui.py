@@ -71,9 +71,15 @@ class GUI:
         self.lado = 'A'
         self.etapa = '1'
         self.solucion = 'H2O'
+        self.rutPiso = '3'
 
         # Aux variables
         self.total = 0
+        self.rut1 = False
+        self.rut2 = False
+        self.rut3 = False
+        self.rut4 = False
+        self.controlRut = False
 
         # Main Window
         self.window = None
@@ -260,6 +266,26 @@ class GUI:
         else:
             runShellCommand('python src/plant2DB.py {} {}'.format(hostname, numberSeeds))
 
+    def checkRoutineButtons(self):
+        if self.rutPiso!=3:
+            self.window['Rut_Iniciar'].Update(button_color=self.disable_color, disabled=True)
+            self.window['Rut_Detener'].Update(button_color=self.disable_color, disabled=True)
+        else:
+            if self.rut3==False:
+                self.window['Rut_Iniciar'].Update(button_color=('black', self.green1), disabled=False)
+                self.window['Rut_Detener'].Update(button_color=self.disable_color, disabled=True)
+            else:
+                self.window['Rut_Iniciar'].Update(button_color=self.disable_color, disabled=True)
+                self.window['Rut_Detener'].Update(button_color=('black', self.green1), disabled=False)
+
+    def startRoutine(self):
+        self.rut3 = True
+        self.checkRoutineButtons()
+
+    def stopRoutine(self):
+        self.rut3 = False
+        self.checkRoutineButtons()
+
     def begin(self):
          if self.filename is not None:
              if os.path.exists(self.filename):
@@ -430,8 +456,24 @@ class GUI:
                           colB2],
                       ], title='Bitácora de siembra', relief=sg.RELIEF_SUNKEN)]
                 ])
+         col4 = sg.Column([
+                     [sg.Frame(layout=[
+                         #[sg.Text(' '*50, key='Error1', text_color='red')],
+                         [sg.Text('Selección de piso a iniciar rutina:')],
+                         [sg.Radio('Piso 1             ', "RUTINA-PISO", key='Rut_Piso1', default=True, text_color='white'),
+                          sg.Radio('Piso 2             ', "RUTINA-PISO", key='Rut_Piso2', text_color='white'),
+                          sg.Radio('Piso 3             ', "RUTINA-PISO", key='Rut_Piso3', text_color='white'),
+                          sg.Radio('Piso 4', "RUTINA-PISO", key='Rut_Piso4', text_color='white')],
+                         [sg.Text(' '*20),
+                          sg.Button('Iniciar', size=(8, 1), key="Rut_Iniciar", pad=(10,10), disabled=True, button_color=self.disable_color),
+                          sg.Text(' '*20),
+                          sg.Button('Detener', size=(8, 1), key="Rut_Detener", pad=(10,10), disabled=True, button_color=self.disable_color),
+                          sg.Text(' '*20)],
+                         ], title='Control de Rutina', relief=sg.RELIEF_SUNKEN)]
+               ])
 
-         layout = [[col1],[col2, col3]]
+         #layout = [[col1], [col2, col3]] # OutDate Layout
+         layout = [[col1], [col2, col4]]
 
          self.window = sg.Window('GG GUI', layout, no_titlebar=False,
                             auto_size_text=True, finalize=True)
@@ -548,6 +590,29 @@ class GUI:
                     self.solucion = '4'
                     self.checkEV()
                     self.updateCurrentTimeValues()
+
+            # Check Events for Routine Events
+            # Check floor
+            if values['Rut_Piso1']:
+                if (self.rutPiso!=1):
+                    self.rutPiso = 1
+                    self.checkRoutineButtons()
+            if values['Rut_Piso2']:
+                if (self.rutPiso!=2):
+                    self.rutPiso = 2
+                    self.checkRoutineButtons()
+            if values['Rut_Piso3']:
+                if (self.rutPiso!=3):
+                    self.rutPiso = 3
+                    self.checkRoutineButtons()
+            if values['Rut_Piso4']:
+                if (self.rutPiso!=4):
+                    self.rutPiso = 4
+                    self.checkRoutineButtons()
+
+            if event == 'Rut_Iniciar': self.startRoutine()
+
+            if event == 'Rut_Detener': self.stopRoutine()
 
             if event == 'Actualizar':
                 resp = self.changeEVvalue(int(self.piso), self.lado, int(self.etapa), self.solucion, self.data, self.cycleTime, self.evTime)

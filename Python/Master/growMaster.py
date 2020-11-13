@@ -88,7 +88,7 @@ def startRoutine(grower):
             publish.multiple(msgs, hostname = brokerIP)
             log.logger.info("Checking Grower{} status to start sequence".format(grower.floor))
     else: log.logger.error("Cannot start sequence. Serial device [motorsGrower] is disconnected.")
-    
+
 def checkSerialMsg(grower):
     # Resend serial messages without response for Growers
     if(grower.serialRequest!=""):
@@ -101,7 +101,7 @@ def checkSerialMsg(grower):
             serialControl.write(serialControl.motorsGrower, grower.serialRequest)
             grower.actualTime = time()
             log.logger.info("Resending Grower{} request: {}".format(grower.floor, grower.serialRequest))
-            
+
 def checkMqttMsg(grower):
     # Resend mqtt messages withouth response in 20s for Growers
     if(grower.mqttRequest!="" and time()-grower.actualTime>20):
@@ -123,7 +123,7 @@ def checkMqttMsg(grower):
                 log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower{} request [{}]".format(grower.floor, e))
                 mqttDisconnect(client, mqttControl)
         grower.actualTime = time()
-        
+
 # Aux Variables
 try: param = sys.argv[1]
 except: param = ""
@@ -287,20 +287,21 @@ try:
 
             # Coordinate Grower routines
             if(hour==6 and minute==0): # At 6am
-                #startRoutine(mGrower.Gr1)                
+                #startRoutine(mGrower.Gr1)
                 log.logger.info("Checking Grower1 status to start sequence")
             elif(hour==8 and minute==0):# At 8am
-                #startRoutine(mGrower.Gr2)                
+                #startRoutine(mGrower.Gr2)
                 log.logger.info("Checking Grower2 status to start sequence")
             elif(hour==10 and minute==0): # At 10am
-                #startRoutine(mGrower.Gr3)                
+                #startRoutine(mGrower.Gr3)
                 log.logger.info("Checking Grower3 status to start sequence")
             elif(hour==12 and minute==0): # At 12pm
-                #startRoutine(mGrower.Gr4)                
+                #startRoutine(mGrower.Gr4)
                 log.logger.info("Checking Grower4 status to start sequence")
             elif(hour==23 and minute==59): # At 11:59pm
                 # Request mongoDB-Parse Server IP
                 publish.single("{}/Server".format(ID), 'whatIsMyIP', hostname = brokerIP)
+            """
             elif(hour==0 and minute==0): # At 0am
                 # Update Plant database and restart GUI
                 if mqttControl.serverIP != '':
@@ -311,18 +312,18 @@ try:
                         log.logger.info("Plant Database Updated")
                     except Exceptions as e: log.logger.error("Plant Database failed to update.\n{}".format(e))
                 else: log.logger.warning("Parse Server Disconnected")
-                
+            """
             elif(hour==7 and minute==0): # At 7am
                 # Send Dayly tasks
                 sub, msg = growCal.getEmail()
                 if(msg!=''): mail.sendMail(sub, msg)
-        
+
         # Check Serial Pending
         checkSerialMsg(mGrower.Gr1)
         checkSerialMsg(mGrower.Gr2)
         checkSerialMsg(mGrower.Gr3)
         checkSerialMsg(mGrower.Gr4)
-        
+
         # Check MQTT Pending
         checkMqttMsg(mGrower.Gr1)
         checkMqttMsg(mGrower.Gr2)
