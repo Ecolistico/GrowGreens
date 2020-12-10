@@ -1,4 +1,4 @@
-void loadSettings(){
+void loadSettings(bool rst){
   File file = SPIFFS.open(PARAM_FILE, "r");
   
   size_t size = file.size();
@@ -28,8 +28,10 @@ void loadSettings(){
       Serial.print(F("Container ID: ")); Serial.println(container_ID);
       Serial.print(F("ESP32 Type: ")); Serial.println(esp32Type);
     }else{
-      Serial.println(F("Settings are wrong\nReseting credentials and rebooting..."));
-      resetCredentials();
+      if(rst){
+        Serial.println(F("Settings are wrong\nReseting credentials and rebooting..."));
+        resetCredentials();  
+      }
     }
     delay(2000); 
   }

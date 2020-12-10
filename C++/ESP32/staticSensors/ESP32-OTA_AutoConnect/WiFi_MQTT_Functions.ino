@@ -9,7 +9,7 @@ bool mqttConnect() {
   uint8_t retry = 3;
   while (!mqttClient.connected()) {
     if (mqttBrokerIp.length() <= 0){
-      loadSettings();
+      loadSettings(true);
       break;
     }
     

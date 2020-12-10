@@ -1,5 +1,4 @@
-/* Add:
-*/
+/* Tested with AutoConnect 1.1.7 */
 
 /*** Include Libraries ***/
 #include <DHTesp.h>
@@ -11,7 +10,8 @@
 #include <AutoConnect.h>
 #include <AutoConnectCredential.h>
 #include <Preferences.h>
-#include <esp_now.h>
+#include <SPI.h>
+#include <EthernetENC.h>
 
 /*** Include files ***/
 // All files are stored in flash memory
@@ -31,7 +31,8 @@ Preferences memory;
 AutoConnect Portal;
 AutoConnectConfig Config;
 WiFiClient esp32Client;
-PubSubClient mqttClient(esp32Client);
+EthernetClient ethClient;
+PubSubClient mqttClient(ethClient);
 station_config_t AC_credential_config;
 station_config_t *AC_credential = &AC_credential_config;
 IPAddress addr;
@@ -39,6 +40,7 @@ String mqttBrokerIp;
 String container_ID;
 String esp32Type;
 byte container_ID_length = 10;
+byte mac[] = { random(2), random(2), random(2), random(2), random(2), random(2) };
 
 /***** Sensors Definitions *****/
 byte dht_1R_pin = 13;
@@ -82,7 +84,7 @@ uint8_t update_constant; // Update time every X seconds
 
 /*** Name functions ***/
 // AutoConnect Functions
-void loadSettings();
+void loadSettings(bool rst);
 String loadParams(AutoConnectAux& aux, PageArgument& args);
 String clearParams(AutoConnectAux& aux, PageArgument& args);
 String saveParams(AutoConnectAux& aux, PageArgument& args);
@@ -142,20 +144,34 @@ void setup() {
   }
   
   Serial.print(F("WiFi "));
+
+  loadSettings(false);
   
-  if (Portal.begin()) {
-    Serial.println("connected:" + WiFi.SSID());
-    Serial.println("IP:" + WiFi.localIP().toString());
-    // Delete credentials
-    //resetCredentials();
-  } else {
-    Serial.println("connection failed:" + String(WiFi.status()));
-    while (1) {
-      delay(100);
-      yield();
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length ){
+    Serial.println("Parameters are ok");
+    mqttClient.setServer(mqttBrokerIp.c_str(), 1883);
+    mqttClient.setCallback(callback); // Function to execute actions with entries of mqtt messages
+  }
+  else {
+    if (Portal.begin()) {
+      Serial.println("connected:" + WiFi.SSID());
+      Serial.println("IP:" + WiFi.localIP().toString());
+      // Delete credentials
+      //resetCredentials();
+    } else {
+      Serial.println("connection failed:" + String(WiFi.status()));
+      while (1) {
+        delay(100);
+        yield();
+      }
     }
   }
   
+  Ethernet.begin(mac);
+  // Allow the hardware to sort itself out
+  delay(1500);
+  
+  Serial.println("TEST");
   memorySetup();
   setupSensors();
   update_time = millis();  
