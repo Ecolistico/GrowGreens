@@ -14,7 +14,7 @@ bool mqttConnect() {
     }
     
     mqttClient.setServer(mqttBrokerIp.c_str(), 1883);
-    Serial.println(String("Attempting MQTT broker: ") + mqttBrokerIp);
+    Serial.print(F("Attempting MQTT broker: ")); Serial.println(mqttBrokerIp);
     mqttClient.setCallback(callback); // Function to execute actions with entries of mqtt messages
 
     for (uint8_t i = 0; i < 8; i++) {
@@ -23,14 +23,14 @@ bool mqttConnect() {
     clientId[8] = '\0';
 
     if (mqttClient.connect(clientId)) {
-      Serial.println("Established: " + String(clientId));
+      Serial.print(F("Established: ")); Serial.println(String(clientId));
       String subscribeTopic = container_ID + "/esp32" + esp32Type; 
       char charTopic[subscribeTopic.length()+1];
       subscribeTopic.toCharArray(charTopic,subscribeTopic.length()+1);
       mqttClient.subscribe(charTopic);
       return true;
     } else {
-      Serial.println("Connection failed: " + String(mqttClient.state()));
+      Serial.print(F("Connection failed: ")); Serial.println(String(mqttClient.state()));
       if (!--retry)
         break;
       delay(3000);
@@ -177,7 +177,7 @@ void resetCredentials(){
     Serial.print(F("There is(are) ")); Serial.print(entries1); Serial.println(F(" entrie(s) that will be deleted"));
     for(int i=entries1-1;i>=0;i--){
       if( AutoConnectCredential().load(i, AC_credential) ){
-        Serial.print("Deleting credential: "); Serial.println(reinterpret_cast<char*>(AC_credential->ssid));
+        Serial.print(F("Deleting credential: ")); Serial.println(reinterpret_cast<char*>(AC_credential->ssid));
         if(AutoConnectCredential().del(reinterpret_cast<char*>(AC_credential->ssid))){
           Serial.println(F("Deleted with success"));
         }

@@ -115,7 +115,7 @@ void setup() {
   Serial.println(F("Initial setup"));
   Serial.print(F("Please wait"));
   for(int i=0;i<30;i++){
-    Serial.print(".");
+    Serial.print(F("."));
     delay(1000);  
   }
   Serial.println();
@@ -148,18 +148,18 @@ void setup() {
   loadSettings(false);
   
   if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length ){
-    Serial.println("Parameters are ok");
+    Serial.println(F("Parameters are ok"));
     mqttClient.setServer(mqttBrokerIp.c_str(), 1883);
     mqttClient.setCallback(callback); // Function to execute actions with entries of mqtt messages
   }
   else {
     if (Portal.begin()) {
-      Serial.println("connected:" + WiFi.SSID());
-      Serial.println("IP:" + WiFi.localIP().toString());
+      Serial.print(F("connected:")); Serial.println(WiFi.SSID());
+      Serial.print(F("IP:")); Serial.println(WiFi.localIP().toString());
       // Delete credentials
       //resetCredentials();
     } else {
-      Serial.println("connection failed:" + String(WiFi.status()));
+      Serial.print(F("connection failed:" )); Serial.println(String(WiFi.status()));
       while (1) {
         delay(100);
         yield();
@@ -170,8 +170,6 @@ void setup() {
   Ethernet.begin(mac);
   // Allow the hardware to sort itself out
   delay(1500);
-  
-  Serial.println("TEST");
   memorySetup();
   setupSensors();
   update_time = millis();  

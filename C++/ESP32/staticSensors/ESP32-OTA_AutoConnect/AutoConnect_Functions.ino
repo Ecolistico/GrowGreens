@@ -126,7 +126,7 @@ bool loadAux(const String auxName) {
     rc = Portal.load(fs);
     fs.close();
   }
-  else { Serial.println("SPIFFS open failed: " + fn); }
+  else { Serial.print(F("SPIFFS open failed: ")); Serial.println(fn); }
   
   return rc;
 }
