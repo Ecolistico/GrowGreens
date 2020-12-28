@@ -36,11 +36,16 @@ PubSubClient mqttClient(ethClient);
 station_config_t AC_credential_config;
 station_config_t *AC_credential = &AC_credential_config;
 IPAddress addr;
+//IPAddress ipEnt;
 String mqttBrokerIp;
 String container_ID;
 String esp32Type;
+String esp32Floor;
 byte container_ID_length = 10;
-byte mac[] = { random(2), random(2), random(2), random(2), random(2), random(2) };
+//byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
+byte mac[6];
+//byte mac[] = { random(2), random(2), random(2), random(2), random(2), random(2) };
+uint8_t mqttAttempt = 0;
 
 /***** Sensors Definitions *****/
 byte dht_1R_pin = 13;
@@ -51,6 +56,10 @@ byte dht_3R_pin = 26;
 byte dht_3L_pin = 25;
 byte dht_4R_pin = 33;
 byte dht_4L_pin = 32;
+byte pinM1 = 10;
+byte pinM2 = 11;
+byte pinM3 = 20;
+byte pinM4 = 3;
 
 /***** Sensors objects *****/
 DHTesp dht_1R;
@@ -61,6 +70,10 @@ DHTesp dht_3R;
 DHTesp dht_3L;
 DHTesp dht_4R;
 DHTesp dht_4L;
+bool Puerta1;
+bool Puerta2;
+bool Puerta3;
+bool Puerta4;
 
 /***** Sensors auxiliar variables *****/
 TempAndHumidity data_1R;
@@ -78,6 +91,10 @@ uint8_t exp_alpha; // = 40; // Smooth Constant in Exponencial Filter. uint8_8 di
 uint8_t kalman_noise; // = 50; // Noise in Kalman Filter. uint8_8 divided by 100
 float kalman_err; // = 1; // Error in Kalman Filter. uint8_8 divided by 100
 
+// Portal aux variable handler
+bool portalAux = false;
+bool startPortalAux = false;
+
 // Temporal variables
 unsigned long update_time;
 uint8_t update_constant; // Update time every X seconds
@@ -87,6 +104,7 @@ uint8_t update_constant; // Update time every X seconds
 void loadSettings(bool rst);
 String loadParams(AutoConnectAux& aux, PageArgument& args);
 String clearParams(AutoConnectAux& aux, PageArgument& args);
+void deleteParams();
 String saveParams(AutoConnectAux& aux, PageArgument& args);
 bool loadAux(const String auxName); // OK
 void setup_AutoConnect(AutoConnect &Portal, AutoConnectConfig &Config);
@@ -109,8 +127,12 @@ void mqttPublish(String top, String msg);
 void callback(char* topic, byte* message, unsigned int length);
 void sendData();
 void resetCredentials();
+bool startCP(IPAddress ip);
+bool PuertaEstado(byte PinM);
 
 void setup() {
+  WiFi.mode(WIFI_MODE_STA);
+  WiFi.macAddress(mac);
   Serial.begin(115200);
   Serial.println(F("Initial setup"));
   Serial.print(F("Please wait"));
@@ -147,7 +169,7 @@ void setup() {
 
   loadSettings(false);
   
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length ){
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length && esp32Floor.toInt()<10){
     Serial.println(F("Parameters are ok"));
     mqttClient.setServer(mqttBrokerIp.c_str(), 1883);
     mqttClient.setCallback(callback); // Function to execute actions with entries of mqtt messages
@@ -167,7 +189,9 @@ void setup() {
     }
   }
   
-  Ethernet.begin(mac);
+  if(Ethernet.begin(mac)) Serial.println(F("Ethernet begin"));
+  else Serial.println(F("Ethernet failed"));
+  
   // Allow the hardware to sort itself out
   delay(1500);
   memorySetup();
@@ -175,17 +199,17 @@ void setup() {
   update_time = millis();  
 }
 
-void loop() {
-    Portal.handleClient();
-    
-    if (!mqttClient.connected()) {
-      mqttConnect();
-    }
-    
-    if(millis()-update_time>update_constant*1000){
+void loop() {  
+    if (!mqttClient.connected() && portalAux==false) { // If MQTT disconnected retry connection 
+      mqttConnect(); 
+    } else if (portalAux==false) mqttClient.loop();   
+   
+    if(millis()-update_time>update_constant*1000){ // Update sensor data
       updateData();
       update_time = millis();
     }
     
-    mqttClient.loop();
+    Portal.handleClient(); // Handle Portal
+    Ethernet.maintain();
+
 }
