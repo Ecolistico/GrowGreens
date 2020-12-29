@@ -49,17 +49,17 @@ uint8_t mqttAttempt = 0;
 
 /***** Sensors Definitions *****/
 byte dht_1R_pin = 13;
-byte dht_1L_pin = 21; // D12 cannot be used. Flash error
-byte dht_2R_pin = 14;
-byte dht_2L_pin = 27;
+byte dht_1L_pin = 14; // D12 cannot be used. Flash error
+byte dht_2R_pin = 27;
+byte dht_2L_pin = 32;
 byte dht_3R_pin = 26;
-byte dht_3L_pin = 25;
-byte dht_4R_pin = 33;
-byte dht_4L_pin = 32;
-byte pinM1 = 10;
-byte pinM2 = 11;
+byte dht_3L_pin = 35;
+byte dht_4R_pin = 25;
+byte dht_4L_pin = 34;
+byte pinM1 = 16;
+byte pinM2 = 13;
 byte pinM3 = 20;
-byte pinM4 = 3;
+byte pinM4 = 4;
 
 /***** Sensors objects *****/
 DHTesp dht_1R;
