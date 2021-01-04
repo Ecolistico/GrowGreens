@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8">
-    <title>Tocani AP</title>
+    <title>Grower AP</title>
     <link rel="icon" href="img/GrowGreens-Web.png">
     <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href= "https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
@@ -11,23 +11,21 @@
 
   <body>
       <div class="container">
-          <h1 class="header">Tocani Access Point</h1>
+          <h1 class="header">Grower Access Point</h1>
           <ul class="steps">
             <li class="is-active">Instrucciones</li>
             <li>Paso 1</li>
             <li>Paso 2</li>
             <li>Paso 3</li>
-            <li>Paso 4</li>
           </ul>
           <form class="form-wrapper">
             <fieldset class="section is-active">
               <p align="left">A continuación deberá proporcionar toda la información necesaria
-                 para que el Tocani pueda comunicarse correctamente con el resto del sistema.</p>
+                 para que el Grower pueda comunicarse correctamente con el resto del sistema.</p>
               <p align="left">Usted debe conocer la siguiente información:</p>
               <ul>
                 <li align="left">ID del contenedor.</li>
                 <li align="left">Piso en el que está instalado el dispósitivo que actualmente está configurando.</li>
-                <li align="left">Nombre y contraseña de la red WiFi a la cual está conectada el sistema.</li>
                 <li align="left">Dirección IP del broker que maneja la comunicación MQTT.</li>
               </ul>
               <p align="left"><b>Nota: </b>Es de vital importancia que preste mucha atención y
@@ -47,24 +45,46 @@
               <h3>¿En qué piso del contenedor esta el dispósitivo que esta configurando?</h3>
               <div class="row cf">
                 <div class="third col">
-                  <input type="radio" name="r1" id="r1">
-                  <label for="r1">
-                    <h4>Primer Piso</h4>
+                  <input type="radio" name="r1" id="r1"><label for="r1">
+                    <h4>Primero</h4>
                   </label>
                 </div>
                 <div class="third col">
                   <input type="radio" name="r1" id="r2"><label for="r2">
-                    <h4>Segundo Piso</h4>
+                    <h4>Segundo</h4>
                   </label>
                 </div>
                 <div class="third col">
                   <input type="radio" name="r1" id="r3"><label for="r3">
-                    <h4>Tercer Piso</h4>
+                    <h4>Tercero</h4>
                   </label>
                 </div>
                 <div class="third col">
                   <input type="radio" name="r1" id="r4"><label for="r4">
-                    <h4>Cuarto Piso</h4>
+                    <h4>Cuarto</h4>
+                  </label>
+                </div>
+              </div>
+              <div class="row cf">
+                <div class="third col">
+                  <input type="radio" name="r1" id="r5">
+                  <label for="r5">
+                    <h4>Quinto </h4>
+                  </label>
+                </div>
+                <div class="third col">
+                  <input type="radio" name="r1" id="r6"><label for="r6">
+                    <h4> Sexto </h4>
+                  </label>
+                </div>
+                <div class="third col">
+                  <input type="radio" name="r1" id="r7"><label for="r7">
+                    <h4>Séptimo</h4>
+                  </label>
+                </div>
+                <div class="third col">
+                  <input type="radio" name="r1" id="r8"><label for="r8">
+                    <h4>Octavo</h4>
                   </label>
                 </div>
               </div>
@@ -73,17 +93,9 @@
               <div class="button">Siguiente</div>
             </fieldset>
             <fieldset class="section">
-              <h3>Credenciales WiFi</h3>
-              <input type="text" name="ssid" id="ssid" placeholder="SSID">
-              <input type="text" name="pssw" id="passw" placeholder="Password">
-              <p class="warn" id="warn3"></p>
-              <div class="button1">Anterior</div>
-              <div class="button">Siguiente</div>
-            </fieldset>
-            <fieldset class="section">
               <h3>Servidor MQTT</h3>
-              <input type="text" name="mqttIP" id="mqttIP" placeholder="192.168.4.1">
-              <p class="warn" id="warn4"></p>
+             <input type="text" name="mqttIP" id="mqttIP" placeholder="192.168.4.1">
+              <p class="warn" id="warn3"></p>
               <div class="button1">Anterior</div>
               <input class="submit button" type="submit" value="Configurar">
             </fieldset>

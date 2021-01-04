@@ -25,10 +25,30 @@ function download_csv() {
       csv += "4";
       csv +=",";
     }
+    else if(document.getElementById("r5").checked){
+      fl = 5;
+      csv += "5";
+      csv +=",";
+    }
+    else if(document.getElementById("r6").checked){
+      fl = 6;
+      csv += "6";
+      csv +=",";
+    }
+    else if(document.getElementById("r7").checked){
+      fl = 7;
+      csv += "7";
+      csv +=",";
+    }
+    else if(document.getElementById("r8").checked){
+      fl = 8;
+      csv += "8";
+      csv +=",";
+    }
     
-    csv += document.getElementById("ssid").value;
+    csv += "X";
     csv +=",";
-    csv += document.getElementById("passw").value;
+    csv += "X";
     csv +=",";
     csv += document.getElementById("mqttIP").value;
     csv +="\n";
@@ -37,15 +57,15 @@ function download_csv() {
     var hiddenElement = document.createElement('a');
     hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
     hiddenElement.target = '_blank';
-    hiddenElement.download = 'tocaniConfig'+fl+'.csv';
+    hiddenElement.download = 'growerConfig'+fl+'.csv';
     hiddenElement.click();
 }
 
 function saveData(){
   var contID = document.getElementById("containerID").value;
   var floor = 0;
-  var ssid = document.getElementById("ssid").value;
-  var password = document.getElementById("passw").value;
+  var ssid = "X";
+  var password = "X";
   var mqttIP = document.getElementById("mqttIP").value;
 
   if(document.getElementById("r1").checked){
@@ -59,6 +79,18 @@ function saveData(){
   }
   else if(document.getElementById("r4").checked){
     floor = 4;
+  }
+  else if(document.getElementById("r5").checked){
+    floor = 5;
+  }
+  else if(document.getElementById("r6").checked){
+    floor = 6;
+  }
+  else if(document.getElementById("r7").checked){
+    floor = 7;
+  }
+  else if(document.getElementById("r8").checked){
+    floor = 8;
   }
 
   $.get("php/data.php?contID="+contID+"&floor="+floor+"&ssid="+ssid+"&password="+password+"&mqttIP="+mqttIP, function(data){
@@ -84,28 +116,12 @@ $(document).ready(function(){
         }
     }
 
-    if(currentSectionIndex === 2 && !document.getElementById("r1").checked && !document.getElementById("r2").checked && !document.getElementById("r3").checked && !document.getElementById("r4").checked ){
+    if(currentSectionIndex === 2 && !document.getElementById("r1").checked && !document.getElementById("r2").checked && !document.getElementById("r3").checked && !document.getElementById("r4").checked  && !document.getElementById("r5").checked  && !document.getElementById("r6").checked  && !document.getElementById("r7").checked  && !document.getElementById("r8").checked){
       control = 1;
       document.getElementById("warn2").innerHTML = "Seleccione una opción";
     }
-    
-    if(currentSectionIndex === 3){
-      if(document.getElementById("ssid").value == "" || document.getElementById("passw").value == ""){
-          control = 1;
-          document.getElementById("warn3").innerHTML = "Nombre y/o contraseña incorrectos";
-      }
-      else if(document.getElementById("ssid").value.length < 6){
-          control = 1;
-          document.getElementById("warn3").innerHTML = "Nombre de la red no cumple con la longitud mínima";
-      }
-      else if(document.getElementById("passw").value.length < 6){
-          control = 1;
-          document.getElementById("warn3").innerHTML = "Contraseña no cumple con la longitud mínima";
-      }
-      
-    }
 
-    if(currentSectionIndex === 4 ){
+    if(currentSectionIndex === 3 ){
       var IP_REGEXP = /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/;
       if( IP_REGEXP.test(document.getElementById("mqttIP").value) == false){
         control = 1;
@@ -117,7 +133,7 @@ $(document).ready(function(){
           for(i = 0;i<document.getElementById("mqttIP").value.length; i++){
               if(IP_REGEXP.test(+document.getElementById("mqttIP").value.charAt(i)) == false && document.getElementById("mqttIP").value.charAt(i) !== '.' ){
                   control = 1;
-                  document.getElementById("warn4").innerHTML = "Dirección IP inválida";
+                  document.getElementById("warn3").innerHTML = "Dirección IP inválida";
                   break;
               }
           }
@@ -128,7 +144,6 @@ $(document).ready(function(){
       document.getElementById("warn1").innerHTML = "";
       document.getElementById("warn2").innerHTML = "";
       document.getElementById("warn3").innerHTML = "";
-      document.getElementById("warn4").innerHTML = "";
 
       currentSection.removeClass("is-active").next().addClass("is-active");
       headerSection.removeClass("is-active").next().addClass("is-active");
@@ -137,7 +152,7 @@ $(document).ready(function(){
         e.preventDefault();
       });
       
-      if(currentSectionIndex === 5){
+      if(currentSectionIndex === 4){
         $(document).find(".form-wrapper .section").first().addClass("is-active");
         $(document).find(".steps li").first().addClass("is-active");
         download_csv();
