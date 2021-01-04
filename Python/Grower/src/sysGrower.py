@@ -1,5 +1,7 @@
 import os
 import json
+import psutil
+import ipaddress
 import subprocess
 from uuid import getnode
 from datetime import datetime
@@ -81,7 +83,16 @@ def getData_JSON(path):
             data = json.load(json_file)
             return data['containerID'], data['floor'], data['mqttIP']
     else: return "", "", ""
-
+    
+def checkInterface(interface):
+    inter = psutil.net_if_addrs().get(interface)[0][2]
+    try:
+        ip = ipaddress.ip_address(inter)
+        return True
+    except:
+        return False
+    
+"""
 def photoPath():
     """"""
     wifi_ip = subprocess.check_output(['hostname', '-I'])
@@ -96,5 +107,5 @@ def photoPath():
     date = "{}-{}-{}".format(day, month, year)
     path = "//{}/{}/{}/sequence".format(ip_str[:-2], growy_name, date) 
     return path
-    
+"""  
 def getMacAddr(): return getnode()

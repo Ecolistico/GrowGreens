@@ -15,6 +15,7 @@ sys.path.insert(0, './src/')
 import sysGrower
 from logger import logger
 from asciiART import asciiArt
+from sysGrower import runShellCommand
 from mqttCallback import mqttController
 
 # Colored traceback useful for raise exception with colors in terminal
@@ -41,6 +42,7 @@ mqttControl = mqttController(log.logger)
 WiFiState = 0
 WiFiTime = time()- 20
 WiFiCount = 0
+MQTTCount = 0
 prevWiFiState = 0
 
 client = None
@@ -58,23 +60,27 @@ try:
         # Check WiFi Loop
         if(time()- WiFiTime > 20):
             # If there is WiFi
-            if(sysGrower.isWiFi()):
-                WiFiState = 1 # Conected to WiFi
+            if(sysGrower.checkInterface('eth0')):
+                prevWiFiState = WiFiState
+                if(sysGrower.isAP()): WiFiState = 3 # Conected to Eth0 and AP
+                else: WiFiState = 1 # Conected to Eth0
                 WiFiCount = 0
             elif(sysGrower.isAP()):
                 prevWiFiState = WiFiState
+                prevAPState = 1
                 WiFiState = 2 # Access Point created
                 WiFiCount = 0
             else:
                 prevWiFiState = WiFiState
-                WiFiState = 0 # Not accesPoint or WiFi
+                WiFiState = 0 # Not accesPoint or Eth0
                 WiFiCount += 1
             WiFiTime = time()
         
         # If not WiFi and not AP while 5*20 seconds
-        if(WiFiCount>=5):
+        if(WiFiCount>=5 or MQTTCount>=5):
             # Configure AP
             WiFiCount = 0
+            MQTTCount = 0
             log.logger.warning("Cannot detect WiFi network ")
             log.logger.info("Configuring AP...")
             sysGrower.runShellCommand('sudo python ./src/APconfig.py')
@@ -82,7 +88,7 @@ try:
         # MQTT Loop
         if(WiFiState!=prevWiFiState):
             # If WiFi Available
-            if(WiFiState == 1):                 
+            if(WiFiState==1):                 
                 # Update parameters
                 mqttControl.update()
                 try:
@@ -93,9 +99,15 @@ try:
                     #client.on_publish = mqttControl.on_publish # Specify on_publish callback
                     client.on_disconnect = mqttControl.on_disconnect # Specify on_disconnect callback
                     # Connect to MQTT Broker Parameters (IP, Port, Seconds Alive)
-                    if(client.connect(mqttControl.brokerIP, 1883, 60)==0): mqttControl.clientConnected = True
-                    else: log.logger.warning("Cannot connect with MQTT Broker")
-                except: log.logger.warning("Cannot connect with MQTT Broker")
+                    if(client.connect(mqttControl.brokerIP, 1883, 60)==0):
+                        mqttControl.clientConnected = True
+                        MQTTCount = 0
+                    else:
+                        log.logger.warning("Cannot connect with MQTT Broker")
+                        MQTTCount += 1
+                except:
+                    log.logger.warning("Cannot connect with MQTT Broker")
+                    MQTTCount += 1
             prevWiFiState = WiFiState
         
         # If WiFi and client connected wait for messages
@@ -114,9 +126,15 @@ try:
                     #client.on_publish = mqttControl.on_publish # Specify on_publish callback
                     client.on_disconnect = mqttControl.on_disconnect # Specify on_disconnect callback
                     # Connect to MQTT Broker Parameters (IP, Port, Seconds Alive)
-                    if(client.connect(mqttControl.brokerIP, 1883, 60)==0): mqttControl.clientConnected = True
-                    else: log.logger.warning("Cannot connect with MQTT Broker")
-                except: log.logger.warning("Cannot connect with MQTT Broker")
+                    if(client.connect(mqttControl.brokerIP, 1883, 60)==0):
+                        mqttControl.clientConnected = True
+                        MQTTCount = 0
+                    else:
+                        log.logger.warning("Cannot connect with MQTT Broker")
+                        MQTTCount += 1
+                except:
+                    log.logger.warning("Cannot connect with MQTT Broker")
+                    MQTTCount += 1
             else: sleep(0.1) # Avoid HIGH CPU usage
         else: sleep(0.1) # Avoid HIGH CPU usage
     mainClose()
