@@ -1,0 +1,13 @@
+[Unit]
+Description=GrowGreens Service
+
+[Service]
+Type=idle
+User=pi
+Environment=DISPLAY=:0
+ExecStart=lxterminal -t GrowGreens --geometry=110x30 --command="/bin/bash -c 'cd /home/pi/Documents/GrowGreens/Python/Grower && ./growGrower.py'"
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=graphical.target
