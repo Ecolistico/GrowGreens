@@ -6,7 +6,7 @@ bool mqttConnect() {
                                  "abcdefghijklmnopqrstuvwxyz";  // For random generation of client ID.
   char    clientId[9];
 
-  uint8_t retry = 3;
+  uint8_t retry = 5;
   while (!mqttClient.connected()) {
     if (mqttBrokerIp.length() <= 0){
       loadSettings(true);
@@ -24,16 +24,22 @@ bool mqttConnect() {
 
     if (mqttClient.connect(clientId)) {
       Serial.print(F("Established: ")); Serial.println(String(clientId));
-      String subscribeTopic = container_ID + "/esp32" + esp32Type; 
+      String subscribeTopic = container_ID + "/esp32" + esp32Type + esp32Floor; 
       char charTopic[subscribeTopic.length()+1];
       subscribeTopic.toCharArray(charTopic,subscribeTopic.length()+1);
       mqttClient.subscribe(charTopic);
       return true;
     } else {
       Serial.print(F("Connection failed: ")); Serial.println(String(mqttClient.state()));
-      if (!--retry)
+      if (!--retry) {
+        portalAux = true; /**/
+        startPortal(portalAux);
+        Serial.println(F("Attempts to connect MQTT exceed"));
+        Serial.println(F("Enable Portal"));
+        WiFi.disconnect(true);
         break;
-      delay(3000);
+        delay(3000);
+      }
     }
   }
   return false;
@@ -50,7 +56,7 @@ void mqttPublish(String top, String msg){
 }
 
 void callback(char* topic, byte* message, unsigned int length) {
-  String topicName = container_ID + "/esp32" + esp32Type;
+  String topicName = container_ID + "/esp32" + esp32Type + esp32Floor;
   String messageTemp;
   
   for (int i = 0; i < length; i++) {
@@ -61,18 +67,19 @@ void callback(char* topic, byte* message, unsigned int length) {
     if (messageTemp == "sendData") { // Send sensor data to Broker
       sendData();
       Serial.println(F("Sending sensor data to MQTT Broker"));
-      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Sensor data sent");
+      mqttPublish(container_ID+"/esp32"+esp32Type+esp32Floor+"/log", "Sensor data sent");
     }
   
     else if(messageTemp == "hardReset"){ // Erase WiFi Credentials and reboot ESP32
       Serial.println(F("Deleting WiFi credentials and rebooting..."));
-      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Deleting WiFi credentials and rebooting...");
+      mqttPublish(container_ID+"/esp32"+esp32Type+esp32Floor+"/log", "Deleting WiFi credentials and rebooting...");
+      deleteParams();
       resetCredentials();
     }
   
     else if(messageTemp == "reboot"){ // Reboot ESP32
       Serial.println(F("Rebooting..."));
-      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Rebooting...");
+      mqttPublish(container_ID+"/esp32"+esp32Type+esp32Floor+"/log", "Rebooting...");
       ESP.restart();
       delay(1000);
     }
@@ -92,11 +99,11 @@ void callback(char* topic, byte* message, unsigned int length) {
         update_constant = newValue;
         memorySave(3);
         Serial.print(F("Attempt to change update time constant succeed, Taking measurements every ")); Serial.print(newValue); Serial.println(F(" s"));
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attempt to change update time constant succeeded, Taking measurements every "+String(newValue)+" s");
+        mqttPublish(container_ID+"/esp32"+esp32Type+esp32Floor+"/log", "Attempt to change update time constant succeeded, Taking measurements every "+String(newValue)+" s");
       }
       else{
         Serial.println(F("Attempt to change update time constant failed, Parameter has to be at least 2 s"));
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attempt to change update time constant failed, Parameter has to be at least 2 s");
+        mqttPublish(container_ID+"/esp32"+esp32Type+esp32Floor+"/error", "Attempt to change update time constant failed, Parameter has to be at least 2 s");
       }
     }
 
@@ -104,7 +111,7 @@ void callback(char* topic, byte* message, unsigned int length) {
       filter = 0;
       memorySave(0);
       Serial.println(F("Attempt to change -Not Filter- Configuration succeeded"));
-      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attempt to change -Not Filter- Configuration succeeded");
+      mqttPublish(container_ID+"/esp32"+esp32Type+esp32Floor+"/log", "Attempt to change -Not Filter- Configuration succeeded");
     }
     
     else if(messageTemp.startsWith("setExponentialFilter")){
@@ -120,11 +127,11 @@ void callback(char* topic, byte* message, unsigned int length) {
       if(setExponentialFilter(newValue)){
         memorySave(1);
         Serial.print(F("Attempt to set Exponential Filter succeeded, New Alpha = ")); Serial.println(newValue);
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/log",  "Attempt to set Exponential Filter succeeded, New Alpha = "+String(newValue));
+        mqttPublish(container_ID+"/esp32"+esp32Type+esp32Floor+"/log",  "Attempt to set Exponential Filter succeeded, New Alpha = "+String(newValue));
       }
       else{
         Serial.println(F("Attempt to set Exponential Filter failed,Alpha parameter is wrong"));
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attempt to set Exponential Filter failed,Alpha parameter is wrong");
+        mqttPublish(container_ID+"/esp32"+esp32Type+esp32Floor+"/error", "Attempt to set Exponential Filter failed,Alpha parameter is wrong");
       }
     }
 
@@ -141,13 +148,13 @@ void callback(char* topic, byte* message, unsigned int length) {
       if(setKalmanFilter(newValue)){
         memorySave(2);
         Serial.print(F("Attempt to set Kalman Filter succeeded, New Kalman Noise = ")); Serial.println(newValue);
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/log",  "Attempt to set Kalman Filter succeeded, New Kalman Noise = "+String(newValue));
+        mqttPublish(container_ID+"/esp32"+esp32Type+esp32Floor+"/log",  "Attempt to set Kalman Filter succeeded, New Kalman Noise = "+String(newValue));
       }
       else{
         Serial.println(F("Attemp to set Kalman Filter failed,Kalman Noise parameter is wrong"));
-        mqttPublish(container_ID+"/esp32"+esp32Type+"/error", "Attemp to set Kalman Filter failed,Kalman Noise parameter is wrong");
+        mqttPublish(container_ID+"/esp32"+esp32Type+esp32Floor+"/error", "Attemp to set Kalman Filter failed,Kalman Noise parameter is wrong");
       }
-    }  
+    } 
   }
 }
 
@@ -156,11 +163,13 @@ void sendData(){
   String textString = String(data_1R.temperature) + "," + String(data_1R.humidity) + "," + String(data_1L.temperature)+ "," + String(data_1L.humidity) + ",";
   textString += String(data_2R.temperature) + "," + String(data_2R.humidity) + "," + String(data_2L.temperature) + "," + String(data_2L.humidity) + ",";
   textString += String(data_3R.temperature) + "," + String(data_3R.humidity) + "," + String(data_3L.temperature) + "," + String(data_3L.humidity) + ",";
-  textString += String(data_4R.temperature) + "," + String(data_4R.humidity) + "," + String(data_4L.temperature) + "," + String(data_4L.humidity);
+  textString += String(data_4R.temperature) + "," + String(data_4R.humidity) + "," + String(data_4L.temperature) + "," + String(data_4L.humidity) + ","; 
+  textString += String(Puerta1) + "," + String(Puerta2) + ",";
+  textString += String(Puerta3) + "," + String(Puerta4);
   char textData[textString.length()+1];
   textString.toCharArray(textData,textString.length()+1);
   
-  String topicString = container_ID + "/esp32" + esp32Type;
+  String topicString = container_ID + "/esp32" + esp32Type + esp32Floor;
   char topicData[topicString.length()+1];
   topicString.toCharArray(topicData,topicString.length()+1);
     
@@ -197,3 +206,4 @@ void resetCredentials(){
   ESP.restart();
   delay(1000);
 }
+
