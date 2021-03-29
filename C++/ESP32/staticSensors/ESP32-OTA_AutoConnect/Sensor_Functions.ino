@@ -113,4 +113,3 @@ bool PuertaEstado(byte PinM){
   }
   return PuertaE;
 }
-
