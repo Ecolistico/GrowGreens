@@ -12,7 +12,7 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 from time import time, sleep, strftime, localtime
 sys.path.insert(0, './src/')
-import EnvControl
+#import EnvControl
 from gui import GUI
 from smtp import Mail
 from logger import logger
@@ -301,6 +301,10 @@ try:
             elif(hour==23 and minute==59): # At 11:59pm
                 # Request mongoDB-Parse Server IP
                 publish.single("{}/Server".format(ID), 'whatIsMyIP', hostname = brokerIP)
+            elif(hour==7 and minute==0): # At 7am
+                # Send Dayly tasks
+                sub, msg = growCal.getEmail()
+                if(msg!=''): mail.sendMail(sub, msg)
             """
             elif(hour==0 and minute==0): # At 0am
                 # Update Plant database and restart GUI
@@ -313,10 +317,6 @@ try:
                     except Exceptions as e: log.logger.error("Plant Database failed to update.\n{}".format(e))
                 else: log.logger.warning("Parse Server Disconnected")
             """
-            elif(hour==7 and minute==0): # At 7am
-                # Send Dayly tasks
-                sub, msg = growCal.getEmail()
-                if(msg!=''): mail.sendMail(sub, msg)
 
         # Check Serial Pending
         checkSerialMsg(mGrower.Gr1)

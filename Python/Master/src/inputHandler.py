@@ -275,5 +275,5 @@ class inputHandler:
             self.handleInput(line)
         if self.gui.rut3==True and self.gui.controlRut==False:
             if self.startRoutine(): self.gui.controlRut = True
-        else if rut3==False and self.gui.controlRut==True:
+        elif self.gui.rut3==False and self.gui.controlRut==True:
             if self.stopRoutine(): self.gui.controlRut = False
