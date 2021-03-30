@@ -1,0 +1,54 @@
+#######################################
+# Syntax Coloring Map For Grow
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+growerStepper	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+toFloat	KEYWORD2
+
+begin	KEYWORD2
+run	KEYWORD2
+getXPosition	KEYWORD2
+getYPosition	KEYWORD2
+setMaxDistanceX	KEYWORD2
+setMaxDistanceY	KEYWORD2
+getMaxDistanceX	KEYWORD2
+getMaxDistanceY	KEYWORD2
+moveX	KEYWORD2
+moveY	KEYWORD2
+moveXTo	KEYWORD2
+moveYTo	KEYWORD2
+calibration	KEYWORD2
+disable	KEYWORD2
+isAvailable	KEYWORD2
+isInCalibration	KEYWORD2
+continueSequence	KEYWORD2
+stopSequence	KEYWORD2
+sequence	KEYWORD2
+home	KEYWORD2
+stop	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+MOTOR_SPEED	LITERAL1
+MOTOR_ACCEL	LITERAL1
+DEFAULT_MICROSTEP	LITERAL1
+DEFAULT_PULLEY_TEETH	LITERAL1
+DEFAULT_X_MM_TOOTH	LITERAL1
+DEFAULT_Y_MM_TOOTH	LITERAL1
+MOTOR_STEP_PER_REV	LITERAL1
+X_HOME_DISTANCE_MM	LITERAL1
+Y_HOME_DISTANCE_MM	LITERAL1
+WAIT_TIME_FOR_GO_HOME	LITERAL1
+DEBOUNCE_TIME	LITERAL1
+MIN_LIMIT_SECURITY_DISTANCE	LITERAL1
