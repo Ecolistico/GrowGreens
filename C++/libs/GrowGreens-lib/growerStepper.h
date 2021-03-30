@@ -66,6 +66,7 @@ class growerStepper
         bool           __Available; // Variables to know if the growerStepepr is working
         bool           __Home, __IsAtHome; // Variable to know if right now is in Home Position
         bool           __Stop;
+        bool           __MagneticIsClosed; // Variable to detect if the both headers get coupled
         uint8_t        __Calibration; // Aux variable for calibration algorithm
         unsigned long  __ActualTime; // The time Grower has been stopped
 

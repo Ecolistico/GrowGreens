@@ -6,9 +6,9 @@
 You need to define the buffer lengths in SparkFun_External_EEPROM.h for 
 generic arduino mega 2560 board. For more details ask Eleazar Dominguez(eleazardg@sippys.com.mx).
 */
-/* Pendiente:
- *  2- Agregar funciones para Magnetic Switch
- *  2.1- Cuando cambie el estado imprimir en pantalla el cambio de estado.
+/* To do:
+ *  1- Check Magnetic Sensor functionality and improve it
+ *  2- Create an inner class switch sensor to improve false detection of limit and magnetics switch
  *  
  */
 
@@ -188,8 +188,6 @@ bool input_string_complete = false;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println(gr4_XStep2);
-  Serial.println(gr4_MS);
   begin_EEPROM();
   Serial.println(F("Setting up growers..."));
   getConfig();

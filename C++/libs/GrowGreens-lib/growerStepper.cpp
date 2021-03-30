@@ -76,6 +76,7 @@ growerStepper::growerStepper(
 
     __Floor = fl;
     __Stop = false;
+    __MagneticIsClosed = false;
 
     // Limit Switches
     __HX1 = false;
@@ -130,6 +131,7 @@ void growerStepper::begin(
      pinMode(__HomeX1, INPUT_PULLUP);
      pinMode(__HomeX2, INPUT_PULLUP);
      pinMode(__HomeY, INPUT_PULLUP);
+     pinMode(__MagneticSwitch, INPUT_PULLUP);
 
      pinMode(__Enable, HIGH); // Disable motors
 
@@ -627,6 +629,13 @@ void growerStepper::run()
     stepperX1->run();
     stepperX2->run();
     stepperY->run();
+
+    // Check if Magnetic Sensor detected some change
+    if(__MagneticIsClosed!=digitalRead(__MagneticSwitch)){
+        __MagneticIsClosed = !__MagneticIsClosed;
+        if(__MagneticIsClosed) printAction(F("Data header was disconnected"), 1);
+        else printAction(F("Data header was connected"), 1);
+    }
 
     // Maybe limit switch X1 was touched
     if(__HX1!=!digitalRead(__HomeX1) && !__CheckX1){
