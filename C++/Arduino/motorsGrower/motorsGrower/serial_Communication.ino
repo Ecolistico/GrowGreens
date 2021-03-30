@@ -14,7 +14,7 @@ void serialEvent() {                                  //if the hardware serial p
 
   
   if(input_string_complete==true){
-    String parameter[5];
+    String parameter[7];
     int k = 0;
     int l = 0;
     // Split the parameters
@@ -413,6 +413,17 @@ void serialEvent() {                                  //if the hardware serial p
       else if(parameter[1]==F("read") || parameter[1]==F("read\n")){ read_EEPROM(HIGH); }
       else if(parameter[1]==F("clean")|| parameter[1]==F("clean\n")){ clean_EEPROM(); }
       else{ Serial.println(F("warning,eeprom(): parameter[1] does not match a type")); }
+    }
+
+    // Config EEPROM
+    else if(parameter[0]==F("config")){
+      int gr = parameter[1].toInt();
+      int steps = parameter[2].toInt();
+      int microsteps = parameter[3].toInt();
+      int pulleyTeeth = parameter[4].toInt();
+      int xTooth = parameter[5].toInt();
+      int yTooth = parameter[6].toInt();
+      saveConfig(gr, steps, microsteps, pulleyTeeth, xTooth, yTooth);
     }
 
     else{ Serial.println(F("warning, Serial Command Unknown")); }

@@ -43,10 +43,8 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define DEFAULT_X_MM_TOOTH 2 // By default we use toothed tape of 2mm in X
 #define DEFAULT_Y_MM_TOOTH 2 // By default we use toothed tape of 2mm in Y
 #define MOTOR_STEP_PER_REV 200 // By default we use motors of 200 steps/rev
-#define DEFAULT_MAX_X_DISTANCE_MM 11573 // By default the max distance are 11.785m
-#define DEFAULT_MAX_Y_DISTANCE_MM 1700 // By  default the max distance are 1.7m
 #define X_HOME_DISTANCE_MM 12500 // The max distance to get home in x
-#define Y_HOME_DISTANCE_MM 2500 // The max distance to get home in y
+#define Y_HOME_DISTANCE_MM 3000 // The max distance to get home in y
 #define WAIT_TIME_FOR_GO_HOME 1800000 // By default 30min the value is given in ms
 #define MIN_LIMIT_SECURITY_DISTANCE 15 // The min distance when moving to not touch the limit switch
 #define DEBOUNCE_TIME 5 // The time for debouncing limit switch in ms
@@ -61,7 +59,8 @@ class growerStepper
         uint8_t        __DirY, __StepY; // Pins required to the stepper motor Y
         uint8_t        __HomeX1, __HomeX2, __HomeY; // Pins required to home
         uint8_t        __Enable; // Pin to enable all the motors
-        
+        uint8_t        __MagneticSwitch; // Pin to read if the two modules are together
+
         /*   Aux   */
         bool           __IsEnable; // Let´s know if the motor are enable/disable
         bool           __Available; // Variables to know if the growerStepepr is working
@@ -69,7 +68,7 @@ class growerStepper
         bool           __Stop;
         uint8_t        __Calibration; // Aux variable for calibration algorithm
         unsigned long  __ActualTime; // The time Grower has been stopped
-        
+
         /*   Configuration   */
         // Inverse of the configurated microSteps in the driver
         uint8_t        __MicroSteps;
@@ -81,7 +80,7 @@ class growerStepper
         AccelStepper *stepperX1;
         AccelStepper *stepperX2;
         AccelStepper *stepperY;
-        
+
         /*   Sequence variables   */
         int  __Sequence; // Variable to know in what part of the sequence is the grower
         bool __SequenceStop; // Variable to stop the sequence until sequenceContinue is executed
@@ -90,23 +89,23 @@ class growerStepper
         int  __SequenceXMoves, __SequenceYMoves; // Variable to know the number of moves in x and y
         int  __SequenceDir;
         long __SequenceXmm, __SequenceYmm;
-        
+
         /*   Others   */
-        long __MaxX, __MaxY; // Maximun security distances
+        unsigned long __MaxX, __MaxY; // Maximun security distances
         bool __OutHomeX1, __OutHomeX2, __OutHomeY; // Aux variables to allow move out of the limits switch
         bool __MoveX1, __MoveX2, __MoveY; // Aux variable to detect when some motors stops moving
-        
+
         /*   Limit Switches   */
         bool __HX1, __HX2, __HY;
-        bool __CheckX1, __CheckX2, __CheckY;  
+        bool __CheckX1, __CheckX2, __CheckY;
         unsigned long __X1Time, __X2Time, __YTime; // Timers to debounce limit switch
-        
+
         /*   Communication   */
         uint8_t __Floor;
-        
+
         /*   Static Variables   */
         static uint8_t __steppersRunning;
-        
+
         /*   Functions   */
         long StepsToMM_X(long steps); // Return the number of mm that equals the steps parameter in X
         long MMToSteps_X(long dist_mm); // Return the number of steps that equals the mm parameter in X
@@ -117,7 +116,7 @@ class growerStepper
         void printAction(String act, uint8_t level=0); // Print an action with format and log level
         // Print an action with format and log level
         void printAction(String act1, String act2, String act3, uint8_t level=0);
-        
+
         void setMaxAccel(uint8_t stepper); // Allows stop the motors to fast
         void setNormalAccel(); // Allows move normally the motors
 
@@ -134,7 +133,8 @@ class growerStepper
           uint8_t homeX1,
           uint8_t homeX2,
           uint8_t homeY,
-          uint8_t en
+          uint8_t en,
+          uint8_t ms
         );
 
          // Init the group of motors with default configuration and send grower to home
@@ -149,10 +149,10 @@ class growerStepper
 
         long getXPosition(); // Returns the position in mm. It assumes that home was reached
         long getYPosition(); // Returns the position in mm. It assumes that home was reached
-        void setMaxDistanceX(long maxDist); // Set the max security distance that can be run in x
-        void setMaxDistanceY(long maxDist); // Set the max security distance that can be run in Y
-        long getMaxDistanceX(); // Get the max security distance in X
-        long getMaxDistanceY(); // Get the max security distance in Y
+        void setMaxDistanceX(unsigned long maxDist); // Set the max security distance that can be run in x
+        void setMaxDistanceY(unsigned long maxDist); // Set the max security distance that can be run in Y
+        unsigned long getMaxDistanceX(); // Get the max security distance in X
+        unsigned long getMaxDistanceY(); // Get the max security distance in Y
         bool moveX(long some_mm, bool seq = false); // Move X some_mm relative to its actual position
         bool moveY(long some_mm, bool seq = false); // Move Y some_mm relative to its actual position
         bool moveXTo(long some_mm, bool seq = false); // Move X to absolut position some_mm

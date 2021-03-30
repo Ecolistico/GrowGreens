@@ -19,7 +19,8 @@ growerStepper::growerStepper(
     uint8_t homeX1,
     uint8_t homeX2,
     uint8_t homeY,
-    uint8_t en
+    uint8_t en,
+    uint8_t ms
   ){
     // Define all the pins
     __DirX1 = dirX1;
@@ -32,6 +33,7 @@ growerStepper::growerStepper(
     __HomeX2 = homeX2;
     __HomeY = homeY;
     __Enable = en;
+    __MagneticSwitch = ms;
 
     __MicroSteps = 0;
     __PulleyTeeth = 0;
@@ -85,17 +87,17 @@ growerStepper::growerStepper(
     __X1Time = millis();
     __X2Time = millis();
     __YTime = millis();
-    
+
     resetTime();
   }
 
 void growerStepper::begin(
-  bool goHome = HIGH,
-  uint8_t steps_per_rev = MOTOR_STEP_PER_REV,
-  uint8_t microStep = DEFAULT_MICROSTEP,
-  uint8_t pulleyTeeth = DEFAULT_PULLEY_TEETH,
-  uint8_t Xmm = DEFAULT_X_MM_TOOTH,
-  uint8_t Ymm = DEFAULT_Y_MM_TOOTH
+  bool goHome /*= HIGH*/,
+  uint8_t steps_per_rev /*= MOTOR_STEP_PER_REV*/,
+  uint8_t microStep /*= DEFAULT_MICROSTEP*/,
+  uint8_t pulleyTeeth /*= DEFAULT_PULLEY_TEETH*/,
+  uint8_t Xmm /*= DEFAULT_X_MM_TOOTH*/,
+  uint8_t Ymm /*= DEFAULT_Y_MM_TOOTH*/
 ) {
      __StepPerRev = steps_per_rev;
      __MicroSteps = microStep;
@@ -168,7 +170,7 @@ bool growerStepper::isTimeToGoHome()
     else{return false;}
   }
 
-void growerStepper::printAction(String act, uint8_t level=0)
+void growerStepper::printAction(String act, uint8_t level/*=0*/)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
@@ -241,23 +243,23 @@ long growerStepper::getYPosition()
     return StepsToMM_Y(y);
   }
 
-void growerStepper::setMaxDistanceX(long maxDist)
-  { __MaxX = DEFAULT_MAX_X_DISTANCE_MM-maxDist;
+void growerStepper::setMaxDistanceX(unsigned long maxDist)
+  { __MaxX = maxDist;
     printAction(F("MaxDistanceX "), String(getMaxDistanceX()), F(""), 0);
   }
 
-void growerStepper::setMaxDistanceY(long maxDist)
-  { __MaxY = DEFAULT_MAX_Y_DISTANCE_MM-maxDist;
+void growerStepper::setMaxDistanceY(unsigned long maxDist)
+  { __MaxY = maxDist;
     printAction(F("MaxDistanceY "), String(getMaxDistanceY()), F(""), 0);
   }
 
-long growerStepper::getMaxDistanceX()
-  { return DEFAULT_MAX_X_DISTANCE_MM-__MaxX; }
+unsigned long growerStepper::getMaxDistanceX()
+  { return __MaxX; }
 
-long growerStepper::getMaxDistanceY()
-  { return DEFAULT_MAX_Y_DISTANCE_MM-__MaxY; }
+unsigned long growerStepper::getMaxDistanceY()
+  { return __MaxY; }
 
-bool growerStepper::moveX(long some_mm, bool seq = false)
+bool growerStepper::moveX(long some_mm, bool seq /*= false*/)
   { long actualPosition1 = StepsToMM_X(stepperX1->currentPosition());
     long actualPosition2 = StepsToMM_X(stepperX2->currentPosition());
     int minDist = MIN_LIMIT_SECURITY_DISTANCE;
@@ -304,7 +306,7 @@ bool growerStepper::moveX(long some_mm, bool seq = false)
     return true;
   }
 
-bool growerStepper::moveY(long some_mm, bool seq = false)
+bool growerStepper::moveY(long some_mm, bool seq/* = false*/)
   { long actualPosition = StepsToMM_Y(stepperY->currentPosition());
     int minDist = MIN_LIMIT_SECURITY_DISTANCE;
 
@@ -344,7 +346,7 @@ bool growerStepper::moveY(long some_mm, bool seq = false)
     return true;
   }
 
-bool growerStepper::moveXTo(long some_mm, bool seq = false)
+bool growerStepper::moveXTo(long some_mm, bool seq /*= false*/)
   { long actualPosition1 = StepsToMM_X(stepperX1->currentPosition());
     long actualPosition2 = StepsToMM_X(stepperX2->currentPosition());
     int minDist = MIN_LIMIT_SECURITY_DISTANCE;
@@ -388,7 +390,7 @@ bool growerStepper::moveXTo(long some_mm, bool seq = false)
     return true;
   }
 
-bool growerStepper::moveYTo(long some_mm, bool seq = false)
+bool growerStepper::moveYTo(long some_mm, bool seq /*= false*/)
   { long actualPosition = StepsToMM_Y(stepperY->currentPosition());
     int minDist = MIN_LIMIT_SECURITY_DISTANCE;
 
@@ -625,7 +627,7 @@ void growerStepper::run()
     stepperX1->run();
     stepperX2->run();
     stepperY->run();
-    
+
     // Maybe limit switch X1 was touched
     if(__HX1!=!digitalRead(__HomeX1) && !__CheckX1){
       __CheckX1 = true;
@@ -636,7 +638,7 @@ void growerStepper::run()
       if(__HX1!=limitX1){ __HX1=limitX1; }
       __CheckX1 = false;
     }
-      
+
     // Stop X1 when limit switch touched
     if(__HX1 && !__OutHomeX1){
       __OutHomeX1 = true;
@@ -645,7 +647,7 @@ void growerStepper::run()
     else if(!__HX1 && __OutHomeX1){
       __OutHomeX1 = false;
     }
-      
+
     // Maybe limit switch X2 was touched
     if(__HX2!=!digitalRead(__HomeX2) && !__CheckX2){
       __CheckX2 = true;
@@ -656,7 +658,7 @@ void growerStepper::run()
       if(__HX2!=limitX2){ __HX2=limitX2; }
       __CheckX2 = false;
     }
-      
+
     // Stop X2 when limit switch touched
     if(__HX2 && !__OutHomeX2){
       __OutHomeX2 = true;
@@ -665,7 +667,7 @@ void growerStepper::run()
     else if(!__HX2 && __OutHomeX2){
       __OutHomeX2 = false;
     }
-    
+
     // Maybe limit switch Y was touched
     if(__HY!=!digitalRead(__HomeY) && !__CheckY){
       __CheckY = true;
@@ -676,7 +678,7 @@ void growerStepper::run()
       if(__HY!=limitY){ __HY=limitY; }
       __CheckY = false;
     }
-      
+
     // Stop Y when limit switch touched
     if(__HY && !__OutHomeY){
       __OutHomeY = true;
@@ -685,7 +687,7 @@ void growerStepper::run()
     else if(!__HY && __OutHomeY){
       __OutHomeY = false;
     }
-    
+
     /*
     // Stop X1 when limit switch touched
     if(!digitalRead(__HomeX1) && !__OutHomeX1){
@@ -714,7 +716,7 @@ void growerStepper::run()
       __OutHomeY = false;
     }
     */
-    
+
     // If X1 was running and stop it substract 1 to __steppersRunning
     if(__MoveX1 && !stepperX1->isRunning()){
       __MoveX1 = false;

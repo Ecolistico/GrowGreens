@@ -1,70 +1,124 @@
 #include <growerStepper.h>
-#include <EEPROM.h>
+#include <Wire.h>
+#include <External_EEPROM.h> // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
+
+/*
+You need to define the buffer lengths in SparkFun_External_EEPROM.h for 
+generic arduino mega 2560 board. For more details ask Eleazar Dominguez(eleazardg@sippys.com.mx).
+*/
+/* Pendiente:
+ *  2- Agregar funciones para Magnetic Switch
+ *  2.1- Cuando cambie el estado imprimir en pantalla el cambio de estado.
+ *  
+ */
+
+ExternalEEPROM myEEPROM;
 
 /*** Define some Pins ***/
 // Grower 1
-const byte gr1_XStep1 = 27;
-const byte gr1_XDir1 = 29;
-const byte gr1_XStep2 = 31;
-const byte gr1_XDir2 = 33; 
-const byte gr1_YStep = 35;
-const byte gr1_YDir = 37; 
-const byte gr1_En = 39;
+#define gr1_XStep1 35
+#define gr1_XDir1  36
+#define gr1_XStep2 30
+#define gr1_XDir2  31 
+#define gr1_YStep  28
+#define gr1_YDir   29 
+#define gr1_En     23
+#define gr1_MS     22
 
-const byte gr1_XHome1 = A15;
-const byte gr1_XHome2 = A14;
-const byte gr1_YHome = A13;
-
-long MAX_X1 = 0;
-long MAX_Y1 = 0;
+#define gr1_XHome1 32
+#define gr1_XHome2 33
+#define gr1_YHome  34
 
 // Grower 2
-const byte gr2_XStep1 = 41;
-const byte gr2_XDir1 = 43;
-const byte gr2_XStep2 = 45;
-const byte gr2_XDir2 = 47; 
-const byte gr2_YStep = 49;
-const byte gr2_YDir = 51; 
-const byte gr2_En = 53;
+#define gr2_XStep1 47
+#define gr2_XDir1  48
+#define gr2_XStep2 42
+#define gr2_XDir2  43 
+#define gr2_YStep  40
+#define gr2_YDir   41 
+#define gr2_En     53
+#define gr2_MS     52
 
-const byte gr2_XHome1 = A12;
-const byte gr2_XHome2 = A11;
-const byte gr2_YHome = A10;
-
-long MAX_X2 = 0;
-long MAX_Y2 = 0;
+#define gr2_XHome1 44
+#define gr2_XHome2 45
+#define gr2_YHome  46
 
 // Grower 3
-const byte gr3_XStep1 = 22;
-const byte gr3_XDir1 = 24;
-const byte gr3_XStep2 = 26;
-const byte gr3_XDir2 = 28; 
-const byte gr3_YStep = 30;
-const byte gr3_YDir = 32; 
-const byte gr3_En = 34;
+#define gr3_XStep1 24
+#define gr3_XDir1  25
+#define gr3_XStep2 9
+#define gr3_XDir2  8
+#define gr3_YStep  11
+#define gr3_YDir   10 
+#define gr3_En     13
+#define gr3_MS     12
 
-const byte gr3_XHome1 = A7;
-const byte gr3_XHome2 = A6;
-const byte gr3_YHome = A5;
-
-long MAX_X3 = 0;
-long MAX_Y3 = 0;
+#define gr3_XHome1 26
+#define gr3_XHome2 27
+#define gr3_YHome  37
 
 // Grower 4
-const byte gr4_XStep1 = 52;
-const byte gr4_XDir1 = 50;
-const byte gr4_XStep2 = 48;
-const byte gr4_XDir2 = 46;
-const byte gr4_YStep = 44;
-const byte gr4_YDir = 42; 
-const byte gr4_En = 40;
+#define gr4_XStep1 51
+#define gr4_XDir1  50
 
-const byte gr4_XHome1 = A4;
-const byte gr4_XHome2 = A3;
-const byte gr4_YHome = A2;
+#define gr4_XHome1 38
+#define gr4_XHome2 39
+#define gr4_YHome  49
+  
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) // For Arduino Mega 2560
+  // Grower 4
+  #define gr4_XStep2 A5
+  #define gr4_XDir2  A4
+  #define gr4_YStep  A3
+  #define gr4_YDir   A2
+  #define gr4_En     A0
+  #define gr4_MS     A1
+#else // For Arduino Due
+  // Grower 4
+  #define gr4_XStep2 59
+  #define gr4_XDir2  58
+  #define gr4_YStep  57
+  #define gr4_YDir   56 
+  #define gr4_En     54
+  #define gr4_MS     55
+#endif
 
+/*** Define Aux Variables ***/
+// Grower 1
+long MAX_X1 = 0;
+long MAX_Y1 = 0;
+byte stepsPerRev1 = 0;
+byte microstep1 = 0;
+byte pulleyTeeth1 = 0;
+byte xTooth1 = 0;
+byte yTooth1 = 0;
+
+// Grower 2
+long MAX_X2 = 0;
+long MAX_Y2 = 0;
+byte stepsPerRev2 = 0;
+byte microstep2 = 0;
+byte pulleyTeeth2 = 0;
+byte xTooth2 = 0;
+byte yTooth2 = 0;
+
+// Grower 3
+long MAX_X3 = 0;
+long MAX_Y3 = 0;
+byte stepsPerRev3 = 0;
+byte microstep3 = 0;
+byte pulleyTeeth3 = 0;
+byte xTooth3 = 0;
+byte yTooth3 = 0;
+
+// Grower 4
 long MAX_X4 = 0;
 long MAX_Y4 = 0;
+byte stepsPerRev4 = 0;
+byte microstep4 = 0;
+byte pulleyTeeth4 = 0;
+byte xTooth4 = 0;
+byte yTooth4 = 0;
 
 unsigned long EEPROM_timer;
 
@@ -79,7 +133,8 @@ growerStepper grower1(
   gr1_XHome1, 
   gr1_XHome2, 
   gr1_YHome,
-  gr1_En
+  gr1_En,
+  gr1_MS
   );
 
 growerStepper grower2(
@@ -93,7 +148,8 @@ growerStepper grower2(
   gr2_XHome1, 
   gr2_XHome2, 
   gr2_YHome,
-  gr2_En
+  gr2_En,
+  gr2_MS
   );
 
 growerStepper grower3(
@@ -107,7 +163,8 @@ growerStepper grower3(
   gr3_XHome1, 
   gr3_XHome2, 
   gr3_YHome,
-  gr3_En
+  gr3_En,
+  gr3_MS
   );
 
 growerStepper grower4(
@@ -121,7 +178,8 @@ growerStepper grower4(
   gr4_XHome1, 
   gr4_XHome2, 
   gr4_YHome,
-  gr4_En
+  gr4_En,
+  gr4_MS
   );
 
 // Serial comunication
@@ -130,18 +188,23 @@ bool input_string_complete = false;
 
 void setup() {
   Serial.begin(115200);
+  Serial.println(gr4_XStep2);
+  Serial.println(gr4_MS);
+  begin_EEPROM();
   Serial.println(F("Setting up growers..."));
-  /* Going Home
-  grower1.begin();
-  grower2.begin();
-  grower3.begin();
-  grower4.begin();
+  getConfig();
+  // Going Home
+  grower1.begin(HIGH, stepsPerRev1, microstep1, pulleyTeeth1, xTooth1, yTooth1);
+  grower2.begin(HIGH, stepsPerRev2, microstep2, pulleyTeeth2, xTooth2, yTooth2);
+  grower3.begin(HIGH, stepsPerRev3, microstep3, pulleyTeeth3, xTooth3, yTooth3);
+  grower4.begin(HIGH, stepsPerRev4, microstep4, pulleyTeeth4, xTooth4, yTooth4);
+  // Withouth Going Home
+  /*
+  grower1.begin(LOW, stepsPerRev1, microstep1, pulleyTeeth1, xTooth1, yTooth1);
+  grower2.begin(LOW, stepsPerRev2, microstep2, pulleyTeeth2, xTooth2, yTooth2);
+  grower3.begin(LOW, stepsPerRev3, microstep3, pulleyTeeth3, xTooth3, yTooth3);
+  grower4.begin(LOW, stepsPerRev4, microstep4, pulleyTeeth4, xTooth4, yTooth4);
   */
-  /* Withouth Going Home*/
-  grower1.begin(LOW);
-  grower2.begin(LOW);
-  grower3.begin(LOW);
-  grower4.begin(LOW);
   read_EEPROM(HIGH); // Charge calibration parameters for each Grower
   EEPROM_timer = millis();
 }
