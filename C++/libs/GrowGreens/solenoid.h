@@ -37,10 +37,10 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #include <wiring.h>
 #endif
 
-#define DEFAULT_TIME_ON         5  // 5 seconds
+#define DEFAULT_TIME_ON         4  // 4 seconds
 #define DEFAULT_CYCLE_TIME      30 // 30 minutes
 #define MAX_VALVES_PER_REGION   10 // 10 solenoids
-#define MAX_FLOOR_NUMBER        10 // 10 floors
+#define MAX_FLOOR_NUMBER        12 // 12 floors
 
 class solenoid
   {  private:
@@ -49,7 +49,7 @@ class solenoid
          unsigned long _TimeOn, _ActualTime;
          float _H2OVolume; // Water consumption for each Solenoid
 
-         void setTime();
+
          void resetTime();
          void solenoidPrint(String act, uint8_t level=0); // Print an action for the Solenoid
          void solenoidPrint(String act1, String act2, String act3, uint8_t level=0); // Print an action for the Solenoid
@@ -58,6 +58,7 @@ class solenoid
 
           solenoid (uint8_t num, uint8_t floor, bool reg, unsigned long timeOn); // Constructor
 
+          void setTime();
           void changeOrder(uint8_t new_number); // Change the order number
           void addConsumptionH2O(float newVolume); // Add Water Consumption for each Solenoid
           unsigned long getTime(); // Get the time for the Solenoid
@@ -120,7 +121,7 @@ class systemValves
       void addWasteH2O(float newVolume); // Add Waste of Water
       unsigned long getActionTime(); // Return total time On of the system
       unsigned long getCycleTime(); // Return Cycle Time
-      bool setCycleTime (unsigned long t_cycle); // Return true if succesful
+      void setCycleTime (unsigned long t_cycle); // Return true if succesful
       void resetTime(); // Restart the time into the Cycle
       unsigned long getTime(); // Return Time Since Cycle Starts
       uint8_t getActualNumber(); // Returns the actual actuator number active into the array
@@ -129,8 +130,11 @@ class systemValves
 
       // To Finish
       //bool OrderAll(bool sequence, bool order); // True if succesful
+      /* To do:
+        1- Add FlowMeter sensor to this class
+     */
 
-      bool run(); // Let´s magic happen
+      void run(); // Let´s magic happen
   };
 
   #endif

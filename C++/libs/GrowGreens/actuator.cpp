@@ -6,10 +6,10 @@
 
 /***   Actuator   ***/
 // Statics variables definitions
-uint8_t Actuator::__TotalActuators = 0;
-Actuator *Actuator::ptr[MAX_ACTUATORS];
+uint8_t cycleActuator::__TotalActuators = 0;
+Actuator *cycleActuator::ptr[MAX_ACTUATORS];
 
-Actuator::Actuator( // Constructor
+cycleActuator::cycleActuator( // Constructor
     uint8_t type,
     uint8_t floor,
     unsigned long t_on,
@@ -42,16 +42,16 @@ Actuator::Actuator( // Constructor
      __TotalActuators++; // Add the new actuator to the total
    }
 
-void Actuator::setTime()
+void cycleActuator::setTime()
   { if(__State == HIGH)
     { resetTime(); }
     else{ __Actual_time = millis() - __TimeOn; }
   }
 
-void Actuator::resetTime()
+void cycleActuator::resetTime()
   {  __Actual_time = millis(); }
 
-void Actuator::printAction(String act, uint8_t level=0)
+void cycleActuator::printAction(String act, uint8_t level=0)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
@@ -80,7 +80,7 @@ void Actuator::printAction(String act, uint8_t level=0)
     Serial.println(act);
   }
 
-void Actuator::printAction(String act1, String act2, String act3, uint8_t level=0)
+void cycleActuator::printAction(String act1, String act2, String act3, uint8_t level=0)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
@@ -111,17 +111,17 @@ void Actuator::printAction(String act1, String act2, String act3, uint8_t level=
     Serial.println(act3);
   }
 
-void Actuator::turnOn()
+void cycleActuator::turnOn()
   { __State = HIGH;
     setTime();
   }
 
-void Actuator::turnOff()
+void cycleActuator::turnOff()
   { __State = LOW;
     setTime();
   }
 
-bool Actuator::setTimeOn(unsigned long t_on)
+bool cycleActuator::setTimeOn(unsigned long t_on)
   { if(t_on*1000UL < __CycleTime){
      __TimeOn = t_on*1000UL;
      printAction(F("TimeOn changed to "), String(t_on), F(" seconds"), 0);
@@ -134,7 +134,7 @@ bool Actuator::setTimeOn(unsigned long t_on)
    }
   }
 
-bool Actuator::setCycleTime(unsigned long t_cycle)
+bool cycleActuator::setCycleTime(unsigned long t_cycle)
   { if(__TimeOn < t_cycle*1000UL){
      __CycleTime = t_cycle*1000UL;
      printAction(F("TimeOff changed to "), String(t_cycle), F(" seconds"), 0);
@@ -147,7 +147,7 @@ bool Actuator::setCycleTime(unsigned long t_cycle)
    }
   }
 
-bool Actuator::setTime(unsigned long t_on, unsigned long t_cycle)
+bool cycleActuator::setTime(unsigned long t_on, unsigned long t_cycle)
   { if(t_on < t_cycle){
      __TimeOn = t_on*1000UL;
      __CycleTime = t_cycle*1000UL;
@@ -161,16 +161,16 @@ bool Actuator::setTime(unsigned long t_on, unsigned long t_cycle)
    }
   }
 
-unsigned long Actuator::getTimeOn()
+unsigned long cycleActuator::getTimeOn()
   { return __TimeOn/1000; }
 
-unsigned long Actuator::getCycleTime()
+unsigned long cycleActuator::getCycleTime()
   { return __CycleTime/1000; }
 
-unsigned long Actuator::getTime()
+unsigned long cycleActuator::getTime()
   { return (millis()-__Actual_time)/1000; }
 
-void Actuator::enable(bool en)
+void cycleActuator::enable(bool en)
   { if(__Enable!=en){
       __Enable = en;
       if(__Enable){ printAction(F("Enable"), 0); }
@@ -178,25 +178,25 @@ void Actuator::enable(bool en)
     }
   }
 
-bool Actuator::isEnable()
+bool cycleActuator::isEnable()
   { return (__Enable);   }
 
-bool Actuator::isType(uint8_t type)
+bool cycleActuator::isType(uint8_t type)
   { if(__Type == type){return true;}
     else{ return false;}
   }
 
-bool Actuator::isFloor(uint8_t floor)
+bool cycleActuator::isFloor(uint8_t floor)
   { if(__Floor == floor){return true;}
     else{ return false;}
   }
 
-void Actuator::begin()
+void cycleActuator::begin()
   { __Enable = true;
     resetTime();
   }
 
-void Actuator::run()
+void cycleActuator::run()
   {  if(__Enable){
        if( millis()-__Actual_time<__TimeOn && __State==LOW){
          __State = HIGH;
@@ -212,10 +212,10 @@ void Actuator::run()
      }
   }
 
-bool Actuator::getState()
+bool cycleActuator::getState()
   { return __State; }
 
-void Actuator::setTimeOnAll(
+void cycleActuator::setTimeOnAll(
     uint8_t type,
     uint8_t floor,
     unsigned long timeOn
@@ -228,7 +228,7 @@ void Actuator::setTimeOnAll(
     }
   }
 
-void Actuator::setCycleTimeAll(
+void cycleActuator::setCycleTimeAll(
     uint8_t type,
     uint8_t floor,
     unsigned long cycleTime
@@ -241,7 +241,7 @@ void Actuator::setCycleTimeAll(
     }
   }
 
-void Actuator::setTimeAll(
+void cycleActuator::setTimeAll(
     uint8_t type,
     uint8_t floor,
     unsigned long timeOn,
@@ -256,7 +256,7 @@ void Actuator::setTimeAll(
     }
   }
 
-unsigned long Actuator::getTimeOnAll(uint8_t type, uint8_t floor)
+unsigned long cycleActuator::getTimeOnAll(uint8_t type, uint8_t floor)
   { for(int i=0; i < __TotalActuators; i++){
       if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
         unsigned long timeOn = ptr[i]->getTimeOn();
@@ -267,7 +267,7 @@ unsigned long Actuator::getTimeOnAll(uint8_t type, uint8_t floor)
     return 0;
   }
 
-unsigned long Actuator::getCycleTimeAll(uint8_t type, uint8_t floor)
+unsigned long cycleActuator::getCycleTimeAll(uint8_t type, uint8_t floor)
   { for(int i=0; i < __TotalActuators; i++){
       if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
         unsigned long cycleTime = ptr[i]->getCycleTime();
@@ -278,7 +278,7 @@ unsigned long Actuator::getCycleTimeAll(uint8_t type, uint8_t floor)
     return 0;
   }
 
-unsigned long Actuator::getTimeAll(uint8_t type, uint8_t floor)
+unsigned long cycleActuator::getTimeAll(uint8_t type, uint8_t floor)
   { for(int i=0; i < __TotalActuators; i++){
       if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
         unsigned long acTime = ptr[i]->getTime();
@@ -289,7 +289,7 @@ unsigned long Actuator::getTimeAll(uint8_t type, uint8_t floor)
     return 0;
   }
 
-void Actuator::enableAll(uint8_t type, uint8_t floor, bool en){
+void cycleActuator::enableAll(uint8_t type, uint8_t floor, bool en){
     for(int i=0; i < __TotalActuators; i++){
       if(ptr[i]->isType(type) && ptr[i]->isFloor(floor)){
         ptr[i]->enable(en);
@@ -298,19 +298,19 @@ void Actuator::enableAll(uint8_t type, uint8_t floor, bool en){
     }
   }
 
-void Actuator::beginAll()
+void cycleActuator::beginAll()
   { for (int i = 0; i < __TotalActuators; i++){
       (ptr[i]->begin());
     }
   }
 
-void Actuator::runAll()
+void cycleActuator::runAll()
   { for (int i = 0; i < __TotalActuators; i++){
       (ptr[i]->run());
     }
   }
 
-/***   solenoidValve   ***/
+/*
 // Statics variables definitions
 bool solenoidValve::__EnableGroup = LOW;
 String solenoidValve::__Group = "Irrigation";
@@ -399,7 +399,7 @@ void solenoidValve::solenoidPrint(String act, uint8_t level=0)
     if(__Region<MAX_IRRIGATION_REGIONS/2){
       Serial.print(F("A"));
       Serial.print(__Region+1);
-    } 
+    }
     else {
       Serial.print(F("B"));
       Serial.print(__Region-3);
@@ -419,7 +419,7 @@ void solenoidValve::solenoidPrint(String act1, String act2, String act3, uint8_t
     if(__Region<MAX_IRRIGATION_REGIONS/2){
       Serial.print(F("A"));
       Serial.print(__Region+1);
-    } 
+    }
     else {
       Serial.print(F("B"));
       Serial.print(__Region-3);
@@ -632,7 +632,7 @@ uint8_t solenoidValve::begin(uint8_t fl, uint8_t reg)
       return 2; // Floor outside of range [0-MAX_FLOOR-1]
     }
   }
-
+  
 bool solenoidValve::run()
   { if(__EnableGroup==true){ // If the Group is enable
       if(__Enable==true){ // If the solenoid is enable
@@ -886,17 +886,17 @@ float solenoidValve::getWaterByFloor(uint8_t fl)
     }
     return h2o;
   }
-
+*/
 /***   asyncActuator   ***/
 // Constructor
-asyncActuator::asyncActuator(uint8_t type=250)
+Actuator::asyncActuator(uint8_t type=250)
    { __State = LOW;
      __Enable = true;
      __Type = type;
      __Counter = 0;
    }
 
-void asyncActuator::printAction(String act, uint8_t level=0)
+void Actuator::printAction(String act, uint8_t level=0)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
@@ -909,7 +909,7 @@ void asyncActuator::printAction(String act, uint8_t level=0)
     Serial.println(act);
   }
 
-void asyncActuator::turnOn()
+void Actuator::turnOn()
   { if(!__State){
       __State = HIGH;
       printAction(F("Turn On"), 0);
@@ -917,7 +917,7 @@ void asyncActuator::turnOn()
     __Counter = 0;
   }
 
-void asyncActuator::turnOff()
+void Actuator::turnOff()
   { if(__Counter<5){__Counter++;}
     else if(__State){
       __Counter = 0;
@@ -926,7 +926,7 @@ void asyncActuator::turnOff()
     }
   }
 
-void asyncActuator::enable(bool en)
+void Actuator::enable(bool en)
   { if(__Enable!=en){
       __Enable = en;
       if(__Enable){ printAction(F("Enable"), 0); }
@@ -934,8 +934,8 @@ void asyncActuator::enable(bool en)
     }
   }
 
-bool asyncActuator::isEnable()
+bool Actuator::isEnable()
   { return (__Enable); }
 
-bool asyncActuator::getState()
+bool Actuator::getState()
   { return __State; }

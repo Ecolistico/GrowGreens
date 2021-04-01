@@ -1,38 +1,21 @@
-void clean_EEPROM(){
-  Serial.println(F("warning,EEPROM: Deleting Memory..."));
-  for(int i=0; i<solenoidValve::__TotalActuators*5+35; i++){
-    EEPROM.update(i, 0);
+void begin_EEPROM(){
+  Wire.begin();
+  if (myEEPROM.begin() == false)
+  {
+    Serial.println("No memory detected. Freezing.");
+    while (1);
   }
-  for(int i=255; i<255+sizeof(float)*4+1; i++){
-    EEPROM.update(i, 0);
-  }
-  for(int i=511; i<662; i++){
-    EEPROM.update(i, 0);
-  }
-  Serial.println(F("warning,EEPROM: Memory Deleted"));
+  Serial.println("Memory detected!");
 }
 
-void print_EEPROM(){
-  Serial.println(F("info,EEPROM: Printing Memory Info"));
-  for(int i=0; i<solenoidValve::__TotalActuators*5+35; i++){
-    Serial.print(i); Serial.print(F(": ")); Serial.println(EEPROM.read(i));
-  }
-  for(int i=255; i<255+sizeof(float)*4+1; i++){
-    Serial.print(i); Serial.print(F(": ")); Serial.println(EEPROM.read(i));
-  }
-  for(int i=511; i<662; i++){
-    Serial.print(i); Serial.print(F(": ")); Serial.println(EEPROM.read(i));
-  }
-}
-
-void save_EEPROM(int pos, int val){
-  int actualVal = EEPROM.read(pos);
-  if(val!=actualVal){
-    Serial.print(F("info,Saving in EEPROM on position("));
+void write_EEPROM(int pos, byte val){
+  byte auxVal = myEEPROM.read(pos);  
+  if(val!=auxVal){
+    Serial.print(F("debug,Saving in EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.println(val);
-    EEPROM.update(pos, val);
+    myEEPROM.write(pos, val);
   }
   else{ 
     Serial.print(F("warning,EEPROM on position("));
@@ -40,66 +23,200 @@ void save_EEPROM(int pos, int val){
     Serial.print(F(") Value="));
     Serial.print(val);
     Serial.println(F(" already saved"));
-  }
+  }   
 }
 
-void save_EEPROM(int pos, float val){
-  float actualVal = 0;
-  EEPROM.get(pos, actualVal);
-  if(val!=actualVal){
+byte read_byte(int pos){
+   Serial.print(F("debug,EEPROM - pos("));
+   byte Value = myEEPROM.read(pos);
+   Serial.print(pos); Serial.print(F("): ")); Serial.println(Value);
+   return Value;
+}
+
+void write_EEPROM(int pos, int val){
+  int auxVal = 0;
+  myEEPROM.get(pos, auxVal);
+  if(val!=auxVal){
     Serial.print(F("info,Saving in EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.println(val);
-    EEPROM.put(pos, val);
+    myEEPROM.put(pos, val);
   }
-  else{
+  else{ 
     Serial.print(F("warning,EEPROM on position("));
     Serial.print(pos);
     Serial.print(F(") Value="));
     Serial.print(val);
     Serial.println(F(" already saved"));
+  }  
+}
+
+int read_int(int pos){
+   int Value = 0;
+   Serial.print(F("debug,EEPROM - pos("));
+   myEEPROM.get(pos, Value);
+   Serial.print(pos); Serial.print(F("): ")); Serial.println(Value);
+   return Value;
+}
+
+
+void write_EEPROM(int pos, float val){
+  float auxVal = 0;
+  myEEPROM.get(pos, auxVal);
+  if(val!=auxVal){
+    Serial.print(F("debug,Saving in EEPROM on position("));
+    Serial.print(pos);
+    Serial.print(F(") Value="));
+    Serial.println(val);
+    myEEPROM.put(pos, val);
+  }
+  else{ 
+    Serial.print(F("warning,EEPROM on position("));
+    Serial.print(pos);
+    Serial.print(F(") Value="));
+    Serial.print(val);
+    Serial.println(F(" already saved"));
+  }   
+}
+
+float read_float(int pos){
+   float Value = 0;
+   Serial.print(F("debug,EEPROM - pos("));
+   myEEPROM.get(pos, Value);
+   Serial.print(pos); Serial.print(F("): ")); Serial.println(Value);
+   return Value;
+}
+
+void write_EEPROM(int pos, long val) {
+  long auxVal = 0;
+  myEEPROM.get(pos, auxVal);
+  if(val!=auxVal){
+    Serial.print(F("info,Saving in EEPROM on position("));
+    Serial.print(pos);
+    Serial.print(F(") Value="));
+    Serial.println(val);
+    myEEPROM.put(pos, val);
+  }
+  else{ 
+    Serial.print(F("warning,EEPROM on position("));
+    Serial.print(pos);
+    Serial.print(F(") Value="));
+    Serial.print(val);
+    Serial.println(F(" already saved"));
+  }  
+}
+
+long read_long(int pos){
+   long Value = 0;
+   Serial.print(F("debug,EEPROM - pos("));
+   myEEPROM.get(pos, Value);
+   Serial.print(pos); Serial.print(F("): ")); Serial.println(Value);
+   return Value;
+}
+
+void write_EEPROM(int pos, unsigned long val) {
+  unsigned long auxVal = 0;
+  myEEPROM.get(pos, auxVal);
+  if(val!=auxVal){
+    Serial.print(F("info,Saving in EEPROM on position("));
+    Serial.print(pos);
+    Serial.print(F(") Value="));
+    Serial.println(val);
+    myEEPROM.put(pos, val);
+  }
+  else{ 
+    Serial.print(F("warning,EEPROM on position("));
+    Serial.print(pos);
+    Serial.print(F(") Value="));
+    Serial.print(val);
+    Serial.println(F(" already saved"));
+  }  
+}
+
+unsigned long read_ulong(int pos){
+   unsigned long Value = 0;
+   Serial.print(F("debug,EEPROM - pos("));
+   myEEPROM.get(pos, Value);
+   Serial.print(pos); Serial.print(F("): ")); Serial.println(Value);
+   return Value;
+}
+
+void clean_EEPROM(bool truncate /*= true*/){
+  int sizeLength = 0;
+  if(truncate) sizeLength=1000;
+  else sizeLength=myEEPROM.getMemorySize();
+  Serial.println(F("warning,EEPROM: Deleting Memory..."));
+  for(int i=0; i<sizeLength; i++){
+    write_EEPROM(i, 0);
+  }
+  Serial.println(F("warning,EEPROM: Memory Deleted"));
+}
+
+void print_EEPROM(bool truncate /*= true*/){
+  int sizeLength = 0;
+  if(truncate) sizeLength=1000;
+  else sizeLength=myEEPROM.getMemorySize();
+  Serial.println(F("info,EEPROM: Printing Memory Info"));
+  for(int i=0; i<sizeLength; i++){
+    Serial.print(i); Serial.print(F(": ")); Serial.println(myEEPROM.read(i));
   }
 }
 
-void solenoidSaveTimeOn(int fl, int reg, int sol, int val){
-  /* Definitions:
-   *    Floor. It can be a whole number from 0 to MAX_FLOOR-1
-   *    Region. It can be a whole nuber from 0 to MAX_FLOOR-1
-   *    In alpha version each region is:
-   *        0 = Germination A
-   *        1 = Stage1 A
-   *        2 = Stage2 A
-   *        3 = Stage3 A
-   *        4 = Germination B
-   *        5 = Stage1 B
-   *        6 = Stage2 B
-   *        7 = Stage3 B: [0-3]
-   *    Solution. It can be a whole number from 0 to MAX_SOLUTIONS_NUMBER
-   *    In alpha version each solution is:
-   *        0 = Night (Water)
-   *        1 = KNO3
-   *        2 = NH2H2PO4
-   *        3 = Ca(NO3)2
-   *        4 = MgSO4 + Micros
-   */
-  if(fl>=0 && fl<MAX_FLOOR){
-    if(reg>=0 && reg<MAX_IRRIGATION_REGIONS){
-      if(sol>=0 && sol<=MAX_SOLUTIONS_NUMBER){
-        if(val>=0 && val<=254){
-          int pos = fl*MAX_IRRIGATION_REGIONS + reg + sol*solenoidValve::__TotalActuators;
-          save_EEPROM(pos, val);
-        }
-        else{ Serial.println(F("error,Solenoid Save Time On (): value parameter incorrect")); }
-      }
-      else{ Serial.println(F("error,Solenoid Save Time On (): solution parameter incorrect")); }
-    }
-    else{ Serial.println(F("error,Solenoid Save Time On (): region parameter incorrect")); }
-  }
-  else{ Serial.println(F("error,Solenoid Save Time On (): floor parameter incorrect")); }
+void configEEPROM(byte floors, byte solenoids, byte minutes, byte analogSensors, byte flowMeters, byte scales, byte ultrasonicSensors, byte switches){
+  write_EEPROM(0, floors);
+  Serial.println(F("Floors Number written in position 0"));
+  write_EEPROM(1, solenoids);
+  Serial.println(F("Solenoids number written in position 1"));
+  write_EEPROM(2, analogSensors);
+  Serial.println(F("Analog sensors number written in position 2"));
+  write_EEPROM(3, flowMeters);
+  Serial.println(F("Flowmeter sensors number written in position 3"));
+  write_EEPROM(4, scales);
+  Serial.println(F("Weight sensors number written in position 4"));
+  write_EEPROM(5, ultrasonicSensors);
+  Serial.println(F("Ultrasonic sensors number written in position 5"));
+  write_EEPROM(6, switches);
+  Serial.println(F("Switch sensors number written in position 6"));    
+  write_EEPROM(21, minutes);
+  Serial.println(F("Minutes written in position 21"));
+  Serial.println(F("EEPROM Configured successfully!"));
 }
 
-void solenoidSaveCycleTime(int val){
+void getConfig(){
+  floors = read_byte(0);
+  solenoids = read_byte(1);
+  analogSensors = read_byte(2);
+  flowMeters = read_byte(3);
+  scales = read_byte(4);
+  ultrasonicSensors = read_byte(5);
+  switches = read_byte(6);
+  minutes = read_byte(21);
+}
+
+bool checkConfig() {
+  if (floors==0 || solenoids==0 || minutes==0) return false;
+  else return true;
+}
+
+
+void saveRegion(int Floor, bool side, int region){
+  int NumEv = myEEPROM.read(1);
+  if (region>=0 && region<=NumEv) {
+    int NewPos = 21 + 1 +((Floor-1)*2)+int(side);
+    write_EEPROM(NewPos, region);
+  }
+  else{Serial.println(F("error,Region Save EEPROM Function: parameter region incorrect"));}
+}
+
+void saveSolenoidTimeOn(int Floor, int region, byte timeOn){
+  int NumFloor = myEEPROM.read(0);
+  int NumEv = myEEPROM.read(1);
+  int posWrite = 21 + 1 + NumFloor*2 + ((Floor-1)*NumEv)+(region-1);
+  myEEPROM.write(posWrite, timeOn); 
+}
+
+void saveCycleTime(int val){
   if(val>=0 && val<=254){
     int pos = solenoidValve::__TotalActuators*5;
     save_EEPROM(pos, val);
@@ -107,259 +224,20 @@ void solenoidSaveCycleTime(int val){
   else{ Serial.println(F("error,Solenoid Save Cycle Time (): value parameter incorrect")); }
 }
 
-void chargeSolenoidParameters(int sol){
-  int pos = 0;
-  int val = 0;
-  
-  for(int i=0; i<solenoidValve::__TotalActuators; i++){
-    if(isDayInThatSolenoid(i)){
-      pos = solenoidValve::__TotalActuators*sol + i;
-    }
-    else{
-      pos = i;
-    }
-    val = EEPROM.read(pos);
-    if(val!=0 && long(val*1000)!=solenoidValve::ptr[i]->getTimeOn()){
-      unsigned long timeOn_ms = long(val*1000);
-      solenoidValve::ptr[i]->setTimeOn(timeOn_ms);  
-    } 
-  }
-  
-  val = EEPROM.read(solenoidValve::__TotalActuators*5);
-  if(val!=0 && long(val*60000)!=solenoidValve::getCycleTime()){
-    unsigned long cycleTime_ms = long(val*60000);
-    solenoidValve::setCycleTime(cycleTime_ms); 
-  }
-
-  // Disable all the solenoids that has to be off
-  pos = solenoidValve::__TotalActuators*5+12;
-  int reg_1f = EEPROM.read(pos+1);
-  int reg_2f = EEPROM.read(pos+2);
-  int reg_3f = EEPROM.read(pos+3);
-  int reg_4f = EEPROM.read(pos+4);
-
-  enableSolenoid(0, reg_1f);
-  enableSolenoid(1, reg_2f);
-  enableSolenoid(2, reg_3f);
-  enableSolenoid(3, reg_4f);
-  /* delete
-  for(int i=0; i<solenoidValve::__TotalActuators; i++){
-    uint8_t fl = solenoidValve::ptr[i]->getFloor();
-    uint8_t rg = (solenoidValve::ptr[i]->getRegion());
-    
-    if(rg>=MAX_FLOOR){ rg -= MAX_FLOOR; } // Set rg in range [0-3]
-    if(fl==0 && rg<reg_1f){ solenoidValve::ptr[i]->enable(true); } // Enable solenoid
-    else if(fl==1 && rg<reg_2f){ solenoidValve::ptr[i]->enable(true); } // Enable solenoid
-    else if(fl==2 && rg<reg_3f){ solenoidValve::ptr[i]->enable(true); } // Enable solenoid
-    else if(fl==3 && rg<reg_4f){ solenoidValve::ptr[i]->enable(true); } // Enable solenoid
-    else{ solenoidValve::ptr[i]->enable(false); } // Disable
-  }
-  */
+void saveAnalog(byte pin, float A, float B, float C){
+  int NumFloor = myEEPROM.read(0);
+  int NumEv = myEEPROM.read(1);
+  int NumAnalSen = myEEPROM.read(2);
+  int posPin = 21 + 1 + NumFloor*2 + (((NumFloor-1)*NumEv)+(1)) + 1;
+  myEEPROM.write(posPin, pin);
+  int posA = 21 + 1 + NumFloor*2 + (((NumFloor-1)*NumEv)+(1)) + 1 + ((sizeof(pin))*NumAnalSen);
+  myEEPROM.put(posA, A);
+  int posB = 21 + 1 + NumFloor*2 + (((NumFloor-1)*NumEv)+(1)) + 1 + ((sizeof(pin) + sizeof(A))*NumAnalSen);
+  myEEPROM.put(posB, B);
+  int posC = 21 + 1 + NumFloor*2 + (((NumFloor-1)*NumEv)+(1)) + 1 + ((sizeof(pin) + sizeof(A) + sizeof(B))*NumAnalSen);
+  myEEPROM.put(posC, C);
 }
-
-void multidaySave(int fl, int cyclesNumber, float lightPercentage, float initHour){
-  int pos = solenoidValve::__TotalActuators*5;
-  
-  if(24%cyclesNumber==0){
-    if(lightPercentage>=0 && lightPercentage<=100){
-      if(initHour>=0 && initHour<24){
-        int inHour = int(initHour*10);
-        switch(fl){
-          case 0:
-            day1.redefine(cyclesNumber, lightPercentage, initHour);
-            save_EEPROM(pos+1, cyclesNumber);
-            save_EEPROM(pos+2, int(lightPercentage));
-            save_EEPROM(pos+3, inHour);
-            break;
-          case 1:
-            day2.redefine(cyclesNumber, lightPercentage, initHour);
-            save_EEPROM(pos+4, cyclesNumber);
-            save_EEPROM(pos+5, int(lightPercentage));
-            save_EEPROM(pos+6, inHour);
-            break;
-          case 2:
-            day3.redefine(cyclesNumber, lightPercentage, initHour);
-            save_EEPROM(pos+7, cyclesNumber);
-            save_EEPROM(pos+8, int(lightPercentage));
-            save_EEPROM(pos+9, inHour);
-            break;
-          case 3:
-            day4.redefine(cyclesNumber, lightPercentage, initHour);
-            save_EEPROM(pos+10, cyclesNumber);
-            save_EEPROM(pos+11, int(lightPercentage));
-            save_EEPROM(pos+12, inHour);
-            break;
-          default:
-            Serial.println(F("error,Multiday Save EEPROM Function: parameter floor incorrect"));
-            break;
-        }
-      }
-      else{ Serial.println(F("error,Multiday Save EEPROM Function: parameter initial hour incorrect")); }
-    }
-    else{ Serial.println(F("error,Multiday Save EEPROM Function: parameter light% incorrect")); }
-  }
-  else{ Serial.println(F("error,Multiday Save EEPROM Function: parameter cycles incorrect")); }
-}
-
-void chargeMultidayParameters(){
-  Serial.println(F("Charging Multiday Parameters from EEPROM"));
-  int pos = solenoidValve::__TotalActuators*5;
-  // Redefine day 1
-  int cycles = EEPROM.read(pos+1);
-  int light = EEPROM.read(pos+2);
-  float initHour = float(EEPROM.read(pos+3))/10;
-  if(cycles>0 && light>0){ day1.redefine(cycles, light, initHour); }
-  // Redefine day 2
-  cycles = EEPROM.read(pos+4);
-  light = EEPROM.read(pos+5);
-  initHour = float(EEPROM.read(pos+6))/10;
-  if(cycles>0 && light>0){ day2.redefine(cycles, light, initHour); }
-  // Redefine day 3
-  cycles = EEPROM.read(pos+7);
-  light = EEPROM.read(pos+8);
-  initHour = float(EEPROM.read(pos+9))/10;
-  if(cycles>0 && light>0){ day3.redefine(cycles, light, initHour); }
-  // Redefine day 4
-  cycles = EEPROM.read(pos+10);
-  light = EEPROM.read(pos+11);
-  initHour = float(EEPROM.read(pos+12))/10;
-  if(cycles>0 && light>0){ day4.redefine(cycles, light, initHour); }
-  
-  Serial.flush();
-  delay(1000);
-}
-
-void regionSave(int fl, int reg){
-  /* Region:
-   *  0 = All off
-   *  1 = Irrigation on Germination
-   *  2 = Irrigation and Ilumination on Germination
-   *  3 = Irrigation on Germination and Stage 1 and Ilumination on Germination
-   *  4 = Irrigation and Ilumination on Germination and Stage 1
-   *  5 = Irrigation in Germination, Stage 1 and 2 and Ilumination on Germination and Stage 1
-   *  6 = Irrigation and Ilumination in Germination, Stage 1 and 2
-   *  7 = Irrigation in Germination, Stage 1, 2 and 3 and Ilumination on Germination, Stage 1 and 2
-   *  8 = Irrigation and Ilumination in Germination, Stage 1, 2 and 3
-   *  
-   */
-  if(fl>=0 && fl<MAX_FLOOR){
-    if(reg>=0 && reg<=MAX_REGION*2){
-      int pos = solenoidValve::__TotalActuators*5+12;
-      save_EEPROM(pos+1+fl, reg);
-    }
-    else{Serial.println(F("error,Region Save EEPROM Function: parameter region incorrect"));}
-  }
-  else{Serial.println(F("error,Region Save EEPROM Function: parameter floor incorrect"));}
-}
-
-void chargeLedRegion(){
-  int pos = solenoidValve::__TotalActuators*5+12;
-  int reg_1f = EEPROM.read(pos+1);
-  int reg_2f = EEPROM.read(pos+2);
-  int reg_3f = EEPROM.read(pos+3);
-  int reg_4f = EEPROM.read(pos+4);
-
-  // Disable all the leds that has to be off
-  enableLED(0, reg_1f);
-  enableLED(1, reg_2f);
-  enableLED(2, reg_3f);
-  enableLED(3, reg_4f);
-
-  Serial.flush();
-  delay(1000);
-}
-
-void chargeSolenoidRegion(){
-  int pos = solenoidValve::__TotalActuators*5+12;
-  int reg_1f = EEPROM.read(pos+1);
-  int reg_2f = EEPROM.read(pos+2);
-  int reg_3f = EEPROM.read(pos+3);
-  int reg_4f = EEPROM.read(pos+4);
-
-  enableSolenoid(0, reg_1f);
-  enableSolenoid(1, reg_2f);
-  enableSolenoid(2, reg_3f);
-  enableSolenoid(3, reg_4f);
-
-  Serial.flush();
-  delay(1000);
-}
-
-void irrigationSave(int cyclesPerDay, int initialHour){
-  if(24%cyclesPerDay==0){
-    if(initialHour>=0 && initialHour<24){
-      int pos = solenoidValve::__TotalActuators*5+16;
-      save_EEPROM(pos+1, cyclesPerDay);
-      save_EEPROM(pos+2, initialHour); 
-    }
-    else{ Serial.println(F("error,Irrigation Save General Parameter: initialHour out of range [0-24]")); }
-  }
-  else{ Serial.println(F("error,Irrigation Save General Parameter: cyclesPerDay incorrect")); }
-}
-
-void solutionSave(int sol, int order, int percent, int ec, float ph){
-  if(sol>=0 && sol<4){
-    if(order>=0 && order<4){
-      if(percent>=0 && percent<=100){
-        if(ec>0 && ec<5000){
-          if(ph>0 && ph<14){
-            int pos = solenoidValve::__TotalActuators*5+18+sol;
-            save_EEPROM(pos+1, order);
-            save_EEPROM(pos+5, percent);
-            save_EEPROM(pos+9, int(ec/20));
-            save_EEPROM(pos+13, int(ph*10));  
-          }
-          else{ Serial.println(F("error,Irrigation Save Solution Parameter: ph out of range [0-14]")); }
-        }
-        else{ Serial.println(F("error,Irrigation Save Solution Parameter: ec out of range [0-5000]")); }
-      }
-      else{ Serial.println(F("error,Irrigation Save Solution Parameter: percent out of range [0-100]")); }
-    }
-    else{ Serial.println(F("error,Irrigation Save Solution Parameter: order out of range [0-3]")); }
-  }
-  else{ Serial.println(F("error,Irrigation Save Solution Parameter: solution out of range [0-3]")); }
-}
-
-void chargeIrrigationParameters(){
-  int pos = solenoidValve::__TotalActuators*5+16;
-  int cyclesPerDay = EEPROM.read(pos+1);
-  int initialHour = EEPROM.read(pos+2);
-  int ord1 = EEPROM.read(pos+3);
-  int ord2 = EEPROM.read(pos+4);
-  int ord3 = EEPROM.read(pos+5);
-  int ord4 = EEPROM.read(pos+6);
-  int per1 = EEPROM.read(pos+7);
-  int per2 = EEPROM.read(pos+8);
-  int per3 = EEPROM.read(pos+9);
-  int per4 = EEPROM.read(pos+10);
-  int ec1 = EEPROM.read(pos+11)*20;
-  int ec2 = EEPROM.read(pos+12)*20;
-  int ec3 = EEPROM.read(pos+13)*20;
-  int ec4 = EEPROM.read(pos+14)*20;
-  float ph1 = float(EEPROM.read(pos+15))/10;
-  float ph2 = float(EEPROM.read(pos+16))/10;
-  float ph3 = float(EEPROM.read(pos+17))/10;
-  float ph4 = float(EEPROM.read(pos+18))/10;
-  
-  if(cyclesPerDay>0 && ord1+ord2+ord3+ord4==6 && ord1!=ord2 && ord1!=ord3 && 
-     ord1!=ord4 && ord2!=ord3 && ord2!=ord4 && ord3!=ord4 && per1+per2+per3+per4==100){
-    Irrigation.redefine(cyclesPerDay, initialHour, ord1, ord2, ord3, ord4, per1, per2, per3, per4 );
-  }
-  else{ Serial.println(F("error,Charge Irrigation Parameters Error: Cannot charge parameters because they are incosistent")); }
-
-  if(ec1!=0 && ec1!=5100 && ec2!=0 && ec2!=5100 && ec3!=0 && ec3!=5100 && ec4!=0 && ec4!=5100){
-    Irrigation.setEC(ec1, ec2, ec3, ec4);
-  }
-  else{ Serial.println(F("error,Charge Irrigation Parameters Error: Cannot charge ec parameters because they are incosistent")); }
-  if(ph1!=0 && ph1!=25.5 && ph2!=0 && ph2!=25.5 && ph3!=0 && ph3!=25.5 && ph4!=0 && ph4!=25.5){
-    Irrigation.setPH(ph1, ph2, ph3, ph4);
-  }
-  else{ Serial.println(F("error,Charge Irrigation Parameters Error: Cannot charge ph parameters because they are incosistent")); }
-
-  Serial.flush();
-  delay(1000);
-}
-
+/*
 void analogSaveFilter(int Type, int filt, float filterParam){
   if(Type>=0 && Type<=2){
     if(filt>=0 && filt<=2){
@@ -520,3 +398,4 @@ void chargePressureParameter(){
     Serial.flush();
     delay(2500);
 }
+*/
