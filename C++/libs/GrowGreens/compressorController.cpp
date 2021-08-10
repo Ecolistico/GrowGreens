@@ -5,120 +5,89 @@
 #include "compressorController.h"
 
 /***   compressorController   ***/
-// Statics variables definitions
 compressorController::compressorController( // Constructor
-  bool nutLogic,
-  bool tankLogic,
-  bool h2oLogic )
-  {  __State = LOW;
-     __Vnut = LOW;
-     __Vtank = LOW;
-     __Vh20 = LOW;
-     __Fnut = LOW;
-     __Fh2o = LOW;
-     __nutInvertedLogic = nutLogic;
-     __tankInvertedLogic = tankLogic;
-     __h20InvertedLogic = h2oLogic;
-     __KeepConnected = false;
-     __Mode = 0;
+  bool Vair_Logic,
+  bool Vconnected_Logic,
+  bool VFree_Logic )
+  {  _VAir = LOW;
+     _VConnected = LOW;
+     _VFree = LOW;
+     _VAir_InvertedLogic = Vair_Logic;
+     _VConnected_InvertedLogic = Vconnected_Logic;
+     _VFree_InvertedLogic = VFree_Logic;
+     _KeepConnected = false;
+     _Mode = 0;
  }
 
-void compressorController::turnOn()
-  { __State = HIGH; }
-
-void compressorController::turnOff()
-  { __State = LOW; }
-
-void compressorController::doNothing()
-  { turnOff();
-    if(__nutInvertedLogic){__Vnut = HIGH;}
-    else{__Vnut = LOW;}
-    if(__tankInvertedLogic){__Vtank = HIGH;}
-    else{__Vtank = LOW;}
-    if(__h20InvertedLogic){__Vh20 = HIGH;}
-    else{__Vh20 = LOW;}
-  }
-
 void compressorController::turnOffAll()
-  { turnOff();
-    if(__KeepConnected){ __Vnut = HIGH; }
-    else{ __Vnut = LOW; }
-    __Vtank = LOW;
-    __Vh20 = LOW;
+  { // If KeepConnected Active let Valve ON
+    if(_KeepConnected) _VConnected = HIGH;
+    else _VConnected = LOW;
+    _VAir = LOW;
+    _VFree = LOW;
   }
 
-void compressorController::fillTank()
-  { turnOn();
-    if(__KeepConnected){ __Vnut = HIGH; }
-    else{ __Vnut = LOW; }
-    __Vtank = HIGH;
-    __Vh20 = LOW;
+void compressorController::pressurize()
+  { _VAir = HIGH;
+    if(_KeepConnected) {
+      _VConnected = HIGH;
+      _VFree = LOW;
+    }
+    else _VConnected = LOW;
   }
 
-void compressorController::fillNut()
-  { turnOn();
-    __Vtank = HIGH;
-    __Vnut = HIGH;
-    __Vh20 = LOW;
-  }
-
-void compressorController::fillH2O()
-  { turnOn();
-    if(__KeepConnected){ __Vnut = HIGH; }
-    else{ __Vnut = LOW; }
-    __Vtank = LOW;
-    __Vh20 = HIGH;
-  }
-
-void compressorController::fillTankAndH2O()
-  { turnOn();
-    if(__KeepConnected){ __Vnut = HIGH; }
-    else{ __Vnut = LOW; }
-    __Vtank = HIGH;
-    __Vh20 = HIGH;
-  }
-
-void compressorController::fillAll()
-  { turnOn();
-    __Vtank = HIGH;
-    __Vnut = HIGH;
-    __Vh20 = HIGH;
+void compressorController::despressurize()
+  { _VFree = HIGH;
+    if (_KeepConnected) {
+      _VAir = LOW;
+      _VConnected = HIGH;
+    }
+    else _VConnected = LOW;
   }
 
 void compressorController::setMode(uint8_t mode)
-  { __Mode = mode;
+  { _Mode = mode;
     switch(mode){
-      case 0: // Do nothing
-        doNothing();
-        printAct(F("Do nothing"), 0);
-        break;
-      case 1: // Turn off all
+      case 0: // Turn off all notConnected
+        _KeepConnected = false;
         turnOffAll();
-        printAct(F("Turn Off All"), 0);
+        printAct(F("Compressor Controller: Turn Off All (disconnected)"), 0);
         break;
-      case 2: // Fill the tank
-        fillTank();
-        printAct(F("Compressing air tank"), 1);
+      case 1: // Turn off all connected
+        _KeepConnected = true;
+        turnOffAll();
+        printAct(F("Compressor Controller: Turn Off All (connected)"), 0);
         break;
-      case 3: // Fill the nutrition kegs
-        fillNut();
-        printAct(F("Compressing nutrition kegs"), 1);
+      case 2: // Pressurize all
+        _KeepConnected = true;
+        pressurize();
+        printAct(F("Compressor Controller: Pressurize all"), 1);
         break;
-      case 4: // Fill the H2O kegs
-        fillH2O();
-        printAct(F("Compressing water kegs"), 1);
+      case 3: // Pressurize air tank
+        _KeepConnected = false;
+        _VFree = LOW;
+        pressurize();
+        printAct(F("Compressor Controller: Pressurize air tank"), 1);
         break;
-      case 5: // Fill the air Tank and H2O Kegs
-        fillTankAndH2O();
-        printAct(F("Compressing air tank and water kegs"), 1);
+      case 4: // Pressurize air tank and Despressurize water tank
+        _KeepConnected = false;
+        pressurize();
+        despressurize();
+        printAct(F("Compressor Controller: Pressurize air tank and Despressurize water tank"), 1);
         break;
-      case 6: // Fill everything
-        fillAll();
-        printAct(F("Compressing all"), 1);
+      case 5: // Despressurize water tank
+        _KeepConnected = false;
+        _VAir = LOW;
+        despressurize();
+        printAct(F("Compressor Controller: Despressurize water tank"), 1);
+        break;
+      case 6: // Despressurize all
+        _KeepConnected = true;
+        despressurize();
+        printAct(F("Compressor Controller: Despressurize all"), 1);
         break;
       default: // Do nothing
-        doNothing();
-        printAct(F("Mode did not match. Do Nothing Instead"), 0);
+        printAct(F("Compressor Controller: Mode did not match. Do Nothing Instead"), 2);
         break;
     }
   }
@@ -133,125 +102,65 @@ void compressorController::printAct(String act, uint8_t level=0)
     Serial.println(act);
   }
 
-bool compressorController::getState() // Constructor
-  { return __State; }
-
-bool compressorController::getValveTank()
-  { if(__tankInvertedLogic){return !__Vtank;}
-    else{return __Vtank;}
+bool compressorController::getVAir()
+  { if(_VAir_InvertedLogic) return !_VAir;
+    else return _VAir;
   }
 
-bool compressorController::getValveNut()
-  { if(__nutInvertedLogic){return !__Vnut;}
-    else{return __Vnut;}
+bool compressorController::getVconnected()
+  { if(_VConnected_InvertedLogic) return !_VConnected;
+    else return _VConnected;
   }
 
-bool compressorController::getValveH2O()
-  { if(__h20InvertedLogic){return !__Vh20;}
-    else{return __Vh20;}
+bool compressorController::getVfree()
+  { if(_VFree_InvertedLogic) return !_VFree;
+    else return _VFree;
   }
 
-bool compressorController::getFreeValveNut()
-  { return __Fnut; }
-
-bool compressorController::getFreeValveH2O()
-  { return __Fh2o; }
-
-void compressorController::openFreeNut()
-  { if(!__Vnut){
-      if(!__Fnut){
-        __Fnut = HIGH;
-        printAct(F("Free Nutrition Valve open"), 0);
-      }
-      else{ printAct(F("Free Nutrition Valve already open"), 2); }
-    }
-    else{ printAct(F("Cannot Free Pressure in nutrition kegs because nutrition valve is open"), 3); }
+void compressorController::Off(bool connected)
+  { if(_Mode!=connected) setMode(connected);
+    else printAct(F("Compressor Controller: It is already running function Off()"), 2);
   }
 
-void compressorController::closeFreeNut()
-  { if(__Fnut){
-      __Fnut = LOW;
-      printAct(F("Free Nutrition Valve close"), 0);
-    }
-    else{ printAct(F("Free Nutrition Valve already close"), 2); }
+void compressorController::pressurizeAll()
+  { if(_Mode!=2) setMode(2);
+    else printAct(F("Compressor Controller: It is already running function pressurizeAll()"), 2);
   }
 
-void compressorController::openFreeH2O()
-  { if(!__Vh20){
-      if(!__Fh2o){
-        __Fh2o = HIGH;
-        printAct(F("Free Water Valve open"), 0);
-      }
-      else{ printAct(F("Free Water Valve already open"), 2); }
-    }
-    else{ printAct(F("Cannot Free Pressure in water kegs because water valve is open"), 3); }
+void compressorController::pressurizeAir()
+  { if(_Mode!=3) setMode(3);
+    else printAct(F("Compressor Controller: It is already running function pressurizeAir()"), 2);
   }
 
-void compressorController::closeFreeH2O()
-  { if(__Fh2o){
-      __Fh2o = LOW;
-      printAct(F("Free Water Valve close"), 0);
-    }
-    else{ printAct(F("Free Water Valve already close"), 2); }
+void compressorController::pressurize_depressurize()
+  { if(_Mode!=4) setMode(4);
+    else printAct(F("Compressor Controller: It is already running function pressurize_depressurize()"), 2);
   }
 
-void compressorController::compressTank()
-  { if(!__Vnut){
-      if(__Mode==4){
-        setMode(5);
-      }
-      else if(__Mode!=2 && __Mode!=3 && __Mode!=5 && __Mode!=6){
-        setMode(2);
-      }
-      else{printAct(F("Already compressing air tank"), 2);}
-    }
-    else{printAct(F("Cannot Compress air tank because nutrition valve is open"), 3);}
+void compressorController::depressurizeWater()
+  { if(_Mode!=5) setMode(5);
+    else printAct(F("Compressor Controller: It is already running function depressurizeWater()"), 2);
   }
 
-void compressorController::compressNut()
-  { if(!__Fnut){
-      if(__Mode==4 || __Mode==5){
-        setMode(6);
-      }
-      else if(__Mode!=3 && __Mode!=6){
-        setMode(3);
-      }
-      else{printAct(F("Already compressing nutrition kegs") , 2);}
-    }
-    else{printAct(F("Cannot Compress nutrition kegs because Free Nutrition Valve is open"), 3);}
+void compressorController::depressurizeAll()
+  { if(_Mode!=+6) setMode(6);
+    else printAct(F("Compressor Controller: It is already running function depressurizeAll()"), 2);
   }
-
-void compressorController::compressH2O()
-  { if(!__Fh2o){
-      if(__Mode==2){
-        setMode(5);
-      }
-      else if(__Mode==3){
-        setMode(6);
-      }
-      else if(__Mode!=4 && __Mode!=5 && __Mode!=6){
-        setMode(4);
-      }
-      else{printAct(F("Already compressing water kegs"), 2);}
-    }
-    else{printAct(F("Cannot Compress water kegs because Free Water Valve is open"), 3);}
-  }
-
-void compressorController::Off()
-  { setMode(1); }
 
 void compressorController::keepConnected(bool con)
-  { if(__KeepConnected!=con){
-      __KeepConnected = con;
-      if(__KeepConnected){
-        printAct(F("Keeping connected nutrition kegs and air tank"), 0);
-        if(!__Vnut){ __Vnut = HIGH; }
+  { if(_KeepConnected!=con){
+      _KeepConnected = con;
+      if(_KeepConnected){
+        printAct(F("Connecting air and water tank"), 0);
+        if(_Mode == 0) setMode(1);
+        else if (_Mode == 3) setMode(2);
+        else if (_Mode == 5) setMode(6);
       }
-      else if(!__KeepConnected){
-        printAct(F("Disconnecting nutrition kegs and air tank"), 0);
-        if(__Vnut && __Mode!=3 && __Mode!=6){
-          __Vnut = LOW;
-        }
+      else if(!_KeepConnected){
+        printAct(F("Disconnecting air and water tank"), 0);
+        if(_Mode == 1) setMode(0);
+        else if (_Mode == 2) setMode(3);
+        else if (_Mode == 6) setMode(5);
       }
     }
   }

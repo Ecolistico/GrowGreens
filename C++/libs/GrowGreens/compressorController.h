@@ -2,8 +2,8 @@
 Library for Grow software package
 Written by : José Manuel Casillas Martín
 email: jmcasimar@sippys.com.mx
-Date : 2019-*-*
-Version : 0.1 (testing version)
+Date : 2021-08-10
+Version : 0.2 (testing version)
 
 This file is part of Grow Software Package.
 
@@ -38,63 +38,39 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 // Class to control the air compressor
 class compressorController
  {  private:
-        bool __State;
-        bool __Vnut; // Valve - nutrition kegs
-        bool __Vtank; // Valve - air tank
-        bool __Vh20; // Valve - H2O kegs
-        bool __Fnut; // Valve - free pressure nutrition kegs
-        bool __Fh2o; // Valve - free pressure H2O kegs
-        bool __nutInvertedLogic; // Logic for __Vnut
-        bool __tankInvertedLogic; // Logic for __Vtank
-        bool __h20InvertedLogic; // Logic for __Vh20
-        bool __KeepConnected; // Aux variable
+        bool _VAir; // Valve - air tank (turn On Compressor Valve)
+        bool _VConnected; // Valve - Connect tanks
+        bool _VFree; // Valve - Free pressure in water tank
+        bool _VAir_InvertedLogic; // Logic for __Vnut
+        bool _VConnected_InvertedLogic; // Logic for __Vtank
+        bool _VFree_InvertedLogic; // Logic for __Vh20
+        bool _KeepConnected; // Aux variable to connect air and water tanks
+        uint8_t _Mode;
 
-        uint8_t __Mode;
-
-        void turnOn(); // Turn on the compressor
-        void turnOff(); // Turn off the compressor
-
-        void doNothing(); // Set all LOW, logic does not matter
         void turnOffAll(); // Set all LOW, using logic
-        void fillTank(); // Settings to fill the tank
-        void fillNut(); // Settings to fill the nutrition kegs
-        void fillH2O(); // Settings to fill the H2O kegs
-        void fillTankAndH2O(); // Settings to fill the tank and H2O kegs
-        void fillAll(); // Settings to fill everything
+        void pressurize(); // Settings to pressurize
+        void despressurize(); // Settings to despressurize
         void setMode(uint8_t mode); // Set the actual mode of operation
 
         void printAct(String act, uint8_t level=0);
 
     public:
          compressorController( // Constructor
-           bool nutLogic,
-           bool tankLogic,
-           bool h2oLogic
+           bool Vair_Logic,
+           bool Vconnected_Logic,
+           bool VFree_Logic
          );
 
-         bool getState(); // Returns Compressor State
-         bool getValveTank(); // Return Valve Compressor State
-         bool getValveNut(); // Return Valve Nutrition State
-         bool getValveH2O(); // Return Valve Water State
-         bool getFreeValveNut(); // Returns Free Valve Nutrition state
-         bool getFreeValveH2O(); // Returns Free Valve H2O state
+         bool getVAir(); // Return Valve Air State
+         bool getVconnected(); // Return Valve Connecting tanks State
+         bool getVfree(); // Return Free Pressure Valve State
 
-         // Check the actual state and if it is possible free pressure of nutrition kegs
-         void openFreeNut();
-         // Close free nutrition valve
-         void closeFreeNut();
-         // Check the actual state and if it is possible free pressure of water kegs
-         void openFreeH2O(); // Free pressure of H2O kegs
-         // Close free water valve
-         void closeFreeH2O();
-         // Check the actual state and if it is possible compress the air tank
-         void compressTank();
-         // Check the actual state and if it is possible compress the nutrition kegs
-         void compressNut();
-         // Check the actual state and if it is possible compress the water kegs
-         void compressH2O();
-         // Turn Off the compressor
-         void Off();
+         void Off(bool connected); // Mode 0/1
+         void pressurizeAll(); // Mode 2
+         void pressurizeAir(); // Mode 3
+         void pressurize_depressurize(); // Mode 4
+         void depressurizeWater(); // Mode 5
+         void depressurizeAll(); // Mode 6
 
          void keepConnected(bool con); // Do we have to keep connected nut with tank?
   };
