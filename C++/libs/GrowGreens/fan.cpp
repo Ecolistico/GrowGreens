@@ -137,7 +137,7 @@ void fan::run()
 systemFan::systemFan(uint8_t floorNum) // Constructor
    { if(floorNum<=MAX_FLOOR_NUMBER){
        _floorNumber = floorNum;
-       for (int i = 0; i<floorNum; i++) _fan[i] = new fan(i, DEFAULT_CYCLE_TIME, DEFAULT_TIME_ON);
+       for (int i = 0; i<floorNum; i++) _fan[i] = new fan(i, DEFAULT_CYCLE_TIME_F, DEFAULT_TIME_ON_F);
      }
      else Serial.println(F("critical,System Fan ERROR: Floors exceed max number"));
    }

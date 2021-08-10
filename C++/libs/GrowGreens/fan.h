@@ -34,14 +34,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #include <wiring.h>
 #endif
 
-#define MAX_ACTUATORS           32 // Max number of fans object
-#define DEFAULT_TIME_ON         50 // 50 percent
-#define DEFAULT_CYCLE_TIME      10 // 10 minutes
-
-
-#ifndef MAX_FLOOR_NUMBER
-#define MAX_FLOOR_NUMBER        12 // 12 floors
-#endif
+#include <commonStructures.h> // Shared structures bewtween differents classes
 
 class fan
  {  private:
