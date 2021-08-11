@@ -35,17 +35,17 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #endif
 
 class processControl
-  {   
+  {
     private:
       void printAction(String act);
-      
+
     public:
-      uint8_t state; // State of the process
-      uint8_t lastState; // Previous state
-      unsigned long actualTime; // Time Control for the process
+      uint8_t _state; // State of the process
+      uint8_t _lastState; // Previous state
+      unsigned long _actualTime; // Time Control for the process
       // Auxiliar variable to transfer parameters to different states in the same process
-      float parameter;
-      uint8_t __Type;
+      float _parameter;
+      uint8_t _type;
 
       processControl(uint8_t type=250); // Constructor
       void setState(uint8_t st, float par = 0); // Function to update the process state
