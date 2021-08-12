@@ -21,10 +21,10 @@ You should have received a copy of the GNU General Public License
 along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-// irrigationController.h
+// solutionController.h
 
-#ifndef irrigationController_h
-#define irrigationController_h
+#ifndef solutionController_h
+#define solutionController_h
 
 #include <stdlib.h>
 #if ARDUINO >= 100
@@ -45,7 +45,7 @@ Definitions:
   Solution 4 = MGSO4 + Micros
 */
 
-class irrigationController
+class solutionController
   { private:
       uint8_t __solution;
       uint8_t __actualCycle;
@@ -59,9 +59,9 @@ class irrigationController
 
     public:
       // Constructor by default 1 irrigationCycle, order = 1,2,3,4 and 25% each solution
-      irrigationController();
+      solutionController();
       // Constructor with complete flexibility
-      irrigationController(uint8_t cyclesPerDay,
+      solutionController(uint8_t cyclesPerDay,
                         uint8_t initialHour,
                         uint8_t ord1,
                         uint8_t ord2,

@@ -1,11 +1,11 @@
-// irrigationController.cpp
+// solutionController.cpp
 //
 // Copyright (C) 2019 Grow
 
-#include "irrigationController.h"
+#include "solutionController.h"
 
-/***   irrigationController   ***/
-irrigationController::irrigationController() // Default Constructor
+/***   solutionController   ***/
+solutionController::solutionController() // Default Constructor
   { __solution = 0; // Not solution define yet
     __actualCycle = 0;
     __cyclesPerDay = 1;
@@ -21,7 +21,7 @@ irrigationController::irrigationController() // Default Constructor
   }
 
 // Constructor
-irrigationController::irrigationController( uint8_t cyclesPerDay,
+solutionController::solutionController( uint8_t cyclesPerDay,
                                             uint8_t initialHour,
                                             uint8_t ord1,
                                             uint8_t ord2,
@@ -75,13 +75,13 @@ irrigationController::irrigationController( uint8_t cyclesPerDay,
     }
   }
 
-uint8_t irrigationController::getSolution()
+uint8_t solutionController::getSolution()
   { return __solution; }
 
-uint8_t irrigationController::getCycle()
+uint8_t solutionController::getCycle()
   { return __actualCycle; }
 
-void irrigationController::redefine( uint8_t cyclesPerDay,
+void solutionController::redefine( uint8_t cyclesPerDay,
                                      uint8_t initialHour,
                                      uint8_t ord1,
                                      uint8_t ord2,
@@ -134,7 +134,7 @@ void irrigationController::redefine( uint8_t cyclesPerDay,
     }
   }
 
-void irrigationController::setEC(uint8_t sol, uint16_t ec)
+void solutionController::setEC(uint8_t sol, uint16_t ec)
   { if(sol>=0 && sol<MAX_SOLUTIONS_NUMBER){
       if(ec>0 && ec<5000){
         __ec[sol] = ec;
@@ -144,14 +144,14 @@ void irrigationController::setEC(uint8_t sol, uint16_t ec)
     else{ Serial.println(F("error,set EC failed: solution out of range [0-3]")); }
   }
 
-void irrigationController::setEC(uint16_t ec1, uint16_t ec2, uint16_t ec3, uint16_t ec4)
+void solutionController::setEC(uint16_t ec1, uint16_t ec2, uint16_t ec3, uint16_t ec4)
   { setEC(0, ec1);
     setEC(1, ec2);
     setEC(2, ec3);
     setEC(3, ec4);
   }
 
-void irrigationController::setPH(uint8_t sol, float ph)
+void solutionController::setPH(uint8_t sol, float ph)
   { if(sol>=0 && sol<MAX_SOLUTIONS_NUMBER){
       if(ph>0 && ph<14){
         __ph[sol] = ph;
@@ -162,24 +162,24 @@ void irrigationController::setPH(uint8_t sol, float ph)
 
   }
 
-void irrigationController::setPH(float ph1, float ph2, float ph3, float ph4)
+void solutionController::setPH(float ph1, float ph2, float ph3, float ph4)
   { setPH(0, ph1);
     setPH(1, ph2);
     setPH(2, ph3);
     setPH(3, ph4);
   }
 
-uint16_t irrigationController::getEC(uint8_t sol)
+uint16_t solutionController::getEC(uint8_t sol)
   { if(sol>=0 && sol<MAX_SOLUTIONS_NUMBER){ return __ec[sol]; }
     else { return 0; }
   }
 
-float irrigationController::getPH(uint8_t sol)
+float solutionController::getPH(uint8_t sol)
   { if(sol>=0 && sol<MAX_SOLUTIONS_NUMBER){ return __ph[sol]; }
     else { return 0; }
   }
 
-uint8_t irrigationController::whatSolution(uint8_t HOUR, uint8_t MINUTE)
+uint8_t solutionController::whatSolution(uint8_t HOUR, uint8_t MINUTE)
   { bool resp = false;
     uint8_t control_Stage = 200;
     float actualHour = float(HOUR) + float(MINUTE)/60;
@@ -242,8 +242,8 @@ uint8_t irrigationController::whatSolution(uint8_t HOUR, uint8_t MINUTE)
 
     return __solution;
   }
-  
-int irrigationController::min2Change(uint8_t HOUR, uint8_t MINUTE)
+
+int solutionController::min2Change(uint8_t HOUR, uint8_t MINUTE)
   { bool resp = false;
     uint8_t control_Stage = 200;
     float actualHour = float(HOUR) + float(MINUTE)/60;
@@ -256,7 +256,7 @@ int irrigationController::min2Change(uint8_t HOUR, uint8_t MINUTE)
       }
     }
     if(control_Stage == 200){ control_Stage = __cyclesPerDay-1; }
-    
+
     // Get the time passed into the actual stage
     if(__cyclesPerDay-control_Stage==1 && actualHour-__beginHour[control_Stage]<0){
       actualHour += 24-__beginHour[control_Stage];
@@ -264,10 +264,10 @@ int irrigationController::min2Change(uint8_t HOUR, uint8_t MINUTE)
     else{
       actualHour -= __beginHour[control_Stage];
     }
-    
+
     // Get the percentage of the time that have already passed
     float percentageGap = float(actualHour)/__hoursPerCycle*100;
-    
+
     // Get the percentage until the next change of solution
     uint8_t sol = getSolution()-1; // Actual solution
     uint8_t ord = __order[sol]; // Order
@@ -277,11 +277,11 @@ int irrigationController::min2Change(uint8_t HOUR, uint8_t MINUTE)
         percentage += __percentage[i];
       }
     }
-    
+
     // Get the minutes until next change of solution
-    float per = float(percentage) - percentageGap;    
+    float per = float(percentage) - percentageGap;
     if(per<0){ per=0; }
     int minutes = int(per*float(__hoursPerCycle)/100*60);
-    
+
     return minutes;
   }
