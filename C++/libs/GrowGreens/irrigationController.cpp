@@ -1,15 +1,16 @@
-// compressorController.cpp
+// irrigationController.cpp
 //
 // Copyright (C) 2019 Grow
 
-#include "compressorController.h"
+#include "irrigationController.h"
 
-/***   compressorController   ***/
-compressorController::compressorController( // Constructor
+/***   irrigationController   ***/
+irrigationController::irrigationController( // Constructor
   bool Vair_Logic,
   bool Vconnected_Logic,
   bool VFree_Logic )
-  {  _VAir = LOW;
+  {  _Pump = LOW;
+     _VAir = LOW;
      _VConnected = LOW;
      _VFree = LOW;
      _VAir_InvertedLogic = Vair_Logic;
@@ -19,7 +20,7 @@ compressorController::compressorController( // Constructor
      _Mode = 0;
  }
 
-void compressorController::turnOffAll()
+void irrigationController::turnOffAll()
   { // If KeepConnected Active let Valve ON
     if(_KeepConnected) _VConnected = HIGH;
     else _VConnected = LOW;
@@ -27,7 +28,7 @@ void compressorController::turnOffAll()
     _VFree = LOW;
   }
 
-void compressorController::pressurize()
+void irrigationController::pressurize()
   { _VAir = HIGH;
     if(_KeepConnected) {
       _VConnected = HIGH;
@@ -36,7 +37,7 @@ void compressorController::pressurize()
     else _VConnected = LOW;
   }
 
-void compressorController::despressurize()
+void irrigationController::despressurize()
   { _VFree = HIGH;
     if (_KeepConnected) {
       _VAir = LOW;
@@ -45,7 +46,7 @@ void compressorController::despressurize()
     else _VConnected = LOW;
   }
 
-void compressorController::setMode(uint8_t mode)
+void irrigationController::setMode(uint8_t mode)
   { _Mode = mode;
     switch(mode){
       case 0: // Turn off all notConnected
@@ -92,62 +93,65 @@ void compressorController::setMode(uint8_t mode)
     }
   }
 
-void compressorController::printAct(String act, uint8_t level=0)
+void irrigationController::printAct(String act, uint8_t level=0)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
     else if(level==3){ Serial.print(F("error,")); } // Error
     else if(level==4){ Serial.print(F("critical,")); } // Error
-    Serial.print(F("Compressor: "));
+    Serial.print(F("(Irrigation) "));
     Serial.println(act);
   }
 
-bool compressorController::getVAir()
+bool irrigationController::getPump()
+  { return _Pump; }
+
+bool irrigationController::getVAir()
   { if(_VAir_InvertedLogic) return !_VAir;
     else return _VAir;
   }
 
-bool compressorController::getVconnected()
+bool irrigationController::getVconnected()
   { if(_VConnected_InvertedLogic) return !_VConnected;
     else return _VConnected;
   }
 
-bool compressorController::getVfree()
+bool irrigationController::getVfree()
   { if(_VFree_InvertedLogic) return !_VFree;
     else return _VFree;
   }
 
-void compressorController::Off(bool connected)
+void irrigationController::Off(bool connected)
   { if(_Mode!=connected) setMode(connected);
     else printAct(F("Compressor Controller: It is already running function Off()"), 2);
   }
 
-void compressorController::pressurizeAll()
+void irrigationController::pressurizeAll()
   { if(_Mode!=2) setMode(2);
     else printAct(F("Compressor Controller: It is already running function pressurizeAll()"), 2);
   }
 
-void compressorController::pressurizeAir()
+void irrigationController::pressurizeAir()
   { if(_Mode!=3) setMode(3);
     else printAct(F("Compressor Controller: It is already running function pressurizeAir()"), 2);
   }
 
-void compressorController::pressurize_depressurize()
+void irrigationController::pressurize_depressurize()
   { if(_Mode!=4) setMode(4);
     else printAct(F("Compressor Controller: It is already running function pressurize_depressurize()"), 2);
   }
 
-void compressorController::depressurizeWater()
+void irrigationController::depressurizeWater()
   { if(_Mode!=5) setMode(5);
     else printAct(F("Compressor Controller: It is already running function depressurizeWater()"), 2);
   }
 
-void compressorController::depressurizeAll()
+void irrigationController::depressurizeAll()
   { if(_Mode!=+6) setMode(6);
     else printAct(F("Compressor Controller: It is already running function depressurizeAll()"), 2);
   }
 
-void compressorController::keepConnected(bool con)
+void irrigationController::keepConnected(bool con)
   { if(_KeepConnected!=con){
       _KeepConnected = con;
       if(_KeepConnected){
@@ -163,4 +167,14 @@ void compressorController::keepConnected(bool con)
         else if (_Mode == 6) setMode(5);
       }
     }
+  }
+
+void irrigationController::turnOnPump()
+  { _Pump = HIGH;
+    printAct(F("Recirculation Controller: Pump was turn on"), 1);
+  }
+
+void irrigationController::turnOffPump()
+  { _Pump = LOW;
+    printAct(F("Recirculation Controller: Pump was turn off"), 1);
   }
