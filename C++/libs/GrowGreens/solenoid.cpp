@@ -8,13 +8,14 @@
 // Statics variables definitions
 uint8_t solenoid::_numberSolenoid = 0;
 
-solenoid::solenoid(uint8_t num, uint8_t floor, bool reg, unsigned long timeOn) // Constructor
+solenoid::solenoid(uint8_t num, uint8_t printNum, uint8_t floor, bool reg, unsigned long timeOn) // Constructor
    { _State = LOW;
      _Enable = true;
      _Floor = floor;
      _Region = reg;
      _Number = num;
-     _TimeOn = timeOn;
+     _PrintNumber = printNum;
+     _TimeOn = timeOn*1000UL;
      setTime();
      _H2OVolume = 0;
      _numberSolenoid++;
@@ -27,7 +28,7 @@ void solenoid::setTime()
   { if(_State == HIGH) resetTime();
     else _ActualTime = millis() - _TimeOn;
   }
-  
+
 void solenoid::changeOrder(uint8_t new_number)
   { _Number = new_number; }
 
@@ -44,7 +45,7 @@ void solenoid::solenoidPrint(String act, uint8_t level/*=0*/)
     Serial.print(_Floor+1);
     if (_Region == 0) Serial.print(F("A"));
     else Serial.print(F("B"));
-    Serial.print(_Number+1);
+    Serial.print(_PrintNumber+1);
     Serial.print(F(": "));
     Serial.println(act);
   }
@@ -59,7 +60,7 @@ void solenoid::solenoidPrint(String act1, String act2, String act3, uint8_t leve
     Serial.print(_Floor+1);
     if (_Region == 0) Serial.print(F("A"));
     else Serial.print(F("B"));
-    Serial.print(_Number+1);
+    Serial.print(_PrintNumber+1);
     Serial.print(F(": "));
     Serial.print(act1);
     Serial.print(act2);
@@ -134,8 +135,8 @@ floorValves::floorValves(uint8_t floor, uint8_t valvesPerRegion) // Constructor
        _H2O_regB = 0;
 
        for (int i = 0; i<valvesPerRegion; i++){
-         _regA[i] = new solenoid(solenoid::_numberSolenoid, floor, 0, DEFAULT_TIME_ON);
-         _regB[i] = new solenoid(solenoid::_numberSolenoid, floor, 1, DEFAULT_TIME_ON);
+         _regA[i] = new solenoid(solenoid::_numberSolenoid, i, floor, 0, DEFAULT_TIME_ON);
+         _regB[i] = new solenoid(solenoid::_numberSolenoid, i, floor, 1, DEFAULT_TIME_ON);
        }
        _floorNumber++;
      }
@@ -175,23 +176,23 @@ void floorValves::floorPrint(String act1, String act2, String act3, uint8_t leve
 
 void floorValves::updateH2O()
   { restartH2O_floor(false);
-    for(int i = 0; i<_valvesPerRegion*2; i++){
-      if(i<_valvesPerRegion) _H2O_regA += _regA[i]->getH2O();
-      else _H2O_regB += _regB[i-_valvesPerRegion]->getH2O();
+    for(int i = 0; i<_valvesPerRegion; i++){
+      _H2O_regA += _regA[i]->getH2O();
+      _H2O_regB += _regB[i]->getH2O();
     }
   }
 
 void floorValves::restartH2O(bool print)
-  { for(int i = 0; i<_valvesPerRegion*2; i++) {
-      if(i<_valvesPerRegion) _regA[i]->restartH2O(print);
-      else _regB[i-_valvesPerRegion]->restartH2O(print);
+  { for(int i = 0; i<_valvesPerRegion; i++) {
+      _regA[i]->restartH2O(print);
+      _regB[i]->restartH2O(print);
     }
   }
 
 void floorValves::printH2O()
-  { for(int i = 0; i<_valvesPerRegion*2; i++) {
-      if(i<_valvesPerRegion) _regA[i]->printH2O();
-      else _regB[i-_valvesPerRegion]->printH2O();
+  { for(int i = 0; i<_valvesPerRegion; i++) {
+      _regA[i]->printH2O();
+      _regB[i]->printH2O();
     }
   }
 
@@ -210,18 +211,39 @@ void floorValves::printH2O_floor()
     floorPrint(F("Water Consumption - "), String(_H2O_regA+_H2O_regB), F(" liters"));
   }
 
+void floorValves::enable(bool en, uint8_t reg)
+  { // Reg A = 0 and Reg B = 1
+    if(!reg) for(int i = 0; i<_valvesPerRegion; i++) {
+        if(i<=reg) _regA[i]->enable(true);
+        else _regA[i]->enable(false);
+    }
+    else for(int i = 0; i<_valvesPerRegion; i++) {
+        if(i<=reg) _regB[i]->enable(true);
+        else _regB[i]->enable(true);
+    }
+  }
+
   /***   systemValves   ***/
-  systemValves::systemValves(uint8_t floorNum, uint8_t valvesPerRegion, uint8_t cycleTime /*= DEFAULT_CYCLE_TIME*/) // Constructor
-     { if(floorNum<=MAX_FLOOR_NUMBER && valvesPerRegion<=MAX_VALVES_PER_REGION){
+  systemValves::systemValves(basicConfig bconfig, dynamicMem & myMem) // Constructor
+     { if(bconfig.floors<=MAX_FLOOR_NUMBER && bconfig.solenoids<=MAX_VALVES_PER_REGION){
          _Enable = false;
-         _CycleTime = cycleTime*60UL*1000UL;
-         _floorNumber = floorNum;
-         _valvesPerRegion = valvesPerRegion;
+         _CycleTime = bconfig.cycleTime*60UL*1000UL;
+         _floorNumber = bconfig.floors;
+         _valvesPerRegion = bconfig.solenoids;
          _actualNumber = 0;
          _H2O_Consumption = 0;
-         _H2O_Waste = 0;
          resetTime();
-         for (int i = 0; i<floorNum; i++) _floor[i] = new floorValves(i, valvesPerRegion);
+         for (int i = 0; i<_floorNumber; i++) {
+           uint8_t valveTime = 0;
+           _floor[i] = new floorValves(i, _valvesPerRegion);
+
+           for(int j=0; j<_valvesPerRegion; j++){
+             valveTime = myMem.read_irrigationParameters(i, 0, j);
+             _floor[i]->_regA[j]->setTimeOn(valveTime);
+             valveTime = myMem.read_irrigationParameters(i, 1, j);
+             _floor[i]->_regB[j]->setTimeOn(valveTime);
+           }
+         }
        }
        else Serial.println(F("critical,System Valves ERROR: Floors exceed max number"));
      }
@@ -238,6 +260,15 @@ void floorValves::printH2O_floor()
      Serial.print(act2);
      Serial.println(act3);
    }
+
+void systemValves::printAtFirst()
+  { if(_actualNumber==0){ // First Solenoid
+      updateH2O(); // Update water info by system and floor
+      printH2O(); // Print solenoid water info
+      printH2O_system(); // Print system water info
+      restartH2O(false); // Restart solenoid water info
+    }
+  }
 
 void systemValves::updateH2O()
    { restartH2O_system(false);
@@ -259,16 +290,10 @@ void systemValves::updateH2O()
  void systemValves::restartH2O_system(bool print)
    { if(print) systemPrint(F("Water Volume Restarted"), F(""), F(""));
      _H2O_Consumption = 0;
-     _H2O_Waste = 0;
    }
 
  void systemValves::printH2O_system()
-   { systemPrint(F("Water Consumption - "), String(_H2O_Consumption), F(" liters"), 0);
-     systemPrint(F("Water Waste - "), String(_H2O_Waste), F(" liters"), 1);
-   }
-
- void systemValves::addWasteH2O(float newVolume)
-   { if(newVolume>0) _H2O_Waste += newVolume; }
+   { systemPrint(F("Water Consumption - "), String(_H2O_Consumption), F(" liters"), 0); }
 
 unsigned long systemValves::getActionTime()
   { unsigned long totalTime = 0;
@@ -346,24 +371,21 @@ void systemValves::run()
         if(reg==0){
           if(_floor[fl]->_regA[num]->isEnable()) { // Solenoid Enable
             if(_floor[fl]->_regA[num]->getState()==LOW){ // Solenoid Off
-              if(_actualNumber==0){ // First Solenoid
-                // getWasteWater(); /* Requires flowMeter*/
-                // restartAllH2O(); /* check if we want to print before*/
-              }
+              printAtFirst();
               _floor[fl]->_regA[num]->turnOn(true);
             }
             else if(_floor[fl]->_regA[num]->getState()==HIGH && _floor[fl]->_regA[num]->getTime()>=_floor[fl]->_regA[num]->getTimeOn()) {
               _floor[fl]->_regA[num]->turnOff(false);
-              //getConsumptionH2O(); /* Requires flowMeter*/
+               /* Requires flowMeter
+               //getConsumptionH2O();
+               // Find another way to calculate this function without need to insert scale sensor in here
+               */
               _actualNumber++;
             }
           }
           else{ /* Check what happen when solenoid is disable */
             if(_floor[fl]->_regA[num]->getState()) _floor[fl]->_regA[num]->turnOff(false); // If solenoid in action turnOff
-            if(_actualNumber==0){ // First Solenoid
-              // getWasteWater(); /* Requires flowMeter*/
-              // restartAllH2O(); /* check if we want to print before*/
-            }
+            printAtFirst();
             _floor[fl]->_regA[num]->setTime(); // Reset solenoid time
             _actualNumber++;
           }
@@ -371,24 +393,21 @@ void systemValves::run()
         else{
           if(_floor[fl]->_regB[num]->isEnable()) { // Solenoid Enable
             if(_floor[fl]->_regB[num]->getState()==LOW){ // Solenoid Off
-              if(_actualNumber==0){ // First Solenoid
-                // getWasteWater(); /* Requires flowMeter*/
-                // restartAllH2O(); /* check if we want to print before*/
-              }
+              printAtFirst();
               _floor[fl]->_regB[num]->turnOn(true);
             }
             else if(_floor[fl]->_regB[num]->getState()==HIGH && _floor[fl]->_regB[num]->getTime()>=_floor[fl]->_regB[num]->getTimeOn()) {
               _floor[fl]->_regB[num]->turnOff(false);
-              //getConsumptionH2O(); /* Requires flowMeter*/
+              /* Requires flowMeter
+              //getConsumptionH2O();
+              // Find another way to calculate this function without need to insert scale sensor in here
+              */
               _actualNumber++;
             }
           }
           else{ /* Check what happen when solenoid is disable */
             if(_floor[fl]->_regB[num]->getState()) _floor[fl]->_regB[num]->turnOff(false); // If solenoid in action turnOff
-            if(_actualNumber==0){ // First Solenoid
-              // getWasteWater(); /* Requires flowMeter*/
-              // restartAllH2O(); /* check if we want to print before*/
-            }
+            printAtFirst();
             _floor[fl]->_regB[num]->setTime(); // Reset solenoid time
             _actualNumber++;
           }
