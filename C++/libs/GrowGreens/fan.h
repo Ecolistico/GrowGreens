@@ -34,6 +34,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #include <wiring.h>
 #endif
 
+#include <dynamicMemory.h>
 #include <commonStructures.h> // Shared structures bewtween differents classes
 
 class fan
@@ -77,7 +78,7 @@ class fan
       public:
         fan *_fan[MAX_FLOOR_NUMBER]; // List of pointers to each fan control
 
-        systemFan(uint8_t floorNum); // Constructor
+        systemFan(uint8_t floorNum, dynamicMem & myMem); // Constructor
 
         void enable(bool en); // Enable the system
         void run();
