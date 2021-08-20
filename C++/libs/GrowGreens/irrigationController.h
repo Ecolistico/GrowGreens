@@ -34,6 +34,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #include <wiring.h>
 #endif
 
+#include <commonStructures.h> // Shared structures bewtween differents classes
 
 // Class to control the air compressor
 class irrigationController
@@ -50,6 +51,7 @@ class irrigationController
         // Aux variables
         bool _KeepConnected; // Aux variable to connect air and water tanks
         uint8_t _Mode;
+        bool _Enable;
 
         // Compressor functions
         void turnOffAll(); // Set all LOW, using logic
@@ -61,11 +63,8 @@ class irrigationController
         void printAct(String act, uint8_t level=0);
 
     public:
-         irrigationController( // Constructor
-           bool Vair_Logic,
-           bool Vconnected_Logic,
-           bool VFree_Logic
-         );
+         // Constructor
+         irrigationController(logicConfig lconfig);
 
          // States
          bool getPump(); // Return State of Water Pump
@@ -86,6 +85,9 @@ class irrigationController
           // Recirculation
           void turnOnPump();
           void turnOffPump();
+
+          // Control
+          void enable(bool en);
   };
 
   #endif

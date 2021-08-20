@@ -5,19 +5,18 @@
 #include "irrigationController.h"
 
 /***   irrigationController   ***/
-irrigationController::irrigationController( // Constructor
-  bool Vair_Logic,
-  bool Vconnected_Logic,
-  bool VFree_Logic )
+// Constructor
+irrigationController::irrigationController(logicConfig lconfig)
   {  _Pump = LOW;
      _VAir = LOW;
      _VConnected = LOW;
      _VFree = LOW;
-     _VAir_InvertedLogic = Vair_Logic;
-     _VConnected_InvertedLogic = Vconnected_Logic;
-     _VFree_InvertedLogic = VFree_Logic;
+     _VAir_InvertedLogic = lconfig.Vair_Logic;
+     _VConnected_InvertedLogic = lconfig.Vconnected_Logic;
+     _VFree_InvertedLogic = lconfig.VFree_Logic;
      _KeepConnected = false;
      _Mode = 0;
+     _Enable = true;
  }
 
 void irrigationController::turnOffAll()
@@ -104,21 +103,32 @@ void irrigationController::printAct(String act, uint8_t level=0)
   }
 
 bool irrigationController::getPump()
-  { return _Pump; }
+  { if(_Enable) return _Pump;
+    else return false;
+  }
 
 bool irrigationController::getVAir()
-  { if(_VAir_InvertedLogic) return !_VAir;
-    else return _VAir;
+  { bool state;
+    if(_Enable) state = _VAir;
+    else state = false;
+    if(_VAir_InvertedLogic) return !state;
+    else return state;
   }
 
 bool irrigationController::getVconnected()
-  { if(_VConnected_InvertedLogic) return !_VConnected;
-    else return _VConnected;
+  { bool state;
+    if(_Enable) state = _VConnected;
+    else state = false;
+    if(_VConnected_InvertedLogic) return !state;
+    else return state;
   }
 
 bool irrigationController::getVfree()
-  { if(_VFree_InvertedLogic) return !_VFree;
-    else return _VFree;
+  { bool state;
+    if(_Enable) state = _VFree;
+    else state = false;
+    if(_VFree_InvertedLogic) return !state;
+    else return state;
   }
 
 void irrigationController::Off(bool connected)
@@ -177,4 +187,12 @@ void irrigationController::turnOnPump()
 void irrigationController::turnOffPump()
   { _Pump = LOW;
     printAct(F("Recirculation Controller: Pump was turn off"), 1);
+  }
+
+void irrigationController::enable(bool en)
+  { if(_Enable!=en){
+      _Enable = en;
+      if(_Enable) printAct(F("Irrigation Controller: Enabled"), 1);
+      else printAct(F("Irrigation Controller: Disabled"), 1);
+    }
   }
