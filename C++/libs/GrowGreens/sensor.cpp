@@ -4,48 +4,33 @@
 
 #include "sensor.h"
 
-/***   analogSensor   ***/
-// Statics variables definitions
-uint8_t analogSensor::__TotalSensors = 0;
-analogSensor *analogSensor::ptr[MAX_ANALOG_SENSOR];
-unsigned long analogSensor::__ActualTime = 0;
+/***   analogSens   ***/
+analogSens::analogSens(uint8_t pin, uint8_t num) // Constructor
+  {  _Pin = pin;
+    _number = num;
 
-analogSensor::analogSensor(uint8_t pin, uint8_t type=250) // Constructor
-  { // Just the first time init pointers
-    if(__TotalSensors<1){
-      for (int i=0; i < MAX_ANALOG_SENSOR; i++) {
-        ptr[i] = NULL; // All Pointers NULL
-      }
-    }
-
-     __Pin = pin;
-     __Type = type;
-     // Default parameters
-     __FirstRead = false;
-     __Degree = 0;
-     __A = 0; __B = 0; __C=0;
-     __Value = 0;
-     __PreValue = __Value;
-     __Filter = 0;
-     __Alpha = 0; __Noise = 0; __Err = 0;
-
-     ptr[__TotalSensors] = this; // Set Static pointer to object
-     __TotalSensors++; // Add the new sensor to the total
+     _FirstRead = false;
+     _Degree = 0;
+     _A = 0; _B = 0; _C=0;
+     _Value = 0;
+     _PreValue = _Value;
+     _Filter = 0;
+     _Alpha = 0; _Noise = 0; _Err = 0;
   }
 
-float analogSensor::model(float val)
-  { switch(__Degree){
+float analogSens::model(float val)
+  { switch(_Degree){
       case 0:
         return val;
         break;
       case 1:
-        return (__A+val);
+        return (_A+val);
         break;
       case 2:
-        return (__A+__B*val);
+        return (_A+_B*val);
         break;
       case 3:
-        return (__A+__B*val+__C*val*val);
+        return (_A+_B*val+_C*val*val);
         break;
       default:
         return val;
@@ -53,16 +38,16 @@ float analogSensor::model(float val)
     }
   }
 
-float analogSensor::filter(float val)
-  {  switch(__Filter){
+float analogSens::filter(float val)
+  {  switch(_Filter){
       case 0:
         return val;
         break;
       case 1:
-        return exponential_filter(__Alpha, val, __PreValue);
+        return exponential_filter(_Alpha, val, _PreValue);
         break;
       case 2:
-        return kalman_filter(val, __PreValue);
+        return kalman_filter(val, _PreValue);
         break;
       default:
         return val;
@@ -70,7 +55,7 @@ float analogSensor::filter(float val)
     }
   }
 
-float analogSensor::exponential_filter(float alpha, float t, float t_1)
+float analogSens::exponential_filter(float alpha, float t, float t_1)
   { if(isnan(alpha) || isnan(t) || isnan(t_1)){
       return t;
     }
@@ -79,220 +64,346 @@ float analogSensor::exponential_filter(float alpha, float t, float t_1)
     }
   }
 
-float analogSensor::kalman_filter(float t, float t_1)
-  { if(__Err==0 || isnan(t) || isnan(t_1) ){
-      if(__Err==0){
-        __Err = 0.1;
+float analogSens::kalman_filter(float t, float t_1)
+  { if(_Err==0 || isnan(t) || isnan(t_1) ){
+      if(_Err==0){
+        _Err = 0.1;
       }
       return t;
     }
     else{
-      float kalman_gain = __Err/(__Err+__Noise);
-      __Err = (1-kalman_gain)*__Err;
+      float kalman_gain = _Err/(_Err+_Noise);
+      _Err = (1-kalman_gain)*_Err;
       return (t_1+kalman_gain*(t-t_1));
     }
   }
 
-void analogSensor::printModel()
-  { if (__Type==0){Serial.print(F("Nutrition Pressure"));}
-    else if (__Type==1){Serial.print(F("Tank Pressure"));}
-    else if(__Type==2){Serial.print(F("Water Pressure"));}
-    else{Serial.print(F("error,Undefined"));}
-    Serial.print(F(" Sensor: "));
-    if(__Degree == 0 ){
-      Serial.println(F("You are not using any model yet..."));
+void analogSens::printModel()
+  { Serial.print(F("info,Sensor: Analog number "));
+    Serial.print(_number);
+    if(_Degree == 0 ){
+      Serial.println(F(" is not using any model yet..."));
     }
     else{
-      Serial.print(F("Y=")); Serial.print(__A);
-      Serial.print(F("+")); Serial.print(__B);
-      Serial.print(F("*x+")); Serial.print(__C); Serial.println(F("*x^2"));
+      Serial.print(F(" Y=")); Serial.print(_A);
+      Serial.print(F("+")); Serial.print(_B);
+      Serial.print(F("*x+")); Serial.print(_C); Serial.println(F("*x^2"));
     }
   }
 
-void analogSensor::printFilter()
-  { if (__Type==0){Serial.print(F("Nutrition Pressure"));}
-    else if (__Type==1){Serial.print(F("Tank Pressure"));}
-    else if(__Type==2){Serial.print(F("Water Pressure"));}
-    else{Serial.print(F("error,Undefined"));}
-    Serial.print(F(" Sensor: "));
-    switch(__Filter){
+void analogSens::printFilter()
+  { switch(_Filter){
       case 0:
-      Serial.println(F("You are not using any filter..."));
-      break;
-    case 1:
-      Serial.print(F("You are using an exponencial filter with Alpha="));
-      Serial.println(__Alpha);
-      break;
-    case 2:
-      Serial.print(F("You are using a Kalman filter with Noise="));
-      Serial.print(__Noise); Serial.print(F(" and Actual Error="));
-      Serial.println(__Err);
-      break;
-    default:
-      Serial.println(F("error,Filters parameters unknowns"));
-    }
-  }
-
-void analogSensor::begin()
-  { pinMode(__Pin, INPUT); }
-
-void analogSensor::read()
-  { float val = analogRead(__Pin);
-    if(__FirstRead){
-      __PreValue = __Value;
-      __Value = filter(model(val));
-    }
-    else{
-      __FirstRead = true;
-      __PreValue = model(val);
-      __Value = __PreValue;
-      if (__Type==0){Serial.print(F("info,Nutrition Pressure"));}
-      else if (__Type==1){Serial.print(F("info,Tank Pressure"));}
-      else if(__Type==2){Serial.print(F("info,Water Pressure"));}
-      else{Serial.print(F("error,Undefined"));}
-      Serial.print(F("Sensor: Initial value="));
-      Serial.println(__Value);
-    }
-  }
-
-bool analogSensor::setModel(
-  uint8_t degree,
-  float a = 0,
-  float b = 0,
-  float c = 0
-){ if(degree==0){
-      __Degree = degree; __A = 0; __B = 0; __C = 0;
-      return true;
-    }
-    else{
-      int count = 0;
-      if(a!=0){count++;}
-      if(b!=0){count++;}
-      if(c!=0){count++;}
-      if(degree<=MAX_EQUATION_DEGREE && count>0 && count-1<=degree){
-        __Degree = degree; __A = a; __B = b; __C = c;
-        printModel();
-        return true;
+        Serial.print(F("info,Sensor: Analog number "));
+        Serial.print(_number);
+        Serial.println(F(" is not using any filter..."));
+        break;
+      case 1:
+        Serial.print(F("info,Sensor: Analog number "));
+        Serial.print(_number);
+        Serial.print(F(" is using an exponencial filter with Alpha="));
+        Serial.println(_Alpha);
+        break;
+      case 2:
+        Serial.print(F("info,Sensor: Analog number "));
+        Serial.print(_number);
+        Serial.print(F(" is using a Kalman filter with Noise="));
+        Serial.print(_Noise); Serial.print(F(" and Actual Error="));
+        Serial.println(_Err);
+        break;
+      default:
+        Serial.print(F("error,Sensor: Analog number "));
+        Serial.print(_number);
+        Serial.println(F(" filters parameters unknowns"));
       }
-      else{return false;}
+    }
+
+void analogSens::setModel(float a /*= 0*/, float b /*= 0*/, float c /*= 0*/)
+{ uint8_t degree;
+  if(a==0 && b==0 && c==0) degree = 0;
+  else if(a!=0 && b==0 && c==0) degree = 1;
+  else if(b!=0 && c==0) degree = 2;
+  else if(c!=0) degree = 3;
+
+  if(degree==0){
+    _Degree = degree;
+    _A = 0;
+    _B = 0;
+    _C = 0;
+  } else {
+      int count = 0;
+      if(a!=0) count++;
+      if(b!=0) count++;
+      if(c!=0) count++;
+      if(degree<=MAX_EQUATION_DEGREE && count>0 && count-1<=degree){
+        _Degree = degree;
+        _A = a;
+        _B = b;
+        _C = c;
+        printModel();
+      } else Serial.println(F("error,Sensor: analogSens::setModel( uint8_t degree, float a = 0, float b = 0, float c = 0) parameters provided are wrong"));
     }
   }
 
-void analogSensor::notFilter()
-  { __Filter = 0;
-    __Alpha = 0;
-    __Noise = 0;
-    __Err = 0;
+void analogSens::notFilter()
+  { _Filter = 0;
+    _Alpha = 0;
+    _Noise = 0;
+    _Err = 0;
     printFilter();
   }
 
-void analogSensor::defaultFilter()
+void analogSens::defaultFilter()
   { /*
     // Default Kalman
-    __Filter = 2;
-    __Noise = 0.5;
-    __Err = 1;
+    _Filter = 2;
+    _Noise = 0.5;
+    _Err = 1;
     */
     // Default exponential
-    __Filter = 1;
-    __Alpha = 0.25;
+    _Filter = 1;
+    _Alpha = 0.25;
     printFilter();
   }
 
-bool analogSensor::setExponentialFilter(float alpha = 0.5)
+void analogSens::setExponentialFilter(float alpha /*= 0.5*/)
   { if(alpha>0 && alpha<1){
-      __Filter = 1; __Alpha = alpha;
+      _Filter = 1;
+      _Alpha = alpha;
       printFilter();
-      return true;
-    }
-    else{return false;}
+    } else Serial.println(F("error,Sensor: analogSens::setExponentialFilter(float alpha = 0.5) parameters provided are wrong"));
   }
 
-bool analogSensor::setKalmanFilter(float noise)
+void analogSens::setKalmanFilter(float noise)
   { if(noise>0){
-      __Filter = 2;
-      __Noise = noise; // Enviromental Noise
-      __Err = 1; // Initial Error
+      _Filter = 2;
+      _Noise = noise; // Enviromental Noise
+      _Err = 1; // Initial Error
       printFilter();
-      return true;
-    }
-    else{return false;}
+    } else Serial.println(F("error,Sensor: analogSens::setKalmanFilter(float noise) parameters provided are wrong"));
   }
 
-float analogSensor::getValue()
-  { return __Value; }
-
-float analogSensor::getPreValue()
-  { return __PreValue; }
-
-void analogSensor::beginAll()
-  { for(int i = 0; i<__TotalSensors; i++){
-      ptr[i]->begin();
-    }
-    __ActualTime = millis();
+void analogSens::setFilter(uint8_t filter, float param)
+  { if(filter==0) notFilter();
+    else if(filter==1) setExponentialFilter(param);
+    else if(filter==2) setKalmanFilter(param);
+    else Serial.println(F("error,Sensor: analogSens::setFilter(uint8_t filter, float param) parameters provided are wrong"));
   }
 
-void analogSensor::readAll()
-  { if(millis()-__ActualTime>100){
-      __ActualTime = millis();
-      for(int i = 0; i<__TotalSensors; i++){
-        ptr[i]->read();
+float analogSens::getValue()
+  { return _Value; }
+
+float analogSens::getPreValue()
+  { return _PreValue; }
+
+void analogSens::begin()
+  { pinMode(_Pin, INPUT); }
+
+void analogSens::read()
+  { float val = analogRead(_Pin);
+    if(_FirstRead){
+      _PreValue = _Value;
+      _Value = filter(model(val));
+    }
+    else{
+      _FirstRead = true;
+      _PreValue = model(val);
+      _Value = _PreValue;
+      Serial.print(F("info,Sensor: Analog number "));
+      Serial.print(_number);
+      Serial.print(F(" initial value="));
+      Serial.println(_Value);
+    }
+  }
+
+void analogSens::printRead()
+  { Serial.print(F("info,Sensor: Analog number "));
+    Serial.print(_number);
+    Serial.print(F(" value="));
+    Serial.println(_Value);
+  }
+
+/*** Flowmeter    ***/
+volatile long Flowmeter::_numPulses1 = 0;
+volatile long Flowmeter::_numPulses2 = 0;
+
+void Flowmeter::countPulses1()
+  { _numPulses1++; }
+
+void Flowmeter::countPulses2()
+  { _numPulses2++; }
+
+// Constructor
+Flowmeter::Flowmeter(uint8_t pin, uint8_t num, float k)
+  { _pin = pin;
+    _number = num;
+    _K = k;
+    _water = 0;
+  }
+
+void Flowmeter::begin()
+  { bool succeed = true;
+    pinMode(_pin, INPUT);
+    if(_number==0) attachInterrupt(digitalPinToInterrupt(_pin), countPulses1, RISING);
+    else if(_number==1) attachInterrupt(digitalPinToInterrupt(_pin), countPulses2, RISING);
+    else if (_number>=MAX_FLOWMETER_SENSOR) succeed = false;
+    if(succeed){
+      Serial.print(F("info,Sensor: Flometer number "));
+      Serial.print(_number);
+      Serial.println(F(" started correctly"));
+    }
+    else Serial.println(F("error,Sensor: Incorrect flowmeter number. It is allowed to control a maximum of 2 sensors."));
+  }
+
+void Flowmeter::restartWater()
+  { _water = 0; }
+
+float Flowmeter::getWater()
+  { return _water; }
+
+void Flowmeter::read()
+  { noInterrupts(); // Disable Interrupts
+    float newVolume = 0;
+    if(_number==0){
+      newVolume = _numPulses1/(60*_K);
+      _numPulses1 = 0;
+    }
+    else if(_number==1){
+      newVolume = _numPulses2/(60*_K);
+      _numPulses2 = 0;
+    }
+    _water += newVolume;
+    interrupts();   // Enable Interrupts
+  }
+
+void Flowmeter::printRead()
+  { Serial.print(F("info,Sensor: Flowmeter number "));
+    Serial.print(_number);
+    Serial.print(F(" water= "));
+    Serial.print(_water);
+    Serial.println(F(" liters"));
+  }
+
+/*** ScaleSens    ***/
+// Constructor
+ScaleSens::ScaleSens(uint8_t pin1, uint8_t pin2, uint8_t num)
+  { _pin1 = pin1;
+    _pin2 = pin2;
+    _number = num;
+    _weight = 0;
+    _sc = new HX711;
+  }
+
+void ScaleSens::begin(long offset, float scale)
+  { _sc->begin(_pin1, _pin2); // Data, Clock
+    _sc->set_offset(offset); // Set Offset
+    _sc->set_scale(scale); // Set Scale
+    Serial.print(F("info,Sensor: Scale number "));
+    Serial.print(_number);
+    Serial.println(F(" started correctly"));
+  }
+
+void ScaleSens::read()
+  { _weight = _sc->get_units(10); }
+
+float ScaleSens::getWeight()
+  { return _weight; }
+
+void ScaleSens::printRead()
+  { Serial.print(F("info,Sensor: Scale number "));
+    Serial.print(_number);
+    Serial.print(F(" weight= "));
+    Serial.print(_weight);
+    Serial.println(F(" kg"));
+  }
+
+void ScaleSens::printRead_notScale()
+  { double value = _sc->get_value(10); // Get the average of 10 readings
+    Serial.print(F("info,Sensor: Scale number "));
+    Serial.print(_number);
+    Serial.print(F(" value (scale@1) = "));
+    Serial.print(value);
+  }
+
+void ScaleSens::printRead_notOffset()
+  { long value = _sc->read_average(10); // Get the average of 10 readings
+    Serial.print(F("info,Sensor: Scale number "));
+    Serial.print(_number);
+    Serial.print(F(" value (offset@0) = "));
+    Serial.print(value);
+  }
+
+/*** SwitchSens    ***/
+// Constructor
+SwitchSens::SwitchSens(uint8_t pin, uint8_t num, bool logic /* = true */)
+  { _pin = pin;
+    _number = num;
+    _counter = 0;
+    _logic = logic;
+    _state = LOW;
+    _readState = LOW;
+  }
+
+void SwitchSens::begin()
+  { pinMode(_pin, INPUT_PULLUP); }
+
+void SwitchSens::setLogic(bool logic)
+  { _logic = logic; }
+
+void SwitchSens::read()
+  { _readState = digitalRead(_pin);
+
+    if(_readState!=_state){
+      _counter++;
+      if(_counter>=5){
+        _counter = 0;
+        _state = _readState;
       }
     }
+
+    if(_logic) return _state;
+    else return !_state;
+  }
+
+void SwitchSens::printRead()
+  { Serial.print(F("info,Sensor: Switch number "));
+    Serial.print(_number);
+    if((_logic && _state) || (!_logic && !_state)) Serial.println(F(" is ON"));
+    else Serial.print(F(" is OFF"));
   }
 
 /***   UltraSonic   ***/
-// Statics variables definitions
-uint8_t UltraSonic::__TotalSensors = 0;
-UltraSonic *UltraSonic::ptr[MAX_ULTRASONIC];
-unsigned long UltraSonic::__ActualTime = 0;
+// Constructor
+UltraSonic::UltraSonic( uint8_t pin1, uint8_t pin2, uint8_t num, int minDist /*= MIN_SECURITY_DISTANCE*/, int maxDist /*= MAX_SECURITY_DISTANCE*/)
+{  _Pin1 = pin1;
+   _Pin2 = pin2;
+   _number = num;
+   _Sonar = new NewPing(_Pin1, _Pin2, MAX_DISTANCE);
 
-UltraSonic::UltraSonic( // Constructor
-  uint8_t pin1,
-  uint8_t pin2,
-  uint8_t type=250,
-  int minDist = MIN_SECURITY_DISTANCE,
-  int maxDist = MAX_SECURITY_DISTANCE
-){  // Just the first time init pointers
-     if(__TotalSensors<1){
-       for (int i=0; i < MAX_ULTRASONIC; i++) {
-         ptr[i] = NULL; // All Pointers NULL
-       }
-     }
+   if(minDist<maxDist){
+     _minDist = minDist;
+     _maxDist = maxDist;
+   } else{
+     _minDist = MIN_SECURITY_DISTANCE;
+     _maxDist = MAX_SECURITY_DISTANCE;
+   }
 
-     __Pin1 = pin1;
-     __Pin2 = pin2;
-     __Type = type;
-     __Sonar = new NewPing(__Pin1, __Pin2, MAX_DISTANCE);
-
-     if(minDist<maxDist){
-       __minDist = minDist;
-       __maxDist = maxDist;
-     }
-     else{
-       __minDist = MIN_SECURITY_DISTANCE;
-       __maxDist = MAX_SECURITY_DISTANCE;
-     }
-
-     // Default parameters
-     __State = 0;
-     __FirstRead = false;
-     __Distance = 0;
-     __PreDistance = 0;
-     __Model = 0;
-     __Param = 0;
-     __Height = 0;
-     __Filter = 0;
-     __Alpha = 0; __Noise = 0; __Err = 0;
-     __countState = 0;
-
-     ptr[__TotalSensors] = this; // Set Static pointer to object
-     __TotalSensors++; // Add the new sensor to the total
+   // Default parameters
+   _State = 0;
+   _FirstRead = false;
+   _Distance = 0;
+   _PreDistance = 0;
+   _Model = 0;
+   _Param = 0;
+   _Height = 0;
+   _Filter = 0;
+   _Alpha = 0; _Noise = 0; _Err = 0;
+   _countState = 0;
 
   }
 
 float UltraSonic::model(float val)
-  { switch(__Model){
+  { switch(_Model){
       case 0: // Not Model
         return val;
         break;
@@ -309,27 +420,27 @@ float UltraSonic::model(float val)
   }
 
 float UltraSonic::cilinder(float val)
-  { float vol = (PI*__Param*__Param)*(val)/1000; // Volumen in liters
+  { float vol = (PI*_Param*_Param)*(val)/1000; // Volumen in liters
     if(vol<0) {return vol;}
     return vol;
   }
 
 float UltraSonic::rectangularPrism(float val)
-  { float vol = (__Param)*(val)/1000; // Volumen in liters
+  { float vol = (_Param)*(val)/1000; // Volumen in liters
     if(vol<0) {return vol;}
     return vol;
   }
 
 float UltraSonic::filter(float val)
-  {  switch(__Filter){
+  {  switch(_Filter){
       case 0:
         return val;
         break;
       case 1:
-        return exponential_filter(__Alpha, val, __PreDistance);
+        return exponential_filter(_Alpha, val, _PreDistance);
         break;
       case 2:
-        return kalman_filter(val, __PreDistance);
+        return kalman_filter(val, _PreDistance);
         break;
       default:
         return val;
@@ -347,304 +458,240 @@ float UltraSonic::exponential_filter(float alpha, float t, float t_1)
   }
 
 float UltraSonic::kalman_filter(float t, float t_1)
-  { if(__Err==0 || isnan(t) || isnan(t_1) ){
-      if(__Err==0){
-        __Err = 0.1;
+  { if(_Err==0 || isnan(t) || isnan(t_1) ){
+      if(_Err==0){
+        _Err = 0.1;
       }
       return t;
     }
     else{
-      float kalman_gain = __Err/(__Err+__Noise);
-      __Err = (1-kalman_gain)*__Err;
+      float kalman_gain = _Err/(_Err+_Noise);
+      _Err = (1-kalman_gain)*_Err;
       return (t_1+kalman_gain*(t-t_1));
     }
   }
 
 float UltraSonic::read()
-  { if(__FirstRead){
-      __PreDistance = __Distance;
-      __Distance = filter(__Sonar->ping_cm());
+  { if(_FirstRead){
+      _PreDistance = _Distance;
+      _Distance = filter(_Sonar->ping_cm());
     }
     else{
-      __PreDistance = __Sonar->ping_cm();
-      __Distance = __PreDistance;
+      _PreDistance = _Sonar->ping_cm();
+      _Distance = _PreDistance;
     }
-    return __Distance;
+    return _Distance;
   }
 
 void UltraSonic::printModel()
-  { if (__Type==0){Serial.print(F("Rec Level"));}
-    else if (__Type==1){Serial.print(F("Sol1 Level"));}
-    else if(__Type==2){Serial.print(F("Sol2 Level"));}
-    else if(__Type==3){Serial.print(F("Sol3 Level"));}
-    else if(__Type==4){Serial.print(F("Sol4 Level"));}
-    else if(__Type==5){Serial.print(F("H2O Level"));}
-    else if(__Type==6){Serial.print(F("sMaker Level"));}
-    else{Serial.print(F("error,Undefined"));}
-    Serial.print(F(" Sensor: "));
-    if(__Model == 0){
-      Serial.println(F("You are not using any model yet..."));
+  { Serial.print(F("info,Sensor: Ultrasonic number "));
+    Serial.print(_number);
+    if(_Model == 0){
+      Serial.print(F(" is not using any model yet..."));
     }
-    else if(__Model == 1){
-      Serial.print(F("You are using a cilinder with radio="));
-      Serial.print(__Param);
+    else if(_Model == 1){
+      Serial.print(F(" is using a cilinder with radio="));
+      Serial.print(_Param);
       Serial.print(F("cm and height="));
-      Serial.print(__Height);
+      Serial.print(_Height);
       Serial.println(F("cm"));
     }
-    else if(__Model == 2){
-      Serial.print(F("You are using a rectangular prism with area="));
-      Serial.print(__Param);
-      Serial.println(F("cm2 and height="));
-      Serial.print(__Height);
+    else if(_Model == 2){
+      Serial.print(F(" is using a rectangular prism with area="));
+      Serial.print(_Param);
+      Serial.print(F("cm2 and height="));
+      Serial.print(_Height);
       Serial.println(F("cm"));
     }
   }
 
 void UltraSonic::printFilter()
-  { if (__Type==0){Serial.print(F("Rec Level"));}
-    else if (__Type==1){Serial.print(F("Sol1 Level"));}
-    else if(__Type==2){Serial.print(F("Sol2 Level"));}
-    else if(__Type==3){Serial.print(F("Sol3 Level"));}
-    else if(__Type==4){Serial.print(F("Sol4 Level"));}
-    else if(__Type==5){Serial.print(F("H2O Level"));}
-    else if(__Type==6){Serial.print(F("sMaker Level"));}
-    else{Serial.print(F("error,Undefined"));}
-    Serial.print(F(" Sensor: "));
-    switch(__Filter){
+  { switch(_Filter){
       case 0:
-      Serial.println(F("You are not using any filter..."));
+      Serial.print(F("info,Sensor: Ultrasonic number "));
+      Serial.print(_number);
+      Serial.println(F(" is not using any filter..."));
       break;
     case 1:
-      Serial.print(F("You are using an exponencial filter with Alpha="));
-      Serial.println(__Alpha);
+      Serial.print(F("info,Sensor: Ultrasonic number "));
+      Serial.print(_number);
+      Serial.print(F(" is using an exponencial filter with Alpha="));
+      Serial.println(_Alpha);
       break;
     case 2:
-      Serial.print(F("You are using a Kalman filter with Noise="));
-      Serial.print(__Noise); Serial.print(F(" and Actual Error="));
-      Serial.println(__Err);
+      Serial.print(F("info,Sensor: Ultrasonic number "));
+      Serial.print(_number);
+      Serial.print(F(" is using a Kalman filter with Noise="));
+      Serial.print(_Noise); Serial.print(F(" and Actual Error="));
+      Serial.println(_Err);
       break;
     default:
-      Serial.println(F("error,Filters parameters unknowns"));
+      Serial.print(F("error,Sensor: Ultrasonic number"));
+      Serial.print(_number);
+      Serial.println(F(" filters parameters unknowns"));
     }
   }
 
 uint8_t UltraSonic::updateState()
   { float val = read();
 
-    if(val < __minDist){
-      if(__countState<-10 || !__FirstRead){
-          __State = 2; // Water level too high
+    if(val < _minDist){
+      if(_countState<-10 || !_FirstRead){
+          _State = 2; // Water level too high
       }
-      else{__countState--; } // Water level getting high
+      else{_countState--; } // Water level getting high
     }
 
-    else if(val > __maxDist){
-      if(__countState>10 || !__FirstRead){
-        __State = 1;  // Water level too low
+    else if(val > _maxDist){
+      if(_countState>10 || !_FirstRead){
+        _State = 1;  // Water level too low
       }
-      else{__countState++; } // Water level getting low
+      else{_countState++; } // Water level getting low
     }
 
     else{
-      __countState = 0;
-      __State =  0; // Water in range}
+      _countState = 0;
+      _State =  0; // Water in range}
     }
 
-    if(!__FirstRead){
-      __FirstRead = true;
-      if (__Type==0){Serial.print(F("info,Rec Level"));}
-      else if (__Type==1){Serial.print(F("info,Sol1 Level"));}
-      else if(__Type==2){Serial.print(F("info,Sol2 Level"));}
-      else if(__Type==3){Serial.print(F("info,Sol3 Level"));}
-      else if(__Type==4){Serial.print(F("info,Sol4 Level"));}
-      else if(__Type==5){Serial.print(F("info,H2O Level"));}
-      else if(__Type==6){Serial.print(F("info,sMaker Level"));}
-      else{Serial.print(F("error,Undefined"));}
-      Serial.print(F("Sensor: Initial value="));
-      Serial.print(model(__Height-__Distance));
+    if(!_FirstRead){
+      _FirstRead = true;
+      Serial.print(F("info,Sensor: Ultrasonic number "));
+      Serial.print(_number);
+      Serial.print(F(" initial value="));
+      Serial.print(model(_Height-_Distance));
       Serial.println(F(" liters"));
+
     }
-    return __State;
+    return _State;
   }
 
-bool UltraSonic::setModel(uint8_t model, float param, float height)
-  { if(model>=0 && model<=2 && param>0 && height>=__maxDist){
-      __Model = model;
-      __Param = param;
-      __Height = height;
+void UltraSonic::setModel(uint8_t model, float param, float height)
+  { if(model>=0 && model<=2 && param>0 && height>=_maxDist){
+      _Model = model;
+      _Param = param;
+      _Height = height;
       printModel();
-      return true;
-    }
-    else{return false;}
+    } else Serial.println(F("error,Sensor: UltraSonic::setModel(uint8_t model, float param, float height) parameters provided are wrong"));
   }
 
 void UltraSonic::notFilter()
-  { __Filter = 0;
-    __Alpha = 0;
-    __Noise = 0;
-    __Err = 0;
+  { _Filter = 0;
+    _Alpha = 0;
+    _Noise = 0;
+    _Err = 0;
     printFilter();
   }
 
 void UltraSonic::defaultFilter()
-  { __Filter = 1;
-    __Alpha = 0.25;
+  { _Filter = 1;
+    _Alpha = 0.25;
     printFilter();
   }
 
-bool UltraSonic::setExponentialFilter(float alpha = 0.2)
+void UltraSonic::setExponentialFilter(float alpha = 0.2)
   { if(alpha>0 && alpha<1){
-      __Filter = 1; __Alpha = alpha;
+      _Filter = 1; _Alpha = alpha;
       printFilter();
-      return true;
-    }
-    else{return false;}
+    } else Serial.println(F("error,Sensor: UltraSonic::setExponentialFilter(float alpha = 0.2) parameters provided are wrong"));
   }
 
-bool UltraSonic::setKalmanFilter(float noise)
+void UltraSonic::setKalmanFilter(float noise)
   { if(noise>0){
-      __Filter = 2;
-      __Noise = noise; // Enviromental Noise
-      __Err = 1; // Initial Error
+      _Filter = 2;
+      _Noise = noise; // Enviromental Noise
+      _Err = 1; // Initial Error
       printFilter();
-      return true;
-    }
-    else{return false;}
+    } else Serial.println(F("error,Sensor: UltraSonic::setKalmanFilter(float noise) parameters provided are wrong"));
   }
 
 int UltraSonic::getMinDist()
-  { return __minDist;}
+  { return _minDist;}
 
 int UltraSonic::getMaxDist()
-  { return __maxDist;}
+  { return _maxDist;}
 
 float UltraSonic::getDistance()
-  { return __Distance; }
+  { return _Distance; }
 
 float UltraSonic::getPreDistance()
-  { return __PreDistance; }
+  { return _PreDistance; }
 
 float UltraSonic::getVolume()
-  { return model(__Height-__Distance);}
+  { return model(_Height-_Distance);}
 
 float UltraSonic::getMinVolume()
-  { return model(__Height-__maxDist);}
-  
+  { return model(_Height-_maxDist);}
+
 float UltraSonic::getMaxVolume()
-  { return model(__Height-__minDist);}
+  { return model(_Height-_minDist);}
 
 uint8_t UltraSonic::getState()
-  { return __State; }
+  { return _State; }
 
 bool UltraSonic::changeMinDist(int minDist)
-  { if(minDist<__maxDist && minDist>=MIN_SECURITY_DISTANCE){
-      __minDist = minDist;
+  { if(minDist<_maxDist && minDist>=MIN_SECURITY_DISTANCE){
+      _minDist = minDist;
       return true;
-    }
-    else{return false;}
+    } else return false;
   }
 
 bool UltraSonic::changeMaxDist(int maxDist)
-  { if(maxDist>__minDist && maxDist<=MAX_SECURITY_DISTANCE){
-      __maxDist = maxDist;
+  { if(maxDist>_minDist && maxDist<=MAX_SECURITY_DISTANCE){
+      _maxDist = maxDist;
       return true;
-    }
-    else{return false;}
+    } else return false;
   }
 
-void UltraSonic::readAndPrint()
-  { for(int i = 0; i<__TotalSensors; i++){
-      uint8_t state = ptr[i]->updateState();
-      uint8_t type = ptr[i]->__Type;
-      if (type==0){Serial.print(F("info,Recirculation Level"));}
-      else if (type==1){Serial.print(F("info,Solution 1 Level"));}
-      else if(type==2){Serial.print(F("info,Solution 2 Level"));}
-      else if(type==3){Serial.print(F("info,Solution 3 Level"));}
-      else if(type==4){Serial.print(F("info,Solution 4 Level"));}
-      else if(type==5){Serial.print(F("info,Water Level"));}
-      else if(type==6){Serial.print(F("info,Solution Maker Level"));}
-      else{Serial.print(F("error,Undefined"));}
-      Serial.print(F(" Sensor: "));
-      Serial.println(ptr[i]->__Distance);
+/***   sensorController   ***/
+// Constructor
+sensorController::sensorController(sensorConfig sconfig, dynamicMem & myMem)
+  { // Save sensorConfig
+    _sconfig = sconfig;
+
+    // Initialize timers
+    _sensorTimer = millis();
+
+    // Initialize analog sensors
+    for (int i = 0; i<_sconfig.analogs; i++){
+      analogSensor analogParameter = myMem.read_analog(i); // Get analog config
+      _myAnalogs[i] = new analogSens(analogParameter.pin, i); // (pin, number)
+      _myAnalogs[i]->setModel(analogParameter.A, analogParameter.B, analogParameter.C); // (A, B, C)
+      _myAnalogs[i]->setFilter(analogParameter.filter, analogParameter.filterParam); // (filter, param)
+      _myAnalogs[i]->begin();
     }
-  }
-
-void UltraSonic::begin()
-  { __ActualTime = millis(); }
-
-void UltraSonic::readAll()
-  { if(millis()-__ActualTime>100){
-      __ActualTime = millis();
-      for(int i = 0; i<__TotalSensors; i++){
-          uint8_t state = ptr[i]->updateState();
-      }
+    // Initialize flowmeter sensors
+    for (int i = 0; i<_sconfig.flowmeters; i++){
+      flowmeter flowParameter = myMem.read_flowmeter(i); // Get flowmeter config
+      _myFlowmeters[i] = new Flowmeter(flowParameter.pin, i, flowParameter.K); // (pin, number, k_constant)
+      _myFlowmeters[i]->begin();
     }
-  }
-
-/***   waterSensor   ***/
-// Statics variables definitions
-uint8_t waterSensor::__TotalSensors = 0;
-waterSensor *waterSensor::ptr[MAX_WATER_SENSOR];
-unsigned long waterSensor::__ActualTime = 0;
-
-waterSensor::waterSensor(uint8_t pin, uint8_t type=250) // Constructor
-  { // Just the first time init pointers
-    if(__TotalSensors<1){
-      for (int i=0; i < MAX_WATER_SENSOR; i++) {
-        ptr[i] = NULL; // All Pointers NULL
-      }
+    // Initialize scale sensors
+    for (int i = 0; i<_sconfig.scales; i++){
+      scale scaleParameter = myMem.read_scale(i); // Get scale config
+      _myScales[i] = new ScaleSens(scaleParameter.pin1, scaleParameter.pin2, i); // (pin1, pin2, num)
+      _myScales[i]->begin(scaleParameter.offset, scaleParameter.scale); // (offset, scale)
     }
-     __Pin = pin;
-     __Type = type;
-     // Default parameters
-     __FirstRead = false;
-     __State = LOW;
-     __countState = 0;
-
-     ptr[__TotalSensors] = this; // Set Static pointer to object
-     __TotalSensors++; // Add the new sensor to the total
-  }
-
-void waterSensor::begin()
-  { pinMode(__Pin, INPUT); }
-
-void waterSensor::read()
-  { bool state = digitalRead(__Pin);
-
-    if(state=!__State && (__countState>=10 || !__FirstRead) ){
-      __State = state;
-      __countState = 0;
+    // Initialize switch sensors
+    for (int i = 0; i<_sconfig.switches; i++){
+      switchSensor switchParameter = myMem.read_switch(i);
+      _mySwitches[i] = new SwitchSens(switchParameter.pin, i, switchParameter.logic); // (pin, num, logic)
     }
-    else if(state=!__State && __countState<10){ __countState++; }
-    else{ __countState = 0; }
-
-    if(!__FirstRead){
-      __FirstRead = true;
-      if (__Type==0){Serial.print(F("Water Irrigation Sensor"));}
-      else if (__Type==1){Serial.print(F("Water Evacuation Sensor"));}
-      else{Serial.print(F("Undefined"));}
-      Serial.print(F("Sensor: Initial state = "));
-      if(__State==AIR_STATE){Serial.println(F("air in line"));}
-      else if(__State==WATER_STATE){Serial.println(F("water in line"));}
+    // Initialize ultrasonic sensors
+    for (int i = 0; i<_sconfig.ultrasonics; i++){
+      ultrasonicSensor ultrasonicParameter = myMem.read_ultrasonic(i);
+      _myUltrasonics[i] = new UltraSonic(ultrasonicParameter.pin1, ultrasonicParameter.pin2, i); // (pin1, pin2, num)
+      _myUltrasonics[i]->setModel(ultrasonicParameter.model, ultrasonicParameter.param, ultrasonicParameter.height); //  (model, param, height)
     }
   }
 
-bool waterSensor::getState()
-  { return __State; }
-
-void waterSensor::beginAll()
-  { for(int i = 0; i<__TotalSensors; i++){
-      ptr[i]->begin();
-    }
-    __ActualTime = millis();
-  }
-
-void waterSensor::readAll()
-  { if(millis()-__ActualTime>100){
-      __ActualTime = millis();
-      for(int i = 0; i<__TotalSensors; i++){
-        ptr[i]->read();
-      }
+void sensorController::read()
+  { if(millis()-_sensorTimer>READ_SENSOR_TIME){
+      _sensorTimer = millis();
+      for (int i = 0; i<_sconfig.analogs; i++) _myAnalogs[i]->read();                 // Read analog sensors
+      for (int i = 0; i<_sconfig.flowmeters; i++) _myFlowmeters[i]->read();           // Read flowmeter sensors
+      for (int i = 0; i<_sconfig.scales; i++) _myScales[i]->read();                   // Read scale sensors
+      for (int i = 0; i<_sconfig.switches; i++) _mySwitches[i]->read();               // Read switch sensors
+      for (int i = 0; i<_sconfig.ultrasonics; i++) _myUltrasonics[i]->updateState();  // Read ultrasonic sensors
     }
   }

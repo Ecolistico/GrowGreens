@@ -2,7 +2,7 @@
 Library from Grow software package
 Written by : José Manuel Casillas Martín
 email: jmcasimar@sippys.com.mx
-Date : 2019-*-*
+Date : 2021-08-12
 Version : 0.1 (testing version)
 
 This file is part of Grow Software Package.
@@ -35,37 +35,22 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #endif
 
 #include <NewPing.h>
+#include <HX711.h>
+#include <dynamicMemory.h>
+#include <commonStructures.h> // Shared structures bewtween differents classes
 
-#define MAX_ANALOG_SENSOR     5 // Max number of analog sensors
-#define MAX_EQUATION_DEGREE   3 // Max degree of equation for calibration
-#define MAX_ULTRASONIC        8 // Max number of ultrasonic sensors
-#define MAX_DISTANCE          300 // Maximum distance(cm) we want to ping
-#define MIN_SECURITY_DISTANCE 10 // Minimum distance(cm) expected
-#define MAX_SECURITY_DISTANCE 82 // Maximum distance(cm) expected
-//#define PI 3.1416
-#define MAX_WATER_SENSOR      3 // Max number of water sensors
-#define AIR_STATE             HIGH // Air state = HIGH
-#define WATER_STATE           LOW // Water State = LOW
-
-// Class to declarate Analog Sensor and applied different filters
-/* Types:
- *      0 - "Nutrition Pressure"
- *      1 - "Tank Pressure"
- *      2 - "Water Pressure"
- *      250 - Undefined
-*/
-class analogSensor
+// Class for Analog Sensors
+class analogSens
   { private:
-        uint8_t __Pin, __Degree, __Type;
-        bool __FirstRead;
-        float __A, __B, __C, __Value, __PreValue;
+        uint8_t _Pin, _Degree, _number;
+        bool _FirstRead;
+        float _A, _B, _C, _Value, _PreValue;
 
         // Constants for the filters
-        uint8_t __Filter;
-        float __Alpha, __Noise, __Err;
-        // Exponential Filter: __Alpha = smoothing variable
-        // Kalman Filter: __Noise = Enviromental Noise, __Err = Error
-        static unsigned long __ActualTime; // Time Counter
+        uint8_t _Filter;
+        float _Alpha, _Noise, _Err;
+        // Exponential Filter: _Alpha = smoothing variable
+        // Kalman Filter: _Noise = Enviromental Noise, _Err = Error
 
         float model(float val);
         float filter(float val);
@@ -73,67 +58,93 @@ class analogSensor
         float kalman_filter(float t, float t_1);
         void printModel();
         void printFilter();
-        void begin(); // Start sensor
-        void read();
 
     public:
-        static uint8_t __TotalSensors;
-        // List of pointers to each sensor
-        static analogSensor *ptr[MAX_ANALOG_SENSOR];
+        analogSens(uint8_t pin, uint8_t num); // Constructor
 
-        analogSensor(uint8_t pin, uint8_t type=250); // Constructor
-
-        bool setModel(
-          uint8_t degree,
-          float a = 0,
-          float b = 0,
-          float c = 0
-        );
+        void setModel(float a = 0, float b = 0, float c = 0);
         void notFilter();
         void defaultFilter(); // Set Kalman with Noise = 0.5
-        bool setExponentialFilter(float alpha = 0.5);
-        bool setKalmanFilter(float noise);
+        void setExponentialFilter(float alpha = 0.5);
+        void setKalmanFilter(float noise);
+        void setFilter(uint8_t filter, float param);
         float getValue();
         float getPreValue();
-        static void beginAll();
-        static void readAll();
+        void begin(); // Start sensor
+        void read();
+        void printRead(); // Print in serial last read
   };
 
-// Class to work with multiples UltraSonic Sensors
-/* Model:
- *      0 = Not model return Distance
- *      1 = Cilinder -> __Param = radio
- *      2 = Rectangular Prism -> __Param = Rectangule Area
- * 
- * Types:
- *      0 - "Recirculation Level"
- *      1 - "Solution 1 Level"
- *      2 - "Solution 2 Level"
- *      3 - "Solution 3 Level"
- *      4 - "Solution 4 Level"
- *      5 - "Water Level"
- *      6 - "Solution Maker Level"
- *      250 - Undefined
-*/
+// Class for flowmeters
+class Flowmeter
+  { private:
+      uint8_t _pin, _number;
+      float _K, _water;
 
+    public:
+      Flowmeter(uint8_t pin, uint8_t num, float k); // Constructor
+
+      static volatile long _numPulses1, _numPulses2;
+      static void countPulses1(); // Interrupt Routine 1
+      static void countPulses2(); // Interrupt Routine 2
+
+      void begin();
+      void restartWater();
+      float getWater();
+      void read();
+      void printRead(); // Print in serial last read
+  };
+
+// Class for scale
+class ScaleSens
+  { private:
+      uint8_t _pin1, _pin2, _number;
+      float _weight;
+
+    public:
+      HX711 *_sc;
+
+      ScaleSens(uint8_t pin1, uint8_t pin2, uint8_t num);
+      void begin(long offset, float scale);
+      void read();
+      float getWeight();
+      void printRead(); // Print in serial last read
+      void printRead_notScale(); // Print in serial read with scale = 1
+      void printRead_notOffset(); // Print in serial read with scale = 1 and offset = 0
+  };
+
+// Class for Switch
+class SwitchSens
+  { private:
+      uint8_t _pin, _number, _counter;
+      bool _logic, _state, _readState;
+
+    public:
+      SwitchSens(uint8_t pin, uint8_t num, bool logic = true); // Constructor
+      void begin();
+      void setLogic(bool logic);
+      void read();
+      void printRead(); // Print in serial last read
+  };
+
+// Class for UltraSonic Sensors
 class UltraSonic
   { private:
-        uint8_t __Pin1, __Pin2, __State, __Type;
-        bool __FirstRead;
-        NewPing *__Sonar;
-        int __minDist, __maxDist, __countState;
-        float __Distance, __PreDistance;
-        static unsigned long __ActualTime; // Time Counter
+        uint8_t _Pin1, _Pin2, _State, _number;
+        bool _FirstRead;
+        NewPing *_Sonar;
+        int _minDist, _maxDist, _countState;
+        float _Distance, _PreDistance;
 
         // Constant for the model
-        uint8_t __Model;
-        float __Param, __Height;
+        uint8_t _Model;
+        float _Param, _Height;
 
         // Constants for the filters
-        uint8_t __Filter;
-        float __Alpha, __Noise, __Err;
-        // Exponential Filter: __Alpha = smoothing variable
-        // Kalman Filter: __Noise = Enviromental Noise, __Err = Error
+        uint8_t _Filter;
+        float _Alpha, _Noise, _Err;
+        // Exponential Filter: _Alpha = smoothing variable
+        // Kalman Filter: _Noise = Enviromental Noise, _Err = Error
 
         float model(float val);
         float cilinder(float val);
@@ -144,25 +155,16 @@ class UltraSonic
         void printModel();
         void printFilter();
         float read(); // Take a measurement
-        uint8_t updateState();
 
     public:
-        static uint8_t __TotalSensors;
-        static UltraSonic *ptr[MAX_ULTRASONIC]; // List of pointers to each sensor
         // Constructor
-        UltraSonic(
-          uint8_t pin1,
-          uint8_t pin2,
-          uint8_t type=250,
-          int minDist = MIN_SECURITY_DISTANCE,
-          int maxDist = MAX_SECURITY_DISTANCE
-        );
+        UltraSonic( uint8_t pin1, uint8_t pin2, uint8_t num, int minDist = MIN_SECURITY_DISTANCE, int maxDist = MAX_SECURITY_DISTANCE);
 
-        bool setModel(uint8_t model, float param, float height);
+        void setModel(uint8_t model, float param, float height);
         void notFilter();
         void defaultFilter(); // Set Kalman with Noise = 0.5
-        bool setExponentialFilter(float alpha = 0.2);
-        bool setKalmanFilter(float noise);
+        void setExponentialFilter(float alpha = 0.2);
+        void setKalmanFilter(float noise);
         int getMinDist();
         int getMaxDist();
         float getDistance(); // Returns more actual distance measurement
@@ -173,37 +175,25 @@ class UltraSonic
         uint8_t getState(); // Returns state (High/Ok/Low)
         bool changeMinDist(int minDist);
         bool changeMaxDist(int maxDist);
-        static void readAndPrint(); // Read and Prints the values of the last measurements
-        static void begin(); // Starts counter to take readings
-        static void readAll(); // Take reading from all the sensors
+        uint8_t updateState();
   };
 
-// Class to declarate Water/Air Sensor
-/*  Types:
- *      0 - "Water Irrigation Sensor"
- *      1 - "Water Evacuation Sensor"
- *      250 - Undefined
-*/
-class waterSensor
-  { private:
-        uint8_t __Pin, __Type;
-        bool __State, __FirstRead;
-        int __countState;
+// Class to manage all the sensor at once
+class sensorController
+   {  private:
+        unsigned long _sensorTimer;
+        sensorConfig _sconfig;
 
-        static unsigned long __ActualTime; // Time Counter
-        void begin(); // Start sensor
+      public:
+        // Sensors
+        analogSens * _myAnalogs[MAX_ANALOG_SENSOR];      // Analog sensors pointer
+        Flowmeter * _myFlowmeters[MAX_FLOWMETER_SENSOR]; // Flowmeter sensors pointer
+        ScaleSens * _myScales[MAX_SCALES_SENSOR];        // Scale sensors pointer
+        SwitchSens * _mySwitches[MAX_SWITCHES_SENSOR];   // Switch sensors pointer
+        UltraSonic * _myUltrasonics[MAX_ULTRASONIC];     // Ultrasonic sensors pointer
+
+        sensorController(sensorConfig sconfig, dynamicMem & myMem); // Constructor
         void read();
+   };
 
-    public:
-        static uint8_t __TotalSensors;
-        // List of pointers to each sensor
-        static waterSensor *ptr[MAX_WATER_SENSOR];
-
-        waterSensor(uint8_t pin, uint8_t type=250 ); // Constructor
-
-        bool getState();
-        static void beginAll();
-        static void readAll();
-  };
-
-  #endif
+#endif
