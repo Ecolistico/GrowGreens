@@ -189,7 +189,9 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
 
     # Setting up
     if sensor['external'] == 'BMP280': bme = BMP280(log.logger) # Start bmp280 sensor
-    else: bme = BME680(log.logger) # Start bme680 sensor
+    elif sensor['external'] == 'BME680': bme = BME680(log.logger) # Start bme680 sensor
+    else: bme = None
+    
     day = 0
     hour = 0
     minute = 0
@@ -257,7 +259,7 @@ try:
                 # Upload sensor data
                 mqttControl.ESP32.upload2DB(conn)
                 mqttControl.mGrower.upload2DB(conn)
-                bme.upload2DB(conn)
+                if bme!=None: bme.upload2DB(conn)
                 # Send to generalControl new time info
                 serialControl.write(serialControl.generalControl, "updateHour,{0},{1}".format(
                     now.hour, now.minute))
@@ -282,7 +284,7 @@ try:
                     mqttDisconnect(client, mqttControl)
 
             # Request bme data
-            if bme.read(): bme.logData()
+            if bme!=None and bme.read(): bme.logData()
             else: log.logger.warning("{} sensor cannot take reading".format(sensor['external']))
 
             # Coordinate Grower routines
