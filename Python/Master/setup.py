@@ -79,7 +79,9 @@ if(WiFi or isWiFi()): # Check if previous configuration files exists
                         print("\nSe encontró una IP disponible para ser configurada")
                         staticIP = direccion
                         break
-                    
+            
+            """
+            Raspberry Pi is just a client. This step is not necessary
             # Config new static IP on raspberry pi
             runShellCommand('sudo cp ./src/configFiles/dhcpcd.conf.orig dhcpcd.conf')
             runShellCommand('sudo python ./src/setStaticIP.py ./dhcpcd.conf {0} {1}'.format(staticIP, Gateway_IP))
@@ -92,9 +94,9 @@ if(WiFi or isWiFi()): # Check if previous configuration files exists
             runShellCommand('sudo systemctl start dhcpcd.service')
             runShellCommand('sudo systemctl restart networking.service')
             print("Se configuró este dispósitivo con una IP estática={}".format(staticIP))
-        
-        if(len(staticIP)>3):
-            runShellCommand("sudo python ./src/genID.py config.json ./src/municipios.json {}".format(staticIP))
+            """
+            
+        if(len(staticIP)>3): runShellCommand("sudo python ./src/genID.py config.json ./src/municipios.json {}".format(staticIP))
         print("\033[0;37;40mSe reiniciará el equipo para que los cambios surtan efecto.")
         input("Presione enter para finalizar")
         runShellCommand('sudo reboot')
