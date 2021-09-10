@@ -6,12 +6,12 @@ from time import time, sleep
 from systemState import systemState
 
 class serialController:
-    def __init__(self, multiGrower, loggerMain, loggerGC, loggerMG, loggerSM, stateFile):
+    def __init__(self, multiGrower, loggerMain, loggerGC, loggerMG1, loggerMG2, stateFile):
         # Define loggers
         self.logMain = loggerMain
         self.logGC = loggerGC
-        self.logMG = loggerMG
-        self.logSM = loggerSM
+        self.logMG1 = loggerMG1
+        self.logMG2 = loggerMG2
         
         # Define microcontrolers
         try:
@@ -23,21 +23,22 @@ class serialController:
             self.gcIsConnected = False
             raise Exception("Communication with generalControl device cannot be stablished. [{}]".format(e))
         try:
-            self.motorsGrower = Serial('/dev/motorsGrower', 115200, timeout=0)
-            self.motorsGrower.dtr = False # Reset
-            self.motorsGrower.close()
-            self.mgIsConnected = True
+            self.motorsGrower1 = Serial('/dev/motorsGrower1', 115200, timeout=0)
+            self.motorsGrower1.dtr = False # Reset
+            self.motorsGrower1.close()
+            self.mg1IsConnected = True
         except Exception as e:
-            self.mgIsConnected = False
-            self.logMain.error("Communication with motorsGrower device cannot be stablished. [{}]".format(e))
+            self.mg1IsConnected = False
+            self.logMain.error("Communication with motorsGrower1 device cannot be stablished. [{}]".format(e))
         try:
-            self.solutionMaker = Serial('/dev/solutionMaker', 115200, timeout=0)
-            self.solutionMaker.dtr = False # Reset
-            self.solutionMaker.close()
-            self.smIsConnected = True
+            self.motorsGrower2 = Serial('/dev/motorsGrower2', 115200, timeout=0)
+            self.motorsGrower2.dtr = False # Reset
+            self.motorsGrower2.close()
+            self.mg2IsConnected = True
         except Exception as e:
-            self.smIsConnected = False
-            self.logMain.error("Communication with solutionMaker device cannot be stablished. [{}]".format(e))
+            self.mg2IsConnected = False
+            self.logMain.error("Communication with motorsGrower2 device cannot be stablished. [{}]".format(e))
+            
         # Define multiGrower variables with mqtt module
         self.mGrower = multiGrower
         # Define responses auxVariables
@@ -55,21 +56,21 @@ class serialController:
             sleep(0.33)
             self.generalControl.reset_input_buffer()
             self.generalControl.dtr = True
-        if self.mgIsConnected and not self.motorsGrower.is_open:
-            self.motorsGrower.open()
+        if self.mg1IsConnected and not self.motorsGrower1.is_open:
+            self.motorsGrower1.open()
             sleep(0.33)
-            self.motorsGrower.reset_input_buffer()
-            self.motorsGrower.dtr = True
-        if self.smIsConnected and not self.solutionMaker.is_open:
-            self.solutionMaker.open()
+            self.motorsGrower1.reset_input_buffer()
+            self.motorsGrower1.dtr = True
+        if self.mg2IsConnected and not self.motorsGrower2.is_open:
+            self.motorsGrower2.open()
             sleep(0.33)
-            self.solutionMaker.reset_input_buffer()
-            self.solutionMaker.dtr = True
-    
+            self.motorsGrower2.reset_input_buffer()
+            self.motorsGrower2.dtr = True
+        
     def close(self):
         if self.gcIsConnected and self.generalControl.is_open: self.generalControl.close()
-        if self.mgIsConnected and self.motorsGrower.is_open: self.motorsGrower.close()
-        if self.smIsConnected and self.solutionMaker.is_open:self.solutionMaker.close()
+        if self.mg1IsConnected and self.motorsGrower1.is_open: self.motorsGrower1.close()
+        if self.mg2IsConnected and self.motorsGrower2.is_open: self.motorsGrower2.close()
     
     def Msg2Log(self, logger, mssg):
         if(mssg.startswith("debug,")): logger.debug(mssg.split(",")[1])
@@ -81,8 +82,8 @@ class serialController:
 
     def write(self, serialObject, mssg):
         if serialObject == self.generalControl and self.gcIsConnected: aux = True
-        elif serialObject == self.motorsGrower and self.mgIsConnected: aux = True
-        elif serialObject == self.solutionMaker and self.smIsConnected: aux = True
+        elif serialObject == self.motorsGrower1 and self.mg1IsConnected: aux = True
+        elif serialObject == self.motorsGrower2 and self.mg2IsConnected: aux = True
         if aux:
             serialObject.write(bytes(mssg, "utf-8"))
             serialObject.flush()
@@ -126,7 +127,7 @@ class serialController:
         self.logMain.info("Grower{} sending request to start sequence".format(fl))
     
     def stopGrower(self, fl):
-        self.write(self.motorsGrower, "stop,{}".format(fl))
+        self.write(self.motorsGrower1, "stop,{}".format(fl))
         self.logMain.warning("Grower{} is busy, sending request to stop".format(fl))
     
     def decideStartOrStopGrower(self, resp):
@@ -223,71 +224,27 @@ class serialController:
         self.logMain.info("Grower{} finished its routine".format(fl))
         
     def sendBootParams(self):
-        self.write(self.generalControl, "boot,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}".format(
-            self.system.state["solution"], self.system.state["volumenNut"],
-            self.system.state["volumenH2O"], self.system.state["consumptionNut"],
-            self.system.state["consumptionH2O"], self.system.state["pumpIn"],
-            self.system.state["IPC"], self.system.state["MPC"],
-            self.system.state["missedNut"], self.system.state["missedH2O"]))
+        self.write(self.generalControl, "boot,{0},{1},{2},{3}".format(
+            self.system.state["volumen"], self.system.state["consumption"],
+            self.system.state["IPC"], self.system.state["missedH2O"]))
         
     def updateSystemState(self, index):
         param = self.respLine[index].split(",")
-        if(len(param)>=11 and param[-1]!=''):
-            if(self.system.update("solution", int(param[1]))): pass
-            #self.logMain.debug("System Solution Updated")
-            else: self.logMain.error("Cannot Update Solution State")
-            if(self.system.update("volumenNut", float(param[2]))): pass
+        if(len(param)>=4 and param[-1]!=''):
+            if(self.system.update("volumen", float(param[1]))): pass
             #self.logMain.debug("System volNut Updated")
-            else: self.logMain.error("Cannot Update volNut State")
-            if(self.system.update("volumenH2O", float(param[3]))): pass
-            #self.logMain.debug("System volH2O Updated")
-            else: self.logMain.error("Cannot Update volH2O State")
-            if(self.system.update("consumptionNut", float(param[4]))): pass
+            else: self.logMain.error("Cannot Update volumen State")
+            if(self.system.update("consumption", float(param[2]))): pass
             #self.logMain.debug("System consNut Updated")
-            else: self.logMain.error("Cannot Update consNut State")
-            if(self.system.update("consumptionH2O", float(param[5]))): pass
-            #self.logMain.debug("System consH2O Updated")
-            else: self.logMain.error("Cannot Update consH2O State")
-            if(self.system.update("pumpIn", int(param[6]))): pass
-            #self.logMain.debug("System pumpIn Updated")
-            else: self.logMain.error("Cannot Update pumpIn State")
-            if(self.system.update("IPC", int(param[7]))): pass
+            else: self.logMain.error("Cannot Update consumption State")
+            if(self.system.update("IPC", int(param[3]))): pass
             #self.logMain.debug("System IPC Updated")
             else: self.logMain.error("Cannot Update IPC State")
-            if(self.system.update("MPC", int(param[8]))): pass
-            #self.logMain.debug("System MPC Updated")
-            else: self.logMain.error("Cannot Update MPC State")
-            if(self.system.update("missedNut", float(param[9]))): pass
-            #self.logMain.debug("System missedNut Updated")
-            else: self.logMain.error("Cannot Update missedNut State")
-            if(self.system.update("missedH2O", float(param[10]))): pass
+            if(self.system.update("missedH2O", float(param[4]))): pass
             #self.logMain.debug("System missedH2O Updated")
             else: self.logMain.error("Cannot Update missedH2O State")
             
         else: self.logMain.error("Line incomplete - {}".format(self.respLine[index]))
-    
-    def requestSolution(self, index):
-        # Form -> "?solutionMaker,float[liters],int[sol],float[ph],int[ec]"
-        param = self.respLine[index].split(",")
-        if(len(param)>=5):
-            liters = float(param[1])
-            solution = int(param[2])
-            ph = float(param[3])
-            ec = int(param[4])
-            self.logMain.debug("Prepare Solution line: {}".format(self.respLine[index]))
-            # Check parameters
-            if(liters>0):
-                if(solution>=0 and solution<4):
-                    if(ph>0 and ph<14):
-                        if(ec>0 and ec<5000):
-                            # If parameters correct then request a solution
-                            self.write(self.solutionMaker, "prepare,{0},{1},{2},{3}".format(
-                                liters, solution, ph, ec))
-                        else: self.logGC.error("solutionMaker ec out of range [0-5000]")
-                    else: self.logGC.error("solutionMaker ph out of range [0-14]")
-                else: self.logGC.error("solutionMaker solution out of range [0-3]")
-            else: self.logGC.error("solutionMaker liters has to be positive")
-        else: self.logMain.error("Line incomplete - {}".format(self.respLine[index]))            
         
     def concatResp(self, resp, line):
         # If that request is not save
@@ -309,8 +266,6 @@ class serialController:
                 if(resp == "boot"): self.sendBootParams()            
                 # Update system state
                 elif(resp == "updateSystemState"): self.updateSystemState(i)
-                # generalControl is requesting to prepare a solution
-                elif(resp == "requestSolution"): self.requestSolution(i)
                 # generalControl ask if sMaker finished to prepare the solution
                 elif(resp == "askSolFinished"): self.write(self.solutionMaker, "?solutionFinished")
                 # solutionMaker accepts to prepare a new solution
@@ -333,18 +288,12 @@ class serialController:
                     self.concatResp("boot", line1)
                 elif(line1.startswith("updateSystemState")):
                     self.concatResp("updateSystemState", line1)
-                elif(line1.startswith("?solutionMaker")):
-                    if self.smIsConnected: self.concatResp("requestSolution", line1)
-                    else: self.concatResp("requestAccepted", line1)
-                elif(line1.startswith("?solutionFinished")):
-                    if self.smIsConnected: self.concatResp("askSolFinished", line1)
-                    else: self.concatResp("solutionFinished", line1)
         
-        if self.mgIsConnected:
+        if self.mg1IsConnected:
             # If bytes available in motorsGrower
-            while self.motorsGrower.in_waiting>0:
-                line2 = str(self.motorsGrower.readline(), "utf-8")[0:-1]
-                self.Msg2Log(self.logMG, line2)
+            while self.motorsGrower1.in_waiting>0:
+                line2 = str(self.motorsGrower1.readline(), "utf-8")[0:-1]
+                self.Msg2Log(self.logMG1, line2)
                 
                 decition = False
                 # If we are waiting for a particular response from Grower1
@@ -447,16 +396,11 @@ class serialController:
                             decition = True
                             self.GrowerRoutineFinish(num)
         
-        if self.smIsConnected:
-            # If bytes available in solutionMaker
-            while self.solutionMaker.in_waiting>0:
-                line3 = str(self.solutionMaker.readline(), "utf-8")[0:-1]
-                self.Msg2Log(self.logSM, line3)
-                self.respTime = time()
-                if(line3.startswith("Request accepted")):
-                    self.concatResp("requestAccepted", line3)
-                elif(line3.startswith("Solution Finished")):
-                    self.concatResp("solutionFinished", line3)
+        if self.mg2IsConnected:
+            # If bytes available in motorsGrower
+            while self.motorsGrower2.in_waiting>0:
+                line2 = str(self.motorsGrower2.readline(), "utf-8")[0:-1]
+                self.Msg2Log(self.logMG2, line2)
         
         # Send all responses
         self.response()
