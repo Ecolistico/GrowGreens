@@ -52,8 +52,8 @@ mGrower = multiGrower(log.logger_grower1, log.logger_grower2, log.logger_grower3
 serialControl = serialController(mGrower,
                                  log.logger,
                                  log.logger_generalControl,
-                                 log.logger_motorsGrower,
-                                 log.logger_solutionMaker,
+                                 log.logger_motorsGrower1,
+                                 log.logger_motorsGrower2,
                                  "state.json")
 
 # Charge GUI parameters and connect logger and serialControl
@@ -76,12 +76,13 @@ def mqttDisconnect(cliente, mqttObj):
     mqttObj.actualTime = time()
 
 def startRoutine(grower):
-    if serialControl.mgIsConnected:
+    if serialControl.mg1IsConnected:
         # Check if Grower is available
         if grower.failedConnection == 0:
             # It is time to move Grower
             grower.time2Move()
             top = "{}/Grower{}".format(ID, grower.floor)
+            # Check messages needed to start routine
             msgs = [{"topic": top, "payload": "OnLED1"},
                     {"topic": top, "payload": "OnLED2"},
                     {"topic": top, "payload": "DisableStream"}]
@@ -98,7 +99,7 @@ def checkSerialMsg(grower):
         elif(not grower.serialRequest.startswith('continueSequence')
              and time()-grower.actualTime>20): req = True
         if req:
-            serialControl.write(serialControl.motorsGrower, grower.serialRequest)
+            serialControl.write(serialControl.motorsGrower1, grower.serialRequest)
             grower.actualTime = time()
             log.logger.info("Resending Grower{} request: {}".format(grower.floor, grower.serialRequest))
             
@@ -168,9 +169,12 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
                                  log.logger_grower2,
                                  log.logger_grower3,
                                  log.logger_grower4,
-                                 log.logger_esp32front,
-                                 log.logger_esp32center,
-                                 log.logger_esp32back)
+                                 log.logger_esp32front1,
+                                 log.logger_esp32center1,
+                                 log.logger_esp32back1,
+                                 log.logger_esp32front2,
+                                 log.logger_esp32center2,
+                                 log.logger_esp32back2)
 
     # From inputHandler
     inputControl = inputHandler(ID, brokerIP, log.logger, serialControl, mqttControl, gui)
@@ -274,9 +278,12 @@ try:
                             {"topic": "{}/Grower2".format(ID), "payload": "cozirData"},
                             {"topic": "{}/Grower3".format(ID), "payload": "cozirData"},
                             {"topic": "{}/Grower4".format(ID), "payload": "cozirData"},
-                            {"topic": "{}/esp32front".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32center".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32back".format(ID), "payload": "sendData"}]
+                            {"topic": "{}/esp32front1".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32center1".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32back1".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32front2".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32center2".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32back2".format(ID), "payload": "sendData"}]
                     # Request ESP32's and Growers data
                     publish.multiple(msgs, hostname = brokerIP)
                 except Exception as e:
@@ -299,11 +306,7 @@ try:
                 log.logger.info("Checking Grower3 status to start sequence")
             elif(hour==12 and minute==0): # At 12pm
                 #startRoutine(mGrower.Gr4)                
-                log.logger.info("Checking Grower4 status to start sequence")
-            elif(hour==23 and minute==59): # At 11:59pm
-                # Request mongoDB-Parse Server IP
-                publish.single("{}/Server".format(ID), 'whatIsMyIP', hostname = brokerIP)
-                
+                log.logger.info("Checking Grower4 status to start sequence")    
             """
             Feature not ready
             elif(hour==7 and minute==0): # At 7am
