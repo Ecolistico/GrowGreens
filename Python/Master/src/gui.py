@@ -245,21 +245,6 @@ class GUI:
         self.window['B_B2'].Update(value=self.SeedValues['SB2'])
         self.window['B_B1'].Update(value=self.SeedValues['SB1'])
 
-    def Seed2DB(self, hostname):
-        numberSeeds = '{}{}{}{}{}{}{}{}'.format(self.SeedValues['SA1'],
-                                                self.SeedValues['SB1'],
-                                                self.SeedValues['SA2'],
-                                                self.SeedValues['SB2'],
-                                                self.SeedValues['SA3'],
-                                                self.SeedValues['SB3'],
-                                                self.SeedValues['SA4'],
-                                                self.SeedValues['SB4'])
-        actualDirectory = os.getcwd()
-        if actualDirectory.endswith('src'):
-            runShellCommand('python plant2DB.py {} {}'.format(hostname, numberSeeds))
-        else:
-            runShellCommand('python src/plant2DB.py {} {}'.format(hostname, numberSeeds))
-
     def begin(self):
          if self.filename is not None:
              if os.path.exists(self.filename):

@@ -18,7 +18,7 @@ from smtp import Mail
 from logger import logger
 from sensor import BMP280, BME680
 from asciiART import asciiArt
-from Calendar import Calendar
+#from Calendar import Calendar
 from credentials import broker, sensor
 from growerData import multiGrower
 from inputHandler import inputHandler
@@ -43,7 +43,7 @@ if not os.path.exists('data/'): os.makedirs('data/')
 log = logger()
 
 # Charge calendar parameters
-growCal = Calendar()
+#growCal = Calendar()
 
 # From communication
 mGrower = multiGrower(log.logger_grower1, log.logger_grower2, log.logger_grower3, log.logger_grower4)
@@ -303,22 +303,14 @@ try:
             elif(hour==23 and minute==59): # At 11:59pm
                 # Request mongoDB-Parse Server IP
                 publish.single("{}/Server".format(ID), 'whatIsMyIP', hostname = brokerIP)
-            elif(hour==0 and minute==0): # At 0am
-                # Update Plant database and restart GUI
-                if mqttControl.serverIP != '':
-                    try:
-                        gui.Seed2DB(mqttControl.serverIP)
-                        gui.ResetSeedValues()
-                        mqttControl.serverIP = ''
-                        log.logger.info("Plant Database Updated")
-                    except Exceptions as e: log.logger.error("Plant Database failed to update.\n{}".format(e))
-                else: log.logger.warning("Parse Server Disconnected")
                 
+            """
+            Feature not ready
             elif(hour==7 and minute==0): # At 7am
                 # Send Dayly tasks
                 sub, msg = growCal.getEmail()
                 if(msg!=''): mail.sendMail(sub, msg)
-        
+            """
         # Check Serial Pending
         checkSerialMsg(mGrower.Gr1)
         checkSerialMsg(mGrower.Gr2)
