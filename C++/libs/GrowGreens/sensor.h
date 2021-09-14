@@ -99,15 +99,16 @@ class Flowmeter
 class ScaleSens
   { private:
       uint8_t _pin1, _pin2, _number;
-      float _weight;
+      float _weight, _minWeight;
 
     public:
       HX711 *_sc;
 
       ScaleSens(uint8_t pin1, uint8_t pin2, uint8_t num);
-      void begin(long offset, float scale);
+      void begin(long offset, float scale, float min_weight);
       void read();
       float getWeight();
+      float getMinWeight();
       void printRead(); // Print in serial last read
       void printRead_notScale(); // Print in serial read with scale = 1
       void printRead_notOffset(); // Print in serial read with scale = 1 and offset = 0

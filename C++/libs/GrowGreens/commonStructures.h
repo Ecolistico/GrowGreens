@@ -85,6 +85,7 @@ typedef struct {
   uint8_t pin2;
   long offset;
   float scale;
+  float min_weight; // Finish
 } scale;
 
 typedef struct {

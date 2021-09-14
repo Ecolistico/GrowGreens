@@ -617,6 +617,14 @@ void dynamicMem::save_scale(uint8_t num, scale sc){
     error = true;
   }
 
+  if (currentPos>=minPos && currentPos<maxPos && !error){
+    write(currentPos, sc.min_weight);
+    currentPos += sizeof(sc.min_weight);
+  } else if(!error){
+    Serial.println(F("error,EEPROM: save_scale(uint8_t num, scale sc) wrong values provided"));
+    error = true;
+  }
+
   if (!error) Serial.println(F("info,EEPROM: Scale Sensor saved correctly"));
 }
 
@@ -768,6 +776,8 @@ scale dynamicMem::read_scale(uint8_t num) {
   sc.offset = read_long(pos);
   pos += sizeof(long);
   sc.scale = read_float(pos);
+  pos += sizeof(float);
+  sc.min_weight = read_float(pos);
 
   return sc;
 }

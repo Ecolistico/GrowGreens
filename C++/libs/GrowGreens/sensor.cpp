@@ -291,13 +291,15 @@ ScaleSens::ScaleSens(uint8_t pin1, uint8_t pin2, uint8_t num)
     _pin2 = pin2;
     _number = num;
     _weight = 0;
+    _minWeight = 0;
     _sc = new HX711;
   }
 
-void ScaleSens::begin(long offset, float scale)
+void ScaleSens::begin(long offset, float scale, float minWeight)
   { _sc->begin(_pin1, _pin2); // Data, Clock
     _sc->set_offset(offset); // Set Offset
     _sc->set_scale(scale); // Set Scale
+    _minWeight = minWeight; // Set minimun weight to control purposes
     Serial.print(F("info,Sensor: Scale number "));
     Serial.print(_number);
     Serial.println(F(" started correctly"));
@@ -308,6 +310,9 @@ void ScaleSens::read()
 
 float ScaleSens::getWeight()
   { return _weight; }
+
+float ScaleSens::getMinWeight()
+  { return _minWeight; }
 
 void ScaleSens::printRead()
   { Serial.print(F("info,Sensor: Scale number "));
@@ -670,7 +675,7 @@ sensorController::sensorController(sensorConfig sconfig, dynamicMem & myMem)
     for (int i = 0; i<_sconfig.scales; i++){
       scale scaleParameter = myMem.read_scale(i); // Get scale config
       _myScales[i] = new ScaleSens(scaleParameter.pin1, scaleParameter.pin2, i); // (pin1, pin2, num)
-      _myScales[i]->begin(scaleParameter.offset, scaleParameter.scale); // (offset, scale)
+      _myScales[i]->begin(scaleParameter.offset, scaleParameter.scale, scaleParameter.min_weight); // (offset, scale, min_weight)
     }
     // Initialize switch sensors
     for (int i = 0; i<_sconfig.switches; i++){
