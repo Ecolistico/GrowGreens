@@ -256,9 +256,9 @@ class serialController:
     def response(self):
         if not self.gcIsConnected or self.generalControl.in_waiting==0: gControl = True
         else: gControl = False
-        if not self.mgIsConnected or self.motorsGrower.in_waiting==0: motorG = True
+        if not self.mg1IsConnected or self.motorsGrower1.in_waiting==0: motorG = True
         else: motorG = False
-        if not self.smIsConnected or self.solutionMaker.in_waiting==0: sMaker = True
+        if not self.mg2IsConnected or self.motorsGrower2.in_waiting==0: sMaker = True
         else: sMaker = False
         if(time()-self.respTime>1 and gControl and motorG and sMaker and len(self.resp)>0):
             for i, resp in enumerate(self.resp):

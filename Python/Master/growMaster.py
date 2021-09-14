@@ -56,9 +56,6 @@ serialControl = serialController(mGrower,
                                  log.logger_motorsGrower2,
                                  "state.json")
 
-# Charge GUI parameters and connect logger and serialControl
-gui = GUI(log.logger, serialControl)
-
 # Define functions
 def mainClose(): # When program is finishing
     # Close devices when finished
@@ -152,6 +149,9 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
         brokerIP = data["staticIP"]
         city = data["city"]
         state = data["state"]
+    
+    # Charge GUI parameters and connect logger and serialControl
+    gui = GUI(ID, log.logger, serialControl)
 
     # Define Mail object
     #mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico

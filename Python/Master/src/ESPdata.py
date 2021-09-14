@@ -202,7 +202,7 @@ class multiESP:
                   " C_T5R, C_H5R, C_T5L, C_H5L, C_T6R, C_H6R, C_T6L, C_H6L," +
                   " C_T7R, C_H7R, C_T7L, C_H7L, C_T8R, C_H8R, C_T8L, C_H8L," +
                   " B_T1R, B_H1R, B_T1L, B_H1L, B_T2R, B_H2R, B_T2L, B_H2L," +
-                  " B_T3R, B_H3R, B_T3L, B_H3L, B_T4R, B_H4R, B_T4L, B_H4L)" +
+                  " B_T3R, B_H3R, B_T3L, B_H3L, B_T4R, B_H4R, B_T4L, B_H4L," +
                   " B_T5R, B_H5R, B_T5L, B_H5L, B_T6R, B_H6R, B_T6L, B_H6L," +
                   " B_T7R, B_H7R, B_T7L, B_H7L, B_T8R, B_H8R, B_T8L, B_H8L)" +
                   " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," +
@@ -211,7 +211,8 @@ class multiESP:
                   " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," +
                   " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," +
                   " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                  ( datetime.now(), self.front1.T1R, self.front1.H1R, self.front1.T1L, self.front1.H1L,
+                  ( datetime.now(),
+                   self.front1.T1R, self.front1.H1R, self.front1.T1L, self.front1.H1L,
                    self.front1.T2R, self.front1.H2R, self.front1.T2L, self.front1.H2L,
                    self.front1.T3R, self.front1.H3R, self.front1.T3L, self.front1.H3L,
                    self.front1.T4R, self.front1.H4R, self.front1.T4L, self.front1.H4L,
