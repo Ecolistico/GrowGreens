@@ -196,3 +196,10 @@ void irrigationController::enable(bool en)
       else printAct(F("Irrigation Controller: Disabled"), 1);
     }
   }
+
+void irrigationController::update()
+  { _PumpL = getPump();
+    _VAirL = getVAir();
+    _VConnectedL = getVconnected();
+    _VFreeL = getVfree();
+  }

@@ -63,6 +63,8 @@ class irrigationController
         void printAct(String act, uint8_t level=0);
 
     public:
+         bool _PumpL, _VAirL, _VConnectedL, _VFreeL; // Variables with logic applied
+
          // Constructor
          irrigationController(logicConfig lconfig);
 
@@ -88,6 +90,7 @@ class irrigationController
 
           // Control
           void enable(bool en);
+          void update();
   };
 
   #endif

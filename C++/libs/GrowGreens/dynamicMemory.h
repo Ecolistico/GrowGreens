@@ -90,6 +90,8 @@ class dynamicMem
       void save_scale(uint8_t num, scale sc);
       void save_switch(uint8_t num, switchSensor sw);
       void save_ultrasonic(uint8_t num, ultrasonicSensor ultra);
+      void save_mux(uint8_t num, Mux muxConfig);
+      void save_stateOrder(uint8_t mx, uint8_t num, uint8_t order);
 
       /* Dynamic Region Returning Functions */
       uint8_t read_irrigationParameters(uint8_t floor, uint8_t region, uint8_t number);
@@ -99,6 +101,8 @@ class dynamicMem
       scale read_scale(uint8_t num);
       switchSensor read_switch(uint8_t num);
       ultrasonicSensor read_ultrasonic(uint8_t num);
+      Mux read_mux(uint8_t num);
+      uint8_t read_stateOrder(uint8_t mx, uint8_t num);
 
       /* Dynamic Region checking functions */
       int MaxIrrigationPos();
@@ -108,6 +112,9 @@ class dynamicMem
       int MaxScalePos();
       int MaxSwitchPos();
       int MaxUltrasonicPos();
+      int MaxMuxPos();
+      int OffStateOrderPos(uint8_t mx);
+      int MaxStateOrderPos();
   };
 
 #endif

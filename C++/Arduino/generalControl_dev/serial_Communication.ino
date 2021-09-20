@@ -2,45 +2,15 @@
 
 const char zero_char = char(48);
 
-/*
-void requestSolution(){ // Form -> "?solutionMaker,float[liters],int[sol],float[ph],int[ec]"
-  Serial.print(F("?solutionMaker,"));
-  Serial.print(US6.getVolume()); // Liters
+void updateSystemState(){ 
+  // Form -> "updateSystemState,int[controlState],float[consH2O]"
+  Serial.print(F("updateSystemState,"));
+  Serial.print(controlState._state); // Control State
   Serial.print(F(",")); 
-  Serial.print(Recirculation.getOut()); // Solution 
-  Serial.print(F(","));
-  Serial.print(Irrigation.getPH(Recirculation.getOut())); // ph
-  Serial.print(F(",")); 
-  Serial.println(Irrigation.getEC(Recirculation.getOut())); // ec
+  Serial.print(h2oConsumption);      // H2O Consumption
 }
 
-void updateSystemState(){ 
-  Recirculation.updateState();
-  // Form -> "updateSystemState,int[sol],float[volNut],float[volH2O],float[consNut],float[consH2O],
-  //          int[pumpIn],int[IPC],int[MPC],float[missedNut],float[missedH2O]"
-  Serial.print(F("updateSystemState,"));
-  Serial.print(Recirculation.getOut()); // Solution
-  Serial.print(F(",")); 
-  Serial.print(Recirculation.getVolKnut()); // volNut
-  Serial.print(F(","));
-  Serial.print(Recirculation.getVolKh2o()); // volH2O
-  Serial.print(F(","));
-  Serial.print(solutionConsumption); // consNut
-  Serial.print(F(",")); 
-  Serial.print(h2oConsumption); // consH2O
-  Serial.print(F(","));
-  Serial.print(Recirculation.InpumpWorkIn()); // pumpIn
-  Serial.print(F(","));
-  Serial.print(IPC.state); // IPC
-  Serial.print(F(",")); 
-  Serial.print(MPC.state); // MPC
-  Serial.print(F(","));
-  Serial.print(Recirculation.getVolCnut()); // missedNut
-  Serial.print(F(","));
-  Serial.println(Recirculation.getVolCh2o()); // missedH2O
-}
-*/
-void serialEvent(){                                  //if the hardware serial port_0 receives a char
+void serialEvent(){                                   //if the hardware serial port_0 receives a char
   inputstring = Serial.readStringUntil(13);           //read the string until we see a <CR>
   input_string_complete = true;                       //set the flag used to tell if we have received a completed string from the PC
   
@@ -61,24 +31,22 @@ void serialEvent(){                                  //if the hardware serial po
     }
 
     if(parameter[0]==F("boot")){ // Functions to recieve variables when boot/rebooting
-      // Form "boot,int[pumpInState],int[IPC],int[MPC],float[h2oConsumption],float[missedH2O]"
+      // Form "boot,int[controlState],float[h2oConsumption]"
       if(!bootParameters){
-        int pumpState = parameter[1].toInt();
-        int ipc = parameter[2].toInt();
-        int mpc = parameter[3].toInt();
-        float h2oCons = parameter[4].toFloat();
-        float missedH2O = parameter[5].toFloat();
+        int ipc = parameter[1].toInt();
+        float h2oCons = parameter[2].toFloat();
         
-        if(pumpState>=0 && ipc>=0 && mpc>=0 && h2oCons>=0 && missedH2O>=0){
+        if(ipc>=0 && h2oCons>=0){
           bootParameters = true; // Set bootParameters as true
           // Update consumption variables
           h2oConsumption = h2oCons;
           Serial.print(F("info,Serial Boot: Initial Water Consumption updated to "));
           Serial.print(h2oConsumption);
           Serial.println(F(" liters"));
-          //rememberState(ipc, mpc, pumpState, missedH2O);
+          controlState.setState(ipc);
+          rememberState();
         }
-        else Serial.println(F("error,Serial Boot: Parameter[1-10] incorrect"));
+        else Serial.println(F("error,Serial Boot: Parameter[1-2] incorrect"));
       }
       else Serial.println(F("error,Serial Boot: Parameters already setted"));
     }
@@ -91,13 +59,7 @@ void serialEvent(){                                  //if the hardware serial po
           dTime.hour = hr;
           dTime.minute = mn;
           Serial.println(F("Hour updated"));
-          /*
-          if(!firstHourUpdate){
-            firstHourUpdate = true;
-            updateDay();
-            Irrigation.whatSolution(dateHour, dateMinute); // Update the solution parameter
-          }
-          */
+          if(!firstHourUpdate) firstHourUpdate = true;
         }
         else Serial.println(F("error,Serial updateHour: Hour is already updated"));
       }
@@ -253,6 +215,28 @@ void serialEvent(){                                  //if the hardware serial po
             mySensors->_myScales[num]->_sc->set_scale(scaleParam);
           }
           else Serial.println(F("error,Serial Sensor Scale setScale: Parameter[3] incorrect"));
+        }
+        else if(parameter[2]==F("setMinWeight")){
+          int num = parameter[3].toInt();
+          float weightParam = parameter[4].toFloat();
+          if(num>=0 && num<sconfig.scales){
+            scale newParam = myMem.read_scale(num);
+            newParam.min_weight= weightParam;
+            myMem.save_scale(num, newParam);
+            mySensors->_myScales[num]->setMinWeight(weightParam);
+          }
+          else Serial.println(F("error,Serial Sensor Scale setMinWeight: Parameter[3] incorrect"));
+        }
+        else if(parameter[2]==F("setMaxWeight")){
+          int num = parameter[3].toInt();
+          float weightParam = parameter[4].toFloat();
+          if(num>=0 && num<sconfig.scales){
+            scale newParam = myMem.read_scale(num);
+            newParam.max_weight= weightParam;
+            myMem.save_scale(num, newParam);
+            mySensors->_myScales[num]->setMaxWeight(weightParam);
+          }
+          else Serial.println(F("error,Serial Sensor Scale setMinWeight: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("getRead")){
           int num = parameter[3].toInt();
@@ -433,6 +417,10 @@ void serialEvent(){                                  //if the hardware serial po
       }
       else Serial.println(F("error,Serial setPressure: Parameter[2] incorrect"));
     }
+
+    else if(parameter[0]==F("mux")){
+      
+    }
     
     else if(parameter[0]==F("eeprom")){ // Functions to manage EEPROM memory
       if(parameter[1]==F("clean") || parameter[1]==F("clean\n")){ myMem.clean();}
@@ -442,11 +430,14 @@ void serialEvent(){                                  //if the hardware serial po
         int valves= parameter[3].toInt();
         int reg = parameter[4].toInt();
         int cycleTime = parameter[5].toInt();
-        if(fl>=0 && fl<MAX_FLOOR_NUMBER && valves>=0 && valves<MAX_VALVES_PER_REGION && (reg==0 || reg==1)){
+        int muxNumber = parameter[6].toInt();
+        
+        if(fl>=0 && fl<MAX_FLOOR_NUMBER && valves>=0 && valves<MAX_VALVES_PER_REGION && (reg==0 || reg==1) && muxNumber>=0){
           bconfig.floors = fl;
           bconfig.solenoids = valves;
           bconfig.regions = reg;
           bconfig.cycleTime = cycleTime;
+          bconfig.mux = muxNumber;
           myMem.config_basic(bconfig);
           rebootFlag = true;
         }

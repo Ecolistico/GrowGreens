@@ -39,7 +39,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 
 class fan
  {  private:
-        bool _State, _Enable;
+        bool _Enable;
         uint8_t _Floor;
         uint8_t _TimeOn; // In percentage
         unsigned long _CycleTime, _ActualTime;
@@ -50,6 +50,7 @@ class fan
         void fanPrint(String act1, String act2, String act3, uint8_t level=0);
 
     public:
+         bool _State;
          static uint8_t _numberFan;
 
          fan(uint8_t floor, unsigned long t_cycle, uint8_t t_on); // Constructor

@@ -58,10 +58,11 @@ void dynamicMem::print(bool truncate /*= true*/) {
 }
 
 void dynamicMem::config_basic(basicConfig config){
-  write(0, config.floors); // Floors number in pos 0
+  write(0, config.floors);    // Floors number in pos 0
   write(1, config.solenoids); // Solenoids number in pos 1
-  write(2, config.regions); // Regions number in pos 2
+  write(2, config.regions);   // Regions number in pos 2
   write(3, config.cycleTime); // cycleTime in pos 3
+  write(4, config.mux);       // mux in pos 4
   Serial.println(F("info,EEPROM: Basic configuration was successfully written!"));
 }
 
@@ -72,16 +73,17 @@ basicConfig dynamicMem::getConfig_basic(){
   bconfig.solenoids = read_byte(1);
   bconfig.regions = read_byte(2);
   bconfig.cycleTime = read_byte(3);
+  bconfig.mux = read_byte(4);
 
   return bconfig;
 }
 
 void dynamicMem::config_pressure(pressureConfig config){
   if(config.free_pressure<config.critical_pressure && config.critical_pressure<config.min_pressure && config.min_pressure<config.max_pressure){
-    write(4, config.max_pressure);      // Max Pressure Allow in System
-    write(5, config.min_pressure);      // Min Pressure Allow in System
-    write(6, config.critical_pressure); // Critical Pressure Below Min_Pressure
-    write(7, config.free_pressure);     // Free pressure to turn on water pump
+    write(5, config.max_pressure);      // Max Pressure Allow in System
+    write(6, config.min_pressure);      // Min Pressure Allow in System
+    write(7, config.critical_pressure); // Critical Pressure Below Min_Pressure
+    write(8, config.free_pressure);     // Free pressure to turn on water pump
     Serial.println(F("info,EEPROM: Pressure configuration was successfully written!"));
   }
   else Serial.println(F("error,EEPROM: Incorrect pressure incorrect parameters in config_pressure(pressureConfig config)"));
@@ -90,10 +92,10 @@ void dynamicMem::config_pressure(pressureConfig config){
 pressureConfig dynamicMem::getConfig_pressure(){
   pressureConfig pconfig;
 
-  pconfig.max_pressure = read_byte(4);
-  pconfig.min_pressure = read_byte(5);
-  pconfig.critical_pressure = read_byte(6);
-  pconfig.free_pressure = read_byte(7);
+  pconfig.max_pressure = read_byte(5);
+  pconfig.min_pressure = read_byte(6);
+  pconfig.critical_pressure = read_byte(7);
+  pconfig.free_pressure = read_byte(8);
 
   return pconfig;
 }
@@ -160,8 +162,10 @@ bool dynamicMem::check_basicConfig(){
   else Serial.println(F("warning,EEPROM: Regions (basic) parameter not found"));
   if (bconfig.cycleTime!=0 && bconfig.cycleTime!=255) counter++;
   else Serial.println(F("warning,EEPROM: CycleTime (basic) parameter not found"));
+  if (bconfig.mux!=0 && bconfig.mux!=255) counter++;
+  else Serial.println(F("warning,EEPROM: Mux (basic) parameter not found"));
 
-  if (counter==4) return true;
+  if (counter==5) return true;
   else return false;
 }
 
@@ -458,9 +462,9 @@ void dynamicMem::save_irrigationParameters(uint8_t floor, uint8_t region, uint8_
 
     int minPos = DYNAMIC_START;
     int maxPos = MaxIrrigationPos();
-    int posWrite = minPos + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
+    int currentPos = minPos + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
 
-    if(posWrite>=minPos && posWrite<maxPos) myMem->write(posWrite, time);
+    if(currentPos>=minPos && currentPos<maxPos) myMem->write(currentPos, time);
     else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) dynamic memory is poorly distributed"));
   } else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) wrong values provided"));
 }
@@ -471,7 +475,7 @@ void dynamicMem::save_fanParameters(uint8_t floor, fan_memory fanM){
 
     int minPos = MaxIrrigationPos();
     int maxPos = MaxFanPos();
-    int currentPos = MaxIrrigationPos() + floor*sizeof(fan_memory);
+    int currentPos = minPos + floor*sizeof(fan_memory);
 
     if (currentPos>=minPos && currentPos<maxPos && !error){
       write(currentPos, fanM.timeOn);
@@ -499,7 +503,7 @@ void dynamicMem::save_analog(uint8_t num, analogSensor analog){
 
   int minPos = MaxFanPos();
   int maxPos = MaxAnalogPos();
-  int currentPos = MaxFanPos() + num*sizeof(analogSensor);
+  int currentPos = minPos + num*sizeof(analogSensor);
 
   if (currentPos>=minPos && currentPos<maxPos && !error){
     write(currentPos, analog.pin);
@@ -557,7 +561,7 @@ void dynamicMem::save_flowmeter(uint8_t num, flowmeter fm){
 
   int minPos = MaxAnalogPos();
   int maxPos = MaxFlowmeterPos();
-  int currentPos = MaxAnalogPos() + num*sizeof(flowmeter);
+  int currentPos = minPos + num*sizeof(flowmeter);
 
   if (currentPos>=minPos && currentPos<maxPos && !error){
     write(currentPos, fm.pin);
@@ -583,7 +587,7 @@ void dynamicMem::save_scale(uint8_t num, scale sc){
 
   int minPos = MaxFlowmeterPos();
   int maxPos = MaxScalePos();
-  int currentPos = MaxFlowmeterPos() + num*sizeof(scale);
+  int currentPos = minPos + num*sizeof(scale);
 
   if (currentPos>=minPos && currentPos<maxPos && !error){
     write(currentPos, sc.pin1);
@@ -625,6 +629,14 @@ void dynamicMem::save_scale(uint8_t num, scale sc){
     error = true;
   }
 
+  if (currentPos>=minPos && currentPos<maxPos && !error){
+    write(currentPos, sc.max_weight);
+    currentPos += sizeof(sc.max_weight);
+  } else if(!error){
+    Serial.println(F("error,EEPROM: save_scale(uint8_t num, scale sc) wrong values provided"));
+    error = true;
+  }
+
   if (!error) Serial.println(F("info,EEPROM: Scale Sensor saved correctly"));
 }
 
@@ -633,7 +645,7 @@ void dynamicMem::save_switch(uint8_t num, switchSensor sw){
 
   int minPos = MaxScalePos();
   int maxPos = MaxSwitchPos();
-  int currentPos = MaxScalePos() + num*sizeof(switchSensor);
+  int currentPos = minPos + num*sizeof(switchSensor);
 
   if (currentPos>=minPos && currentPos<maxPos && !error){
     write(currentPos, sw.pin);
@@ -659,7 +671,7 @@ void dynamicMem::save_ultrasonic(uint8_t num, ultrasonicSensor ultra){
 
   int minPos = MaxSwitchPos();
   int maxPos = MaxUltrasonicPos();
-  int currentPos = MaxSwitchPos() + num*sizeof(ultrasonicSensor);
+  int currentPos = minPos + num*sizeof(ultrasonicSensor);
 
   if (currentPos>=minPos && currentPos<maxPos && !error){
     write(currentPos, ultra.pin1);
@@ -702,6 +714,86 @@ void dynamicMem::save_ultrasonic(uint8_t num, ultrasonicSensor ultra){
   }
 
   if (!error) Serial.println(F("info,EEPROM: Ultrasonic Sensor saved correctly"));
+}
+
+void dynamicMem::save_mux(uint8_t num, Mux muxConfig){
+  bool error = false;
+
+  int minPos = MaxUltrasonicPos();
+  int maxPos = MaxMuxPos();
+  int currentPos = minPos + num*sizeof(Mux);
+
+  if (currentPos>=minPos && currentPos<maxPos && !error){
+    write(currentPos, muxConfig.pcb_mounted);
+    currentPos += sizeof(muxConfig.pcb_mounted);
+  } else if(!error){
+    Serial.println(F("error,EEPROM: save_mux(uint8_t num, Mux muxConfig) wrong values provided"));
+    error = true;
+  }
+
+  if (currentPos>=minPos && currentPos<maxPos && !error){
+    write(currentPos, muxConfig.ds);
+    currentPos += sizeof(muxConfig.ds);
+  } else if(!error){
+    Serial.println(F("error,EEPROM: save_mux(uint8_t num, Mux muxConfig) wrong values provided"));
+    error = true;
+  }
+
+  if (currentPos>=minPos && currentPos<maxPos && !error){
+    write(currentPos, muxConfig.stcp);
+    currentPos += sizeof(muxConfig.stcp);
+  } else if(!error){
+    Serial.println(F("error,EEPROM: save_mux(uint8_t num, Mux muxConfig) wrong values provided"));
+    error = true;
+  }
+
+  if (currentPos>=minPos && currentPos<maxPos && !error){
+    write(currentPos, muxConfig.shcp);
+    currentPos += sizeof(muxConfig.shcp);
+  } else if(!error){
+    Serial.println(F("error,EEPROM: save_mux(uint8_t num, Mux muxConfig) wrong values provided"));
+    error = true;
+  }
+
+  if (currentPos>=minPos && currentPos<maxPos && !error){
+    write(currentPos, muxConfig.ds1);
+    currentPos += sizeof(muxConfig.ds1);
+  } else if(!error){
+    Serial.println(F("error,EEPROM: save_mux(uint8_t num, Mux muxConfig) wrong values provided"));
+    error = true;
+  }
+
+  if (currentPos>=minPos && currentPos<maxPos && !error){
+    write(currentPos, muxConfig.stcp1);
+    currentPos += sizeof(muxConfig.stcp1);
+  } else if(!error){
+    Serial.println(F("error,EEPROM: save_mux(uint8_t num, Mux muxConfig) wrong values provided"));
+    error = true;
+  }
+
+  if (currentPos>=minPos && currentPos<maxPos && !error){
+    write(currentPos, muxConfig.shcp1);
+    currentPos += sizeof(muxConfig.shcp1);
+  } else if(!error){
+    Serial.println(F("error,EEPROM: save_mux(uint8_t num, Mux muxConfig) wrong values provided"));
+    error = true;
+  }
+
+  if (!error) Serial.println(F("info,EEPROM: Mux saved correctly"));
+}
+
+void dynamicMem::save_stateOrder(uint8_t mx, uint8_t num, uint8_t order){
+  Mux prevMux = read_mux(mx);
+
+  int minPos = MaxMuxPos() + OffStateOrderPos(mx);
+  int maxPos = MaxMuxPos() + OffStateOrderPos(mx) + prevMux.pcb_mounted*OUT_PER_PCB;
+  int currentPos = minPos  + OffStateOrderPos(mx) + num;
+
+  if(currentPos>=minPos && currentPos<maxPos) {
+    myMem->write(currentPos, order);
+    Serial.println(F("info,EEPROM: Mux State saved correctly"));
+  }
+  else Serial.println(F("error,EEPROM: save_state(uint8_t mx, uint8_t num, uint8_t order) wrong values provided"));
 }
 
 uint8_t dynamicMem::read_irrigationParameters(uint8_t floor, uint8_t region, uint8_t number){
@@ -778,6 +870,8 @@ scale dynamicMem::read_scale(uint8_t num) {
   sc.scale = read_float(pos);
   pos += sizeof(float);
   sc.min_weight = read_float(pos);
+  pos += sizeof(float);
+  sc.max_weight = read_float(pos);
 
   return sc;
 }
@@ -810,6 +904,37 @@ ultrasonicSensor dynamicMem::read_ultrasonic(uint8_t num) {
   ultra.height = read_float(pos);
 
   return ultra;
+}
+
+Mux dynamicMem::read_mux(uint8_t num) {
+  Mux mx;
+
+  int pos = MaxUltrasonicPos() + num*sizeof(Mux);
+
+  mx.pcb_mounted = read_byte(pos);
+  pos += sizeof(uint8_t);
+  mx.ds = read_byte(pos);
+  pos += sizeof(uint8_t);
+  mx.stcp = read_byte(pos);
+  pos += sizeof(uint8_t);
+  mx.shcp = read_float(pos);
+  pos += sizeof(uint8_t);
+  mx.ds1 = read_float(pos);
+  pos += sizeof(uint8_t);
+  mx.stcp1 = read_byte(pos);
+  pos += sizeof(uint8_t);
+  mx.shcp1 = read_float(pos);
+
+  return mx;
+}
+
+uint8_t dynamicMem::read_stateOrder(uint8_t mx, uint8_t num){
+  Mux prevMux = read_mux(mx);
+
+  int pos = MaxMuxPos() + OffStateOrderPos(mx) + num;
+  uint8_t st = read_byte(pos);
+
+  return st;
 }
 
 int dynamicMem::MaxIrrigationPos(){
@@ -866,4 +991,36 @@ int dynamicMem::MaxUltrasonicPos() {
   if (ultras == 254 ) ultras = 0;
   int pos = MaxSwitchPos() + ultras*sizeof(ultrasonicSensor);
   return pos;
+}
+
+int dynamicMem::MaxMuxPos() {
+  int mux = read_byte(4);
+  // 254 is a key for 0
+  if (mux == 254) mux = 0;
+  int pos = MaxUltrasonicPos() + mux*sizeof(Mux);
+}
+
+int dynamicMem::OffStateOrderPos(uint8_t mx) {
+  int mux = read_byte(4);
+  int offset = 0;
+
+  // Asking for a mux that exist
+  if(mx<mux && mux!=254){
+    // 254 is a key for 0
+    for(int i = 0; i < mx; i++){
+      Mux prevMux = read_mux(i);
+      offset += prevMux.pcb_mounted*OUT_PER_PCB;
+    }
+  }
+
+  return offset;
+}
+
+int dynamicMem::MaxStateOrderPos(){
+  int mux = read_byte(4);
+  Mux lastMux = read_mux(mux);
+  // 254 is a key for 0
+  if (mux == 254) mux = 0;
+
+  int pos = MaxMuxPos() + OffStateOrderPos(mux) + lastMux.pcb_mounted*OUT_PER_PCB;
 }

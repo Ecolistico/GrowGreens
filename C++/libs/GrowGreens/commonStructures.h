@@ -12,10 +12,13 @@
 #define DEFAULT_CYCLE_TIME      30 // 30 minutes
 #define MAX_VALVES_PER_REGION   10 // 10 solenoids
 
+// Actuators
+#define AUX_ACTUATORS           4  // 4 actuators extra
+
 // Fan
-#define MAX_ACTUATORS           32    // Max number of fans object
-#define DEFAULT_TIME_ON_F         50  // 50 percent for fans
-#define DEFAULT_CYCLE_TIME_F      10  // 10 minutes for fans
+#define MAX_ACTUATORS           32  // Max number of fans object
+#define DEFAULT_TIME_ON_F       50  // 50 percent for fans
+#define DEFAULT_CYCLE_TIME_F    10  // 10 minutes for fans
 
 // Dynamic Memory
 #define DYNAMIC_START 30          // Start Dynamic Memory in position 30
@@ -33,11 +36,16 @@
 #define MAX_SCALES_SENSOR     2   // Maximun number of scales allowed
 #define MAX_SWITCHES_SENSOR   10  // Maximun number of switches allowed
 
+// MUX
+#define MAX_MODULES 20  // Max number of PCB in a single commutation tower
+#define OUT_PER_PCB 8   // Outputs per PCB
+
 typedef struct {
   uint8_t floors;
   uint8_t solenoids;
   uint8_t regions;
   uint8_t cycleTime;
+  uint8_t mux;
 } basicConfig;
 
 typedef struct {
@@ -85,7 +93,8 @@ typedef struct {
   uint8_t pin2;
   long offset;
   float scale;
-  float min_weight; // Finish
+  float min_weight;
+  float max_weight;
 } scale;
 
 typedef struct {
@@ -105,5 +114,24 @@ typedef struct {
   uint8_t hour;
   uint8_t minute;
 } dateTime;
+
+typedef struct {
+  uint8_t pcb_mounted;
+  uint8_t ds;           // Data MUX
+  uint8_t stcp;         // Latch MUX
+  uint8_t shcp;         // Clock MUX
+  uint8_t ds1;          // Data DEMUX
+  uint8_t stcp1;        // Latch DEMUX
+  uint8_t shcp1;        // Clock DEMUX
+} Mux;
+
+typedef struct {
+  bool *state;
+  uint8_t number;
+} MuxState;
+
+typedef struct {
+  bool *st[OUT_PER_PCB];
+} MuxOut;
 
 #endif

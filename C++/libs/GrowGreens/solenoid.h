@@ -42,7 +42,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 
 class solenoid
   {  private:
-         bool _State, _Enable, _Region; // Solenoid State, Enable and Region for each solenoid
+         bool _Enable, _Region; // Solenoid Enable and Region for each solenoid
          uint8_t _Number, _Floor, _PrintNumber; // Solenoid place into array and Floor
          unsigned long _TimeOn, _ActualTime;
          float _H2OVolume; // Water consumption for each Solenoid
@@ -52,6 +52,8 @@ class solenoid
          void solenoidPrint(String act, uint8_t level=0); // Print an action for the Solenoid
          void solenoidPrint(String act1, String act2, String act3, uint8_t level=0); // Print an action for the Solenoid
      public:
+          bool _State;    // Solenoid State,
+
           static uint8_t _numberSolenoid;
 
           solenoid (uint8_t num, uint8_t printNum, uint8_t floor, bool reg, unsigned long timeOn); // Constructor
