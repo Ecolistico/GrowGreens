@@ -16,9 +16,12 @@ class mqttController:
                  loggerGr2,
                  loggerGr3,
                  loggerGr4,
-                 loggerFront,
-                 loggerCenter,
-                 loggerBack):
+                 loggerFront1,
+                 loggerCenter1,
+                 loggerBack1,
+                 loggerFront2,
+                 loggerCenter2,
+                 loggerBack2):
         # Define container parameters
         self.ID = ID
         self.brokerIP = brokerIP
@@ -29,11 +32,14 @@ class mqttController:
         self.logGr2 = loggerGr2
         self.logGr3 = loggerGr3
         self.logGr4 = loggerGr4
-        self.logFront = loggerFront
-        self.logCenter = loggerCenter
-        self.logBack = loggerBack
+        self.logFront1 = loggerFront1
+        self.logCenter1 = loggerCenter1
+        self.logBack1 = loggerBack1
+        self.logFront2 = loggerFront2
+        self.logCenter2 = loggerCenter2
+        self.logBack2 = loggerBack2
         # Define ESP32´s object
-        self.ESP32 = ESPdata.multiESP(self.logFront, self.logCenter, self.logBack)
+        self.ESP32 = ESPdata.multiESP(self.logFront1, self.logCenter1, self.logBack1, self.logFront2, self.logCenter2, self.logBack2)
         # Define multiGrower´s object
         self.mGrower = multiGrower
         # Define aux variables
@@ -113,30 +119,48 @@ class mqttController:
                 self.requestGr4 = False
                 self.onGrowerMsg(self.mGrower.Gr4, message)
                     
-            elif(device == "esp32front"): self.logFront.debug(message)
-            elif(device == "esp32center"): self.logCenter.debug(message)
-            elif(device == "esp32back"): self.logBack.debug(message)
+            elif(device == "esp32front1"): self.logFront1.debug(message)
+            elif(device == "esp32center1"): self.logCenter1.debug(message)
+            elif(device == "esp32back1"): self.logBack1.debug(message)
+            elif(device == "esp32front2"): self.logFront2.debug(message)
+            elif(device == "esp32center2"): self.logCenter2.debug(message)
+            elif(device == "esp32back2"): self.logBack2.debug(message)
             else: self.logMain.warning("Unknown mqtt log recieve - device={}, message={}".format(device, message))
         
         # Get MQTT errors from ESP32´s
         elif(top.endswith("error")):
-            if(device == "esp32front"): self.logFront.error(message)
-            elif(device == "esp32center"): self.logCenter.error(message)
-            elif(device == "esp32back"): self.logBack.error(message)
+            if(device == "esp32front1"): self.logFront1.error(message)
+            elif(device == "esp32center1"): self.logCenter1.error(message)
+            elif(device == "esp32back1"): self.logBack1.error(message)
+            if(device == "esp32front2"): self.logFront2.error(message)
+            elif(device == "esp32center2"): self.logCenter2.error(message)
+            elif(device == "esp32back2"): self.logBack2.error(message)
             else: self.logMain.error("Unknown mqtt log recieve - device={}, message={}".format(device, message))
             
         # Get data from ESP32 front, center and back
-        elif(top.endswith("esp32front") and message!="sendData"):
-            self.ESP32.front.str2array(message)
-            self.ESP32.front.connected = True
+        elif(top.endswith("esp32front1") and message!="sendData"):
+            self.ESP32.front1.str2array(message)
+            self.ESP32.front1.connected = True
             # Ask again for the data if not complete
-        elif(top.endswith("esp32center") and message!="sendData"):
-            self.ESP32.center.str2array(message)
-            self.ESP32.center.connected = True
+        elif(top.endswith("esp32center1") and message!="sendData"):
+            self.ESP32.center1.str2array(message)
+            self.ESP32.center1.connected = True
             # Ask again for the data if not complete
-        elif(top.endswith("esp32back") and message!="sendData"):
-            self.ESP32.back.str2array(message)
-            self.ESP32.back.connected = True
+        elif(top.endswith("esp32back1") and message!="sendData"):
+            self.ESP32.back1.str2array(message)
+            self.ESP32.back1.connected = True
+            # Ask again for the data if not complete
+        elif(top.endswith("esp32front2") and message!="sendData"):
+            self.ESP32.front2.str2array(message)
+            self.ESP32.front2.connected = True
+            # Ask again for the data if not complete
+        elif(top.endswith("esp32center2") and message!="sendData"):
+            self.ESP32.center2.str2array(message)
+            self.ESP32.center2.connected = True
+            # Ask again for the data if not complete
+        elif(top.endswith("esp32back2") and message!="sendData"):
+            self.ESP32.back2.str2array(message)
+            self.ESP32.back2.connected = True
             # Ask again for the data if not complete
         
         # Communication withb MongoDB-Parse Server

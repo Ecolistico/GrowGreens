@@ -18,7 +18,7 @@ from smtp import Mail
 from logger import logger
 from sensor import BMP280, BME680
 from asciiART import asciiArt
-from Calendar import Calendar
+#from Calendar import Calendar
 from credentials import broker, sensor
 from growerData import multiGrower
 from inputHandler import inputHandler
@@ -43,7 +43,7 @@ if not os.path.exists('data/'): os.makedirs('data/')
 log = logger()
 
 # Charge calendar parameters
-growCal = Calendar()
+#growCal = Calendar()
 
 # From communication
 mGrower = multiGrower(log.logger_grower1, log.logger_grower2, log.logger_grower3, log.logger_grower4)
@@ -52,12 +52,9 @@ mGrower = multiGrower(log.logger_grower1, log.logger_grower2, log.logger_grower3
 serialControl = serialController(mGrower,
                                  log.logger,
                                  log.logger_generalControl,
-                                 log.logger_motorsGrower,
-                                 log.logger_solutionMaker,
+                                 log.logger_motorsGrower1,
+                                 log.logger_motorsGrower2,
                                  "state.json")
-
-# Charge GUI parameters and connect logger and serialControl
-gui = GUI(log.logger, serialControl)
 
 # Define functions
 def mainClose(): # When program is finishing
@@ -76,12 +73,13 @@ def mqttDisconnect(cliente, mqttObj):
     mqttObj.actualTime = time()
 
 def startRoutine(grower):
-    if serialControl.mgIsConnected:
+    if serialControl.mg1IsConnected:
         # Check if Grower is available
         if grower.failedConnection == 0:
             # It is time to move Grower
             grower.time2Move()
             top = "{}/Grower{}".format(ID, grower.floor)
+            # Check messages needed to start routine
             msgs = [{"topic": top, "payload": "OnLED1"},
                     {"topic": top, "payload": "OnLED2"},
                     {"topic": top, "payload": "DisableStream"}]
@@ -98,7 +96,7 @@ def checkSerialMsg(grower):
         elif(not grower.serialRequest.startswith('continueSequence')
              and time()-grower.actualTime>20): req = True
         if req:
-            serialControl.write(serialControl.motorsGrower, grower.serialRequest)
+            serialControl.write(serialControl.motorsGrower1, grower.serialRequest)
             grower.actualTime = time()
             log.logger.info("Resending Grower{} request: {}".format(grower.floor, grower.serialRequest))
             
@@ -151,6 +149,9 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
         brokerIP = data["staticIP"]
         city = data["city"]
         state = data["state"]
+    
+    # Charge GUI parameters and connect logger and serialControl
+    gui = GUI(ID, log.logger, serialControl)
 
     # Define Mail object
     #mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
@@ -168,9 +169,12 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
                                  log.logger_grower2,
                                  log.logger_grower3,
                                  log.logger_grower4,
-                                 log.logger_esp32front,
-                                 log.logger_esp32center,
-                                 log.logger_esp32back)
+                                 log.logger_esp32front1,
+                                 log.logger_esp32center1,
+                                 log.logger_esp32back1,
+                                 log.logger_esp32front2,
+                                 log.logger_esp32center2,
+                                 log.logger_esp32back2)
 
     # From inputHandler
     inputControl = inputHandler(ID, brokerIP, log.logger, serialControl, mqttControl, gui)
@@ -189,7 +193,9 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
 
     # Setting up
     if sensor['external'] == 'BMP280': bme = BMP280(log.logger) # Start bmp280 sensor
-    else: bme = BME680(log.logger) # Start bme680 sensor
+    elif sensor['external'] == 'BME680': bme = BME680(log.logger) # Start bme680 sensor
+    else: bme = None
+    
     day = 0
     hour = 0
     minute = 0
@@ -257,7 +263,7 @@ try:
                 # Upload sensor data
                 mqttControl.ESP32.upload2DB(conn)
                 mqttControl.mGrower.upload2DB(conn)
-                bme.upload2DB(conn)
+                if bme!=None: bme.upload2DB(conn)
                 # Send to generalControl new time info
                 serialControl.write(serialControl.generalControl, "updateHour,{0},{1}".format(
                     now.hour, now.minute))
@@ -272,9 +278,12 @@ try:
                             {"topic": "{}/Grower2".format(ID), "payload": "cozirData"},
                             {"topic": "{}/Grower3".format(ID), "payload": "cozirData"},
                             {"topic": "{}/Grower4".format(ID), "payload": "cozirData"},
-                            {"topic": "{}/esp32front".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32center".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32back".format(ID), "payload": "sendData"}]
+                            {"topic": "{}/esp32front1".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32center1".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32back1".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32front2".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32center2".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32back2".format(ID), "payload": "sendData"}]
                     # Request ESP32's and Growers data
                     publish.multiple(msgs, hostname = brokerIP)
                 except Exception as e:
@@ -282,7 +291,7 @@ try:
                     mqttDisconnect(client, mqttControl)
 
             # Request bme data
-            if bme.read(): bme.logData()
+            if bme!=None and bme.read(): bme.logData()
             else: log.logger.warning("{} sensor cannot take reading".format(sensor['external']))
 
             # Coordinate Grower routines
@@ -297,26 +306,14 @@ try:
                 log.logger.info("Checking Grower3 status to start sequence")
             elif(hour==12 and minute==0): # At 12pm
                 #startRoutine(mGrower.Gr4)                
-                log.logger.info("Checking Grower4 status to start sequence")
-            elif(hour==23 and minute==59): # At 11:59pm
-                # Request mongoDB-Parse Server IP
-                publish.single("{}/Server".format(ID), 'whatIsMyIP', hostname = brokerIP)
-            elif(hour==0 and minute==0): # At 0am
-                # Update Plant database and restart GUI
-                if mqttControl.serverIP != '':
-                    try:
-                        gui.Seed2DB(mqttControl.serverIP)
-                        gui.ResetSeedValues()
-                        mqttControl.serverIP = ''
-                        log.logger.info("Plant Database Updated")
-                    except Exceptions as e: log.logger.error("Plant Database failed to update.\n{}".format(e))
-                else: log.logger.warning("Parse Server Disconnected")
-                
+                log.logger.info("Checking Grower4 status to start sequence")    
+            """
+            Feature not ready
             elif(hour==7 and minute==0): # At 7am
                 # Send Dayly tasks
                 sub, msg = growCal.getEmail()
                 if(msg!=''): mail.sendMail(sub, msg)
-        
+            """
         # Check Serial Pending
         checkSerialMsg(mGrower.Gr1)
         checkSerialMsg(mGrower.Gr2)

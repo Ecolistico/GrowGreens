@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# This file it is in development
 from time import time, sleep
 
 class Alert():
