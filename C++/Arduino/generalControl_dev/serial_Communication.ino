@@ -11,6 +11,7 @@ void updateSystemState(){
 }
 
 void serialEvent(){                                   //if the hardware serial port_0 receives a char
+  Serial.flush();
   inputstring = Serial.readStringUntil(13);           //read the string until we see a <CR>
   input_string_complete = true;                       //set the flag used to tell if we have received a completed string from the PC
   
@@ -33,7 +34,7 @@ void serialEvent(){                                   //if the hardware serial p
     if(parameter[0]==F("boot")){ // Functions to recieve variables when boot/rebooting
       // Form "boot,int[controlState],float[h2oConsumption]"
       if(!bootParameters){
-        int ipc = parameter[1].toInt();
+        uint8_t ipc = parameter[1].toInt();
         float h2oCons = parameter[2].toFloat();
         
         if(ipc>=0 && h2oCons>=0){
@@ -52,8 +53,8 @@ void serialEvent(){                                   //if the hardware serial p
     }
 
     else if(parameter[0]==F("updateHour")){
-      int hr = parameter[1].toInt();
-      int mn = parameter[2].toInt();
+      uint8_t hr = parameter[1].toInt();
+      uint8_t mn = parameter[2].toInt();
       if(hr>=0 && hr<24 && mn>=0 && mn<60){
         if(dTime.hour!=hr || dTime.minute!=mn){
           dTime.hour = hr;
@@ -70,24 +71,24 @@ void serialEvent(){                                   //if the hardware serial p
       if(parameter[1]==F("systemEnable") || parameter[1]==F("systemEnable\n")) myFans->enable(true);
       else if(parameter[1]==F("systemDisable") || parameter[1]==F("systemDisable\n")) myFans->enable(false);
       else if(parameter[1]==F("enable")){
-        int fl = parameter[2].toInt();
+        uint8_t fl = parameter[2].toInt()-1;
         myFans->_fan[fl]->enable(true);
       }
       else if(parameter[1]==F("disable") || parameter[1]==F("disable\n")){
-        int fl = parameter[2].toInt();
+        uint8_t fl = parameter[2].toInt()-1;
         myFans->_fan[fl]->enable(false);
       }
       else if(parameter[1]==F("setTimeOn")){
-        int fl = parameter[2].toInt();
-        int t_on = parameter[3].toInt();
+        uint8_t fl = parameter[2].toInt()-1;
+        uint8_t t_on = parameter[3].toInt();
         fan_memory newParam = myMem.read_fan(fl);
         newParam.timeOn = t_on;
         myMem.save_fanParameters(fl, newParam);
         myFans->_fan[fl]->setTimeOn(t_on);
       }
       else if(parameter[1]==F("setCycleTime")){
-        int fl = parameter[2].toInt();
-        int t_cycle = parameter[3].toInt();
+        uint8_t fl = parameter[2].toInt()-1;
+        uint8_t t_cycle = parameter[3].toInt();
         fan_memory newParam = myMem.read_fan(fl);
         newParam.cycleTime = t_cycle;
         myMem.save_fanParameters(fl, newParam);
@@ -105,8 +106,8 @@ void serialEvent(){                                   //if the hardware serial p
     else if(parameter[0]==F("sensor")){
       if(parameter[1]==F("analog")){
         if(parameter[2]==F("changePin")){
-          int num = parameter[3].toInt();
-          int pin = parameter[4].toInt();
+          uint8_t num = parameter[3].toInt()-1;
+          uint8_t pin = parameter[4].toInt();
           if(num>=0 && num<sconfig.analogs){
             analogSensor newParam = myMem.read_analog(num);
             newParam.pin = pin;
@@ -116,7 +117,7 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Analog setModel: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("setModel")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           float A = parameter[4].toFloat();
           float B = parameter[5].toFloat();
           float C = parameter[6].toFloat();
@@ -131,8 +132,8 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Analog setModel: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("setFilter")){
-          int num = parameter[3].toInt();
-          int filter = parameter[4].toInt();
+          uint8_t num = parameter[3].toInt()-1;
+          uint8_t filter = parameter[4].toInt();
           float param = parameter[5].toFloat();
           if(num>=0 && num<sconfig.analogs && filter>=0 && filter<=2 && param>0) {
             analogSensor newParam = myMem.read_analog(num);
@@ -144,7 +145,7 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Analog setFilter: Parameter[3, 4, 5] incorrect"));
         }
         else if(parameter[2]==F("getRead")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.analogs) mySensors->_myAnalogs[num]->printRead();
           else Serial.println(F("error,Serial Sensor Analog getRead: Parameter[3] incorrect"));
         }
@@ -152,8 +153,8 @@ void serialEvent(){                                   //if the hardware serial p
       }
       else if(parameter[1]==F("flowmeter")){
         if(parameter[2]==F("changePin")){
-          int num = parameter[3].toInt();
-          int pin = parameter[4].toInt();
+          uint8_t num = parameter[3].toInt()-1;
+          uint8_t pin = parameter[4].toInt();
           if(num>=0 && num<sconfig.flowmeters){
             flowmeter newParam = myMem.read_flowmeter(num);
             newParam.pin = pin;
@@ -163,7 +164,7 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Flowmeter changePin: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("calibrate")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           float k = parameter[4].toFloat();
           if(num>=0 && num<sconfig.flowmeters){
             flowmeter newParam = myMem.read_flowmeter(num);
@@ -174,7 +175,7 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Flowmeter calibrate: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("getRead")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.flowmeters) mySensors->_myFlowmeters[num]->printRead();
           else Serial.println(F("error,Serial Sensor Flowmeter getRead: Parameter[3] incorrect"));
         }
@@ -182,9 +183,9 @@ void serialEvent(){                                   //if the hardware serial p
       }
       else if(parameter[1]==F("scale")){
         if(parameter[2]==F("changePin")){
-          int num = parameter[3].toInt();
-          int pin1 = parameter[4].toInt();
-          int pin2 = parameter[5].toInt();
+          uint8_t num = parameter[3].toInt()-1;
+          uint8_t pin1 = parameter[4].toInt();
+          uint8_t pin2 = parameter[5].toInt();
           if(num>=0 && num<sconfig.scales){
             scale newParam = myMem.read_scale(num);
             newParam.pin1 = pin1;
@@ -195,7 +196,7 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Scale changePin: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("setOffset")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           float offset = parameter[4].toFloat();
           if(num>=0 && num<sconfig.scales){
             scale newParam = myMem.read_scale(num);
@@ -206,7 +207,7 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Scale setOffset: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("setScale")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           float scaleParam = parameter[4].toFloat();
           if(num>=0 && num<sconfig.scales){
             scale newParam = myMem.read_scale(num);
@@ -217,7 +218,7 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Scale setScale: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("setMinWeight")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           float weightParam = parameter[4].toFloat();
           if(num>=0 && num<sconfig.scales){
             scale newParam = myMem.read_scale(num);
@@ -228,7 +229,7 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Scale setMinWeight: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("setMaxWeight")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           float weightParam = parameter[4].toFloat();
           if(num>=0 && num<sconfig.scales){
             scale newParam = myMem.read_scale(num);
@@ -239,17 +240,17 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Scale setMinWeight: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("getRead")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.scales) mySensors->_myScales[num]->printRead();
           else Serial.println(F("error,Serial Sensor Scale getRead: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("getRead_notScale")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.scales) mySensors->_myScales[num]->printRead_notScale();
           else Serial.println(F("error,Serial Sensor Scale getRead_notScale: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("getRead_notOffset")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.scales) mySensors->_myScales[num]->printRead_notOffset();
           else Serial.println(F("error,Serial Sensor Scale getRead_notOffset: Parameter[3] incorrect"));
         }
@@ -257,8 +258,8 @@ void serialEvent(){                                   //if the hardware serial p
       }
       else if(parameter[1]==F("switch")){
         if(parameter[2]==F("changePin")){
-          int num = parameter[3].toInt();
-          int pin = parameter[4].toInt();
+          uint8_t num = parameter[3].toInt()-1;
+          uint8_t pin = parameter[4].toInt();
           if(num>=0 && num<sconfig.switches){
             switchSensor newParam = myMem.read_switch(num);
             newParam.pin = pin;
@@ -268,7 +269,7 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Switch changePin: Parameter[3] incorrect")); 
         }
         else if(parameter[2]==F("changeLogic")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.switches){
             bool logic;
             if(parameter[4]==F("1\n") || parameter[4]==F("1") || parameter[4]==F("true\n") || parameter[4]==F("true") || parameter[4]==F("TRUE\n") || parameter[4]==F("TRUE")) logic = true;
@@ -281,7 +282,7 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Switch changePin: Parameter[3] incorrect")); 
         }
         else if(parameter[2]==F("getRead")){
-          int num = parameter[3].toInt();
+          uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.switches) mySensors->_mySwitches[num]->printRead();
           else Serial.println(F("error,Serial Sensor Switch getRead: Parameter[3] incorrect"));
         }
@@ -289,9 +290,9 @@ void serialEvent(){                                   //if the hardware serial p
       }
       else if(parameter[1]==F("ultrasonic")){
         if(parameter[2]==F("changePin")){
-          int num = parameter[3].toInt();
-          int pin1 = parameter[4].toInt();
-          int pin2 = parameter[5].toInt();
+          uint8_t num = parameter[3].toInt()-1;
+          uint8_t pin1 = parameter[4].toInt();
+          uint8_t pin2 = parameter[5].toInt();
           if(num>=0 && num<sconfig.ultrasonics){
             ultrasonicSensor newParam = myMem.read_ultrasonic(num);
             newParam.pin1 = pin1;
@@ -302,8 +303,8 @@ void serialEvent(){                                   //if the hardware serial p
           else Serial.println(F("error,Serial Sensor Ultrasonic changePin: Parameter[3] incorrect")); 
         }
         else if(parameter[2]==F("setModel")){
-          int num = parameter[3].toInt();
-          int model = parameter[4].toInt();
+          uint8_t num = parameter[3].toInt()-1;
+          uint8_t model = parameter[4].toInt();
           float param = parameter[5].toInt();
           float height = parameter[6].toInt();
           if(num>=0 && num<sconfig.ultrasonics){
@@ -326,25 +327,25 @@ void serialEvent(){                                   //if the hardware serial p
       if(parameter[1]==F("systemEnable") || parameter[1]==F("systemEnable\n")) myValves->enable(true);
       else if(parameter[1]==F("systemDisable") || parameter[1]==F("systemDisable\n")) myValves->enable(false);
       else if(parameter[1]==F("regionEnable")){
-        int fl = parameter[2].toInt();
-        int reg = parameter[3].toInt();
+        uint8_t fl = parameter[2].toInt()-1;
+        uint8_t reg = parameter[3].toInt()-1;
         if(fl>=0 && fl<bconfig.floors && (reg==0 || reg==1)){
           myValves->_floor[fl]->enable(true, reg);
         }
         else Serial.println(F("error,Serial Solenoid regionEnable: Parameter[2,3] unknown"));
       }
       else if(parameter[1]==F("regionDisable")){
-        int fl = parameter[2].toInt();
-        int reg = parameter[3].toInt();
+        uint8_t fl = parameter[2].toInt()-1;
+        uint8_t reg = parameter[3].toInt()-1;
         if(fl>=0 && fl<bconfig.floors && (reg==0 || reg==1)){
           myValves->_floor[fl]->enable(false, reg);
         }
         else Serial.println(F("error,Serial Solenoid regionDisable: Parameter[2,3] unknown"));
       }
       else if(parameter[1]==F("enable")){
-        int fl = parameter[2].toInt();
-        int reg = parameter[3].toInt();
-        int valveNumber = parameter[4].toInt();
+        uint8_t fl = parameter[2].toInt()-1;
+        uint8_t reg = parameter[3].toInt()-1;
+        uint8_t valveNumber = parameter[4].toInt()-1;
         if(fl>=0 && fl<bconfig.floors && (reg==0 || reg==1) && valveNumber>=0 && valveNumber<bconfig.solenoids){
           if(reg==0) myValves->_floor[fl]->_regA[valveNumber]->enable(true);
           else myValves->_floor[fl]->_regB[valveNumber]->enable(true);
@@ -352,9 +353,9 @@ void serialEvent(){                                   //if the hardware serial p
         else Serial.println(F("error,Serial Solenoid enable: Parameter[2,3,4] unknown"));
       }
       else if(parameter[1]==F("disable")){
-        int fl = parameter[2].toInt();
-        int reg = parameter[3].toInt();
-        int valveNumber = parameter[4].toInt();
+        uint8_t fl = parameter[2].toInt()-1;
+        uint8_t reg = parameter[3].toInt()-1;
+        uint8_t valveNumber = parameter[4].toInt()-1;
         if(fl>=0 && fl<bconfig.floors && (reg==0 || reg==1) && valveNumber>=0 && valveNumber<bconfig.solenoids){
           if(reg==0) myValves->_floor[fl]->_regA[valveNumber]->enable(false);
           else myValves->_floor[fl]->_regB[valveNumber]->enable(false);
@@ -362,20 +363,20 @@ void serialEvent(){                                   //if the hardware serial p
         else Serial.println(F("error,Serial Solenoid disable: Parameter[2,3,4] unknown"));
       }
       else if(parameter[1]==F("setTimeOn")){
-        int fl = parameter[2].toInt();
-        int reg = parameter[3].toInt();
-        int valveNumber = parameter[4].toInt();
-        int timeOn = abs(parameter[5].toInt());
+        uint8_t fl = parameter[2].toInt()-1;
+        uint8_t reg = parameter[3].toInt()-1;
+        uint8_t valveNumber = parameter[4].toInt()-1;
+        uint8_t timeOn = abs(parameter[5].toInt());
         if(fl>=0 && fl<bconfig.floors && (reg==0 || reg==1) && valveNumber>=0 && valveNumber<bconfig.solenoids){
-          if(reg==0) myValves->_floor[fl]->_regA[valveNumber]->setTimeOn(timeOn*1000);
-          else myValves->_floor[fl]->_regB[valveNumber]->setTimeOn(timeOn*1000);
+          if(reg==0) myValves->_floor[fl]->_regA[valveNumber]->setTimeOn(timeOn*1000UL);
+          else myValves->_floor[fl]->_regB[valveNumber]->setTimeOn(timeOn*1000UL);
           myMem.save_irrigationParameters(fl, reg, valveNumber, timeOn);
         }
         else Serial.println(F("error,Serial Solenoid setTimeOn: Parameter[2,3,4] unknown"));
       }
       else if(parameter[1]==F("setCycleTime")){
-        int cycleTime = abs(parameter[2].toInt());
-        myValves->setCycleTime(cycleTime);
+        uint8_t cycleTime = abs(parameter[2].toInt());
+        myValves->setCycleTime(cycleTime*1000UL);
         bconfig.cycleTime = cycleTime;
         myMem.config_basic(bconfig);
       }
@@ -383,7 +384,8 @@ void serialEvent(){                                   //if the hardware serial p
     }
 
     else if(parameter[0]==F("setPressure")){
-      float pres = parameter[2].toFloat();
+      uint8_t pres = parameter[2].toInt();
+      
       if(pres>0){
         if(parameter[1]==F("max")){
           if(pres>pconfig.min_pressure && pres<=200){
@@ -419,20 +421,75 @@ void serialEvent(){                                   //if the hardware serial p
     }
 
     else if(parameter[0]==F("mux")){
-      
+      if(parameter[1]==F("setPcbMounted")){
+        uint8_t mx = parameter[2].toInt()-1;
+        uint8_t pcb_mounted = parameter[3].toInt();
+        if(mx>=0 && mx<bconfig.mux && pcb_mounted>0 && pcb_mounted<MAX_MODULES){
+          Mux newParam = myMem.read_mux(mx);
+          newParam.pcb_mounted = pcb_mounted;
+          myMem.save_mux(mx, newParam);
+          rebootFlag = true;
+        }
+        else Serial.println(F("error,Serial Mux setPcbMounted: Parameter[2-3] incorrect")); 
+      }
+      else if(parameter[1]==F("changeMuxPins")){
+        uint8_t mx = parameter[2].toInt()-1;
+        uint8_t data = parameter[3].toInt();
+        uint8_t latch = parameter[4].toInt();
+        uint8_t clk = parameter[5].toInt();
+        if(mx>=0 && mx<bconfig.mux && data!=0 && latch!=0 && clk!=0){
+          Mux newParam = myMem.read_mux(mx);
+          newParam.ds = ds;
+          newParam.stcp = latch;
+          newParam.shcp = clk;
+          myMem.save_mux(mx, newParam);
+          rebootFlag = true;
+        }
+        else Serial.println(F("error,Serial Mux changeMuxPins: Parameter[2-4] incorrect")); 
+      }
+      else if(parameter[1]==F("changeDemuxPins")){
+        uint8_t mx = parameter[2].toInt()-1;
+        uint8_t data = parameter[3].toInt();
+        uint8_t latch = parameter[4].toInt();
+        uint8_t clk = parameter[5].toInt();
+        if(mx>=0 && mx<bconfig.mux && data!=0 && latch!=0 && clk!=0){
+          Mux newParam = myMem.read_mux(mx);
+          newParam.ds1 = ds;
+          newParam.stcp1 = latch;
+          newParam.shcp1 = clk;
+          myMem.save_mux(mx, newParam);
+          rebootFlag = true;
+        }
+        else Serial.println(F("error,Serial Mux changeDemuxPins: Parameter[2-4] incorrect"));
+      }
+      else if(parameter[1]==F("setOrder"){
+        uint8_t mx = parameter[2].toInt()-1;
+        uint8_t num = parameter[3].toInt()-1;
+        uint8_t order = parameter[4].toInt()-1;
+        if(mx>=0 && mx<bconfig.mux){
+          int totalOut = myMux->_myMux[mx]->_config.pcb_mounted*OUT_PER_PCB;
+          if(num>=0 && num<totalOut && order>=0 && order<totalOut){
+            myMem.save_stateOrder(mx, num, order);
+            rebootFlag = true;
+          }
+          else Serial.println(F("error,Serial MUX setOrder: Parameter[3-4] unknown"));
+        }
+        else Serial.println(F("error,Serial MUX setOrder: Parameter[2] unknown"));
+      }
+      else Serial.println(F("error,Serial MUX: Parameter[1] unknown"));
     }
     
     else if(parameter[0]==F("eeprom")){ // Functions to manage EEPROM memory
       if(parameter[1]==F("clean") || parameter[1]==F("clean\n")){ myMem.clean();}
       else if(parameter[1]==F("print") || parameter[1]==F("print\n")){ myMem.print();}
       else if(parameter[1]==F("config_basic")) {
-        int fl = parameter[2].toInt();
-        int valves= parameter[3].toInt();
-        int reg = parameter[4].toInt();
-        int cycleTime = parameter[5].toInt();
-        int muxNumber = parameter[6].toInt();
+        uint8_t fl = parameter[2].toInt();
+        uint8_t valves = parameter[3].toInt();
+        uint8_t reg = parameter[4].toInt();
+        uint8_t cycleTime = parameter[5].toInt();
+        uint8_t muxNumber = parameter[6].toInt();
         
-        if(fl>=0 && fl<MAX_FLOOR_NUMBER && valves>=0 && valves<MAX_VALVES_PER_REGION && (reg==0 || reg==1) && muxNumber>=0){
+        if(fl>=0 && fl<MAX_FLOOR_NUMBER && valves>=0 && valves<MAX_VALVES_PER_REGION && (reg==0 || reg==1 || reg==2) && muxNumber>=0){
           bconfig.floors = fl;
           bconfig.solenoids = valves;
           bconfig.regions = reg;
@@ -444,10 +501,10 @@ void serialEvent(){                                   //if the hardware serial p
         else Serial.println(F("error,Serial EEPROM config_basic: Parameter[2,3,4,5] unknown"));
       }
       else if(parameter[1]==F("config_pressure")) {
-        int max_pressure = parameter[2].toInt();
-        int min_pressure = parameter[3].toInt();
-        int critical_pressure = parameter[4].toInt();
-        int free_pressure = parameter[5].toInt();
+        uint8_t max_pressure = parameter[2].toInt();
+        uint8_t min_pressure = parameter[3].toInt();
+        uint8_t critical_pressure = parameter[4].toInt();
+        uint8_t free_pressure = parameter[5].toInt();
         if(free_pressure>0 && critical_pressure>free_pressure && min_pressure>critical_pressure && max_pressure>min_pressure && max_pressure<200){
           pconfig.max_pressure= max_pressure;
           pconfig.min_pressure = min_pressure;
@@ -458,11 +515,11 @@ void serialEvent(){                                   //if the hardware serial p
         else Serial.println(F("error,Serial EEPROM config_pressure: Parameter[2,3,4,5] unknown"));
       }
       else if(parameter[1]==F("config_sensors")) {
-        int analogs = abs(parameter[2].toInt());
-        int flowmeters = abs(parameter[3].toInt());
-        int scales = abs(parameter[4].toInt());
-        int switches = abs(parameter[5].toInt());
-        int ultrasonics = abs(parameter[6].toInt());
+        uint8_t analogs = abs(parameter[2].toInt());
+        uint8_t flowmeters = abs(parameter[3].toInt());
+        uint8_t scales = abs(parameter[4].toInt());
+        uint8_t switches = abs(parameter[5].toInt());
+        uint8_t ultrasonics = abs(parameter[6].toInt());
         sconfig.analogs = analogs;
         sconfig.flowmeters = flowmeters;
         sconfig.scales = scales;

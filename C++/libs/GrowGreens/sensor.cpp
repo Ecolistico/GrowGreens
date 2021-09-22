@@ -673,7 +673,9 @@ sensorController::sensorController(sensorConfig sconfig, dynamicMem & myMem)
     _sensorTimer = millis();
 
     // Initialize analog sensors
-    for (int i = 0; i<_sconfig.analogs; i++){
+    int s_analogs = 0;
+    if(_sconfig.analogs!=254) s_analogs = _sconfig.analogs;
+    for (int i = 0; i<s_analogs; i++){
       analogSensor analogParameter = myMem.read_analog(i); // Get analog config
       _myAnalogs[i] = new analogSens(analogParameter.pin, i); // (pin, number)
       _myAnalogs[i]->setModel(analogParameter.A, analogParameter.B, analogParameter.C); // (A, B, C)
@@ -681,24 +683,32 @@ sensorController::sensorController(sensorConfig sconfig, dynamicMem & myMem)
       _myAnalogs[i]->begin();
     }
     // Initialize flowmeter sensors
-    for (int i = 0; i<_sconfig.flowmeters; i++){
+    int s_flowmeters = 0;
+    if(_sconfig.flowmeters!=254) s_flowmeters = _sconfig.flowmeters;
+    for (int i = 0; i<s_flowmeters; i++){
       flowmeter flowParameter = myMem.read_flowmeter(i); // Get flowmeter config
       _myFlowmeters[i] = new Flowmeter(flowParameter.pin, i, flowParameter.K); // (pin, number, k_constant)
       _myFlowmeters[i]->begin();
     }
     // Initialize scale sensors
-    for (int i = 0; i<_sconfig.scales; i++){
+    int s_scales = 0;
+    if(_sconfig.scales!=254) s_scales = _sconfig.scales;
+    for (int i = 0; i<s_scales; i++){
       scale scaleParameter = myMem.read_scale(i); // Get scale config
       _myScales[i] = new ScaleSens(scaleParameter.pin1, scaleParameter.pin2, i); // (pin1, pin2, num)
       _myScales[i]->begin(scaleParameter.offset, scaleParameter.scale, scaleParameter.min_weight, scaleParameter.max_weight); // (offset, scale, min_weight, max_weight)
     }
     // Initialize switch sensors
-    for (int i = 0; i<_sconfig.switches; i++){
+    int s_switches = 0;
+    if(_sconfig.switches!=254) s_switches = _sconfig.switches;
+    for (int i = 0; i<s_switches; i++){
       switchSensor switchParameter = myMem.read_switch(i);
       _mySwitches[i] = new SwitchSens(switchParameter.pin, i, switchParameter.logic); // (pin, num, logic)
     }
     // Initialize ultrasonic sensors
-    for (int i = 0; i<_sconfig.ultrasonics; i++){
+    int s_ultrasonics = 0;
+    if(_sconfig.ultrasonics!=254) s_ultrasonics = _sconfig.ultrasonics;
+    for (int i = 0; i<s_ultrasonics; i++){
       ultrasonicSensor ultrasonicParameter = myMem.read_ultrasonic(i);
       _myUltrasonics[i] = new UltraSonic(ultrasonicParameter.pin1, ultrasonicParameter.pin2, i); // (pin1, pin2, num)
       _myUltrasonics[i]->setModel(ultrasonicParameter.model, ultrasonicParameter.param, ultrasonicParameter.height); //  (model, param, height)

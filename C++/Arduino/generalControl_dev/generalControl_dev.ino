@@ -6,6 +6,12 @@
  *    8.1) dynamicMem Congruencia de punteros e índices
  *    8.2) Comunicación Serial
  *    8.3) Mapeo de multiplexores correcto
+ *    
+ *    BUGS:
+ *    * Unexpected changes of variables before calling EEPROM functions in serial communications
+ *        solenoid,setTimeOn,7,2,5,11 usually failed
+ *        fan,setTimeOn,4,50 usually failed
+ *    * EEPROM write(pos, value) write 0 at pos+1
  */
 
 /*** Include Libraries ***/
@@ -48,7 +54,7 @@ String inputstring = "";
 bool input_string_complete = false;
 
 // Dev & Testing
-#ifndef TEST
+#ifdef TEST
 bool test = true;
 #else
 bool test = false;
@@ -72,25 +78,25 @@ void setup() {
 
   if(test){
     bool nothing;
+    myMem.begin(bconfig, pconfig, sconfig, lconfig); // Begin EEPROM
+    //myMem.write(170, 255);
+    //for(int i = 126; i<170; i++) myMem.write(i, 255);
+    //myMem.clean(); // Set all bytes at 255 in EEPROM
+    myMem.print();
   }
   
   else{
     Serial.println(F("info,Setting up Device..."));
-  
+
     // Initialize timers
     rebootTimer = millis();
   
     // Initialize dynamic memory
-    memoryReady = myMem.begin();
+    memoryReady = myMem.begin(bconfig, pconfig, sconfig, lconfig);
   
     // Charge eeprom parameters for each fan and load it
     // Turn on each fan with delay (to avoid EMI)
-    if(memoryReady){
-      bconfig = myMem.getConfig_basic();    // Get basic config
-      pconfig = myMem.getConfig_pressure(); // Get pressure config
-      sconfig = myMem.getConfig_sensors();  // Get sensor config
-      lconfig = myMem.getConfig_logic();    // Get logic config
-  
+    if(memoryReady){  
       // Initialize fan control
       myFans = new systemFan(bconfig.floors, myMem);
   
@@ -109,8 +115,8 @@ void setup() {
       // Configuration for DC Multiplexers (only solenodis)
       for (int i = 0; i<bconfig.floors; i++) {
          for(int j=0; j<bconfig.solenoids; j++){
-            int orderA = myMem.read_stateOrder(1, i*bconfig.solenoids*bconfig.regions + j);
-            int orderB = myMem.read_stateOrder(1, i*bconfig.solenoids*bconfig.regions + j + bconfig.solenoids);
+            int orderA = myMem.read_stateOrder(0, i*bconfig.solenoids*bconfig.regions + j);
+            int orderB = myMem.read_stateOrder(0, i*bconfig.solenoids*bconfig.regions + j + bconfig.solenoids);
             myMux->_myMux[0]->addState(myValves->_floor[i]->_regA[j]->_State, orderA);
             myMux->_myMux[0]->addState(myValves->_floor[i]->_regB[j]->_State, orderB);
          }
@@ -118,7 +124,7 @@ void setup() {
       // Add 4 Extra Solenoids
       int readPos = bconfig.floors*bconfig.solenoids*bconfig.regions;
       for(int i = 0; i<AUX_ACTUATORS; i++){
-        int order = myMem.read_stateOrder(1, readPos+i);
+        int order = myMem.read_stateOrder(0, readPos+i);
         if(i==0) myMux->_myMux[0]->addState(myIrrigation->_VAirL, order);
         else if(i==1) myMux->_myMux[0]->addState(myIrrigation->_VConnectedL, order);
         else if(i==2) myMux->_myMux[0]->addState(myIrrigation->_VFreeL, order);
@@ -130,8 +136,8 @@ void setup() {
 
       // Configuration fo AC Multiplexers (only fans)
       for (int i = 0; i<bconfig.floors; i++) {
-          int order1 = myMem.read_stateOrder(2, i);
-          int order2 = myMem.read_stateOrder(2, i+bconfig.floors);
+          int order1 = myMem.read_stateOrder(1, i);
+          int order2 = myMem.read_stateOrder(1, i+bconfig.floors);
           myMux->_myMux[1]->addState(myFans->_fan[i]->_State, order1);
           myMux->_myMux[1]->addState(myFans->_fan[i]->_State, order2);
       }

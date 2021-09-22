@@ -39,7 +39,7 @@ void MUX::muxPrint(String act1, String act2, String act3, String act4, uint8_t l
     Serial.print(F(": "));
     Serial.print(act1);
     Serial.print(act2);
-    Serial.println(act3);
+    Serial.print(act3);
     Serial.println(act4);
   }
 

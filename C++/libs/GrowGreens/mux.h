@@ -75,7 +75,7 @@ class muxController
 
      public:
        // Sensors
-       MUX * _myMux[MAX_ANALOG_SENSOR];                      // Analog sensors pointer
+       MUX * _myMux[MAX_MUX_SYSTEMS];                      // Analog sensors pointer
 
        muxController(uint8_t muxNumber, dynamicMem & myMem); // Constructor
        void update();                                        // Update states for all multiplexors systems

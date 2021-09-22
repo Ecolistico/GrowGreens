@@ -50,7 +50,7 @@ class dynamicMem
       dynamicMem(); // Constructor
 
       /* General Functions */
-      bool begin();
+      bool begin(basicConfig &bconfig, pressureConfig &pconfig, sensorConfig &sconfig, logicConfig &lconfig);
       void clean(bool truncate = true);
       void print(bool truncate = true);
       void config_basic(basicConfig config);

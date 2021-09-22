@@ -37,6 +37,7 @@
 #define MAX_SWITCHES_SENSOR   10  // Maximun number of switches allowed
 
 // MUX
+#define MAX_MUX_SYSTEMS 4 // Max number of multiplexer systems
 #define MAX_MODULES 20  // Max number of PCB in a single commutation tower
 #define OUT_PER_PCB 8   // Outputs per PCB
 
@@ -71,7 +72,7 @@ typedef struct {
 
 typedef struct {
   uint8_t timeOn;
-  unsigned long cycleTime;
+  uint8_t cycleTime;
 } fan_memory;
 
 typedef struct {

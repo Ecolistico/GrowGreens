@@ -10,7 +10,7 @@ dynamicMem::dynamicMem() {
   myMem = new ExternalEEPROM;
 }
 
-bool dynamicMem::begin() {
+bool dynamicMem::begin(basicConfig &bconfig, pressureConfig &pconfig, sensorConfig &sconfig, logicConfig &lconfig) {
   Wire.begin();
   if (myMem->begin() == false){
     Serial.println(F("error,EEPROM: No memory detected. Freezing."));
@@ -20,10 +20,16 @@ bool dynamicMem::begin() {
 
   if (check_basicConfig()) {
     Serial.println(F("info,EEPROM: Basic configuration is complete"));
+    bconfig = getConfig_basic();
     if(check_pressureConfig()){
+      Serial.println(F("info,EEPROM: Pressure configuration is complete"));
+      pconfig = getConfig_pressure();
       if (check_sensorConfig()){
         Serial.println(F("info,EEPROM: Sensor configuration is complete"));
+        sconfig = getConfig_sensors();
         if(check_logicConfig()){
+          Serial.println(F("info,EEPROM: Logic configuration is complete"));
+          lconfig = getConfig_logic();
           if(check_dynamicMem()) {
             Serial.println(F("info,EEPROM: Dynamic configuration is complete enough"));
             return true;
@@ -41,9 +47,7 @@ void dynamicMem::clean(bool truncate /*= true*/) {
   if(truncate) sizeLength = 1000;
   else sizeLength = myMem->getMemorySize();
   Serial.println(F("warning,EEPROM: Deleting Memory..."));
-  for(int i = 0; i<sizeLength; i++){
-    write(i, 0);
-  }
+  for(int i = 0; i<sizeLength; i++) write(i, 255);
   Serial.println(F("warning,EEPROM: Memory Deleted"));
 }
 
@@ -152,6 +156,7 @@ bool dynamicMem::check_float(float fl){
 
 bool dynamicMem::check_basicConfig(){
   basicConfig bconfig = getConfig_basic();
+  Mux mx;
   uint8_t counter = 0;
 
   if (bconfig.floors!=0 && bconfig.floors!=255) counter++;
@@ -162,7 +167,17 @@ bool dynamicMem::check_basicConfig(){
   else Serial.println(F("warning,EEPROM: Regions (basic) parameter not found"));
   if (bconfig.cycleTime!=0 && bconfig.cycleTime!=255) counter++;
   else Serial.println(F("warning,EEPROM: CycleTime (basic) parameter not found"));
-  if (bconfig.mux!=0 && bconfig.mux!=255) counter++;
+  if (bconfig.mux!=0 && bconfig.mux!=255) {
+    bool isMuxOk = true;
+    for(int i = 0; i<bconfig.mux; i++){
+      mx = read_mux(i);
+      if((mx.pcb_mounted==0 || mx.pcb_mounted==255) && (mx.ds==0 || mx.ds==255) && (mx.stcp==0 || mx.stcp==255) && (mx.shcp==0 || mx.shcp==255) && (mx.ds1==0 || mx.ds1==255) && (mx.stcp1==0 || mx.stcp1==255) && (mx.shcp1==0 || mx.shcp1==255)){
+        isMuxOk = false;
+        Serial.print(F("error,EEPROM: Mux ")); Serial.print(i); Serial.println(F(" is not configured yet"));
+      }
+    }
+    if(isMuxOk) counter++;
+  }
   else Serial.println(F("warning,EEPROM: Mux (basic) parameter not found"));
 
   if (counter==5) return true;
@@ -321,10 +336,10 @@ bool dynamicMem::check_dynamicMem(){
 void dynamicMem::write(int pos, uint8_t val){
   uint8_t auxVal = myMem->read(pos);
   if(val!=auxVal){
-    Serial.print(F("debug,Saving in EEPROM on position("));
-    Serial.print(pos);
-    Serial.print(F(") Value="));
-    Serial.println(val);
+    //Serial.print(F("debug,Saving in EEPROM on position("));
+    //Serial.print(pos);
+    //Serial.print(F(") Value="));
+    //Serial.println(val);
     myMem->write(pos, val);
   }
   else{
@@ -338,8 +353,8 @@ void dynamicMem::write(int pos, uint8_t val){
 
 uint8_t dynamicMem::read_byte(int pos){
   uint8_t auxVal = myMem->read(pos);
-  Serial.print(F("debug,EEPROM: pos("));
-  Serial.print(pos); Serial.print(F(")= ")); Serial.println(auxVal);
+  //Serial.print(F("debug,EEPROM: pos("));
+  //Serial.print(pos); Serial.print(F(")= ")); Serial.println(auxVal);
   return auxVal;
 }
 
@@ -365,8 +380,8 @@ void dynamicMem::write(int pos, int val){
 int dynamicMem::read_int(int pos){
   int auxVal = 0;
   myMem->get(pos, auxVal);
-  Serial.print(F("debug,EEPROM: pos("));
-  Serial.print(pos); Serial.print(F(")= ")); Serial.println(auxVal);
+  //Serial.print(F("debug,EEPROM: pos("));
+  //Serial.print(pos); Serial.print(F(")= ")); Serial.println(auxVal);
   return auxVal;
 }
 
@@ -374,10 +389,10 @@ void dynamicMem::write(int pos, float val){
   float auxVal = 0;
   myMem->get(pos, auxVal);
   if(val!=auxVal){
-    Serial.print(F("debug,Saving in EEPROM on position("));
-    Serial.print(pos);
-    Serial.print(F(") Value="));
-    Serial.println(val);
+    //Serial.print(F("debug,Saving in EEPROM on position("));
+    //Serial.print(pos);
+    //Serial.print(F(") Value="));
+    //Serial.println(val);
     myMem->put(pos, val);
   }
   else{
@@ -392,8 +407,8 @@ void dynamicMem::write(int pos, float val){
 float dynamicMem::read_float(int pos){
   float auxVal = 0;
   myMem->get(pos, auxVal);
-  Serial.print(F("debug,EEPROM: pos("));
-  Serial.print(pos); Serial.print(F(")= ")); Serial.println(auxVal);
+  //Serial.print(F("debug,EEPROM: pos("));
+  //Serial.print(pos); Serial.print(F(")= ")); Serial.println(auxVal);
   return auxVal;
 }
 
@@ -419,8 +434,8 @@ void dynamicMem::write(int pos, long val){
 long dynamicMem::read_long(int pos){
   long auxVal = 0;
   myMem->get(pos, auxVal);
-  Serial.print(F("debug,EEPROM: pos("));
-  Serial.print(pos); Serial.print(F(")= ")); Serial.println(auxVal);
+  //Serial.print(F("debug,EEPROM: pos("));
+  //Serial.print(pos); Serial.print(F(")= ")); Serial.println(auxVal);
   return auxVal;
 }
 
@@ -446,8 +461,8 @@ void dynamicMem::write(int pos, unsigned long val){
 unsigned long dynamicMem::read_ulong(int pos){
   unsigned long auxVal = 0;
   myMem->get(pos, auxVal);
-  Serial.print(F("debug,EEPROM: pos("));
-  Serial.print(pos); Serial.print(F(")= ")); Serial.println(auxVal);
+  //Serial.print(F("debug,EEPROM: pos("));
+  //Serial.print(pos); Serial.print(F(")= ")); Serial.println(auxVal);
   return auxVal;
 }
 
@@ -463,14 +478,13 @@ void dynamicMem::save_irrigationParameters(uint8_t floor, uint8_t region, uint8_
     int minPos = DYNAMIC_START;
     int maxPos = MaxIrrigationPos();
     int currentPos = minPos + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
-
     if(currentPos>=minPos && currentPos<maxPos) myMem->write(currentPos, time);
     else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) dynamic memory is poorly distributed"));
   } else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) wrong values provided"));
 }
 
 void dynamicMem::save_fanParameters(uint8_t floor, fan_memory fanM){
-  if(floor<MAX_FLOOR_NUMBER && floor<=read_byte(0)){
+  if(floor<MAX_FLOOR_NUMBER && floor<read_byte(0)){
     bool error = false;
 
     int minPos = MaxIrrigationPos();
@@ -818,8 +832,7 @@ fan_memory dynamicMem::read_fan(uint8_t floor) {
 
   fan.timeOn = read_byte(pos);
   pos += sizeof(uint8_t);
-  fan.cycleTime = read_ulong(pos);
-  pos += sizeof(long);
+  fan.cycleTime = read_byte(pos);
 
   return fan;
 }
@@ -910,20 +923,19 @@ Mux dynamicMem::read_mux(uint8_t num) {
   Mux mx;
 
   int pos = MaxUltrasonicPos() + num*sizeof(Mux);
-
   mx.pcb_mounted = read_byte(pos);
   pos += sizeof(uint8_t);
   mx.ds = read_byte(pos);
   pos += sizeof(uint8_t);
   mx.stcp = read_byte(pos);
   pos += sizeof(uint8_t);
-  mx.shcp = read_float(pos);
+  mx.shcp = read_byte(pos);
   pos += sizeof(uint8_t);
-  mx.ds1 = read_float(pos);
+  mx.ds1 = read_byte(pos);
   pos += sizeof(uint8_t);
   mx.stcp1 = read_byte(pos);
   pos += sizeof(uint8_t);
-  mx.shcp1 = read_float(pos);
+  mx.shcp1 = read_byte(pos);
 
   return mx;
 }

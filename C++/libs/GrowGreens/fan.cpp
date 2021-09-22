@@ -67,10 +67,10 @@ unsigned long fan::getTime()
 void fan::setTimeOn(uint8_t t_on)
   { if (t_on>=0 && t_on<=100) {
       _TimeOn = t_on;
-      fanPrint(F("Time on changed to "), String(t_on), F(" seconds"), 0);
+      fanPrint(F("Time on changed to "), String(t_on), F(" %"), 0);
     }
     else if(t_on==0) enable(false);
-    else fanPrint(F("Cannot change time on. Parameter has to be express in percentage (0-100) seconds"), 3);
+    else fanPrint(F("Cannot change time on. Parameter has to be express in percentage (0-100)"), 3);
   }
 
 void fan::setCycleTime(unsigned long t_cycle)
