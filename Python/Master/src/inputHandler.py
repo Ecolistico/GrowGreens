@@ -149,12 +149,10 @@ class inputHandler:
                 else: self.log.info("inputHandler- {} Command Unknown".format(line))
         
         elif(line.startswith("importEeprom")):
-            self.log.info("inputHandler-[generalControl] Importing eeprom")
-            # open file
-            with open("eeprom.config",'r') as conf:
-                for line in conf: self.writeGC(line.strip()) # read the file with a for loop and send it line by line to GC
-            self.log.info("inputHandler-[generalControl] Import finished")
-            
+            self.log.info("Importing eeprom to generalControl")
+            self.serialControl.importEeprom = 0
+            self.serialControl.writeEeprom()
+                    
         elif(line.startswith("startRoutine")):
             if self.serialControl.mg1IsConnected:
                 param = self.valSplit(line)

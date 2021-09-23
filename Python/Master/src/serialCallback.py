@@ -15,7 +15,7 @@ class serialController:
         
         # Variable to export Eeprom from GC
         self.exportEeprom = False
-        
+        self.importEeprom = 0
         # Define microcontrolers
         try:
             self.generalControl = Serial('/dev/generalControl', 115200, timeout=0)
@@ -239,11 +239,20 @@ class serialController:
             
         else: self.logMain.error("Line incomplete - {}".format(self.respLine[index]))
     
-    def saveEeprom(self, index):
-        param = self.respLine[index]
-        with open("eeprom.config", "a") as f:
-            f.write(param + '\n')
-    
+    def writeEeprom(self):
+        # open file
+        with open("eeprom.config",'r') as conf:
+            lines = conf.readlines()
+            if(self.importEeprom<len(lines)):
+                splitLine = lines[self.importEeprom].split(":")
+                self.importEeprom += 1
+                aux = "eeprom,write,{},{}".format(splitLine[0], splitLine[1])
+                print(aux[:-1])
+                self.concatResp("importEeprom", aux)    
+            else:
+                self.importEeprom = 0
+                self.logMain.info("Import eeprom to generalControl finished")
+                
     def concatResp(self, resp, line):
         # If that request is not save
         if not resp in self.resp:
@@ -264,9 +273,9 @@ class serialController:
                 if(resp == "boot"): self.sendBootParams()            
                 # Update system state
                 elif(resp == "updateSystemState"): self.updateSystemState(i)
-                # Save new eeprom line in file
-                elif(resp == "saveEeprom"): self.saveEeprom(i)
-                
+                # Import EEPROM
+                elif(resp == "importEeprom"): self.write(self.generalControl, self.respLine[i])
+                    
                 self.logMain.debug("Request {} was answered".format(resp))
               
             self.resp = []
@@ -274,12 +283,19 @@ class serialController:
             
     def loop(self):
         if self.gcIsConnected:
+            # Called the next Eeprom import line
+            if (not "importEeprom" in self.resp and self.importEeprom>0 and self.importEeprom<=1000): self.writeEeprom()
+            
             # If bytes available in generalControl
             while self.generalControl.in_waiting>0:
                 line1 = str(self.generalControl.readline(), "utf-8")[0:-1]
+                
                 # Check if we are not exporting eeprom to file
-                if(exportEeprom and not line1.startswith("EXPORT EEPROM FINISHED")):
-                    self.concatResp("saveEeprom", line1)
+                if(self.exportEeprom and not line1.startswith("info,EXPORT EEPROM FINISHED")):
+                    if(not line1.startswith("info")):
+                        with open("eeprom.config", "a") as f:
+                            print(line1[:-1])
+                            f.write(line1)
                 else:
                     self.Msg2Log(self.logGC, line1)
                     
@@ -287,10 +303,10 @@ class serialController:
                     self.concatResp("boot", line1)
                 elif(line1.startswith("updateSystemState")):
                     self.concatResp("updateSystemState", line1)
-                elif(line1.startswith("EXPORT EEPROM STARTED")):
+                elif(line1.startswith("info,EXPORT EEPROM STARTED")):
                     open('eeprom.config', 'w').close()
                     self.exportEeprom = True
-                elif(line1.startswith("EXPORT EEPROM FINISHED")):
+                elif(line1.startswith("info,EXPORT EEPROM FINISHED")):
                     self.exportEeprom = False
         
         if self.mg1IsConnected:
