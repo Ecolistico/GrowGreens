@@ -13,6 +13,9 @@ class serialController:
         self.logMG1 = loggerMG1
         self.logMG2 = loggerMG2
         
+        # Variable to export Eeprom from GC
+        self.exportEeprom = False
+        
         # Define microcontrolers
         try:
             self.generalControl = Serial('/dev/generalControl', 115200, timeout=0)
@@ -224,28 +227,23 @@ class serialController:
         self.logMain.info("Grower{} finished its routine".format(fl))
         
     def sendBootParams(self):
-        self.write(self.generalControl, "boot,{0},{1},{2},{3}".format(
-            self.system.state["volumen"], self.system.state["consumption"],
-            self.system.state["IPC"], self.system.state["missedH2O"]))
+        self.write(self.generalControl, "boot,{0},{1}".format(self.system.state["controlState"], self.system.state["consumptionH2O"] ))
         
     def updateSystemState(self, index):
         param = self.respLine[index].split(",")
-        if(len(param)>=4 and param[-1]!=''):
-            if(self.system.update("volumen", float(param[1]))): pass
-            #self.logMain.debug("System volNut Updated")
-            else: self.logMain.error("Cannot Update volumen State")
-            if(self.system.update("consumption", float(param[2]))): pass
-            #self.logMain.debug("System consNut Updated")
-            else: self.logMain.error("Cannot Update consumption State")
-            if(self.system.update("IPC", int(param[3]))): pass
-            #self.logMain.debug("System IPC Updated")
-            else: self.logMain.error("Cannot Update IPC State")
-            if(self.system.update("missedH2O", float(param[4]))): pass
-            #self.logMain.debug("System missedH2O Updated")
-            else: self.logMain.error("Cannot Update missedH2O State")
+        if(len(param)>=2 and param[-1]!=''):
+            if(self.system.update("controlState", float(param[1]))): pass
+            else: self.logMain.error("Cannot Update controlState")
+            if(self.system.update("consumptionH2O", float(param[2]))): pass
+            else: self.logMain.error("Cannot Update consumptionH2O")
             
         else: self.logMain.error("Line incomplete - {}".format(self.respLine[index]))
-        
+    
+    def saveEeprom(self, index):
+        param = self.respLine[index]
+        with open("eeprom.config", "a") as f:
+            f.write(param + '\n')
+    
     def concatResp(self, resp, line):
         # If that request is not save
         if not resp in self.resp:
@@ -266,13 +264,9 @@ class serialController:
                 if(resp == "boot"): self.sendBootParams()            
                 # Update system state
                 elif(resp == "updateSystemState"): self.updateSystemState(i)
-                # generalControl ask if sMaker finished to prepare the solution
-                elif(resp == "askSolFinished"): self.write(self.solutionMaker, "?solutionFinished")
-                # solutionMaker accepts to prepare a new solution
-                elif(resp == "requestAccepted"): self.write(self.generalControl, "solutionMaker,accept")
-                # solutionMaker finished to prepare the solution
-                elif(resp == "solutionFinished"): self.write(self.generalControl, "solutionMaker,finished")
-                    
+                # Save new eeprom line in file
+                elif(resp == "saveEeprom"): self.saveEeprom(i)
+                
                 self.logMain.debug("Request {} was answered".format(resp))
               
             self.resp = []
@@ -283,11 +277,21 @@ class serialController:
             # If bytes available in generalControl
             while self.generalControl.in_waiting>0:
                 line1 = str(self.generalControl.readline(), "utf-8")[0:-1]
-                self.Msg2Log(self.logGC, line1)
+                # Check if we are not exporting eeprom to file
+                if(exportEeprom and not line1.startswith("EXPORT EEPROM FINISHED")):
+                    self.concatResp("saveEeprom", line1)
+                else:
+                    self.Msg2Log(self.logGC, line1)
+                    
                 if(line1.startswith("?boot")):
                     self.concatResp("boot", line1)
                 elif(line1.startswith("updateSystemState")):
                     self.concatResp("updateSystemState", line1)
+                elif(line1.startswith("EXPORT EEPROM STARTED")):
+                    open('eeprom.config', 'w').close()
+                    self.exportEeprom = True
+                elif(line1.startswith("EXPORT EEPROM FINISHED")):
+                    self.exportEeprom = False
         
         if self.mg1IsConnected:
             # If bytes available in motorsGrower
