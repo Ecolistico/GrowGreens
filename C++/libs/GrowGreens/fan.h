@@ -46,7 +46,7 @@ class fan
 
         void setTime();
         void resetTime();
-        void fanPrint(String act, uint8_t level=0);
+        void fanPrint(String act, uint8_t level = 0);
         void fanPrint(String act1, String act2, String act3, uint8_t level=0);
 
     public:
@@ -74,7 +74,7 @@ class fan
     { private:
         uint8_t _floorNumber;
 
-        void systemPrint(String act1, String act2, String act3, uint8_t level=0); // Print an action for entire system
+        void systemPrint(String act1, String act2, String act3, uint8_t level = 0); // Print an action for entire system
 
       public:
         fan *_fan[MAX_FLOOR_NUMBER]; // List of pointers to each fan control

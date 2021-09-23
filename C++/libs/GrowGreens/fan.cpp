@@ -145,7 +145,7 @@ systemFan::systemFan(uint8_t floorNum, dynamicMem & myMem) // Constructor
      else Serial.println(F("critical,System Fan ERROR: Floors exceed max number"));
    }
 
-void systemFan::systemPrint(String act1, String act2, String act3, uint8_t level=0)
+void systemFan::systemPrint(String act1, String act2, String act3, uint8_t level /* = 0*/)
  { if(level==0){ Serial.print(F("debug,")); } // Debug
    else if(level==1){ Serial.print(F("info,")); } // Info
    else if(level==2){ Serial.print(F("warning,")); } // Warning

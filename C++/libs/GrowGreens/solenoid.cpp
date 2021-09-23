@@ -35,7 +35,7 @@ void solenoid::changeOrder(uint8_t new_number)
 void solenoid::addConsumptionH2O(float newVolume)
   { if(newVolume>0) _H2OVolume += newVolume; }
 
-void solenoid::solenoidPrint(String act, uint8_t level/*=0*/)
+void solenoid::solenoidPrint(String act, uint8_t level /* = 0 */)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
@@ -50,7 +50,7 @@ void solenoid::solenoidPrint(String act, uint8_t level/*=0*/)
     Serial.println(act);
   }
 
-void solenoid::solenoidPrint(String act1, String act2, String act3, uint8_t level/*=0*/)
+void solenoid::solenoidPrint(String act1, String act2, String act3, uint8_t level /* =0 */)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
@@ -144,7 +144,7 @@ floorValves::floorValves(uint8_t floor, uint8_t valvesPerRegion) // Constructor
 
    }
 
-void floorValves::regionPrint(String act1, String act2, String act3, bool reg, uint8_t level/*=0*/)
+void floorValves::regionPrint(String act1, String act2, String act3, bool reg, uint8_t level /* =0 */)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
@@ -160,7 +160,7 @@ void floorValves::regionPrint(String act1, String act2, String act3, bool reg, u
     Serial.println(act3);
   }
 
-void floorValves::floorPrint(String act1, String act2, String act3, uint8_t level/*=0*/)
+void floorValves::floorPrint(String act1, String act2, String act3, uint8_t level /* = 0*/)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
@@ -248,7 +248,7 @@ void floorValves::enable(bool en, uint8_t reg)
        else Serial.println(F("critical,System Valves ERROR: Floors exceed max number"));
      }
 
- void systemValves::systemPrint(String act1, String act2, String act3, uint8_t level=0)
+ void systemValves::systemPrint(String act1, String act2, String act3, uint8_t level /* =0 */)
    { if(level==0){ Serial.print(F("debug,")); } // Debug
      else if(level==1){ Serial.print(F("info,")); } // Info
      else if(level==2){ Serial.print(F("warning,")); } // Warning

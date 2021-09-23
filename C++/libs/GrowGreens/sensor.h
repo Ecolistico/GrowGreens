@@ -127,7 +127,7 @@ class SwitchSens
       SwitchSens(uint8_t pin, uint8_t num, bool logic = true); // Constructor
       void begin();
       void setLogic(bool logic);
-      void read();
+      bool read();
       void printRead(); // Print in serial last read
   };
 

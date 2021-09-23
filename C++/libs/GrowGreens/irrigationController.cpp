@@ -92,7 +92,7 @@ void irrigationController::setMode(uint8_t mode)
     }
   }
 
-void irrigationController::printAct(String act, uint8_t level=0)
+void irrigationController::printAct(String act, uint8_t level /*= 0 */)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning

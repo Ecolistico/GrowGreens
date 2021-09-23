@@ -49,8 +49,8 @@ class solenoid
 
 
          void resetTime();
-         void solenoidPrint(String act, uint8_t level=0); // Print an action for the Solenoid
-         void solenoidPrint(String act1, String act2, String act3, uint8_t level=0); // Print an action for the Solenoid
+         void solenoidPrint(String act, uint8_t level = 0); // Print an action for the Solenoid
+         void solenoidPrint(String act1, String act2, String act3, uint8_t level = 0); // Print an action for the Solenoid
      public:
           bool _State;    // Solenoid State,
 
@@ -80,8 +80,8 @@ class floorValves
   {  private:
           uint8_t _Floor, _valvesPerRegion; // Floor where the solenoids are placed
 
-          void regionPrint(String act1, String act2, String act3, bool reg, uint8_t level=0); // Print an action for each Region
-          void floorPrint(String act1, String act2, String act3, uint8_t level=0); // Print an action for each Region
+          void regionPrint(String act1, String act2, String act3, bool reg, uint8_t level = 0); // Print an action for each Region
+          void floorPrint(String act1, String act2, String act3, uint8_t level = 0); // Print an action for each Region
 
      public:
           float _H2O_regA, _H2O_regB; // Water consumption for each side
@@ -106,7 +106,7 @@ class systemValves
       uint8_t _floorNumber, _valvesPerRegion, _actualNumber; // How many floors conforms the system
       float _H2O_Consumption; // Consumption of water
 
-      void systemPrint(String act1, String act2, String act3, uint8_t level=0); // Print an action for entire system
+      void systemPrint(String act1, String act2, String act3, uint8_t level = 0); // Print an action for entire system
       void printAtFirst(); // Function that runs when _actualNumber == 0, print and reset water info
 
     public:

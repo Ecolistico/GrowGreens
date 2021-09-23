@@ -370,7 +370,7 @@ void SwitchSens::begin()
 void SwitchSens::setLogic(bool logic)
   { _logic = logic; }
 
-void SwitchSens::read()
+bool SwitchSens::read()
   { _readState = digitalRead(_pin);
 
     if(_readState!=_state){
@@ -609,7 +609,7 @@ void UltraSonic::defaultFilter()
     printFilter();
   }
 
-void UltraSonic::setExponentialFilter(float alpha = 0.2)
+void UltraSonic::setExponentialFilter(float alpha /* = 0.2 */)
   { if(alpha>0 && alpha<1){
       _Filter = 1; _Alpha = alpha;
       printFilter();
