@@ -1,11 +1,18 @@
 /* PENDIENTE:
- *  1) Multiplexores:
- *    1.1 Funciones serial para guardar orden de los estados
- *
- *  8) TROUBLESHOOTING
- *    8.1) dynamicMem Congruencia de punteros e índices
- *    8.2) Comunicación Serial
- *    8.3) Mapeo de multiplexores correcto
+ *  1) Solenoid
+ *    1.1) Funciones para ordenar riegos
+ *  
+ *  2) Serial
+ *    2.1) Exportar EEPROM a archivo
+ *    2.2) Importar EEPROM desde archivo
+ *  
+ *  3) EMERGENCY STOP
+ *    3.1) Programar paro de emergencia con multiplexors enable/disable
+ *    
+ *  3) TROUBLESHOOTING
+ *    3.1) Mapeo de multiplexores correcto
+ *    3.2) Declaración pines sensores es correcto
+ *    
  *    
  *    BUGS:
  *    * Unexpected changes of variables before calling EEPROM functions in serial communications
@@ -60,17 +67,21 @@ bool test = true;
 bool test = false;
 #endif
 
-/* REDEFINE */
-// Control action that has to be executed at least once when booting/rebooting
+// Boot variables
 bool firstHourUpdate = false;     // Update first time we get the time
 bool bootParameters = false;      // Update first time we get initial parameters
+// Aux variables
 float h2oConsumption;             // Store water constumption per irrigation cycle
 float initialWeight;              // Get the difference in weight to know water consumption
+// Emergency Variables
 bool emergencyFlag = false;       // Flag to set an emergency
 bool emergencyPrint = false;      // Flag to know when emergency message is printed
+// Reboot variables
 bool rebootFlag = false;          // Flag to know when we need to reboot
 bool rebootPrint = false;         // Flag to know when reboot message is printed
 unsigned long rebootTimer;        // Timer start counting when rebootFlag true
+// Import EEPROM Variables
+bool flagImport = false;                  // Flag import EEPROM parameters
 
 void setup() {
   // Initialize serial
@@ -78,11 +89,13 @@ void setup() {
 
   if(test){
     bool nothing;
+    /*
     myMem.begin(bconfig, pconfig, sconfig, lconfig); // Begin EEPROM
     //myMem.write(170, 255);
     //for(int i = 126; i<170; i++) myMem.write(i, 255);
     //myMem.clean(); // Set all bytes at 255 in EEPROM
     myMem.print();
+    */
   }
   
   else{
@@ -93,7 +106,7 @@ void setup() {
   
     // Initialize dynamic memory
     memoryReady = myMem.begin(bconfig, pconfig, sconfig, lconfig);
-  
+    
     // Charge eeprom parameters for each fan and load it
     // Turn on each fan with delay (to avoid EMI)
     if(memoryReady){  
@@ -131,8 +144,6 @@ void setup() {
         else if(i==3) myMux->_myMux[0]->addState(myIrrigation->_PumpL, order);
         else Serial.println(F("error,main setup(): Cannot add extra solenoid"));
       }
-      
-      myMux->_myMux[0]->orderMux();
 
       // Configuration fo AC Multiplexers (only fans)
       for (int i = 0; i<bconfig.floors; i++) {
@@ -142,8 +153,15 @@ void setup() {
           myMux->_myMux[1]->addState(myFans->_fan[i]->_State, order2);
       }
 
-      myMux->_myMux[1]->orderMux();
-      
+      for(int i = 0; i<bconfig.mux; i++ ) myMux->_myMux[i]->orderMux();
+
+      /*** DEBUG ***/
+      ///*
+      myMux->_myMux[0]->enable(true);
+      myMux->_myMux[1]->enable(true);
+      myValves->enable(true); // This has to be call when 
+      //*/
+      /*** DEBUG ***/
       Serial.println(F("info,Device is ready"));
     }
     else Serial.println(F("critical,Memory: Please provide the memory configuration missed to be able to start"));
@@ -156,7 +174,7 @@ void loop() {
     myFans->run();
     myValves ->run();
     myIrrigation->update();
-    mySensors->read();
+    //mySensors->read(); // Scale timeOut killing other process
 
     // Run main control
     mainControl();

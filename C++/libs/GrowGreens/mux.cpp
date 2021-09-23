@@ -60,16 +60,19 @@ void MUX::addState(bool &state, uint8_t order)
   { if(_numStates < MAX_MODULES*OUT_PER_PCB){
       _mux[_numStates].number = order;
       _mux[_numStates++].state = &state;  // Check pointer assigment
-      muxPrint(F("addState = "), String(*_mux[_numStates-1].state), F(""), F(""));
+      //muxPrint(F("addState = "), String(*_mux[_numStates-1].state), F(" in position "), String(_mux[_numStates-1].number));
     } else { muxPrint(F("Error addState() cannot add more than MAX_MODULES*OUT_PER_PCB states"), 3);}
   }
+
+void MUX::printState(uint8_t quotient, uint8_t remainder)
+  { muxPrint(F("printState "), String(quotient), String(remainder), String(*_muxOut[quotient].st[remainder])); }
 
 void MUX::orderMux()
   { for(int i = 0; i<_config.pcb_mounted*OUT_PER_PCB; i++) {
       int quotient = i / OUT_PER_PCB;
       int remainder = i % OUT_PER_PCB;
       _muxOut[quotient].st[remainder] = &_false; // Check pointer assigment
-      muxPrint(F("orderMux all to false = "), String(*_muxOut[quotient].st[remainder]), F(""), F(""));
+      //muxPrint(F("orderMux all to false = "), String(*_muxOut[quotient].st[remainder]), F(""), F(""));
     }
 
     for(int i = 0; i<_numStates; i++){
@@ -77,7 +80,7 @@ void MUX::orderMux()
       int quotient = num / OUT_PER_PCB;
       int remainder = num % OUT_PER_PCB;
       _muxOut[quotient].st[remainder] = _mux[i].state; // Check pointer assigment
-      muxPrint(F("orderMux to state = "), String(*_muxOut[quotient].st[remainder]), F(""), F(""));
+      //muxPrint(F("orderMux to state = "), String(*_muxOut[quotient].st[remainder]), F(""), F(""));
     }
 
   }
@@ -98,7 +101,8 @@ void MUX::codificationMultiplexer() {
   for(int i = 0; i<_config.pcb_mounted; i++) shiftOut(_config.ds, _config.shcp, MSBFIRST, value_Multiplexer[i]);
   digitalWrite(_config.stcp, HIGH);
 
-  if(millis() - _printTimer>10000){
+  if(millis() - _printTimer>60000){
+    _printTimer = millis();
     for(int i = 0; i<_config.pcb_mounted; i++) muxPrint(F("74HC595-"), String(i), F("= "), String(value_Multiplexer[i]));
   }
 
@@ -113,7 +117,7 @@ void MUX::enable(bool en)
   }
 
 void MUX::update()
-  { if(millis() - _timer > 10) {
+  { if(millis() - _timer > 100) {
       _timer = millis();
       codificationMultiplexer();
     }

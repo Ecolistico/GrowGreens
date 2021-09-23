@@ -234,13 +234,13 @@ void floorValves::enable(bool en, uint8_t reg)
          _H2O_Consumption = 0;
          resetTime();
          for (int i = 0; i<_floorNumber; i++) {
-           uint8_t valveTime = 0;
+           unsigned long valveTime = 0;
            _floor[i] = new floorValves(i, _valvesPerRegion);
 
            for(int j=0; j<_valvesPerRegion; j++){
-             valveTime = myMem.read_irrigationParameters(i, 0, j);
+             valveTime = myMem.read_irrigationParameters(i, 0, j)*1000UL;
              _floor[i]->_regA[j]->setTimeOn(valveTime);
-             valveTime = myMem.read_irrigationParameters(i, 1, j);
+             valveTime = myMem.read_irrigationParameters(i, 1, j)*1000UL;
              _floor[i]->_regB[j]->setTimeOn(valveTime);
            }
          }

@@ -194,21 +194,15 @@ void rememberState(){
     controlState.setState(40);
   }
   else if(controlState._state==60){
-    //emergencyFlag = true;
-    //myValves->enable(false);
     myIrrigation->pressurizeAll();
     controlState.setState(10);
   }
   else if(controlState._state==70){
-    //emergencyFlag = true;
-    //myValves->enable(false);
     myIrrigation->keepConnected(false);
     myIrrigation->depressurizeWater();
     controlState.setState(20);
   }
   else if(controlState._state==71){
-    //emergencyFlag = true;
-    //myValves->enable(false);
     myIrrigation->keepConnected(false);
     myIrrigation->depressurizeWater();
     controlState.setState(20);
@@ -216,4 +210,5 @@ void rememberState(){
   else controlState.setState(0);
 
   updateSystemState();
+  irrigationState.setState(0);
 }

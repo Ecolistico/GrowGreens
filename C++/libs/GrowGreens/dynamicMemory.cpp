@@ -800,8 +800,8 @@ void dynamicMem::save_stateOrder(uint8_t mx, uint8_t num, uint8_t order){
   Mux prevMux = read_mux(mx);
 
   int minPos = MaxMuxPos() + OffStateOrderPos(mx);
-  int maxPos = MaxMuxPos() + OffStateOrderPos(mx) + prevMux.pcb_mounted*OUT_PER_PCB;
-  int currentPos = minPos  + OffStateOrderPos(mx) + num;
+  int maxPos = minPos + prevMux.pcb_mounted*OUT_PER_PCB;
+  int currentPos = minPos + num;
 
   if(currentPos>=minPos && currentPos<maxPos) {
     myMem->write(currentPos, order);
@@ -818,11 +818,10 @@ uint8_t dynamicMem::read_irrigationParameters(uint8_t floor, uint8_t region, uin
   bconfig.regions = read_byte(2);
   bconfig.cycleTime = read_byte(3);
 
-  int minPos = DYNAMIC_START;
-  int maxPos = MaxIrrigationPos();
-  int posWrite = minPos + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
+  int pos = DYNAMIC_START + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
+  uint8_t resp = read_byte(pos);
 
-  return read_byte(posWrite);
+  return resp;
 }
 
 fan_memory dynamicMem::read_fan(uint8_t floor) {
@@ -1010,6 +1009,8 @@ int dynamicMem::MaxMuxPos() {
   // 254 is a key for 0
   if (mux == 254) mux = 0;
   int pos = MaxUltrasonicPos() + mux*sizeof(Mux);
+
+  return pos;
 }
 
 int dynamicMem::OffStateOrderPos(uint8_t mx) {
