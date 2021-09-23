@@ -1,18 +1,10 @@
 /* PENDIENTE:
- *  1) Solenoid
- *    1.1) Funciones para ordenar riegos
- *  
- *  2) Serial
- *    2.1) Exportar EEPROM a archivo
- *    2.2) Importar EEPROM desde archivo
- *  
- *  3) EMERGENCY STOP
- *    3.1) Programar paro de emergencia con multiplexors enable/disable
+ *  1) EMERGENCY STOP
+ *    1.1) Programar paro de emergencia con multiplexors enable/disable
  *    
- *  3) TROUBLESHOOTING
- *    3.1) Mapeo de multiplexores correcto
- *    3.2) Declaración pines sensores es correcto
- *    
+ *  2) TROUBLESHOOTING
+ *    2.1) Mapeo de multiplexores correcto
+ *    2.2) Declaración pines sensores es correcto
  *    
  *    BUGS:
  *    * Unexpected changes of variables before calling EEPROM functions in serial communications
@@ -157,6 +149,7 @@ void setup() {
       ///*
       myMux->_myMux[0]->enable(true);
       myMux->_myMux[1]->enable(true);
+      myValves->invertOrder(false); // Start irrigation from floor 8
       myValves->enable(true); // This has to be call when 
       //*/
       /*** DEBUG ***/

@@ -31,7 +31,9 @@
 #define MAX_DISTANCE          300 // Maximum distance(cm) we want to ping
 #define MIN_SECURITY_DISTANCE 10  // Minimum distance(cm) expected
 #define MAX_SECURITY_DISTANCE 82  // Maximum distance(cm) expected
+#ifndef PI
 #define PI 3.1416
+#endif
 #define MAX_FLOWMETER_SENSOR  2   // Maximun number of flowmters allowed
 #define MAX_SCALES_SENSOR     2   // Maximun number of scales allowed
 #define MAX_SWITCHES_SENSOR   10  // Maximun number of switches allowed

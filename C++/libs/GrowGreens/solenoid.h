@@ -130,12 +130,11 @@ class systemValves
       bool isEnable(); // Returns true if the solenoid System is enable
 
       // To Finish
-      //bool OrderAll(bool sequence, bool order); // True if succesful
       /* To do:
         1- Add FlowMeter sensor to this class (CANCELLED)
         2- Add Water Consumption functionality with scale sensor
      */
-
+      void invertOrder(bool invert); // Fucntion to order system
       void run(); // Let´s magic happen
   };
 

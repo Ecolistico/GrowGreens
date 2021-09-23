@@ -339,6 +339,25 @@ void systemValves::enable(bool en)
 bool systemValves::isEnable()
   {  return _Enable; }
 
+void systemValves::invertOrder(bool invert){
+  for(int i = 0; i<solenoid::_numberSolenoid; i++){
+    int fl;
+    int sol;
+    if(invert){
+      fl = (solenoid::_numberSolenoid - 1 - i) / (_valvesPerRegion*2);
+      sol = (solenoid::_numberSolenoid - 1 - i) % (_valvesPerRegion*2);
+    }
+    else{
+      fl = i / (_valvesPerRegion*2);
+      sol = i % (_valvesPerRegion*2);
+    }
+    int reg = sol / _valvesPerRegion;
+    int valveNumber = sol % _valvesPerRegion;
+    if(reg==0) _floor[fl]->_regA[valveNumber]->changeOrder(i);
+    else _floor[fl]->_regB[valveNumber]->changeOrder(i);
+  }
+}
+
 void systemValves::run()
   { if(_Enable==true){ // If system is enable
       // Look for solenoid that is next
