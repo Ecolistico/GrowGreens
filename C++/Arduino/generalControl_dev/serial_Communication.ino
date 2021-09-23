@@ -16,14 +16,12 @@ void serialEvent(){                                   //if the hardware serial p
   
   if(input_string_complete==true){
     String parameter[12];
-    char look4char;
     int k = 0;
     int l = 0;
+    
     // Split the parameters
     for (int j = 0; j<inputstring.length(); j++){
-      if(flagImport) look4char = ':'; // Looking for ':'
-      else look4char = ',';           // Looking for ','
-      if(inputstring[j] == look4char){ 
+      if(inputstring[j] == ','){ // Looking for ','
         parameter[k] = inputstring.substring(l,j);
         k++;
         l = j+1;
@@ -488,7 +486,12 @@ void serialEvent(){                                   //if the hardware serial p
         myMem.print();
         Serial.println(F("info,EXPORT EEPROM FINISHED"));
       }
-      else if(parameter[1]==F("import") || parameter[1]==F("import\n")) flagImport = true;
+      else if(parameter[1]==F("write")){
+        int pos = parameter[2].toInt();
+        uint8_t val = parameter[3].toInt();
+        if(pos>=0 && val>=0 && val<=255) myMem.write(pos, val);
+        else Serial.println(F("error,EEPROM write: Parameter[2-3] incorrect"));
+      }
       else if(parameter[1]==F("config_basic")) {
         uint8_t fl = parameter[2].toInt();
         uint8_t valves = parameter[3].toInt();
@@ -547,17 +550,10 @@ void serialEvent(){                                   //if the hardware serial p
       }
       else Serial.println(F("error,Serial EEPROM: Parameter[1] incorrect"));
     }
-    
-    else if(flagImport && (parameter[0]==F("IMPORT FINISHED") || parameter[0]==F("IMPORT FINISHED\n"))) flagImport = false;
-
-    else if(flagImport && parameter[0]!=F("IMPORT FINISHED") && parameter[0]!=  F("IMPORT FINISHED\n")){
-      int pos = parameter[0].toInt();
-      uint8_t val = parameter[1].toInt();
-      if(pos>=0 && val>=0 && val<=255) myMem.write(pos, val);
-      else Serial.println(F("error,Import EEPROM: Parameter[0-1] incorrect"));
+    else {
+      Serial.println(F("error, Serial Command Unknown"));
+      Serial.println("error," + parameter[0]);
     }
-    
-    else Serial.println(F("error, Serial Command Unknown"));
   }
   input_string_complete = false;
 }

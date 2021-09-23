@@ -80,8 +80,6 @@ bool emergencyPrint = false;      // Flag to know when emergency message is prin
 bool rebootFlag = false;          // Flag to know when we need to reboot
 bool rebootPrint = false;         // Flag to know when reboot message is printed
 unsigned long rebootTimer;        // Timer start counting when rebootFlag true
-// Import EEPROM Variables
-bool flagImport = false;                  // Flag import EEPROM parameters
 
 void setup() {
   // Initialize serial
