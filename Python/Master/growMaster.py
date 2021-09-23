@@ -40,7 +40,7 @@ if not os.path.exists('temp/'): os.makedirs('temp/')
 if not os.path.exists('data/'): os.makedirs('data/')
 # Check if eeprom config file exists, if not then create it
 if not os.path.exists('eeprom.config'):
-    with open('readme.txt', 'w') as f: f.write('')
+    with open('eeprom.config', 'w') as f: f.write('')
     
 # Charge logger parameters
 log = logger()
