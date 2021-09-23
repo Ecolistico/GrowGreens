@@ -6,7 +6,7 @@
 
 /***   processControl   ***/
 
-processControl::processControl(uint8_t type=250)
+processControl::processControl(uint8_t type /* = 250*/ )
   {
     _state = 0;
     _lastState = 0;
@@ -23,7 +23,7 @@ void processControl::printAction(String act)
     Serial.println(act);
   }
 
-void processControl::setState(uint8_t st, float par = 0)
+void processControl::setState(uint8_t st, float par /* = 0*/ )
   { _lastState = _state;
     _state = st;
     _parameter = par;

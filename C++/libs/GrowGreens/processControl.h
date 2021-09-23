@@ -47,7 +47,7 @@ class processControl
       float _parameter;
       uint8_t _type;
 
-      processControl(uint8_t type=250); // Constructor
+      processControl(uint8_t type = 250); // Constructor
       void setState(uint8_t st, float par = 0); // Function to update the process state
   };
 

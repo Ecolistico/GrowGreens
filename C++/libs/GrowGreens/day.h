@@ -72,7 +72,7 @@ class LED_Mod
          bool __State, __Enable;
          uint8_t __Floor, __Region;
 
-         void printAction(String act, uint8_t level=0);
+         void printAction(String act, uint8_t level = 0);
          void setState(bool state);
 
      public:
@@ -97,9 +97,9 @@ class LED_Mod
 class fixDay {
     private:
         bool __Led1, __Led2, __Led3, __Led4; // One Variable per floor
-        void printAction(String act, uint8_t level=0);
+        void printAction(String act, uint8_t level = 0);
         uint8_t __Config; // Select differents configuration to fix LED´s
-        
+
     public:
         fixDay(uint8_t config); // Constructor
         bool getLed1();

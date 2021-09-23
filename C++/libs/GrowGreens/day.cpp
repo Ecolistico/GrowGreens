@@ -122,7 +122,7 @@ LED_Mod::LED_Mod(uint8_t floor, uint8_t region) // Constructor
     __TotalLeds++; // Add the new led object to the total
   }
 
-void LED_Mod::printAction(String act, uint8_t level=0)
+void LED_Mod::printAction(String act, uint8_t level /* = 0 */)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
@@ -203,8 +203,8 @@ fixDay::fixDay(uint8_t config) // Constructor
     __Led4 = LOW;
     __Config = config;
    }
-   
-void fixDay::printAction(String act, uint8_t level=0)
+
+void fixDay::printAction(String act, uint8_t level /* = 0 */)
   { if(level==0){ Serial.print(F("debug,")); } // Debug
     else if(level==1){ Serial.print(F("info,")); } // Info
     else if(level==2){ Serial.print(F("warning,")); } // Warning
@@ -215,16 +215,16 @@ void fixDay::printAction(String act, uint8_t level=0)
 
 bool fixDay::getLed1()
   { return __Led1; }
-  
+
 bool fixDay::getLed2()
   { return __Led2; }
-  
+
 bool fixDay::getLed3()
   { return __Led3; }
-  
+
 bool fixDay::getLed4()
   { return __Led4; }
-  
+
 void fixDay::updateLedState(uint8_t hour)
   { if (__Config==0){ // 4 floors with light/night cycle 50/50. Each floor turn on 2 hours and turn off 2 hours
       if(hour==0 || hour==1) {
@@ -232,7 +232,7 @@ void fixDay::updateLedState(uint8_t hour)
         __Led2 = LOW;
         __Led3 = HIGH;
         __Led4 = HIGH;
-      } 
+      }
       else if(hour==2 || hour==3){
         __Led1 = HIGH;
         __Led2 = LOW;
@@ -300,14 +300,14 @@ void fixDay::updateLedState(uint8_t hour)
         __Led4 = LOW;
       }
     }
-    
+
     else if(__Config==1){ // Floor 4 always off. The other 3 with day/night cycle 66/33
       if(hour==0 || hour==1) {
         __Led1 = HIGH;
         __Led2 = LOW;
         __Led3 = HIGH;
         __Led4 = LOW;
-      } 
+      }
       else if(hour==2 || hour==3){
         __Led1 = HIGH;
         __Led2 = HIGH;
@@ -375,5 +375,5 @@ void fixDay::updateLedState(uint8_t hour)
         __Led4 = LOW;
       }
     }
-  
+
   }
