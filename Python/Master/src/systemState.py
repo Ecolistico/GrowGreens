@@ -9,37 +9,26 @@ class systemState:
         # Default State
         self.file = file
         self.state = {}
-        self.state["volumen"] = 0
-        self.state["consumption"] = 0
-        self.state["IPC"] = 0
-        self.state["missedH2O"] = 0
+        self.state["controlState"] = 0
+        self.state["consumptionH2O"] = 0
         
     def load(self):
         if(os.path.isfile(self.file)):
             with open(self.file) as f:
                 data = json.load(f)
-                self.state["volumen"] = data["volumen"]
-                self.state["consumption"] = data["consumption"]
-                self.state["IPC"] = data["IPC"]
-                self.state["missedH2O"] = data["missedH2O"]                
+                self.state["controlState"] = data["controlState"]
+                self.state["consumptionH2O"] = data["consumptionH2O"]                
             return True
         else: return False
     
     def update(self, key, val):
         save = False
-        if(key.startswith("volumen") and val>=0):
-            self.state["volumen"] = val
+        if(key.startswith("controlState") and val>=0):
+            self.state["controlState"] = val
             save = True
-        elif(key.startswith("consumption") and val>=0):
-            self.state["consumption"] = val
+        elif(key.startswith("consumptionH2O") and val>=0):
+            self.state["consumptionH2O"] = val
             save = True
-        elif(key.startswith("IPC")):
-            self.state["IPC"] = val
-            save = True
-        elif(key.startswith("missedH2O")):
-            self.state["missedH2O"] = val
-            save = True
-        
         if save:
             self.save()
             

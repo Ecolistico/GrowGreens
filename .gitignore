@@ -8,6 +8,7 @@ Python/Grower/data/
 
 # Config Files
 Python/Master/*.json
+Python/Master/*.config
 Python/Master/src/*.csv
 GUI/*.csv
 
