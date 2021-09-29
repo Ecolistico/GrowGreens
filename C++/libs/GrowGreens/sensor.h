@@ -121,7 +121,7 @@ class ScaleSens
 class SwitchSens
   { private:
       uint8_t _pin, _number, _counter;
-      bool _logic, _state, _readState;
+      bool _logicInverted, _state, _readState;
 
     public:
       SwitchSens(uint8_t pin, uint8_t num, bool logic = true); // Constructor

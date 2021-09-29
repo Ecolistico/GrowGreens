@@ -359,7 +359,7 @@ SwitchSens::SwitchSens(uint8_t pin, uint8_t num, bool logic /* = true */)
   { _pin = pin;
     _number = num;
     _counter = 0;
-    _logic = logic;
+    _logicInverted = logic;
     _state = LOW;
     _readState = LOW;
   }
@@ -368,7 +368,7 @@ void SwitchSens::begin()
   { pinMode(_pin, INPUT_PULLUP); }
 
 void SwitchSens::setLogic(bool logic)
-  { _logic = logic; }
+  { _logicInverted = logic; }
 
 bool SwitchSens::read()
   { _readState = digitalRead(_pin);
@@ -381,14 +381,14 @@ bool SwitchSens::read()
       }
     }
 
-    if(_logic) return _state;
+    if(_logicInverted) return _state; // If logic inverted
     else return !_state;
   }
 
 void SwitchSens::printRead()
   { Serial.print(F("info,Sensor: Switch number "));
     Serial.print(_number);
-    if((_logic && _state) || (!_logic && !_state)) Serial.println(F(" is ON"));
+    if((_logicInverted && _state) || (!_logicInverted && !_state)) Serial.println(F(" is ON"));
     else Serial.print(F(" is OFF"));
   }
 
