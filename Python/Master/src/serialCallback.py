@@ -267,7 +267,7 @@ class serialController:
         else: motorG = False
         if not self.mg2IsConnected or self.motorsGrower2.in_waiting==0: sMaker = True
         else: sMaker = False
-        if(time()-self.respTime>1 and gControl and motorG and sMaker and len(self.resp)>0):
+        if(time()-self.respTime>2 and gControl and motorG and sMaker and len(self.resp)>0):
             for i, resp in enumerate(self.resp):
                 # generalControl is requesting the necessary booting parameters
                 if(resp == "boot"): self.sendBootParams()            

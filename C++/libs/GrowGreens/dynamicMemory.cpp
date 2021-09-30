@@ -335,12 +335,20 @@ bool dynamicMem::check_dynamicMem(){
 
 void dynamicMem::write(int pos, uint8_t val){
   uint8_t auxVal = myMem->read(pos);
+  uint8_t nextByte = myMem->read(pos+1);
   if(val!=auxVal){
     //Serial.print(F("debug,Saving in EEPROM on position("));
     //Serial.print(pos);
     //Serial.print(F(") Value="));
     //Serial.println(val);
     myMem->write(pos, val);
+    if(nextByte!=myMem->read(pos+1)){
+      Serial.print(F("error,EEPROM write wrong byte in pos ("));
+      Serial.print(pos+1);
+      Serial.print(F(") correcting Value ="));
+      Serial.print(nextByte);
+      write(pos+1, nextByte);
+    }
   }
   else{
     Serial.print(F("warning,EEPROM on position("));

@@ -68,11 +68,23 @@ float initialWeight;              // Get the difference in weight to know water 
 // Emergency Variables
 bool emergencyFlag = false;       // Flag to set an emergency
 bool emergencyPrint = false;      // Flag to know when emergency message is printed
+bool emergencyButtonFlag = false;// Flag to know when emergency button is pressed
 // Reboot variables
 bool rebootFlag = false;          // Flag to know when we need to reboot
 bool rebootPrint = false;         // Flag to know when reboot message is printed
 unsigned long rebootTimer;        // Timer start counting when rebootFlag true
 
+void emergencyButtonPressed() {
+  if(!mySensors->_mySwitches[0]->getState() && !emergencyButtonFlag) {
+    emergencyButtonFlag = true;
+    for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(false);
+  }
+  else if(mySensors->_mySwitches[0]->getState() && emergencyButtonFlag){
+    emergencyButtonFlag = false;
+    for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
+  }
+  
+}
 void setup() {
   // Initialize serial
   Serial.begin(115200);
@@ -161,11 +173,13 @@ void setup() {
 
 void loop() {
   if(memoryReady){
+    emergencyButtonPressed(); // Check if emergency button is pressed
+    
     // Update objects and variables
     myFans->run();
     myValves ->run();
     myIrrigation->update();
-    //mySensors->read(); // Scale timeOut killing other process
+    mySensors->read(); // Scale timeOut killing other process
 
     // Run main control
     mainControl();

@@ -370,9 +370,13 @@ void SwitchSens::begin()
 void SwitchSens::setLogic(bool logic)
   { _logicInverted = logic; }
 
-bool SwitchSens::read()
+bool SwitchSens::getState()
+  { if(_logicInverted) return _state; // If logic inverted
+    else return !_state;
+  }
+  
+void SwitchSens::read()
   { _readState = digitalRead(_pin);
-
     if(_readState!=_state){
       _counter++;
       if(_counter>=5){
@@ -380,9 +384,6 @@ bool SwitchSens::read()
         _state = _readState;
       }
     }
-
-    if(_logicInverted) return _state; // If logic inverted
-    else return !_state;
   }
 
 void SwitchSens::printRead()
@@ -704,6 +705,7 @@ sensorController::sensorController(sensorConfig sconfig, dynamicMem & myMem)
     for (int i = 0; i<s_switches; i++){
       switchSensor switchParameter = myMem.read_switch(i);
       _mySwitches[i] = new SwitchSens(switchParameter.pin, i, switchParameter.logic); // (pin, num, logic)
+      _mySwitches[i]->begin();
     }
     // Initialize ultrasonic sensors
     int s_ultrasonics = 0;
@@ -718,10 +720,25 @@ sensorController::sensorController(sensorConfig sconfig, dynamicMem & myMem)
 void sensorController::read()
   { if(millis()-_sensorTimer>READ_SENSOR_TIME){
       _sensorTimer = millis();
-      for (int i = 0; i<_sconfig.analogs; i++) _myAnalogs[i]->read();                 // Read analog sensors
-      for (int i = 0; i<_sconfig.flowmeters; i++) _myFlowmeters[i]->read();           // Read flowmeter sensors
-      for (int i = 0; i<_sconfig.scales; i++) _myScales[i]->read();                   // Read scale sensors
-      for (int i = 0; i<_sconfig.switches; i++) _mySwitches[i]->read();               // Read switch sensors
-      for (int i = 0; i<_sconfig.ultrasonics; i++) _myUltrasonics[i]->updateState();  // Read ultrasonic sensors
+      // Read analog sensors
+      int s_analogs = 0;
+      if(_sconfig.analogs!=254) s_analogs = _sconfig.analogs;
+      for (int i = 0; i<s_analogs; i++) _myAnalogs[i]->read();
+      // Read flowmeter sensors
+      int s_flowmeters = 0;
+      if(_sconfig.flowmeters!=254) s_flowmeters = _sconfig.flowmeters;
+      for (int i = 0; i<s_flowmeters; i++) _myFlowmeters[i]->read();
+      // Read scale sensors
+      int s_scales = 0;
+      if(_sconfig.scales!=254) s_scales = _sconfig.scales;
+      for (int i = 0; i<s_scales; i++) _myScales[i]->read();
+      // Read switch sensors
+      int s_switches = 0;
+      if(_sconfig.switches!=254) s_switches = _sconfig.switches;
+      for (int i = 0; i<s_switches; i++) _mySwitches[i]->read();
+      // Read ultrasonic sensors
+      int s_ultrasonics = 0;
+      if(_sconfig.ultrasonics!=254) s_ultrasonics = _sconfig.ultrasonics;
+      for (int i = 0; i<s_ultrasonics; i++) _myUltrasonics[i]->updateState();
     }
   }
