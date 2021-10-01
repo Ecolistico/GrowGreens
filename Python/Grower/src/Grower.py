@@ -28,6 +28,8 @@ class Grower:
 
         self.OUT1 = out1     # GPIO to activate IR
         self.OUT2 = out2    # GPIO to activate LED
+        self.SDA = 2
+        self.SCL = 3
                 # Setting Up Cozir
         try:
             self.coz = cozir.Cozir(self.log)
@@ -53,9 +55,13 @@ class Grower:
 
         GPIO.setup(self.OUT1, GPIO.OUT)
         GPIO.setup(self.OUT2, GPIO.OUT)
+        GPIO.setup(self.SDA, GPIO.OUT)
+        GPIO.setup(self.SCL, GPIO.OUT)
 
         GPIO.output(self.OUT1, GPIO.LOW)
         GPIO.output(self.OUT2, GPIO.LOW)
+        GPIO.output(self.SDA, GPIO.LOW)
+        GPIO.output(self.SCL, GPIO.LOW)
 
     def getState(self, gpio):
         return GPIO.input(gpio)
