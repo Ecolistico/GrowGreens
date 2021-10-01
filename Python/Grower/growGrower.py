@@ -48,6 +48,24 @@ prevWiFiState = 0
 client = None
 run = True
 
+def mainInit():
+    log.logger.info("Testing Outputs")
+    sleep(3)
+    log.logger.info("Output 1: ON")
+    mqttControl.grower.turnOn(mqttControl.grower.OUT1)
+    sleep(3)
+    log.logger.info("Output 1: OFF")
+    mqttControl.grower.turnOff(mqttControl.grower.OUT1)
+    sleep(3)
+    log.logger.info("Output 2: ON")
+    mqttControl.grower.turnOn(mqttControl.grower.OUT2)
+    sleep(3)
+    log.logger.info("Output 2: OFF")
+    mqttControl.grower.turnOff(mqttControl.grower.OUT2)
+    sleep(3)
+    log.logger.info("Test Finished")
+    
+    
 def mainClose():
     # Close devices when finished
     mqttControl.grower.close() # Clean GPIO
@@ -56,6 +74,7 @@ def mainClose():
     log.shutdown()
         
 try:
+    mainInit()
     while run:
         # Check WiFi Loop
         if(time()- WiFiTime > 20):
