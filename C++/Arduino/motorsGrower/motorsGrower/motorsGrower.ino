@@ -60,29 +60,17 @@ ExternalEEPROM myEEPROM;
 // Grower 4
 #define gr4_XStep1 51
 #define gr4_XDir1  50
-
+#define gr4_XStep2 59 // A5
+#define gr4_XDir2  58 // A4
+#define gr4_YStep  57 // A3
+#define gr4_YDir   56 // A2
+#define gr4_En     54 // A0
+#define gr4_MS     55 // A1
+  
 #define gr4_XHome1 38
 #define gr4_XHome2 39
 #define gr4_YHome  49
   
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) // For Arduino Mega 2560
-  // Grower 4
-  #define gr4_XStep2 A5
-  #define gr4_XDir2  A4
-  #define gr4_YStep  A3
-  #define gr4_YDir   A2
-  #define gr4_En     A0
-  #define gr4_MS     A1
-#else // For Arduino Due
-  // Grower 4
-  #define gr4_XStep2 59
-  #define gr4_XDir2  58
-  #define gr4_YStep  57
-  #define gr4_YDir   56 
-  #define gr4_En     54
-  #define gr4_MS     55
-#endif
-
 /*** Define Aux Variables ***/
 // Grower 1
 long MAX_X1 = 0;
