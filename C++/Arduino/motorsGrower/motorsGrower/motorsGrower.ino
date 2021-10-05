@@ -25,9 +25,9 @@ ExternalEEPROM myEEPROM;
 #define gr1_En     23
 #define gr1_MS     22
 
-#define gr1_XHome1 32
-#define gr1_XHome2 33
 #define gr1_YHome  34
+#define gr1_XHome1 33
+#define gr1_XHome2 32
 
 // Grower 2
 #define gr2_XStep1 47
@@ -39,9 +39,9 @@ ExternalEEPROM myEEPROM;
 #define gr2_En     53
 #define gr2_MS     52
 
-#define gr2_XHome1 44
-#define gr2_XHome2 45
 #define gr2_YHome  46
+#define gr2_XHome1 45
+#define gr2_XHome2 44
 
 // Grower 3
 #define gr3_XStep1 24
@@ -53,9 +53,9 @@ ExternalEEPROM myEEPROM;
 #define gr3_En     13
 #define gr3_MS     12
 
-#define gr3_XHome1 26
-#define gr3_XHome2 27
 #define gr3_YHome  37
+#define gr3_XHome1 27
+#define gr3_XHome2 26
 
 // Grower 4
 #define gr4_XStep1 51
@@ -66,10 +66,10 @@ ExternalEEPROM myEEPROM;
 #define gr4_YDir   56 // A2
 #define gr4_En     54 // A0
 #define gr4_MS     55 // A1
-  
-#define gr4_XHome1 38
-#define gr4_XHome2 39
+
 #define gr4_YHome  49
+#define gr4_XHome1 39
+#define gr4_XHome2 38
   
 /*** Define Aux Variables ***/
 // Grower 1
