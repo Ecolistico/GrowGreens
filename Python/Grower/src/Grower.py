@@ -30,7 +30,8 @@ class Grower:
         self.OUT2 = out2    # GPIO to activate LED
         self.SDA = 2
         self.SCL = 3
-                # Setting Up Cozir
+
+        # Setting Up Cozir
         try:
             self.coz = cozir.Cozir(self.log)
             checkCozir = 0
