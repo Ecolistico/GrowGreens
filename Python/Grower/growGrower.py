@@ -65,9 +65,11 @@ def mainInit():
     sleep(3)
     log.logger.info("Output IR: ON")
     mqttControl.grower.turnOff(mqttControl.grower.SCL)
+    mqttControl.grower.turnOff(mqttControl.grower.SDA)
     sleep(3)
     log.logger.info("Output IR: OFF")
     mqttControl.grower.turnOn(mqttControl.grower.SCL)
+    mqttControl.grower.turnOn(mqttControl.grower.SDA)
     sleep(3)
     log.logger.info("Test Finished")
 
