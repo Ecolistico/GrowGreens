@@ -61,8 +61,8 @@ class Grower:
 
         GPIO.output(self.OUT1, GPIO.LOW)
         GPIO.output(self.OUT2, GPIO.LOW)
-        GPIO.output(self.SDA, GPIO.HIGH)
-        GPIO.output(self.SCL, GPIO.HIGH)
+        GPIO.output(self.SDA, GPIO.LOW)
+        GPIO.output(self.SCL, GPIO.LOW)
 
     def getState(self, gpio):
         return GPIO.input(gpio)
