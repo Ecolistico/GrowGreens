@@ -374,12 +374,12 @@ bool SwitchSens::getState()
   { if(_logicInverted) return _state; // If logic inverted
     else return !_state;
   }
-  
+
 void SwitchSens::read()
   { _readState = digitalRead(_pin);
     if(_readState!=_state){
       _counter++;
-      if(_counter>=5){
+      if(_counter>=2){
         _counter = 0;
         _state = _readState;
       }

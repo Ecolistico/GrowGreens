@@ -117,7 +117,7 @@ void MUX::enable(bool en)
   }
 
 void MUX::update()
-  { if(millis() - _timer > 100) {
+  { if(millis() - _timer > 50) {
       _timer = millis();
       codificationMultiplexer();
     }

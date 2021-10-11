@@ -166,12 +166,12 @@ void setup() {
       //*/
       /*** DEBUG ***/
       Serial.println(F("info,Device is ready"));
+
+      // Test Big Pump
+      myIrrigation->turnOnPump();
     }
     else Serial.println(F("critical,Memory: Please provide the memory configuration missed to be able to start"));
   }
-
-  // Test Big Pump
-  myIrrigation->turnOnPump();
 }
 
 void loop() {
