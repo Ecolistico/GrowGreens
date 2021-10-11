@@ -169,6 +169,9 @@ void setup() {
     }
     else Serial.println(F("critical,Memory: Please provide the memory configuration missed to be able to start"));
   }
+
+  // Test Big Pump
+  myIrrigation->turnOnPump();
 }
 
 void loop() {

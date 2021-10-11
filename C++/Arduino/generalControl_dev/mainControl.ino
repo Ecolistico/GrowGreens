@@ -109,6 +109,7 @@ void correctiveProcess(){
   else if(controlState._state==21){
     if(mySensors->_myScales[0]->getWeight()>=mySensors->_myScales[0]->getMaxWeight()){
       myIrrigation->pressurizeAll();
+      myIrrigation->turnOffPump();
       controlState.setState(10);
       updateSystemState();
     }
@@ -137,6 +138,7 @@ void correctiveProcess(){
     }
     else if(mySensors->_myScales[0]->getWeight()>=mySensors->_myScales[0]->getMaxWeight()){
       myIrrigation->pressurizeAll();
+      myIrrigation->turnOffPump();
       controlState.setState(10);
       updateSystemState();
     }
@@ -163,6 +165,7 @@ void correctiveProcess(){
   else if(controlState._state==71){
     if(mySensors->_myScales[0]->getWeight()>=mySensors->_myScales[0]->getMaxWeight()){
       myIrrigation->pressurizeAll();
+      myIrrigation->turnOffPump();
       controlState.setState(60);
       updateSystemState();
     }
