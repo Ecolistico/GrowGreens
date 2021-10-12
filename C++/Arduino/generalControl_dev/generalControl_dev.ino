@@ -90,15 +90,18 @@ void emergencyButtonPressed() {
     myValves->enable(true);
     digitalWrite(relay2, !true);
   }
-  else if(mySensors->_mySwitches[0]->getState() && !bootEmergencyRelay){
+  else if(!bootEmergencyRelay){ // Just on boot
     bootEmergencyRelay = true;
-    for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
-    myValves->enable(true);
-    myMux->update();
-    digitalWrite(relay2, !true);
+    for(int i = 0; i<3; i++) mySensors->read();
+    else if(mySensors->_mySwitches[0]->getState()){
+      for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
+      myValves->enable(true);
+      myMux->update();
+      digitalWrite(relay2, !true);
+    }
   }
-  
 }
+
 void setup() {
   // Initialize serial
   Serial.begin(115200);
