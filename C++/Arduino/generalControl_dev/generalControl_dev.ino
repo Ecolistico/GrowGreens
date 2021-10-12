@@ -191,7 +191,7 @@ void setup() {
       digitalWrite(relay2, !false);
       
       // Test Big Pump
-      myIrrigation->turnOnPump();
+      //myIrrigation->turnOnPump();
     }
     else Serial.println(F("critical,Memory: Please provide the memory configuration missed to be able to start"));
   }
