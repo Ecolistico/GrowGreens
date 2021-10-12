@@ -11,6 +11,7 @@ MUX::MUX(Mux config) // Constructor
   { _config = config;
     _numStates = 0;
     _en = false;
+    _stcpEn = true;
     _false = false;
     _number = _total++;
     for(int i = 0; i < OUT_PER_PCB; i++) _off[i] = false;
@@ -99,7 +100,9 @@ void MUX::codificationMultiplexer() {
 
   digitalWrite(_config.stcp, LOW);
   for(int i = 0; i<_config.pcb_mounted; i++) shiftOut(_config.ds, _config.shcp, MSBFIRST, value_Multiplexer[i]);
-  digitalWrite(_config.stcp, HIGH);
+  if(_stcpEn) digitalWrite(_config.stcp, HIGH);
+
+  _stcpEn = _en; // Copy _en to latch enable. This allow to write one last time the state before turn off latch
 
   if(millis() - _printTimer>60000){
     _printTimer = millis();

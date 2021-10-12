@@ -77,28 +77,29 @@ uint8_t relay1 = 9;
 uint8_t relay2 = 8;
 
 void emergencyButtonPressed() {
+  if(!bootEmergencyRelay){
+    bootEmergencyRelay = true;
+    myMux->update(); // Update to set all state as LOW
+    for(int i = 0; i<3; i++) mySensors->read();
+    if(mySensors->_mySwitches[0]->getState()){
+      for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
+      myValves->enable(true);
+      digitalWrite(relay2, !true);
+    }
+  }
+  
   if(!mySensors->_mySwitches[0]->getState() && !emergencyButtonFlag) {
     emergencyButtonFlag = true;
     for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(false);
+    myMux->update(); // Update to set all state as LOW
     myValves->enable(false);
     digitalWrite(relay2, !false);
   }
   else if(mySensors->_mySwitches[0]->getState() && emergencyButtonFlag){
     emergencyButtonFlag = false;
-    if(!bootEmergencyRelay) bootEmergencyRelay = true;
     for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
     myValves->enable(true);
     digitalWrite(relay2, !true);
-  }
-  else if(!bootEmergencyRelay){ // Just on boot
-    bootEmergencyRelay = true;
-    for(int i = 0; i<3; i++) mySensors->read();
-    if(mySensors->_mySwitches[0]->getState()){
-      myMux->update(); // Update before enable to set all state as LOW
-      for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
-      myValves->enable(true);
-      digitalWrite(relay2, !true);
-    }
   }
 }
 
