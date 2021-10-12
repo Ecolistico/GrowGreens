@@ -99,7 +99,7 @@ void MUX::codificationMultiplexer() {
 
   digitalWrite(_config.stcp, LOW);
   for(int i = 0; i<_config.pcb_mounted; i++) shiftOut(_config.ds, _config.shcp, MSBFIRST, value_Multiplexer[i]);
-  if(_en) digitalWrite(_config.stcp, HIGH);
+  digitalWrite(_config.stcp, HIGH);
 
   if(millis() - _printTimer>60000){
     _printTimer = millis();
