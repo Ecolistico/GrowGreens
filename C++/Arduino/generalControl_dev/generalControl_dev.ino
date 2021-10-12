@@ -59,6 +59,7 @@ bool test = false;
 // Boot variables
 bool firstHourUpdate = false;     // Update first time we get the time
 bool bootParameters = false;      // Update first time we get initial parameters
+bool bootEmergencyRelay = false;  // Update first time to activate multiplexors relay
 // Aux variables
 float h2oConsumption;             // Store water constumption per irrigation cycle
 float initialWeight;              // Get the difference in weight to know water consumption
@@ -84,8 +85,16 @@ void emergencyButtonPressed() {
   }
   else if(mySensors->_mySwitches[0]->getState() && emergencyButtonFlag){
     emergencyButtonFlag = false;
+    if(!bootEmergencyRelay) bootEmergencyRelay = true;
     for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
     myValves->enable(true);
+    digitalWrite(relay2, !true);
+  }
+  else if(mySensors->_mySwitches[0]->getState() && !bootEmergencyRelay){
+    bootEmergencyRelay = true;
+    for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
+    myValves->enable(true);
+    myMux->update();
     digitalWrite(relay2, !true);
   }
   
