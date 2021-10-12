@@ -80,13 +80,13 @@ void emergencyButtonPressed() {
     emergencyButtonFlag = true;
     for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(false);
     myValves->enable(false);
-    digitalWrite(relay1, false);
+    digitalWrite(relay2, !false);
   }
   else if(mySensors->_mySwitches[0]->getState() && emergencyButtonFlag){
     emergencyButtonFlag = false;
     for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
     myValves->enable(true);
-    digitalWrite(relay1, true);
+    digitalWrite(relay2, !true);
   }
   
 }
@@ -174,6 +174,8 @@ void setup() {
       // Redefinition
       pinMode(relay1, OUTPUT);
       pinMode(relay2, OUTPUT);
+      digitalWrite(relay1, !false);
+      digitalWrite(relay2, !false);
       
       // Test Big Pump
       myIrrigation->turnOnPump();
