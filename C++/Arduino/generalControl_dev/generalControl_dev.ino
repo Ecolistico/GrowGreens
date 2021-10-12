@@ -93,7 +93,7 @@ void emergencyButtonPressed() {
   else if(!bootEmergencyRelay){ // Just on boot
     bootEmergencyRelay = true;
     for(int i = 0; i<3; i++) mySensors->read();
-    else if(mySensors->_mySwitches[0]->getState()){
+    if(mySensors->_mySwitches[0]->getState()){
       for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
       myValves->enable(true);
       myMux->update();
