@@ -1,10 +1,7 @@
 /* PENDIENTE:
- *  1) EMERGENCY STOP
- *    1.1) Programar paro de emergencia con multiplexors enable/disable
  *    
- *  2) TROUBLESHOOTING
- *    2.1) Mapeo de multiplexores correcto
- *    2.2) Declaración pines sensores es correcto
+ *  1) TROUBLESHOOTING
+ *    1.1) Declaración pines sensores es correcto
  *    
  *    BUGS:
  *    * Unexpected changes of variables before calling EEPROM functions in serial communications
@@ -74,14 +71,22 @@ bool rebootFlag = false;          // Flag to know when we need to reboot
 bool rebootPrint = false;         // Flag to know when reboot message is printed
 unsigned long rebootTimer;        // Timer start counting when rebootFlag true
 
+// Need redefinition as class to add them in dynamicMem as parameters
+uint8_t relay1 = 9;
+uint8_t relay2 = 8;
+
 void emergencyButtonPressed() {
   if(!mySensors->_mySwitches[0]->getState() && !emergencyButtonFlag) {
     emergencyButtonFlag = true;
     for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(false);
+    myValves->enable(false);
+    digitalWrite(relay1, false);
   }
   else if(mySensors->_mySwitches[0]->getState() && emergencyButtonFlag){
     emergencyButtonFlag = false;
     for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
+    myValves->enable(true);
+    digitalWrite(relay1, true);
   }
   
 }
@@ -157,16 +162,19 @@ void setup() {
 
       for(int i = 0; i<bconfig.mux; i++ ) myMux->_myMux[i]->orderMux();
 
-      /*** DEBUG ***/
-      ///*
-      myMux->_myMux[0]->enable(true);
-      myMux->_myMux[1]->enable(true);
-      myValves->invertOrder(false); // Start irrigation from floor 8
-      myValves->enable(true); // This has to be call when 
-      //*/
-      /*** DEBUG ***/
+      myValves->invertOrder(true); // Start irrigation from floor 8
       Serial.println(F("info,Device is ready"));
 
+      /*** DEBUG ***/
+      /*
+      myMux->_myMux[0]->enable(true);
+      myMux->_myMux[1]->enable(true);
+      */
+      
+      // Redefinition
+      pinMode(relay1, OUTPUT);
+      pinMode(relay2, OUTPUT);
+      
       // Test Big Pump
       myIrrigation->turnOnPump();
     }
