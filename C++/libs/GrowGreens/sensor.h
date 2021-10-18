@@ -98,6 +98,8 @@ class Flowmeter
 // Class for scale
 class ScaleSens
   { private:
+      bool _en;
+      unsigned long _printTimer;
       uint8_t _pin1, _pin2, _number;
       float _weight, _minWeight, _maxWeight;
 
