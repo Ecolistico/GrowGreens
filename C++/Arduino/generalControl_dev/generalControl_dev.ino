@@ -1,13 +1,14 @@
 /* PENDIENTE:
  *    
- *  1) TROUBLESHOOTING
- *    1.1) Declaración pines sensores es correcto
- *    
  *    BUGS:
- *    * Unexpected changes of variables before calling EEPROM functions in serial communications
+ *    1- Unexpected changes of variables before calling EEPROM functions in serial communications
  *        solenoid,setTimeOn,7,2,5,11 usually failed
  *        fan,setTimeOn,4,50 usually failed
- *    * EEPROM write(pos, value) write 0 at pos+1
+ *        
+ *    2- EEPROM write(pos, value) write 0 at pos+1
+ *    2.1- Import EEPROM() is too slow and make mistakes
+ *    
+ *    3- When Scale is not found Multiplexers towers start flashing in a similar way that when turn latch ON
  */
 
 /*** Include Libraries ***/
