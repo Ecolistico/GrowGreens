@@ -347,7 +347,7 @@ void ScaleSens::setMinWeight(float weight)
 void ScaleSens::setMaxWeight(float weight)
   { _maxWeight = weight; }
 
-void ScaleSens::print(String value)
+void ScaleSens::printVal(String value)
   { Serial.print(F("info,Sensor: Scale number "));
     Serial.print(_number);
     Serial.print(F(" value = "));

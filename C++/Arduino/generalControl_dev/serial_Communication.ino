@@ -242,14 +242,14 @@ void serialEvent(){                                   //if the hardware serial p
           uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.scales){
             long value = mySensors->_myScales[num]->_sc->get_offset();
-             mySensors->_myScales[num]->print(String(value));
+             mySensors->_myScales[num]->printVal(String(value));
           }
         }
         else if(parameter[2]==F("getScale")){
           uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.scales){
             long value = mySensors->_myScales[num]->_sc->get_scale();
-             mySensors->_myScales[num]->print(String(value));
+             mySensors->_myScales[num]->printVal(String(value));
           }
         }
         else if(parameter[2]==F("getRead")){
