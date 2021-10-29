@@ -77,7 +77,7 @@ class dynamicMem
       int read_int(int pos);
       void write(int pos, float val);
       float read_float(int pos);
-      void write(int pos, long val);
+      void write_long(int pos, long val);
       long read_long(int pos);
       void write(int pos, unsigned long val);
       unsigned long read_ulong(int pos);

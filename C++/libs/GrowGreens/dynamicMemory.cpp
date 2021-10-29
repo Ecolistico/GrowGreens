@@ -420,7 +420,7 @@ float dynamicMem::read_float(int pos){
   return auxVal;
 }
 
-void dynamicMem::write(int pos, long val){
+void dynamicMem::write_long(int pos, long val){
   long auxVal = 0;
   myMem->get(pos, auxVal);
   if(val!=auxVal){
@@ -628,7 +628,7 @@ void dynamicMem::save_scale(uint8_t num, scale sc){
   }
 
   if (currentPos>=minPos && currentPos<maxPos && !error){
-    write(currentPos, sc.offset);
+    write_long(currentPos, sc.offset);
     currentPos += sizeof(sc.offset);
   } else if(!error){
     Serial.println(F("error,EEPROM: save_scale(uint8_t num, scale sc) wrong values provided"));
