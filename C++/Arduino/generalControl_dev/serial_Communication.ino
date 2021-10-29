@@ -1,11 +1,11 @@
 /*****   Lecture on serial Events   *****/
 const char zero_char = char(48);
 
-void updateSystemState(){ 
+void updateSystemState(){
   // Form -> "updateSystemState,int[controlState],float[consH2O]"
   Serial.print(F("updateSystemState,"));
   Serial.print(controlState._state); // Control State
-  Serial.print(F(",")); 
+  Serial.print(F(","));
   Serial.print(h2oConsumption);      // H2O Consumption
 }
 
@@ -13,12 +13,12 @@ void serialEvent(){                                   //if the hardware serial p
   Serial.flush();
   inputstring = Serial.readStringUntil(13);           //read the string until we see a <CR>
   input_string_complete = true;                       //set the flag used to tell if we have received a completed string from the PC
-  
+
   if(input_string_complete==true){
     String parameter[12];
     int k = 0;
     int l = 0;
-    
+
     // Split the parameters
     for (int j = 0; j<inputstring.length(); j++){
       if(inputstring[j] == ','){ // Looking for ','
@@ -65,7 +65,7 @@ void serialEvent(){                                   //if the hardware serial p
       }
       else Serial.println(F("error,Serial updateHour: Parameter[1,2] incorrect"));
     }
-    
+
     else if(parameter[0]==F("fan")){
       if(parameter[1]==F("systemEnable") || parameter[1]==F("systemEnable\n")) myFans->enable(true);
       else if(parameter[1]==F("systemDisable") || parameter[1]==F("systemDisable\n")) myFans->enable(false);
@@ -238,6 +238,20 @@ void serialEvent(){                                   //if the hardware serial p
           }
           else Serial.println(F("error,Serial Sensor Scale setMinWeight: Parameter[3] incorrect"));
         }
+        else if(parameter[2]==F("getOffset")){
+          uint8_t num = parameter[3].toInt()-1;
+          if(num>=0 && num<sconfig.scales){
+            long value = mySensors->_myScales[num]->_sc->get_offset();
+             mySensors->_myScales[num]->print(String(value));
+          }
+        }
+        else if(parameter[2]==F("getScale")){
+          uint8_t num = parameter[3].toInt()-1;
+          if(num>=0 && num<sconfig.scales){
+            long value = mySensors->_myScales[num]->_sc->get_scale();
+             mySensors->_myScales[num]->print(String(value));
+          }
+        }
         else if(parameter[2]==F("getRead")){
           uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.scales) mySensors->_myScales[num]->printRead();
@@ -265,7 +279,7 @@ void serialEvent(){                                   //if the hardware serial p
             myMem.save_switch(num, newParam);
             rebootFlag = true;
           }
-          else Serial.println(F("error,Serial Sensor Switch changePin: Parameter[3] incorrect")); 
+          else Serial.println(F("error,Serial Sensor Switch changePin: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("changeLogic")){
           uint8_t num = parameter[3].toInt()-1;
@@ -278,7 +292,7 @@ void serialEvent(){                                   //if the hardware serial p
             myMem.save_switch(num, newParam);
             mySensors->_mySwitches[num]->setLogic(logic);
           }
-          else Serial.println(F("error,Serial Sensor Switch changePin: Parameter[3] incorrect")); 
+          else Serial.println(F("error,Serial Sensor Switch changePin: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("getRead")){
           uint8_t num = parameter[3].toInt()-1;
@@ -299,7 +313,7 @@ void serialEvent(){                                   //if the hardware serial p
             myMem.save_ultrasonic(num, newParam);
             rebootFlag = true;
           }
-          else Serial.println(F("error,Serial Sensor Ultrasonic changePin: Parameter[3] incorrect")); 
+          else Serial.println(F("error,Serial Sensor Ultrasonic changePin: Parameter[3] incorrect"));
         }
         else if(parameter[2]==F("setModel")){
           uint8_t num = parameter[3].toInt()-1;
@@ -320,8 +334,8 @@ void serialEvent(){                                   //if the hardware serial p
         else Serial.println(F("error,Serial Sensor Ultrasonic: Parameter[2] incorrect"));
       }
       else Serial.println(F("error,Serial Sensor: Parameter[1] incorrect"));
-    }    
-    
+    }
+
     else if(parameter[0]==F("solenoid")){
       if(parameter[1]==F("systemEnable") || parameter[1]==F("systemEnable\n")) myValves->enable(true);
       else if(parameter[1]==F("systemDisable") || parameter[1]==F("systemDisable\n")) myValves->enable(false);
@@ -384,33 +398,33 @@ void serialEvent(){                                   //if the hardware serial p
 
     else if(parameter[0]==F("setPressure")){
       uint8_t pres = parameter[2].toInt();
-      
+
       if(pres>0){
         if(parameter[1]==F("max")){
           if(pres>pconfig.min_pressure && pres<=200){
             pconfig.max_pressure= pres;
-            myMem.config_pressure(pconfig); 
+            myMem.config_pressure(pconfig);
           }
           else{Serial.println(F("error,Serial setPressure (max): Pressure has to be bigger than min_pressure and smaller than 200 psi"));}
         }
         else if(parameter[1]==F("min")){
           if(pres<pconfig.max_pressure){
             pconfig.min_pressure= pres;
-            myMem.config_pressure(pconfig); 
+            myMem.config_pressure(pconfig);
           }
           else{Serial.println(F("error,Serial setPressure (min): Pressure has to be smaller than max_pressure"));}
         }
         else if(parameter[1]==F("critical")){
           if(pres<pconfig.min_pressure){
             pconfig.critical_pressure= pres;
-            myMem.config_pressure(pconfig); 
+            myMem.config_pressure(pconfig);
           }
           else Serial.println(F("error,Serial setPressure (critical): Pressure has to be smaller than min_pressure"));
         }
         else if(parameter[1]==F("free")){
           if(pres<pconfig.critical_pressure){
             pconfig.free_pressure= pres;
-            myMem.config_pressure(pconfig); 
+            myMem.config_pressure(pconfig);
           }
           else Serial.println(F("error,Serial setPressure (free): Pressure has to be smaller than critical_pressure"));
         }
@@ -429,7 +443,7 @@ void serialEvent(){                                   //if the hardware serial p
           myMem.save_mux(mx, newParam);
           rebootFlag = true;
         }
-        else Serial.println(F("error,Serial Mux setPcbMounted: Parameter[2-3] incorrect")); 
+        else Serial.println(F("error,Serial Mux setPcbMounted: Parameter[2-3] incorrect"));
       }
       else if(parameter[1]==F("changeMuxPins")){
         uint8_t mx = parameter[2].toInt()-1;
@@ -444,7 +458,7 @@ void serialEvent(){                                   //if the hardware serial p
           myMem.save_mux(mx, newParam);
           rebootFlag = true;
         }
-        else Serial.println(F("error,Serial Mux changeMuxPins: Parameter[2-4] incorrect")); 
+        else Serial.println(F("error,Serial Mux changeMuxPins: Parameter[2-4] incorrect"));
       }
       else if(parameter[1]==F("changeDemuxPins")){
         uint8_t mx = parameter[2].toInt()-1;
@@ -477,7 +491,7 @@ void serialEvent(){                                   //if the hardware serial p
       }
       else Serial.println(F("error,Serial MUX: Parameter[1] incorrect"));
     }
-    
+
     else if(parameter[0]==F("eeprom")){ // Functions to manage EEPROM memory
       if(parameter[1]==F("clean") || parameter[1]==F("clean\n")){ myMem.clean();}
       else if(parameter[1]==F("print") || parameter[1]==F("print\n")){ myMem.print(); }
@@ -498,7 +512,7 @@ void serialEvent(){                                   //if the hardware serial p
         uint8_t reg = parameter[4].toInt();
         uint8_t cycleTime = parameter[5].toInt();
         uint8_t muxNumber = parameter[6].toInt();
-        
+
         if(fl>=0 && fl<MAX_FLOOR_NUMBER && valves>=0 && valves<MAX_VALVES_PER_REGION && (reg==0 || reg==1 || reg==2) && muxNumber>=0){
           bconfig.floors = fl;
           bconfig.solenoids = valves;
