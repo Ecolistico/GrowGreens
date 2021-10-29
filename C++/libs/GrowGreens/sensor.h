@@ -114,7 +114,7 @@ class ScaleSens
       float getMaxWeight();
       void setMinWeight(float weight);
       void setMaxWeight(float weight);
-      void print(float value);
+      void printVal(float value);
       void print(long value);
       void printRead(); // Print in serial last read
       void printRead_notScale(); // Print in serial read with scale = 1
