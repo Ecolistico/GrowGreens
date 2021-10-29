@@ -196,7 +196,7 @@ void serialEvent(){                                   //if the hardware serial p
         }
         else if(parameter[2]==F("setOffset")){
           uint8_t num = parameter[3].toInt()-1;
-          float offset = parameter[4].toFloat();
+          long offset = parameter[4].toInt();
           if(num>=0 && num<sconfig.scales){
             scale newParam = myMem.read_scale(num);
             newParam.offset = offset;
