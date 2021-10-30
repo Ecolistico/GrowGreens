@@ -201,6 +201,7 @@ void serialEvent(){                                   //if the hardware serial p
             scale newParam = myMem.read_scale(num);
             newParam.offset = offset;
             myMem.save_scale(num, newParam);
+            Serial.print(F("error, DEBBUGGING: ")); Serial.println(offset);
             mySensors->_myScales[num]->_sc->set_offset(offset);
           }
           else Serial.println(F("error,Serial Sensor Scale setOffset: Parameter[3] incorrect"));
@@ -242,6 +243,7 @@ void serialEvent(){                                   //if the hardware serial p
           uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.scales){
             long value = mySensors->_myScales[num]->_sc->get_offset();
+            Serial.print(F("error, DEBBUGGING: ")); Serial.println(value);
              mySensors->_myScales[num]->printVal(value);
           }
         }
