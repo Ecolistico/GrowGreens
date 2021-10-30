@@ -379,7 +379,7 @@ void ScaleSens::printRead_notOffset()
     Serial.print(F("info,Sensor: Scale number "));
     Serial.print(_number);
     Serial.print(F(" value (offset@0) = "));
-    Serial.print(value);
+    Serial.println(value);
   }
 
 /*** SwitchSens    ***/
