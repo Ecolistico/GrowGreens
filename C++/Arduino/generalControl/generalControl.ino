@@ -1,35 +1,35 @@
 /*
  * To do:
  * 1- Change EEPROM to externalEEPROM and all its functions
- * 
+ *
  * 2- Add scale calibration procedure
  * 2.1- Get offset
  * 2.2- Get scale
  * 2.3- Save it in EEPROM
  * 2.4 Possible troubles with interrupts and flowmeters sensors.
  * 2.5 Possible troubles with cable length. It could possible tried to change the Shift In function to make delayMicroseconds about 15-20us and see how it works
- * 
+ *
  * 3- Add analog sensor calibration procedure
  * 3.1- Ask user for the type of curve (constant, linear, cuadratic, etc.)
  * 3.2- Get the number of meditions necesary to calculate the equation
  * 3.3- Save the parameters get it
- * 
+ *
  * 4- Add flowmters sensor calibration procedura
  * 4.1 Set interrupts and open the valve for x seconds/minutes
  * 4.2 Ask user for the number of liters that crossed the flowmeter
- * 4.3 Get and save in EEPROM the factor K 
- * 
+ * 4.3 Get and save in EEPROM the factor K
+ *
  * 5- Create MUX/DEMUX Class to manage the commutation towers
- * 
+ *
  * 6- Reestructure EEPROM with all this information
- * 
+ *
  * 7- Redo flow chart of each process
 */
-
+// This is a test
 /*** Include Libraries ***/
 #include <Wire.h>
 #include <External_EEPROM.h> // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
-/* You need to define the buffer lengths in SparkFun_External_EEPROM.h for 
+/* You need to define the buffer lengths in SparkFun_External_EEPROM.h for
 generic arduino mega 2560 board. For more details ask Eleazar Dominguez(eleazardg@sippys.com.mx). */
 #include <solenoid.h>
 #include <sensor.h>
@@ -37,7 +37,7 @@ generic arduino mega 2560 board. For more details ask Eleazar Dominguez(eleazard
 ExternalEEPROM myEEPROM;
 
 /*** Config Variables ***/
-byte floors = 0; 
+byte floors = 0;
 byte solenoids = 0;
 byte minutes = 0;
 byte analogSensors = 0;
@@ -175,7 +175,7 @@ void setup() {
     // Define INPUTS&OUTPUTS
     solenoidValve::flowSensorBegin();
     recirculationController::flowSensorBegin();
-    
+
     pinMode(stcp, OUTPUT);
     pinMode(shcp, OUTPUT);
     pinMode(ds, OUTPUT);
@@ -183,7 +183,7 @@ void setup() {
     pinMode(emergencyUser, INPUT_PULLUP);
     digitalWrite(mR, !LOW); // Turn off Relays
     allMultiplexerOff(); // Set multiplexors off
-    
+
     // Initialize objects
     sensors_setup(); // Initialize sensors
     Actuator::beginAll(); // Initialize actuators
@@ -191,14 +191,14 @@ void setup() {
     // Initialize recirculationController
     Recirculation.begin(US0, US1, US2, US3, US4, US5, US6);
     Serial.flush();
-    
+
     // Charge EEPROM parameters saved
     chargeMultidayParameters(); // For multiDay
     chargeLedRegion(); // For LED´s
     chargeSolenoidRegion(); // For solenoidValves
     chargeIrrigationParameters(); // For irrigation control
     chargePressureParameter(); // For pressure control
-    
+
     // Set initial state
     inputstring.reserve(30); // Reserve 30 bytes for serial strings
     codification_Multiplexer(); // Initialize Multiplexers
@@ -207,17 +207,17 @@ void setup() {
     logSensTime = millis();
     buttonTime = millis();
     bootTimer = millis();
-    
+
     // Finished
     Serial.println(F("Device Ready"));
     Serial.flush();
     delay(1000);
-    
+
     if(!digitalRead(emergencyUser)){ // Enable Relays
       digitalWrite(mR, !HIGH); // Turn on multiplexors
     }
-    
-    // Testing settings 
+
+    // Testing settings
     //solenoidValve::enableGroup(true); delete
   }
   else {
@@ -229,7 +229,7 @@ void loop() {
   if(configFinished){
     /*** Request boot info to raspberry ***/
     boot();
-    
+
     /*** Emergency Conditions ***/
     emergencyStop();
     /*** Sensors ***/
@@ -248,9 +248,9 @@ void loop() {
     /*** Multiplexers & Relays states ***/
     multiplexerRun();
     /*** log&debug***/
-    logSens();  
+    logSens();
   }
-  
+
   // Testing code
-  
+
 }
