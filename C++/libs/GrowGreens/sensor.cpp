@@ -332,12 +332,12 @@ float ScaleSens::getWeight()
   { return _weight; }
 
 float ScaleSens::getMinWeight()
-  { float resp = _minWeight + (_sc->get_offset()/_sc->get_scale());
+  { float resp = _minWeight; /*+ (_sc->get_offset()/_sc->get_scale());*/
     return resp;
   }
 
 float ScaleSens::getMaxWeight()
-  { float resp = _maxWeight + (_sc->get_offset()/_sc->get_scale());
+  { float resp = _maxWeight; /*+ (_sc->get_offset()/_sc->get_scale());*/
     return resp;
   }
 
