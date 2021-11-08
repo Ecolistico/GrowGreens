@@ -252,6 +252,20 @@ void serialEvent(){                                   //if the hardware serial p
              mySensors->_myScales[num]->printVal(String(value));
           }
         }
+        else if(parameter[2]==F("getMinWeight")){
+          uint8_t num = parameter[3].toInt()-1;
+          if(num>=0 && num<sconfig.scales){
+            float value = mySensors->_myScales[num]->getMinWeight();
+             mySensors->_myScales[num]->printVal(String(value));
+          }
+        }
+        else if(parameter[2]==F("getMaxWeight")){
+          uint8_t num = parameter[3].toInt()-1;
+          if(num>=0 && num<sconfig.scales){
+            float value = mySensors->_myScales[num]->getMaxWeight();
+             mySensors->_myScales[num]->printVal(String(value));
+          }
+        }
         else if(parameter[2]==F("getRead")){
           uint8_t num = parameter[3].toInt()-1;
           if(num>=0 && num<sconfig.scales) mySensors->_myScales[num]->printRead();
