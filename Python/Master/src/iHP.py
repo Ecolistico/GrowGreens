@@ -6,7 +6,6 @@ import os
 import random
 
 class IHP:
-
     def RandomValues(self):
         #Returns 4 Random bytes
         self.a = hex(random.randrange(0,255))
@@ -307,18 +306,6 @@ class IHP:
         numero1 = int(ba, 2)
         print("Command code for Module, ISOCOMM, or PFC.:",numero1)
 
-        
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -349,7 +336,7 @@ class IHP:
         UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 
         if(NumberF == "1"):
-            self.WriteProtect()
+            self.WriteProtect()##Como le cargo los parametro???? POR LO PRONTO SE LO TIENES QUE PASAR A MANO
 
         elif(NumberF == "2"):
             self.OperationMode()
@@ -370,58 +357,30 @@ class IHP:
         msg = "Message from Server {}".format(msgFromServer[0])
         print(msg)
         data = msgFromServer[0]
-        info = [data[i:i+1] for i in range(0, len(data))]
+        info = self.splitBytes(data)
         lentrama = len(data)
-        print("Len Trama" lentrama)
-        #encoding = 'utf-8'
-        #b'hello'.decode(encoding)
-        info1 = ord(info[5])
-        print(info1)
-        info2 = str(info1)
-        #info1 = str(info[0])
-        #msg = "Message from Server {}".format(msgFromServer[0]
-        val1 = bin(int(info2, 10))
-        val2 = bin(96)
-        print(val1)
-        print(val2)
-        val3 = [info1 >> i & 1 for i in range(8)]
-        val3.reverse()
-        print(val3)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-msgFromClient = "Hello UDP Server"
-bytesToSend = b'\x80\x80\x80\x80\xA1\x00\x01\x10\x00'
-
-serverAddressPort = ("192.168.6.105", 8888)
-bufferSize = 1024
-
-# Create a UDP socket at client side
-UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-
-# Send to server using created UDP socket
-UDPClientSocket.sendto(bytesToSend, serverAddressPort)
-msgFromServer = UDPClientSocket.recvfrom(bufferSize)
-msg = "Message from Server {}".format(msgFromServer[0])
-print(msg)
+        if (lentrama==5):
+            self.Comp4FBytes(info)
+            self.Comp5Byte(info)
+        if (lentrama==6):
+            self.Comp4FBytes(info)
+            self.Comp5Byte(info)
+            self.Comp6Byte(info)
+        if (lentrama==7):
+            self.Comp4FBytes(info)
+            self.Comp5Byte(info)
+            self.Comp6Byte(info)
+            self.Comp7Byte(info)
+        if (lentrama==8):
+            self.Comp4FBytes(info)
+            self.Comp5Byte(info)
+            self.Comp6Byte(info)
+            self.Comp7Byte(info)
+            self.Comp8Byte(info)
+        if (lentrama==9):
+            self.Comp4FBytes(info)
+            self.Comp5Byte(info)
+            self.Comp6Byte(info)
+            self.Comp7Byte(info)
+            self.Comp8Byte(info)
+            self.Comp9Byte(info)
