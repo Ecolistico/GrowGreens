@@ -90,28 +90,28 @@ class IHP:
         z = [self.a,self.b,self.c,self.d,e,f,g,h,i,j]
         return z
 
-   def Vref(self, ModuleN, Voltage):
+    def Vref(self, ModuleN, Voltage):
        #Change Module N Default Voltage #3
-       self.RandomValues()
-       self.ModuleN = ModuleN
-       self.Voltage = Voltage
+        self.RandomValues()
+        self.ModuleN = ModuleN
+        self.Voltage = Voltage
         e = b'\xA1'
         if(ModuleN == "Module1"):
-            f = b'\x10'
+           f = b'\x10'
         elif(ModuleN == "Module2"):
-            f = b'\x11'
+           f = b'\x11'
         elif(ModuleN == "Module3"):
-            f = b'\x12'
+           f = b'\x12'
         elif(ModuleN == "Module4"):
-            f = b'\x13'
+           f = b'\x13'
         elif(ModuleN == "Module5"):
-            f = b'\x14'
+           f = b'\x14'
         elif(ModuleN == "Module6"):
-            f = b'\x15'
+           f = b'\x15'
         elif(ModuleN == "Module7"):
-            f = b'\x16'
+           f = b'\x16'
         elif(ModuleN == "Module8"):
-            f = b'\x17'
+           f = b'\x17'
         g = b'\x04'
         h = b'\xB1'
         i = b'\x03'
@@ -125,7 +125,7 @@ class IHP:
         z = [self.a,self.b,self.c,self.d,e,f,g,h,i,j1,j2,j3]
         return z
 
-   def Iref(self, ModuleN, Current):
+    def Iref(self, ModuleN, Current):
        #Change Module N Default Current #4
         self.RandomValues()
         self.ModuleN = ModuleN
@@ -246,9 +246,9 @@ class IHP:
         elif(numero1!=0):
             print("BYTE5: Reserved for future use. Values should be zero. NOT OK")
         if(listBit[5]==1):
-            print("BYTE5:Bit5: Final Bit Reserved for future use. Value should be one. OK"")
+            print("BYTE5:Bit5: Final Bit Reserved for future use. Value should be one. OK")
         elif(listBit[5]!=1):
-            print("BYTE5:Bit5: Final Bit Reserved for future use. Value should be one. NOTOK"")
+            print("BYTE5:Bit5: Final Bit Reserved for future use. Value should be one. NOTOK")
         if(listBit[6]==0):
             print("BYTE5:Bit6: No error,OK")
         elif(listBit[6]==1):
@@ -305,13 +305,6 @@ class IHP:
         ba = "".join(map(str, listBit))
         numero1 = int(ba, 2)
         print("Command code for Module, ISOCOMM, or PFC.:",numero1)
-
-
-
-
-
-
-
 
 
     ##AGREGAR TIMEOUT!!!!!!!!!!!!!   ////marcador para unificar
