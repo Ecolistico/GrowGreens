@@ -273,8 +273,42 @@ class IHP:
         ca = "".join(map(str, valf2))
         numero2 = int(ca, 2)
         print("BYTE6:Bit4-7: A non-zero value indicates an error code, zero is reserved for normal responses:", numero2)
+        #AGREGAR TABLA DE ERRORES
 
     def Comp7Byte(self, info):
+        #Analyze Byte7
+        self.info = tm
+        Bytepos = self.splitByte(tm, 7)
+        listBit = self.splitIntoBits(BytePos)
+        valf1 = [listBit[0], listBit[1], listBit[2], listBit[3], listBit[4]]
+        ba = "".join(map(str, valf1))
+        numero1 = int(ba, 2)
+        print("BYTE7:Internal Device Address:", numero1)
+        #AGREGAR TABLA DE DIRECCIONES
+
+    def Comp8Byte(self, info):
+        #Analyze Byte8
+        self.info = tm
+        Bytepos = self.splitByte(tm, 8)
+        listBit = self.splitIntoBits(BytePos)
+        valf1 = [listBit[0], listBit[1], listBit[2], listBit[3], listBit[4],listBit[5]]
+        ba = "".join(map(str, valf1))
+        numero1 = int(ba, 2)
+        print("BYTE8:Bit0-5:length of the data included in this message starting from 10th Byte.:",numero1)
+        #A implementar lecturas
+        print("BYTE8:Bit6: Value should be 0:",listBit[6])
+        print("BYTE8:Bit7: Value should be 0:",listBit[6])
+
+    def Comp9Byte(self, info):
+        self.info = tm
+        Bytepos = self.splitByte(tm, 9)
+        listBit = self.splitIntoBits(BytePos)
+        ba = "".join(map(str, listBit))
+        numero1 = int(ba, 2)
+        print("Command code for Module, ISOCOMM, or PFC.:",numero1)
+
+        
+
 
 
 
@@ -294,7 +328,7 @@ class IHP:
 
 
     ##AGREGAR TIMEOUT!!!!!!!!!!!!!   ////marcador para unificar
-
+ ######modificar completamente la CommunicationIHP() al final
     def CommunicationIHP(self, NumberF, MAC, ip_range, IHPPort):
         self.NumberF = NumberF #Number function
         self.MAC = MAC
