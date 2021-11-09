@@ -41,7 +41,7 @@ if not os.path.exists('data/'): os.makedirs('data/')
 # Check if eeprom config file exists, if not then create it
 if not os.path.exists('eeprom.config'):
     with open('eeprom.config', 'w') as f: f.write('')
-    
+
 # Charge logger parameters
 log = logger()
 
@@ -89,7 +89,7 @@ def startRoutine(grower):
             publish.multiple(msgs, hostname = brokerIP)
             log.logger.info("Checking Grower{} status to start sequence".format(grower.floor))
     else: log.logger.error("Cannot start sequence. Serial device [motorsGrower] is disconnected.")
-    
+
 def checkSerialMsg(grower):
     # Resend serial messages without response for Growers
     if(grower.serialRequest!=""):
@@ -102,7 +102,7 @@ def checkSerialMsg(grower):
             serialControl.write(serialControl.motorsGrower1, grower.serialRequest)
             grower.actualTime = time()
             log.logger.info("Resending Grower{} request: {}".format(grower.floor, grower.serialRequest))
-            
+
 def checkMqttMsg(grower):
     # Resend mqtt messages withouth response in 20s for Growers
     if(grower.mqttRequest!="" and time()-grower.actualTime>20):
@@ -124,7 +124,7 @@ def checkMqttMsg(grower):
                 log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower{} request [{}]".format(grower.floor, e))
                 mqttDisconnect(client, mqttControl)
         grower.actualTime = time()
-        
+
 # Aux Variables
 try: param = sys.argv[1]
 except: param = ""
@@ -152,7 +152,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
         brokerIP = data["staticIP"]
         city = data["city"]
         state = data["state"]
-    
+
     # Charge GUI parameters and connect logger and serialControl
     gui = GUI(ID, log.logger, serialControl)
 
@@ -198,7 +198,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     if sensor['external'] == 'BMP280': bme = BMP280(log.logger) # Start bmp280 sensor
     elif sensor['external'] == 'BME680': bme = BME680(log.logger) # Start bme680 sensor
     else: bme = None
-    
+
     day = 0
     hour = 0
     minute = 0
@@ -299,17 +299,17 @@ try:
 
             # Coordinate Grower routines
             if(hour==6 and minute==0): # At 6am
-                #startRoutine(mGrower.Gr1)                
+                #startRoutine(mGrower.Gr1)
                 log.logger.info("Checking Grower1 status to start sequence")
             elif(hour==8 and minute==0):# At 8am
-                #startRoutine(mGrower.Gr2)                
+                #startRoutine(mGrower.Gr2)
                 log.logger.info("Checking Grower2 status to start sequence")
             elif(hour==10 and minute==0): # At 10am
-                #startRoutine(mGrower.Gr3)                
+                #startRoutine(mGrower.Gr3)
                 log.logger.info("Checking Grower3 status to start sequence")
             elif(hour==12 and minute==0): # At 12pm
-                #startRoutine(mGrower.Gr4)                
-                log.logger.info("Checking Grower4 status to start sequence")    
+                #startRoutine(mGrower.Gr4)
+                log.logger.info("Checking Grower4 status to start sequence")
             """
             Feature not ready
             elif(hour==7 and minute==0): # At 7am
@@ -322,7 +322,7 @@ try:
         checkSerialMsg(mGrower.Gr2)
         checkSerialMsg(mGrower.Gr3)
         checkSerialMsg(mGrower.Gr4)
-        
+
         # Check MQTT Pending
         checkMqttMsg(mGrower.Gr1)
         checkMqttMsg(mGrower.Gr2)
