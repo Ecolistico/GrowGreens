@@ -84,7 +84,6 @@ def scan_for_hosts(ip_range):
     nmap_args = ['sudo', 'nmap', '-n', '-sP', '-oX', '-', ip_range]
     return subprocess.check_output(nmap_args)
 
-
 def find_ip_address_for_mac_address(xml, mac_address):
     """Parse Nmap's XML output, find the host element with the given
     MAC address, and return that host's IP address (or `None` if no
@@ -95,13 +94,11 @@ def find_ip_address_for_mac_address(xml, mac_address):
     if host_elem is not None:
         return find_ip_address(host_elem)
 
-
 def find_host_with_mac_address(host_elems, mac_address):
     """Return the first host element that contains the MAC address."""
     for host_elem in host_elems:
         if host_has_mac_address(host_elem, mac_address):
             return host_elem
-
 
 def host_has_mac_address(host_elem, wanted_mac_address):
     """Return true if the host has the given MAC address."""
@@ -111,16 +108,13 @@ def host_has_mac_address(host_elem, wanted_mac_address):
         found_mac_address.lower() == wanted_mac_address.lower()
     )
 
-
 def find_mac_address(host_elem):
     """Return the host's MAC address."""
     return find_address_of_type(host_elem, 'mac')
 
-
 def find_ip_address(host_elem):
     """Return the host's IP address."""
     return find_address_of_type(host_elem, 'ipv4')
-
 
 def find_address_of_type(host_elem, type_):
     """Return the host's address of the given type, or `None` if there
