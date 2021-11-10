@@ -202,15 +202,15 @@ class IHP:
         #Returns a byte in a specific position, returns it in decimal format.
         #self.info = info #list # Ya se guardo previamente
         self.PosByte = PosByte #List position
-        info1 = ord(self.info[PosByte])
-        info2 = str(info1)
+        self.info1 = ord(self.info[PosByte])
+        info2 = str(self.info1)
         val1 = bin(int(info2, 10))
         print(val1)
-        return info1
+        #return info1
 
-    def splitIntoBits(self, BytePos):
+    def splitIntoBits(self):
         #Split byte into its bits, return a list of binary
-        selg.BytePos = info1 # Esta declaración esta mal ¿Dónde esta info1 declarada?
+        selg.info1 = info1 # Esta declaración esta mal ¿Dónde esta info1 declarada?
         val3 = [info1 >> i & 1 for i in range(8)]
         val3.reverse()
         print(val3)
@@ -232,7 +232,7 @@ class IHP:
         #self.info = tm # Esta declaración está tm no ha sido declarada en ningún lugar
         tm = self.info # Creo que lo que querías hacer era esto
         Bytepos = self.splitByte(tm, 5)
-        listBit = self.splitIntoBits(BytePos)
+        listBit = self.splitIntoBits()
         if (listBit[0]==1): print("BYTE5: Bit[0] = 1: Command response is included with this message")
         elif(listBit[0]==0): print("BYTE5: Bit[0]: ERROR ‘0’ Message is an acknowledgement receipt of a BLANK message.")
         valf1 = [listBit[1], listBit[2], listBit[3], listBit[4]]
