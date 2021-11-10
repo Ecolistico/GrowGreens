@@ -190,7 +190,7 @@ class IHP:
         return z
 
     def WriteProtectDisableM(self, ModuleN):
-        #To MODULE
+        #To MODULE #6
         self.RandomValues()
         e = b'\xA1'
         if(ModuleN == 1): f = b'\x10'
@@ -207,6 +207,19 @@ class IHP:
         h = b'\x10'
         # Cambio de comparación es mpas sencillo trabajar con booleanos que con strings
         i = b'\x00'
+        z = [self.a,self.b,self.c,self.d,e,f,g,h,i]
+        return z
+
+    def ModuleSave(self):
+        #Module Save to ISOCOMM #7
+        self.RandomValues()
+        #self.EDWrite = EDWrite # Creo que no hace falta crear otra variable de clase para guardar este parámetro
+        e = b'\xA1'
+        f = b'\x00'
+        g = b'\x01'
+        h = b'\xD7'
+        i = b'\x00'
+        # Es más sensillo trabajar con booleanos que con strings
         z = [self.a,self.b,self.c,self.d,e,f,g,h,i]
         return z
 
@@ -345,6 +358,8 @@ class IHP:
         elif(NumberF == "3"): self.Vref()
         elif(NumberF == "4"): self.Iref()
         elif(NumberF == "5"): self.Operation()
+        elif(NumberF == "6"): self.WriteProtectDisableM()
+        elif(NumberF == "7"): self.ModuleSave()
 
         #bytesToSend = self.z
         # Send to server using created UDP socket
