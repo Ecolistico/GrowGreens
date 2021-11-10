@@ -306,9 +306,7 @@ class IHP:
         numero1 = int(ba, 2)
         print("Command code for Module, ISOCOMM, or PFC.:",numero1)
 
-
-    ##AGREGAR TIMEOUT!!!!!!!!!!!!!   ////marcador para unificar
- ######modificar completamente la CommunicationIHP() al final
+######   ////marcador para unificar
     def CommunicationIHP(self, NumberF, MAC, ip_range, IHPPort):
         self.NumberF = NumberF #Number function
         self.MAC = MAC
@@ -345,10 +343,14 @@ class IHP:
 
         #bytesToSend = self.z
         # Send to server using created UDP socket
+        UDPClientSocket.settimeout(1) # Sets the socket to timeout after 1 second of no activity
         UDPClientSocket.sendto(self.z, serverAddressPort)
-        msgFromServer = UDPClientSocket.recvfrom(bufferSize)
-        msg = "Message from Server {}".format(msgFromServer[0])
-        print(msg)
+        try:
+            msgFromServer = UDPClientSocket.recvfrom(bufferSize)
+            msg = "Message from Server {}".format(msgFromServer[0])
+            print(msg)
+        except socket.timeout: # fail after 1 second of no activity
+            print("Didn't receive data! [Timeout]")
         data = msgFromServer[0]
         info = self.splitBytes(data)
         lentrama = len(data)
