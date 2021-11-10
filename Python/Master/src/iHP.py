@@ -54,7 +54,7 @@ class IHP:
         # En ocasiones esto hace más fácil la lectura del código porque revisas menos líneas
 
     def WriteProtect(self, enable):
-        #Enable/Disable Write #1
+        #Enable/Disable Write to ISOCOMM #1
         self.RandomValues()
         #self.EDWrite = EDWrite # Creo que no hace falta crear otra variable de clase para guardar este parámetro
         e = b'\xA1'
@@ -171,7 +171,7 @@ class IHP:
         # Cambio de comparación es más sencillo trabajar con enteros que con strings
         # Nos permite utilizar for para hacer un loop sobre la función sin hacer funciones adicionales
         # para crear los strings que estamos definiendo
-        if(ModuleN == 1): f = b'\x00'
+        if(ModuleN == 1): f = b'\x10'
         elif(ModuleN == 2): f = b'\x11'
         elif(ModuleN == 3): f = b'\x12'
         elif(ModuleN == 4): f = b'\x13'
@@ -186,6 +186,27 @@ class IHP:
         # Cambio de comparación es mpas sencillo trabajar con booleanos que con strings
         if(OnOff == True): i = b'\x80'
         elif(OnOff == False): i = b'\x00'
+        z = [self.a,self.b,self.c,self.d,e,f,g,h,i]
+        return z
+
+    def WriteProtectDisableM(self, ModuleN):
+        #To MODULE
+        self.RandomValues()
+        e = b'\xA1'
+        if(ModuleN == 1): f = b'\x10'
+        elif(ModuleN == 2): f = b'\x11'
+        elif(ModuleN == 3): f = b'\x12'
+        elif(ModuleN == 4): f = b'\x13'
+        elif(ModuleN == 5): f = b'\x14'
+        elif(ModuleN == 6): f = b'\x15'
+        elif(ModuleN == 7): f = b'\x16'
+        elif(ModuleN == 8): f = b'\x17'
+        # else: Pendiente manejar el error de la función ¿qué pasa si doy como parámetro 0,9,10?
+        # Nos tiene que devolver la alerta de que el parámetro es incorrecto
+        g = b'\x01'
+        h = b'\x10'
+        # Cambio de comparación es mpas sencillo trabajar con booleanos que con strings
+        i = b'\x00'
         z = [self.a,self.b,self.c,self.d,e,f,g,h,i]
         return z
 
