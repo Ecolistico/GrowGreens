@@ -81,7 +81,7 @@ def find_address_of_type(host_elem, type_):
 
 
 if __name__ == '__main__':
-    mac_address = 'D0:03:EB:A8:38:D1'
+    mac_address = 'D0:03:EB:A2:DD:14'
     ip_range = '192.168.6.1/23'
 #     ip_range = '192.168.6.1-192.168.7.255' 
 
