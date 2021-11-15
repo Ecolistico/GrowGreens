@@ -1,422 +1,396 @@
+import os
+import struct
 import socket
+import random
+import binascii
 import subprocess
 import xml.etree.ElementTree as ET
-#sys.path.insert(0, './src/') # Borrar línea, sólo es necesario agregarla cuando vas a importar librerias desde la carpeta src y el archivo que estas trabajando esta fuera de esa carpeta. Ejemplo: growMaster.py requiere esta línea para acceder a todas las librerías programadas en ./src/
-import os
-import random
-from sysMaster import scan_for_hosts, find_ip_address_for_mac_address # Agregar esta línea para poder acceder sólo a las funciones requeridad de sysMaster
-import binascii
-import struct
+from sysMaster import scan_for_hosts, find_ip_address_for_mac_address, splitBytes2Hex, splitByte, splitIntoBits
 
 class IHP:
-    # Pendiente agregar logger a la clase para poder acceder a las funciones del log y sustituir todos los print
-    def __init__(self, MAC, ip_range, port):#, logger = None):
+    # Initialize the class
+    def __init__(self, MAC, ip_range, port, logger = None):
         self.MAC = MAC
         self.ip_range = ip_range
         self.port = port
-        #self.log = logger
-        #self.msgToSend = msgToSend # Quitar msgToSend se crea el objeto para dejar la comunicación permanente no para cada msj
-        self.ScanIP() # initialize IP and connected variables
+        self.log = logger
+        self.ScanIP() # initialize self.ip and self.connected
+
+        # Default variables
         self.a = ''
         self.b = ''
         self.c = ''
         self.d = ''
-    """
-    def log(self, level, mssg):
-        if (self.log == None): print(mssg)
-        else:
-            if level == 0: log.debug(mssg)
-            elif
-    """     
+        self.maxVoltage = 80
+        self.maxCurrent = 37
+
+        # Timing
+        self.TIMING = 0.1 # 100ms between each command is send
+
+        # Internal Device Address
+        self.COMMS   = 0x00
+        self.PFC1    = 0x07
+        self.PFC2    = 0x08
+        self.Module1 = 0x10
+        self.Module2 = 0x11
+        self.Module3 = 0x12
+        self.Module4 = 0x13
+        self.Module5 = 0x14
+        self.Module6 = 0x15
+        self.Module7 = 0x16
+        self.Module8 = 0x17
+        self.Group1  = 0x18
+        self.Group2  = 0x19
+        self.Group3  = 0x1A
+        self.Group4  = 0x1B
+        self.Group5  = 0x1C
+        self.Group6  = 0x1D
+        self.Group7  = 0x1E
+
+        # Error Codes
+        self.ERR_SUCCESS                = 0 # Success / No Error
+        self.ERR_RACK_NOT_EXISTING      = 1 # No iHP Rack available on the specified address
+        self.ERR_DEVICE_NOT_EXISTING    = 2 # Invalid / No devices existing on the specified device address
+        self.ERR_UNSUPPORTED_CMD        = 3 # Unsupported command code
+        self.ERR_OPERATION_INVALID      = 4 # Operation not supported – that command is not valid for reading/writing (depending on what operation was issued)
+        self.ERR_LENGTH_INVALID         = 5 # The length given is invalid for the command code
+        self.ERR_DATA_INVALID           = 6 # The data provided doesn’t match what was expected
+        self.ERR_WRITE_PROTECT          = 7 # The command is valid but the data is write protected
+        self.ERR_PROTOCOL_INVALID       = 8 # There was an error parsing the command.
+
+    # Manage log if logger object exist if not just print
+    def str2log(self, msg, level = 'DEBUG'):
+        if self.log!=None:
+            if (level==0 or level=='DEBUG'): self.log.debug("(iHP PS) {}".format(msg))
+            elif (level==1 or level=='INFO'): self.log.info("(iHP PS) {}".format(msg))
+            elif (level==2 or level=='WARNING'): self.log.warning("(iHP PS) {}".format(msg))
+            elif (level==3 or level=='ERROR'): self.log.error("(iHP PS) {}".format(msg))
+            elif (level==4 or level=='CRITICAL'): self.log.critical("(iHP PS) {}".format(msg))
+        else: print('{},(iHP PS) {}'.format(level, msg))
+
+    # Returns 4 Random bytes
     def RandomValues(self):
-        #Returns 4 Random bytes
-       
-        self.a = hex(random.randrange(0,255))
-        self.b = hex(random.randrange(0,255))
-        self.c = hex(random.randrange(0,255))
-        self.d = hex(random.randrange(0,255))
-        self.a = self.a[2:]
-        self.b = self.b[2:]
-        self.c = self.c[2:]
-        self.d = self.d[2:]
-        if len(self.a)<2:
-            self.a = "0" + self.a
-        if len(self.b)<2:
-            self.b = "0" + self.b
-        if len(self.c)<2:
-            self.c = "0" + self.c
-        if len(self.d)<2:
-            self.d = "0" + self.d
-        self.a = int(self.a, 16)
-        print(self.a)
-        self.b = int(self.b, 16)
-        print(self.b)
-        self.c = int(self.c, 16)
-        print(self.c)
-        self.d = int(self.d, 16)
-        print(self.d)
-        
+        aux1 = hex(random.randrange(0,255))[2:]
+        aux2 = hex(random.randrange(0,255))[2:]
+        aux3 = hex(random.randrange(0,255))[2:]
+        aux4 = hex(random.randrange(0,255))[2:]
+        if len(aux1)<2: self.a = int("0" + aux1, 16)
+        else:
+            self.a = 1
+            self.str2log("Random Value A is out of range. Giving 1 as default", 3)
+        if len(aux2)<2: self.b = int("0" + aux2, 16)
+        else:
+            self.b = 2
+            self.str2log("Random Value B is out of range. Giving 2 as default", 3)
+        if len(aux3)<2: self.c = int("0" + aux3, 16)
+        else:
+            self.c = 3
+            self.str2log("Random Value C is out of range. Giving 3 as default", 3)
+        if len(aux4)<2: self.d = int("0" + aux4, 16)
+        else:
+            self.d = 4
+            self.str2log("Random Value D is out of range. Giving 4 as default", 3)
+
+    # Scan the IP in the local network to find iHP device
     def ScanIP(self):
         xml = scan_for_hosts(self.ip_range)
         ip_address = find_ip_address_for_mac_address(xml, self.MAC)
         if ip_address:
             self.connected = True
             self.ip = ip_address
-            print('Found IP address {} for MAC address {} in IP address range {}.'.format(ip_address, self.MAC, self.ip_range))
+            self.str2log('Found IP address {} for MAC address {} in IP address range {}'.format(ip_address, self.MAC, self.ip_range), 1)
         else:
             self.connected = False
             self.ip = ""
-            print('No IP address found for MAC address {} in IP address range {}.'.format(self.MAC, self.ip_range))
+            self.str2log('No IP address found for MAC address {} in IP address range {}'.format(self.MAC, self.ip_range), 2)
 
-    def WriteProtect(self, enable):
-        #Enable/Disable Write to ISOCOMM #1
-        self.RandomValues()
-        #self.EDWrite = EDWrite # Creo que no hace falta crear otra variable de clase para guardar este parámetro
-        e = 0xA1
-        f = 0x00
-        g = 0x01
-        h = 0x10
-        if(enable == True): # Cambié "ENABLE" por True
+    # Enable/Disable Write to Devices
+    def WriteProtect(self, device, enable):
+        if self.connected:
+            self.RandomValues()
+            e = 0xA1
+            if(device == 0): f = 0x00   # ISOCOMM
+            elif(device>=1 and device <=8): f = 0x10 + device - 1 # Module 1-8
+            else:
+                self.str2log("WriteProtect() parameter device is wrong, provide a correct value", 3)
+                return False
+            g = 0x01
+            h = 0x10
+            if(enable == True): i = 0x00
+            elif(enable == False): i = 0x80
+            bytes2send = bytes([self.a, self.b, self.c, self.d, e, f, g, h, i])
+            return communicationUDP(self, bytes2send)
+        else:
+            self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
+            return False
+
+    # Change device to Digital Current Source (DCS) Mode
+    def DCS(self, device):
+        if self.connected:
+            self.str2log("Change Module n to Digital Current Source")
+            self.RandomValues()
+            e = 0xA1
+            f = 0x00
+            g = 0x02
+            h = 0xD3
+            if(device>=1 and device<=8): i = 0x00 + device - 1   # Module 1-8
+            else:
+                self.str2log("DCS() parameter device is wrong, provide a correct value", 3)
+                return False
+            j = 0x08
+            bytes2send = bytes([self.a, self.b, self.c, self.d, e, f, g, h, i, j])
+            return communicationUDP(self, bytes2send)
+        else:
+            self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
+            return False
+
+    # Change device Voltage
+    def setVoltage(self, device, voltage):
+        if self.connected:
+            self.RandomValues()
+            e = 0xA1
+            if(device>=1 and device<=8): f = 0x10 + device - 1 # Module 1-8
+            else:
+                self.str2log("setVoltage() parameter device is wrong, provide a correct value", 3)
+                return False
+            g = 0x04
+            h = 0xB1
+            i = 0x03
+            # Pendiente agregar límites de voltaje para no mandar valores fuera de rango
+            # Mejor aún configurar el voltaje como función porcentual 0-100%
+            mult = voltage * 10000
+            fmt = "<{}".format("L")
+            bytes = struct.pack(fmt, mult)
+            F1 = "".join("{:02x}".format(byte) for byte in bytes)
+            j1 = int(F1[:2], 16)
+            j2 = int(F1[2:4], 16)
+            j3 = int(F1[-4:-2], 16)
+            bytes2send = bytearray([self.a, self.b, self.c, self.d, e, f, g, h, i, j1, j2, j3])
+            return communicationUDP(self, bytes2send)
+        else:
+            self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
+            return False
+
+    def setVoltagePercentage(self, device, voltage):
+        self.Voltage(device, voltage*self.maxVoltage/100)
+
+    # Change device Current
+    def setCurrent(self, device, current):
+        if self.connected:
+            self.RandomValues()
+            e = 0xA1
+            if(device>=1 and device<=8): f = 0x10 + device - 1 # Module 1-8
+            else:
+                self.str2log("setCurrent() parameter device is wrong, provide a correct value", 3)
+                return False
+            g = 0x04
+            h = 0xB2
+            i = 0x03
+            # Pendiente agregar límites de corriente para no mandar valores fuera de rango
+            # Mejor aún configurar la corriente como función porcentual 0-100%
+            mult = current * 10000
+            fmt = "<{}".format("L")
+            bytes = struct.pack(fmt, mult)
+            F1 = "".join("{:02x}".format(byte) for byte in bytes)
+            j1 = int(F1[:2], 16)
+            j2 = int(F1[2:4], 16)
+            j3 = int(F1[-4:-2], 16)
+            bytes2send = bytearray([self.a, self.b, self.c, self.d, e, f, g, h, i, j1, j2, j3])
+            return communicationUDP(self, bytes2send)
+        else:
+            self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
+            return False
+
+    def setCurrentPercentage(self, device, current):
+        self.Voltage(device, current*self.maxCurrent/100)
+
+    # Device Turn On/Off
+    def enable(self, device, en):
+        if self.connected:
+            self.RandomValues()
+            e = 0xA1
+            if(device>=1 and device<=8): f = 0x10 + device - 1 # Module 1-8
+            else:
+                self.str2log("enable() parameter device is wrong, provide a correct value", 3)
+                return False
+            g = 0x01
+            h = 0x01
+            if(en == True): i = 0x80
+            elif(en == False): i = 0x00
+            bytes2send = bytes([self.a, self.b, self.c, self.d, e, f, g, h, i])
+            return communicationUDP(self, bytes2send)
+        else:
+            self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
+            return False
+
+    # Module Save to ISOCOMM
+    def save(self):
+        if self.connected:
+            self.RandomValues()
+            e = 0xA1
+            f = 0x00
+            g = 0x01
+            h = 0xD7
             i = 0x00
-        elif(enable == False): # Cambie "DISABLE" por False
-            i = 0x80
-        # Es más sensillo trabajar con booleanos que con strings
-        self.z = bytes([self.a,self.b,self.c,self.d,e,f,g,h,i])
+            bytes2send = bytes([self.a, self.b, self.c, self.d, e, f, g, h, i])
+            return communicationUDP(self, bytes2send)
+        else:
+            self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
+            return False
 
-    def OperationMode(self, ModuleN):
-    #Change Module n to Digital Current Source #2
-        print("Change Module n to Digital Current Source")
-        self.RandomValues()
-        #self.ModuleN = ModuleN No hace falta una variable de clase. El parámetro sólo se usa dentro de esta función
-        e = 0xA1
-        f = 0x00
-        g = 0x02
-        h = 0xD3
-        # Cambio de comparación es más sencillo trabajar con enteros que con strings
-        # Nos permite utilizar for para hacer un loop sobre la función sin hacer funciones adicionales
-        # para crear los strings que estamos definiendo
-        if(ModuleN == 1): i = 0x00
-        elif(ModuleN == 2): i = 0x01
-        elif(ModuleN == 3): i = 0x02
-        elif(ModuleN == 4): i = 0x03
-        elif(ModuleN == 5): i = 0x04
-        elif(ModuleN == 6): i = 0x05
-        elif(ModuleN == 7): i = 0x06
-        elif(ModuleN == 8): i = 0x07
-        # else: Pendiente manejar el error de la función ¿qué pasa si doy como parámetro 0,9,10?
-        # Nos tiene que devolver la alerta de que el parámetro es incorrecto
-        j = 0x08
-        self.z = bytes([self.a,self.b,self.c,self.d,e,f,g,h,i,j])
+    # Compare first 4 bytes with the first ones that we sent. It is like our command ID
+    def check4FBytes(self, bytes):
+        a = int(bytes[0], 16)
+        b = int(bytes[1], 16)
+        c = int(bytes[2], 16)
+        d = int(bytes[3], 16)
+        if (self.a==a and self.b==b and self.c==c and self.d==d):
+            self.str2log("The first 4 bytes are correct {} {} {} {}".format(a, b, c, d))
+            return True
+        else:
+            self.str2log("First 4 bytes ERROR Recieve: {} {} {} {} Sent: {} {} {} {}".format(a, b, c, d, self.a, self.b, self.c, self.d), 3)
+            return False
 
-    def Vref(self, ModuleN, Voltage):
-        #Change Module N Default Voltage #3
-        self.RandomValues()
-        #self.ModuleN = ModuleN No hace falta una variable de clase. El parámetro sólo se usa dentro de esta función
-        #self.Voltage = Voltage No hace falta una variable de clase. El parámetro sólo se usa dentro de esta función
-        e = 0xA1
-        # Cambio de comparación es más sencillo trabajar con enteros que con strings
-        # Nos permite utilizar for para hacer un loop sobre la función sin hacer funciones adicionales
-        # para crear los strings que estamos definiendo
-        if(ModuleN == 1): f = 0x10
-        elif(ModuleN == 2): f = 0x11
-        elif(ModuleN == 3): f = 0x12
-        elif(ModuleN == 4): f = 0x13
-        elif(ModuleN == 5): f = 0x14
-        elif(ModuleN == 6): f = 0x15
-        elif(ModuleN == 7): f = 0x16
-        elif(ModuleN == 8): f = 0x17
-        # else: Pendiente manejar el error de la función ¿qué pasa si doy como parámetro 0,9,10?
-        # Nos tiene que devolver la alerta de que el parámetro es incorrecto
-        g = 0x04
-        h = 0xB1
-        i = 0x03
-        # Pendiente agregar límites de voltaje para no mandar valores fuera de rango
-        # Mejor aún configurar el voltaje como función porcentual 0-100%
-        mult = Voltage * 10000
-        fmt = "<{}".format("L")
-        bytes = struct.pack(fmt, mult)
-        F1 = "".join("{:02x}".format(byte) for byte in bytes)
-        j1 = int(F1[:2], 16)
-        j2 = int(F1[2:4], 16)
-        j3 = int(F1[-4:-2], 16)
-        self.z = bytearray([self.a,self.b,self.c,self.d,e,f,g,h,i,j1,j2,j3])
+    # Analyze Byte 5. In this byte we could know if there is a error message
+    def check5Byte(self, bytes):
+        byte = int(bytes[4], 16)
+        listBit = splitIntoBits(byte)
+        #self.str2log("List Byte5 {}".format(listBit))
+        joinBits = [listBit[1], listBit[2], listBit[3], listBit[4]]
+        auxBits = "".join(map(str, joinBits))
+        resp = int(auxBits, 2)
 
-    def Iref(self, ModuleN, Current):
-        #Change Module N Default Current #4
-        self.RandomValues()
-        #self.ModuleN = ModuleN No hace falta una variable de clase. El parámetro sólo se usa dentro de esta función
-        #self.Current = Current No hace falta una variable de clase. El parámetro sólo se usa dentro de esta función
-        e = 0xA1
-        # Cambio de comparación es más sencillo trabajar con enteros que con strings
-        # Nos permite utilizar for para hacer un loop sobre la función sin hacer funciones adicionales
-        # para crear los strings que estamos definiendo
-        if(ModuleN == 1): f = 0x10
-        elif(ModuleN == 2): f = 0x11
-        elif(ModuleN == 3): f = 0x12
-        elif(ModuleN == 4): f = 0x13
-        elif(ModuleN == 5): f = 0x14
-        elif(ModuleN == 6): f = 0x15
-        elif(ModuleN == 7): f = 0x16
-        elif(ModuleN == 8): f = 0x17
-        # else: Pendiente manejar el error de la función ¿qué pasa si doy como parámetro 0,9,10?
-        # Nos tiene que devolver la alerta de que el parámetro es incorrecto
-        g = 0x04
-        h = 0xB2
-        i = 0x03
-        # Pendiente agregar límites de corriente para no mandar valores fuera de rango
-        # Mejor aún configurar la corriente como función porcentual 0-100%
-        mult = Current * 10000
-        fmt = "<{}".format("L")
-        bytes = struct.pack(fmt, mult)
-        F1 = "".join("{:02x}".format(byte) for byte in bytes)
-        j1 = int(F1[:2], 16)
-        j2 = int(F1[2:4], 16)
-        j3 = int(F1[-4:-2], 16)
-        self.z = bytearray([self.a,self.b,self.c,self.d,e,f,g,h,i,j1,j2,j3])
-        
+        if (listBit[0]==1): self.str2log("Byte 5 Bit[0]: Command response is included with this message")
+        elif(listBit[0]==0): self.str2log("Byte 5 Bit[0]: Message is an acknowledgement receipt of a BLANK message")
 
-    def Operation(self, ModuleN, OnOff):
-        #Module n Turn On/Off #5
-        self.RandomValues()
-        #self.ModuleN = ModuleN No hace falta una variable de clase. El parámetro sólo se usa dentro de esta función
-        #self.OnOff = OnOff No hace falta una variable de clase. El parámetro sólo se usa dentro de esta función
-        e = 0xA1
-        # Cambio de comparación es más sencillo trabajar con enteros que con strings
-        # Nos permite utilizar for para hacer un loop sobre la función sin hacer funciones adicionales
-        # para crear los strings que estamos definiendo
-        if(ModuleN == 1): f = 0x10
-        elif(ModuleN == 2): f = 0x11
-        elif(ModuleN == 3): f = 0x12
-        elif(ModuleN == 4): f = 0x13
-        elif(ModuleN == 5): f = 0x14
-        elif(ModuleN == 6): f = 0x15
-        elif(ModuleN == 7): f = 0x16
-        elif(ModuleN == 8): f = 0x17
-        # else: Pendiente manejar el error de la función ¿qué pasa si doy como parámetro 0,9,10?
-        # Nos tiene que devolver la alerta de que el parámetro es incorrecto
-        g = 0x01
-        h = 0x01
-        # Cambio de comparación es mpas sencillo trabajar con booleanos que con strings
-        if(OnOff == True): i = 0x80
-        elif(OnOff == False): i = 0x00
-        self.z = bytes([self.a,self.b,self.c,self.d,e,f,g,h,i])
+        if(auxBits!=0 or listBit[5]!=1 or listBit[7]!=0): self.str2log("Byte 5 ERROR: Check Bits 1,2,3,4,5 and 7 with Artesyn documentation values are wrong", 3)
 
-    def WriteProtectDisableM(self, ModuleN):
-        #To MODULE #6
-        self.RandomValues()
-        e = 0xA1
-        if(ModuleN == 1): f = 0x10
-        elif(ModuleN == 2): f = 0x11
-        elif(ModuleN == 3): f = 0x12
-        elif(ModuleN == 4): f = 0x13
-        elif(ModuleN == 5): f = 0x14
-        elif(ModuleN == 6): f = 0x15
-        elif(ModuleN == 7): f = 0x16
-        elif(ModuleN == 8): f = 0x17
-        # else: Pendiente manejar el error de la función ¿qué pasa si doy como parámetro 0,9,10?
-        # Nos tiene que devolver la alerta de que el parámetro es incorrecto
-        g = 0x01
-        h = 0x10
-        # Cambio de comparación es mpas sencillo trabajar con booleanos que con strings
-        i = 0x00
-        self.z = bytes([self.a,self.b,self.c,self.d,e,f,g,h,i])
+        if(listBit[6]==0): return True
+        elif(listBit[6]==1):
+            self.str2log("Byte 5 bit[6]: Error code sent in next byte", 3)
+            return False
 
-    def ModuleSave(self):
-        #Module Save to ISOCOMM #7
-        self.RandomValues()
-        #self.EDWrite = EDWrite # Creo que no hace falta crear otra variable de clase para guardar este parámetro
-        e = 0xA1
-        f = 0x00
-        g = 0x01
-        h = 0xD7
-        i = 0x00
-        # Es más sensillo trabajar con booleanos que con strings
-        self.z = bytes([self.a,self.b,self.c,self.d,e,f,g,h,i])
+    # Analyze Byte 6. Check error messages
+    def check6Byte(self, bytes):
+        byte = int(bytes[5], 16)
+        listBit = splitIntoBits(byte)
+        #self.str2log("List Bit, Byte6 {}".format(listBit))
+        joinBits = [listBit[0], listBit[1], listBit[2], listBit[3]]
+        auxBits = "".join(map(str, joinBits))
+        resp = int(auxBits, 2)
 
-    def splitBytes(self, data):
-        # self.data no se está usando en nungún lado sólo en está función si quieres guardarlo como variable de clase
-        # la puedes guardar pero ya no se la pases como parámetro a esta función
-        #self.data = data #Split the ByteArray by the number of bytes of the frame,it returns a list
-        hex_var = binascii.hexlify(data)
-        info = [hex_var[i:i+2] for i in range(0, len(hex_var),2)]
-        lentrama = len(data)
-        print("Lentrama", lentrama)
-        print(info)
-        self.info = info # En lugar de retornar el valor solo guardalo en su variable de clase, y accedes a el desde cualquier otra función dentro de la clase
+        if (resp!=0) self.str2log("Byte 6 ERROR: Check Bits 0,1,2,3 with Artesyn documentaion values should be zero")
 
-    def splitByte(self, PosByte): # self.info ya se guardo previamente no es necesario pasar el info como parámetro
-        #Returns a byte in a specific position, returns it in decimal format.
-        #self.info = info #list # Ya se guardo previamente
-        self.PosByte = PosByte #List position
-        self.info1 = int(self.info[PosByte], 16)
-        info2 = str(self.info1)
-        val1 = bin(int(info2, 10))
-        print(val1)
-        return self.info1
+        joinBits = [listBit[4], listBit[5], listBit[6], listBit[7]]
+        auxBits = "".join(map(str, joinBits))
+        resp = int(auxBits, 2)
 
-    def splitIntoBits(self):
-        #Split byte into its bits, return a list of binary
-        val3 = [self.info1 >> i & 1 for i in range(8)]
-        val3.reverse()
-        print(val3)
-        return val3
+        if(resp==self.ERR_SUCCESS): return True
+        else:
+            if(resp==self.ERR_RACK_NOT_EXISTING): self.str2log("No iHP Rack available on the specified address", 3)
+            elif(resp==self.ERR_DEVICE_NOT_EXISTING): self.str2log("Invalid / No devices existing on the specified device address", 3)
+            elif(resp==self.ERR_UNSUPPORTED_CMD): self.str2log("Unsupported command code", 3)
+            elif(resp==self.ERR_OPERATION_INVALID): self.str2log("Operation not supported – that command is not valid for reading/writing (depending on what operation was issued)", 3)
+            elif(resp==self.ERR_LENGTH_INVALID): self.str2log("The length given is invalid for the command code", 3)
+            elif(resp==self.ERR_DATA_INVALID): self.str2log("The data provided doesn’t match what was expected", 3)
+            elif(resp==self.ERR_WRITE_PROTECT): self.str2log("The command is valid but the data is write protected", 3)
+            elif(resp==self.ERR_PROTOCOL_INVALID): self.str2log("There was an error parsing the command", 3)
+            else: self.str2log("Error Command {} reserved for future use. Please ask Artesyn for further information".format(resp), 3)
+            return False
 
-    def Comp4FBytes(self): # No es necesario pasar info como parámetro ya lo guardaste en la clase como self.info
-        #Compara los 4 primeros Bytes con los que le mandamos
-        #self.info = tm # Esta declaración está tm no ha sido declarada en ningún lugar
-        tm = self.info # Creo que lo que querías hacer era esto
-        a1 = self.a
-        a2 = self.b
-        a3 = self.c
-        a4 = self.d
-        b1 = int(tm[0], 16)
-        b2 = int(tm[1], 16)
-        b3 = int(tm[2], 16)
-        b4 = int(tm[3], 16)
-        if (a1==b1 and a2==b2 and a3==b3 and a4==b4): print("The first 4 bytes are correct", b1, b2, b3, b4, "OK")
-        else: print("First 4 bytes ERROR",b1, b2, b3, b4,"Sent:", a1, a2, a3, a4)
+    # Analyze Byte 7. Check the internal device address
+    def check7Byte(self, bytes):
+        byte = int(bytes[6], 16)
+        listBit = splitIntoBits(byte)
+        #self.str2log("List Bit, Byte7 {}".format(listBit))
+        joinBits = [listBit[0], listBit[1], listBit[2], listBit[3], listBit[4]]
+        auxBits = "".join(map(str, joinBits))
+        resp = int(auxBits, 2)
+        # PENDIENTE
+        if(resp==self.COMMS): self.str2log("Internal Device Address: {}".format(resp))
+        elif(resp==self.PFC1)
+        elif(resp==self.PFC2)
+        elif(resp==self.Module1)
+        elif(resp==self.Module2)
+        elif(resp==self.Module3)
+        elif(resp==self.Module4)
+        elif(resp==self.Module5)
+        elif(resp==self.Module6)
+        elif(resp==self.Module7)
+        elif(resp==self.Module8)
+        elif(resp==self.Group1)
+        elif(resp==self.Group2)
+        elif(resp==self.Group3)
+        elif(resp==self.Group4)
+        elif(resp==self.Group5)
+        elif(resp==self.Group6)
+        elif(resp==self.Group7)
 
-    def Comp5Byte(self): # No es necesario pasar info como parámetro ya lo guardaste en la clase como self.info
-        #Analyze Byte5
-        #self.info = tm # Esta declaración está tm no ha sido declarada en ningún lugar
-        #tm = self.info # Creo que lo que querías hacer era esto
-        Bytepos = self.splitByte(4)
-        listBit = self.splitIntoBits()
-        print("List Bit, Byte5", listBit)
-        if (listBit[0]==1): print("BYTE5: Bit[0] = 1: Command response is included with this message")
-        elif(listBit[0]==0): print("BYTE5: Bit[0]: ERROR ‘0’ Message is an acknowledgement receipt of a BLANK message.")
-        valf1 = [listBit[1], listBit[2], listBit[3], listBit[4]]
-        ba = "".join(map(str, valf1))
-        numero1 = int(ba, 2)
-        if (numero1==0): print("BYTE5: Reserved for future use. Values is 0, OK")
-        elif(numero1!=0): print("BYTE5: Reserved for future use. Values should be zero. NOT OK")
-        if(listBit[5]==1): print("BYTE5:Bit5: Final Bit Reserved for future use. Value should be one. OK")
-        elif(listBit[5]!=1): print("BYTE5:Bit5: Final Bit Reserved for future use. Value should be one. NOTOK")
-        if(listBit[6]==0): print("BYTE5:Bit6: No error,OK")
-        elif(listBit[6]==1): print("BYTE5:Bit6: BIT ERROR, NOT OK")
-        if(listBit[7]==0): print("BYTE5:Bit7: Reserved for future use. Value should be zero. OK")
-        elif(listBit[7]!=0): print("BYTE5:Bit7: Reserved for future use. Value should be zero. NOT OK")
-
-    def Comp6Byte(self): # No es necesario pasar info como parámetro ya lo guardaste en la clase como self.info
-        #Analyze Byte6
-        #self.info = tm # Esta declaración está tm no ha sido declarada en ningún lugar
-        #tm = self.info # Creo que lo que querías hacer era esto
-        Bytepos = self.splitByte(5)
-        print("byte", Bytepos)
-        listBit = self.splitIntoBits()
-        print("List Bit, Byte6", listBit)
-        valf1 = [listBit[0], listBit[1], listBit[2], listBit[3]]
-        ba = "".join(map(str, valf1))
-        numero1 = int(ba, 2)
-        print("BYTE6:Bit0-3: Command that is being responded to. should be 0:", numero1)
-
-        valf2 = [listBit[4], listBit[5], listBit[6], listBit[7]]
-        ca = "".join(map(str, valf2))
-        numero2 = int(ca, 2)
-        print("BYTE6:Bit4-7: A non-zero value indicates an error code, zero is reserved for normal responses:", numero2)
-        #AGREGAR TABLA DE ERRORES
-
-    def Comp7Byte(self): # No es necesario pasar info como parámetro ya lo guardaste en la clase como self.info
-        #Analyze Byte7
-        #self.info = tm # Esta declaración está tm no ha sido declarada en ningún lugar
-        #tm = self.info # Creo que lo que querías hacer era esto
-        Bytepos = self.splitByte(6)
-        listBit = self.splitIntoBits()
-        print("List Bit, Byte7", listBit)
-        valf1 = [listBit[0], listBit[1], listBit[2], listBit[3], listBit[4]]
-        ba = "".join(map(str, valf1))
-        numero1 = int(ba, 2)
-        print("BYTE7:Internal Device Address:", numero1)
-        #AGREGAR TABLA DE DIRECCIONES
-
-    def Comp8Byte(self): # No es necesario pasar info como parámetro ya lo guardaste en la clase como self.info
-        #Analyze Byte8
-        #self.info = tm # Esta declaración está tm no ha sido declarada en ningún lugar
-        #tm = self.info # Creo que lo que querías hacer era esto
-        Bytepos = self.splitByte(7)
-        listBit = self.splitIntoBits()
-        print("List Bit, Byte8", listBit)
+    # Analyze Byte8
+    def check8Byte(self, bytes):
+        byte = int(bytes[7], 16)
+        listBit = splitIntoBits(byte)
+        self.str2log("List Bit, Byte8 {}".format(listBit))
         valf1 = [listBit[0], listBit[1], listBit[2], listBit[3], listBit[4],listBit[5]]
         ba = "".join(map(str, valf1))
         numero1 = int(ba, 2)
-        print("BYTE8:Bit0-5:length of the data included in this message starting from 10th Byte.:",numero1)
+        self.str2log("BYTE8:Bit0-5:length of the data included in this message starting from 10th Byte: {}".format(numero1))
         #A implementar lecturas
-        print("BYTE8:Bit6: Value should be 0:",listBit[6])
-        print("BYTE8:Bit7: Value should be 0:",listBit[6])
+        self.str2log("BYTE8:Bit6: Value should be 0: {}".format(listBit[6]))
+        self.str2log("BYTE8:Bit7: Value should be 0: {}".format(listBit[6]))
 
-    def Comp9Byte(self): # No es necesario pasar info como parámetro ya lo guardaste en la clase como self.info
-        #self.info = tm # Esta declaración está tm no ha sido declarada en ningún lugar
-        #tm = self.info # Creo que lo que querías hacer era esto
-        Bytepos = self.splitByte(8)
-        listBit = self.splitIntoBits()
-        print("List Bit, Byte9", listBit)
+    # Analyze Byte9
+    def check9Byte(self, bytes):
+        byte = int(bytes[8], 16)
+        listBit = splitIntoBits(byte)
+        self.str2log("List Bit, Byte9 {}".format(listBit))
         ba = "".join(map(str, listBit))
         numero1 = int(ba, 2)
-        print("Command code for Module, ISOCOMM, or PFC.:",numero1)
+        self.str2log("Command code for Module, ISOCOMM, or PFC: {}".format(numero1))
 
-######   ////marcador para unificar
-    def CommunicationIHP(self, NumberF):
-        self.NumberF = NumberF #Number function
+    # Main Communication Function
+    def communicationUDP(self, bytes2send):
+        success = False
 
         serverAddressPort = (self.ip, self.port)
         bufferSize = 1024
+
         # Create a UDP socket at client side
-        UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        with socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM) as udp:
+            # Send to server using created UDP socket
+            udp.settimeout(self.TIMING) # Sets the socket to timeout after X time of no activity
+            udp.sendto(bytes2send, serverAddressPort)
+            self.str2log("Sent: {} Len: {}".format(bytes2send, len(bytes2send)))
+            try:
+                msgFromServer = udp.recvfrom(bufferSize)
+                msg = "Message from Server {}".format(msgFromServer[0])
+                self.str2log(msg)
+                data = msgFromServer[0]
+                bytes = splitBytes2Hex(data)
 
-        if(NumberF == "1"): self.WriteProtect(False)
-        elif(NumberF == "2"): self.OperationMode(6)
-        elif(NumberF == "3"): self.Vref()
-        elif(NumberF == "4"): self.Iref(2, 35)
-        elif(NumberF == "5"): self.Operation()
-        elif(NumberF == "6"): self.WriteProtectDisableM(3)
-        elif(NumberF == "7"): self.ModuleSave()
+                self.check4FBytes(bytes)
+                self.check5Byte(bytes)
+                self.check6Byte(bytes)
+                self.check7Byte(bytes)
+                self.check8Byte(bytes)
+                self.check9Byte(bytes)
+            except socket.TimeoutError: # fail after 1 second of no activity
+                self.str2log("Didn't receive data! [Timeout]")
+                return False
 
-        bytesToSend = self.z
-        # Send to server using created UDP socket
-        UDPClientSocket.settimeout(2) # Sets the socket to timeout after 1 second of no activity
-        UDPClientSocket.sendto(bytesToSend, serverAddressPort)
-        print("Sent:", bytesToSend, "Len:", len(bytesToSend))
-        try:
-            msgFromServer = UDPClientSocket.recvfrom(bufferSize)
-            msg = "Message from Server {}".format(msgFromServer[0])
-            print(msg)
-        except socket.timeout: # fail after 1 second of no activity
-            print("Didn't receive data! [Timeout]")
-        data = msgFromServer[0]
-        self.splitBytes(data)
-        lentrama = len(data)
-        # Creo que este if lo podemos mejorar, no recuerdo el mínimo de los bytes que esperamos pero creo que siempre mínimo son 8 o 9
-        # No es necesario agregar los casos con menos bytes, si tenemos menos bytes es un error y tenemos que manejar ese error de alguna manera
-        if (lentrama==5):
-            self.Comp4FBytes() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp5Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-        if (lentrama==6):
-            self.Comp4FBytes() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp5Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp6Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-        if (lentrama==7):
-            self.Comp4FBytes() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp5Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp6Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp7Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-        if (lentrama==8):
-            self.Comp4FBytes() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp5Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp6Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp7Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp8Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-        if (lentrama>=9):
-            self.Comp4FBytes() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp5Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp6Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp7Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp8Byte() # info ya esta guardada en self.info gracias a la función splitBytes
-            self.Comp9Byte() # info ya esta guardada en self.info gracias a la función splitBytes
+        return success
 
 # Debug
 def main():
     ihp = IHP('D0:03:EB:A2:DD:14', '192.168.6.1/23', 8888)
-    ihp.CommunicationIHP('6')
-    
+    ihp.self.WriteProtect(6, True)
+    #ihp.self.DCS(6)
+    #ihp.self.setVoltage()
+    #ihp.self.setVoltagePercentage()
+    #ihp.self.setCurrent(2, 35)
+    #ihp.self.setCurrentPercentage()
+    #ihp.self.enable()
+    #ihp.self.save()
+
 if __name__ == '__main__':
     main()

@@ -123,3 +123,15 @@ def find_address_of_type(host_elem, type_):
     address_elem = host_elem.find('./address[@addrtype="{}"]'.format(type_))
     if address_elem is not None:
         return address_elem.get('addr')
+
+# For an array of bytes returns a list of hexadecimals values
+def splitBytes2Hex(data):
+    hex_var = binascii.hexlify(data)
+    bytes_hex = [hex_var[i:i+2] for i in range(0, len(hex_var),2)]
+    return bytes_hex
+
+# Split byte into its bits, return a list of binary
+def splitIntoBits(byte):
+    bits = [byte >> i & 1 for i in range(8)]
+    bits.reverse()
+    return bits
