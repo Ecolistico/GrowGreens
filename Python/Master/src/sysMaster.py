@@ -1,5 +1,7 @@
 import os
+import sys
 import select
+import binascii
 import subprocess
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -135,3 +137,10 @@ def splitIntoBits(byte):
     bits = [byte >> i & 1 for i in range(8)]
     bits.reverse()
     return bits
+
+# Convert a list of bits into a single number
+def listBytestoDecimal(listBytes):
+    dec = 0
+    for i in listBytes:
+        dec = dec*256 + int(i, 16)
+    return dec
