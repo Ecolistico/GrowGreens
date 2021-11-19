@@ -133,9 +133,9 @@ def splitBytes2Hex(data):
     return bytes_hex
 
 # Split byte into its bits, return a list of binary
-def splitIntoBits(byte):
+def splitIntoBits(byte, inverted = False):
     bits = [byte >> i & 1 for i in range(8)]
-    bits.reverse()
+    if inverted: bits.reverse()
     return bits
 
 # Convert a list of bits into a single number

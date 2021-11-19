@@ -11,11 +11,11 @@ class IHP:
         self.port = port
         self.log = logger
         # Create a UDP socket at client side
+        self.TIMING = 2 # timeout grater than 1s is required (from experimental test)
         self.ScanIP() # initialize self.ip and self.connected
         if self.connected:
             self.serverAddressPort = (self.ip, self.port)
             self.ClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-            #UDPServerSocket.bind((localIP, localPort))
             self.ClientSocket.settimeout(self.TIMING) # Sets the socket to timeout after X time of no activity
         else: 
             self.serverAddressPort = None
@@ -33,9 +33,6 @@ class IHP:
         self.errorCounter = 0
         
         # Constants
-        # Timing
-        self.TIMING = 2 # timeout grater than 1s is required (from experimental test)
-
         # Internal Device Address
         self.COMMS   = 0x00
         self.PFC1    = 0x07
@@ -67,7 +64,7 @@ class IHP:
         self.ERR_WRITE_PROTECT          = 7 # The command is valid but the data is write protected
         self.ERR_PROTOCOL_INVALID       = 8 # There was an error parsing the command.
 
-        self.MAX_ERROR                  = 5 # Max retries when command fails
+        self.MAX_ERROR                  = 3 # Max retries when command fails (count start at zero)
 
         # Command codes
         self.OPERATION      = 0x01  # Set Operation ON/OFF
@@ -95,12 +92,19 @@ class IHP:
 
     # Manage log if logger object exist if not just print
     def str2log(self, msg, level = 'DEBUG'):
+        if(level==0): level = 'DEBUG'
+        elif(level==1): level = 'INFO'
+        elif(level==2): level = 'WARNING'
+        elif(level==3): level = 'ERROR'
+        elif(level==4): level = 'CRITICAL'
+        
         if self.log!=None:
-            if (level==0 or level=='DEBUG'): self.log.debug("(iHP PS) {}".format(msg))
-            elif (level==1 or level=='INFO'): self.log.info("(iHP PS) {}".format(msg))
-            elif (level==2 or level=='WARNING'): self.log.warning("(iHP PS) {}".format(msg))
-            elif (level==3 or level=='ERROR'): self.log.error("(iHP PS) {}".format(msg))
-            elif (level==4 or level=='CRITICAL'): self.log.critical("(iHP PS) {}".format(msg))
+            if (level=='DEBUG'): self.log.debug("(iHP PS) {}".format(msg))
+            elif (level=='INFO'): self.log.info("(iHP PS) {}".format(msg))
+            elif (level=='WARNING'): self.log.warning("(iHP PS) {}".format(msg))
+            elif (level=='ERROR'): self.log.error("(iHP PS) {}".format(msg))
+            elif (level=='CRITICAL'): self.log.critical("(iHP PS) {}".format(msg))
+            
         else: print('{},(iHP PS) {}'.format(level, msg))
 
     # Print the error and manage MAX_ERROR_EXCEED case
@@ -126,19 +130,20 @@ class IHP:
         aux2 = hex(randrange(0,255))[2:]
         aux3 = hex(randrange(0,255))[2:]
         aux4 = hex(randrange(0,255))[2:]
-        if len(aux1)<2: self.id1 = int("0" + aux1, 16)
+        
+        if len(aux1)<=2: self.id1 = int("0" + aux1, 16)
         else:
             self.id1 = 1
             self.str2log("Random Value A is out of range. Giving 1 as default", 3)
-        if len(aux2)<2: self.id2 = int("0" + aux2, 16)
+        if len(aux2)<=2: self.id2 = int("0" + aux2, 16)
         else:
             self.id2 = 2
             self.str2log("Random Value B is out of range. Giving 2 as default", 3)
-        if len(aux3)<2: self.id3 = int("0" + aux3, 16)
+        if len(aux3)<=2: self.id3 = int("0" + aux3, 16)
         else:
             self.id3 = 3
             self.str2log("Random Value C is out of range. Giving 3 as default", 3)
-        if len(aux4)<2: self.id4 = int("0" + aux4, 16)
+        if len(aux4)<=2: self.id4 = int("0" + aux4, 16)
         else:
             self.id4 = 4
             self.str2log("Random Value D is out of range. Giving 4 as default", 3)
@@ -159,6 +164,7 @@ class IHP:
     # Enable/Disable Write to Devices
     def WriteProtect(self, device, enable): # READ RESPONSE AS BITMAPPED
         if self.connected:
+            self.str2log("WriteProtect {} Device {}".format('enable' if enable else 'disable', device))
             self.RandomValues()
             id5 = self.REQUEST
             if(device == 0): id6 = self.COMMS   # ISOCOMM
@@ -171,7 +177,7 @@ class IHP:
             if(enable == True): id9 = 0x00
             elif(enable == False): id9 = 0x80
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9])
-            return self.communicationUDP(self, bytes2send)
+            return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
@@ -179,7 +185,7 @@ class IHP:
     # Change device to Digital Current Source (DCS) Mode
     def DCS(self, device): # READ RESPONSE AS BITMAPPED
         if self.connected:
-            self.str2log("Change Module n to Digital Current Source")
+            self.str2log("Change Module {} to Digital Current Source".format(device))
             self.RandomValues()
             id5 = self.REQUEST
             id6 = self.COMMS
@@ -191,7 +197,7 @@ class IHP:
                 return False
             id10 = 0x08
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9, id10])
-            return self.communicationUDP(self, bytes2send)
+            return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
@@ -199,6 +205,7 @@ class IHP:
     # Change device Voltage
     def setVoltage(self, device, voltage): # READ RESPONSE AS DIRECT multiplier=10000 V
         if self.connected:
+            self.str2log("Change voltage from module {} to {} V".format(device, voltage))
             self.RandomValues()
             id5 = self.REQUEST
             if(device>=1 and device<=8): id6 = self.Module1 + device - 1 # Module 1-8
@@ -212,22 +219,23 @@ class IHP:
             # Mejor aún configurar el voltaje como función porcentual 0-100%
             mult = voltage * 10000
             fmt = "<{}".format("L")
-            bytes = struct.pack(fmt, mult)
+            bytes = struct.pack(fmt, int(mult))
             parameters = "".join("{:02x}".format(byte) for byte in bytes)
             id10 = int(parameters[:2], 16)
             id11 = int(parameters[2:4], 16)
             id12 = int(parameters[-4:-2], 16)
             bytes2send = bytearray([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9, id10, id11, id12])
-            return self.communicationUDP(self, bytes2send)
+            return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
 
-    def setVoltagePercentage(self, device, voltage): self.Voltage(device, voltage*self.maxVoltage/100)
+    def setVoltagePercentage(self, device, voltage): return self.setVoltage(device, voltage*self.maxVoltage/100)
 
     # Change device Current
     def setCurrent(self, device, current): # READ RESPONSE AS DIRECT multiplier=10000 A
         if self.connected:
+            self.str2log("Change current from module {} to {} A".format(device, current))
             self.RandomValues()
             id5 = self.REQUEST
             if(device>=1 and device<=8): id6 = self.Module1 + device - 1 # Module 1-8
@@ -241,22 +249,23 @@ class IHP:
             # Mejor aún configurar la corriente como función porcentual 0-100%
             mult = current * 10000
             fmt = "<{}".format("L")
-            bytes = struct.pack(fmt, mult)
+            bytes = struct.pack(fmt, int(mult))
             parameters = "".join("{:02x}".format(byte) for byte in bytes)
             id10 = int(parameters[:2], 16)
             id11 = int(parameters[2:4], 16)
             id12 = int(parameters[-4:-2], 16)
             bytes2send = bytearray([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9, id10, id11, id12])
-            return self.communicationUDP(self, bytes2send)
+            return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
 
-    def setCurrentPercentage(self, device, current): self.Voltage(device, current*self.maxCurrent/100)
+    def setCurrentPercentage(self, device, current): return self.setCurrent(device, current*self.maxCurrent/100)
 
     # Device Turn On/Off
     def operation(self, device, en):   # READ RESPONSE AS BITMAPPED
         if self.connected:
+            self.str2log("Turning {} Module {}".format('on' if en else 'off', device))
             self.RandomValues()
             id5 = self.REQUEST
             if(device>=1 and device<=8): id6 = self.Module1 + device - 1 # Module 1-8
@@ -268,7 +277,7 @@ class IHP:
             if(en == True): id9 = 0x80
             elif(en == False): id9 = 0x00
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9])
-            return self.communicationUDP(self, bytes2send)
+            return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
@@ -276,6 +285,7 @@ class IHP:
     # Module Save to ISOCOMM
     def save(self):
         if self.connected:
+            self.str2log("Saving parameters to ISOCOMM")
             self.RandomValues()
             id5 = self.REQUEST
             id6 = self.COMMS
@@ -283,7 +293,7 @@ class IHP:
             self.command = self.SAVE
             id9 = 0x00
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9])
-            return self.communicationUDP(self, bytes2send)
+            return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
@@ -291,6 +301,7 @@ class IHP:
     # Read Voltage from device
     def readVout(self, device):
         if self.connected:
+            self.str2log("Request voltage to Module {}".format(device))
             self.RandomValues()
             id5 = self.REQUEST
             if(device>=1 and device<=8): id6 = self.Module1 + device - 1
@@ -300,7 +311,7 @@ class IHP:
             id7 = self.READ + 0 # Read Mode without aditional bytes
             self.command = self.READ_VOUT
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
-            return self.communicationUDP(self, bytes2send)
+            return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
@@ -308,6 +319,7 @@ class IHP:
     # Read Current from device
     def readIout(self, device):
         if self.connected:
+            self.str2log("Request current to Module {}".format(device))
             self.RandomValues()
             id5 = self.REQUEST
             if(device>=1 and device<=8): id6 = self.Module1 + device - 1
@@ -317,7 +329,7 @@ class IHP:
             id7 = self.READ + 0 # Read Mode without aditional bytes
             self.command = self.READ_IOUT
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
-            return self.communicationUDP(self, bytes2send)
+            return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
@@ -325,6 +337,7 @@ class IHP:
     # Read Input Voltage from line
     def readVin(self, line):
         if self.connected:
+            self.str2log("Request input voltage to line {}".format(line))
             self.RandomValues()
             id5 = self.REQUEST
             id6 = self.COMMS
@@ -334,7 +347,7 @@ class IHP:
                 self.str2log("readVin() parameter line is wrong, provide a correct value", 3)
                 return False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
-            return self.communicationUDP(self, bytes2send)
+            return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
@@ -342,6 +355,7 @@ class IHP:
     # Read Input Current from line
     def readIin(self, line):
         if self.connected:
+            self.str2log("Request input current to line {}".format(line))
             self.RandomValues()
             id5 = self.REQUEST
             id6 = self.COMMS
@@ -351,7 +365,7 @@ class IHP:
                 self.str2log("readIin() parameter line is wrong, provide a correct value", 3)
                 return False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
-            return self.communicationUDP(self, bytes2send)
+            return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
@@ -374,14 +388,14 @@ class IHP:
         byte = int(bytes[4], 16)
         listBit = splitIntoBits(byte)
         #self.str2log("List Byte5 {}".format(listBit))
-        joinBits = [listBit[1], listBit[2], listBit[3], listBit[4]]
+        joinBits = [listBit[4], listBit[3], listBit[2], listBit[1]]
         auxBits = "".join(map(str, joinBits))
         resp = int(auxBits, 2)
 
         if (listBit[0]==1): self.str2log("Byte 5 Bit[0]: Command response is included with this message")
         elif(listBit[0]==0): self.str2log("Byte 5 Bit[0]: Message is an acknowledgement receipt of a BLANK message")
-
-        if(auxBits!=0 or listBit[5]!=1 or listBit[7]!=0): self.str2log("Byte 5 ERROR: Check Bits 1,2,3,4,5 and 7 with Artesyn documentation values are wrong", 3)
+        
+        if(resp!=0 or listBit[5]!=1 or listBit[7]!=0): self.str2log("Byte 5 ERROR: Check Bits 1,2,3,4,5 and 7 with Artesyn documentation values are wrong", 3)
 
         if(listBit[6]==0): return True
         elif(listBit[6]==1):
@@ -393,13 +407,13 @@ class IHP:
         byte = int(bytes[5], 16)
         listBit = splitIntoBits(byte)
         #self.str2log("List Bit, Byte6 {}".format(listBit))
-        joinBits = [listBit[0], listBit[1], listBit[2], listBit[3]]
+        joinBits = [listBit[3], listBit[2], listBit[1], listBit[0]]
         auxBits = "".join(map(str, joinBits))
         resp = int(auxBits, 2)
 
-        if (resp!=0): self.str2log("Byte 6 ERROR: Check Bits 0,1,2,3 with Artesyn documentaion values should be zero")
+        if (resp!=0): self.str2log("Byte 6 ERROR: Check Bits 0,1,2,3 with Artesyn documentation values should be zero")
 
-        joinBits = [listBit[4], listBit[5], listBit[6], listBit[7]]
+        joinBits = [listBit[7], listBit[6], listBit[5], listBit[4]]
         auxBits = "".join(map(str, joinBits))
         resp = int(auxBits, 2)
 
@@ -421,7 +435,7 @@ class IHP:
         byte = int(bytes[6], 16)
         listBit = splitIntoBits(byte)
         #self.str2log("List Bit, Byte7 {}".format(listBit))
-        joinBits = [listBit[0], listBit[1], listBit[2], listBit[3], listBit[4]]
+        joinBits = [listBit[4], listBit[3], listBit[2], listBit[1], listBit[0]]
         auxBits = "".join(map(str, joinBits))
         resp = int(auxBits, 2)
 
@@ -450,11 +464,10 @@ class IHP:
         byte = int(bytes[7], 16)
         listBit = splitIntoBits(byte)
         #self.str2log("List Bit, Byte8 {}".format(listBit))
-        joinBits = [listBit[0], listBit[1], listBit[2], listBit[3], listBit[4],listBit[5]]
+        joinBits = [listBit[5], listBit[4], listBit[3], listBit[2], listBit[1],listBit[0]]
         auxBits = "".join(map(str, joinBits))
         outputLen = int(auxBits, 2)
-
-        self.str2log("Byte 8 bit[0-5]: length of the data included in this message starting from 10th Byte: {}".format(outputLen))
+        self.str2log("Byte 8 bit[0-5]: length of the data included in this message starting from 10th Byte= {}".format(outputLen))
 
         if(listBit[6]!=0): self.str2log("Byte 8 bit[6]: Value should be 0", 3)
         if(listBit[7]!=0): self.str2log("Byte 8 bit[7]: Value should be 0", 3)
@@ -472,39 +485,42 @@ class IHP:
 
     # Analyze Byte 10 to N
     def decodeResponse(self, bytes, outputLen):
-        response = []
-        for i in range(outputLen): response.append(bytes[i+9])
-        
-        if (self.command == self.OPERATION):
-            byte = int(response[0], 16)
-            listBit = splitIntoBits(byte)
-            if(listBit[7]==1): self.str2log("Module On")
-            else: self.str2log("Module Off")
-        elif(self.command == self.READ_VOUT):
-            number = listBytestoDecimal(response)
-            multiplier = 10000
-            self.str2log("Voltage = {} V".format(number/multiplier))
-        elif(self.command == self.READ_IOUT):
-            number = listBytestoDecimal(response)
-            multiplier = 10000
-            self.str2log("Current = {} A".format(number/multiplier))
-        elif(self.command>=self.READ_VIN and self.command<=self.READ_IIN+2):
-            number = listBytestoDecimal(response)
-            if(self.command>=self.READ_VIN and self.command<self.READ_IIN):
-                multiplier = 10
-                self.str2log("Voltage Line {}= {} V".format(self.command - self.READ_VIN + 1, number/multiplier))
-            else:
-                multiplier = 100
-                self.str2log("Current Line {}= {} A".format(self.command - self.READ_IIN + 1, number/multiplier))
-        # WRITE_PROTECT does not return byte according to Artesyn docs
-        elif(self.command == self.WRITE_PROTECT): self.str2log(''.join(response), 2)
-        # VREF does not return byte according to Artesyn docs
-        elif(self.command == self.VREF):  self.str2log(''.join(response), 2)
-        # IREF does not return byte according to Artesyn docs
-        elif(self.command == self.IREF):  self.str2log(''.join(response), 2)
-        # MODULE_CONFIG write only on ISOCOMM when use it in another device it will be read only
-        elif(self.command == self.MODULE_CONFIG): self.str2log(''.join(response), 2)
-        else: self.str2log("Command ({}) does not list. Please see Artesyn documentation for further information".format(self.command), 3)
+        if(outputLen>0):
+            response = []
+            for i in range(outputLen): response.append(bytes[i+9])
+            response.reverse()
+            if (self.command == self.OPERATION):
+                byte = int(response[0], 16)
+                listBit = splitIntoBits(byte)
+                if(listBit[7]==1): self.str2log("Module On")
+                else: self.str2log("Module Off")
+            elif(self.command == self.READ_VOUT):
+                number = listBytestoDecimal(response)
+                multiplier = 10000
+                self.str2log("Voltage = {} V".format(number/multiplier))
+            elif(self.command == self.READ_IOUT):
+                number = listBytestoDecimal(response)
+                multiplier = 10000
+                self.str2log("Current = {} A".format(number/multiplier))
+            elif(self.command>=self.READ_VIN and self.command<=self.READ_IIN+2):
+                number = listBytestoDecimal(response)
+                if(self.command>=self.READ_VIN and self.command<self.READ_IIN):
+                    multiplier = 10
+                    self.str2log("Voltage Line {}= {} V".format(self.command - self.READ_VIN + 1, number/multiplier))
+                else:
+                    multiplier = 100
+                    self.str2log("Current Line {}= {} A".format(self.command - self.READ_IIN + 1, number/multiplier))
+            # WRITE_PROTECT does not return byte according to Artesyn docs
+            elif(self.command == self.WRITE_PROTECT): self.str2log(''.join(response), 2)
+            # VREF does not return byte according to Artesyn docs
+            elif(self.command == self.VREF):  self.str2log(''.join(response), 2)
+            # IREF does not return byte according to Artesyn docs
+            elif(self.command == self.IREF):  self.str2log(''.join(response), 2)
+            # SAVE does not return byteaccoding to Artesyn docs
+            elif(self.command == self.SAVE): self.str2log(''.join(response), 2)
+            # MODULE_CONFIG write only on ISOCOMM when use it in another device it will be read only
+            elif(self.command == self.MODULE_CONFIG): self.str2log(''.join(response), 2)
+            else: self.str2log("Command ({}) does not list. Please see Artesyn documentation for further information".format(self.command), 3)
 
     # Main Communication Function
     def communicationUDP(self, bytes2send):
@@ -529,29 +545,29 @@ class IHP:
                 self.check7Byte(bytes)                              # Print device address
                 outputLen = self.check8Byte(bytes)                  # Get the len of the output bytes
                 command = self.check9Byte(bytes)                    # Return true if command is the same that was sent
-                if(command): 
+                if(command):
                     self.decodeResponse(bytes, outputLen)  # Decode the response
                     return True
 
         # fail after 2 second of no activity
-        except socket.TimeoutError: self.str2log("Didn't receive data! [Timeout]", 4)
+        except socket.timeout: self.str2log("Didn't receive data! [Timeout]", 4)
         # Untracked error
         except Exception as e: self.str2log("Error Unknown: {}".format(e), 3)
 
         return False
 
-    def request(self, command, data): 
+    def request(self, command, data):
         try:
             if(command == self.OPERATION):
                 dev, en = data['device'], data['enable']
                 if(dev>=1 and dev<=8):
                     commandNumber = 4
                     command1 = self.WRITE_PROTECT
-                    data1 = {'device': self.COMM, 'enable': True}
+                    data1 = {'device': self.COMMS, 'enable': True}
                     command2 = self.OPERATION
                     data2 = {'device': dev, 'enable': en}
                     command3 = self.WRITE_PROTECT
-                    data3 = {'device': self.COMM, 'enable': False}
+                    data3 = {'device': self.COMMS, 'enable': False}
                     command4 = self.SAVE
                     data4 = {}
                     self.commandList.append({'commandNumber': commandNumber, 
@@ -567,18 +583,18 @@ class IHP:
                 if(dev>=1 and dev<=8):
                     commandNumber = 4
                     command1 = self.WRITE_PROTECT
-                    data1 = {'device': self.COMM, 'enable': True}
+                    data1 = {'device': dev, 'enable': True}
                     command2 = self.VREF
                     data2 = {'device': dev, 'type': type, 'vref': vref}
                     command3 = self.WRITE_PROTECT
-                    data3 = {'device': self.COMM, 'enable': False}
+                    data3 = {'device': self.COMMS, 'enable': True}
                     command4 = self.SAVE
                     data4 = {}
                     self.commandList.append({'commandNumber': commandNumber, 
                                             'request': 'Vref',
                                             0: {'command': command1, 'data': data1}, 
                                             1: {'command': command2, 'data': data2}, 
-                                            2: {'command': command3, 'data': data3}, 
+                                            2: {'command': command3, 'data': data3},
                                             3: {'command': command4, 'data': data4}})
                 else: self.str2log("Vref() device number should be between 1 and 8", 3)
 
@@ -587,18 +603,18 @@ class IHP:
                 if(dev>=1 and dev<=8):
                     commandNumber = 4
                     command1 = self.WRITE_PROTECT
-                    data1 = {'device': self.COMM, 'enable': True}
+                    data1 = {'device': dev, 'enable': True}
                     command2 = self.IREF
                     data2 = {'device': dev, 'type': type, 'iref': iref}
                     command3 = self.WRITE_PROTECT
-                    data3 = {'device': self.COMM, 'enable': False}
+                    data3 = {'device': self.COMMS, 'enable': True}
                     command4 = self.SAVE
                     data4 = {}
                     self.commandList.append({'commandNumber': commandNumber, 
                                             'request': 'Iref',
                                             0: {'command': command1, 'data': data1}, 
                                             1: {'command': command2, 'data': data2}, 
-                                            2: {'command': command3, 'data': data3}, 
+                                            2: {'command': command3, 'data': data3},
                                             3: {'command': command4, 'data': data4}})
                 else: self.str2log("Iref() device number should be between 1 and 8", 3)
 
@@ -607,11 +623,11 @@ class IHP:
                 if(dev>=1 and dev<=8):
                     commandNumber = 4
                     command1 = self.WRITE_PROTECT
-                    data1 = {'device': self.COMM, 'enable': True}
+                    data1 = {'device': self.COMMS, 'enable': True}
                     command2 = self.MODULE_CONFIG
                     data2 = {'device': dev, 'type': type}
                     command3 = self.WRITE_PROTECT
-                    data3 = {'device': self.COMM, 'enable': False}
+                    data3 = {'device': self.COMMS, 'enable': False}
                     command4 = self.SAVE
                     data4 = {}
                     self.commandList.append({'commandNumber': commandNumber, 
@@ -651,7 +667,7 @@ class IHP:
                     command1 = self.READ_VIN + line - 1
                     self.commandList.append({'commandNumber': commandNumber, 
                                             'request': 'Read Vin',
-                                            0: {'command': command1 }})
+                                            0: {'command': command1, 'data': {} }})
                 else: self.str2log("ReadVin() device number should be between 1 and 3", 3)
             
             elif(command == self.READ_IIN):
@@ -661,19 +677,19 @@ class IHP:
                     command1 = self.READ_IIN + line - 1
                     self.commandList.append({'commandNumber': commandNumber, 
                                             'request': 'Read Iin',
-                                            0: {'command': command1}})
+                                            0: {'command': command1, 'data': {} }})
                 else: self.str2log("ReadIin() device number should be between 1 and 3", 3)
     
         except Exception as e: self.str2log("Critical Error: {}".format(e), 4)
 
     def run(self):
-        if(self.running and len(self.commandList>0)):
+        if(self.running and len(self.commandList)>0):
             cList = self.commandList[0] # Get the first array of commands
             if(self.actualCommand<cList['commandNumber']):
                 c = cList[self.actualCommand]['command']
                 data = cList[self.actualCommand]['data']
                 if(c == self.WRITE_PROTECT):
-                    if(self.writeProtect(data['device'], data['enable'])): self.commandSucceed()
+                    if(self.WriteProtect(data['device'], data['enable'])): self.commandSucceed()
                     else: self.errorWithCommand("We have problems with command WRITE_PROTECT")
                 elif(c == self.OPERATION):
                     if(self.operation(data['device'], data['enable'])): self.commandSucceed()
@@ -719,22 +735,38 @@ class IHP:
                 self.commandList = self.commandList[1:] # Delete the first request because it is finished
                 self.actualCommand = 0
                 self.str2log("Request {} solved".format(cList['request']))
-        elif(not self.running and len(self.commandList>0)): 
+        elif(not self.running and len(self.commandList)>0): 
             self.running = True
             self.str2log("There is(are) request(s). Communication is running")
-        elif(self.running and len(self.commandList==0)):
+        elif(self.running and len(self.commandList)==0):
             self.running = False
             self.str2log("All request are solved. Communication is stopped")
 
 # Debug
 def main():
+    from time import sleep
     ihp = IHP('D0:03:EB:A2:DD:14', '192.168.6.1/23', 8888)
-    ihp.request(ihp.READ_VIN, {'line': 1})
-    ihp.request(ihp.READ_VIN, {'line': 2})
-    ihp.request(ihp.READ_VIN, {'line': 3})
-    ihp.request(ihp.READ_IIN, {'line': 1})
-    ihp.request(ihp.READ_IIN, {'line': 2})
-    ihp.request(ihp.READ_IIN, {'line': 3})
+    for i in range(1,9,1):
+        ihp.WriteProtect(i, True)
+        sleep(0.06)
+        ihp.setCurrent(i, 0)
+        sleep(0.06)
+    #ihp.WriteProtect(2, True)
+    #ihp.WriteProtect(0, True)
+    #ihp.save()
+    
+    #ihp.setCurrent(2, 10)
+    
+    
+    # Functions tested
+    for i in range(1,4,1):
+        ihp.request(ihp.READ_VIN, {'line': i})
+        ihp.request(ihp.READ_IIN, {'line': i})
+    
+    #for i in range(2,3,1): ihp.request(ihp.MODULE_CONFIG, {'device': i, 'type': 'DCS'})
+    #for i in range(1,9,1): ihp.request(ihp.IREF, {'device': i, 'type': 'normal', 'iref': 10})
+    while True:
+        ihp.run()
     """
     ihp.self.WriteProtect(6, True)
     ihp.DCS(6)
