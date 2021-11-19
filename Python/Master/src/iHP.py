@@ -1,5 +1,6 @@
 import struct
 import socket
+from time import time
 from random import randrange
 from sysMaster import scan_for_hosts, find_ip_address_for_mac_address, splitBytes2Hex, splitIntoBits, listBytestoDecimal
 
@@ -11,12 +12,12 @@ class IHP:
         self.port = port
         self.log = logger
         # Create a UDP socket at client side
-        self.TIMING = 2 # timeout grater than 1s is required (from experimental test)
+        self.TIMEOUT = 2 # timeout grater than 1s is required (from experimental test)
         self.ScanIP() # initialize self.ip and self.connected
         if self.connected:
             self.serverAddressPort = (self.ip, self.port)
             self.ClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-            self.ClientSocket.settimeout(self.TIMING) # Sets the socket to timeout after X time of no activity
+            self.ClientSocket.settimeout(self.TIMEOUT) # Sets the socket to timeout after X time of no activity
         else: 
             self.serverAddressPort = None
             self.ClientSocket = None
@@ -31,6 +32,9 @@ class IHP:
         self.running = False
         self.actualCommand = 0
         self.errorCounter = 0
+        self.timing = 0
+        self.actualTime = 0
+        self.waitRequest = False
         
         # Constants
         # Internal Device Address
@@ -162,7 +166,7 @@ class IHP:
             self.str2log('No IP address found for MAC address {} in IP address range {}'.format(self.MAC, self.ip_range), 2)
 
     # Enable/Disable Write to Devices
-    def WriteProtect(self, device, enable): # READ RESPONSE AS BITMAPPED
+    def WriteProtect(self, device, enable):
         if self.connected:
             self.str2log("WriteProtect {} Device {}".format('enable' if enable else 'disable', device))
             self.RandomValues()
@@ -176,6 +180,8 @@ class IHP:
             self.command = self.WRITE_PROTECT
             if(enable == True): id9 = 0x00
             elif(enable == False): id9 = 0x80
+            self.timing = 0.06
+            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9])
             return self.communicationUDP(bytes2send)
         else:
@@ -183,7 +189,7 @@ class IHP:
             return False
 
     # Change device to Digital Current Source (DCS) Mode
-    def DCS(self, device): # READ RESPONSE AS BITMAPPED
+    def DCS(self, device):
         if self.connected:
             self.str2log("Change Module {} to Digital Current Source".format(device))
             self.RandomValues()
@@ -196,6 +202,8 @@ class IHP:
                 self.str2log("DCS() parameter device is wrong, provide a correct value", 3)
                 return False
             id10 = 0x08
+            self.timing = 0.06
+            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9, id10])
             return self.communicationUDP(bytes2send)
         else:
@@ -203,7 +211,7 @@ class IHP:
             return False
 
     # Change device Voltage
-    def setVoltage(self, device, voltage): # READ RESPONSE AS DIRECT multiplier=10000 V
+    def setVoltage(self, device, voltage):
         if self.connected:
             self.str2log("Change voltage from module {} to {} V".format(device, voltage))
             self.RandomValues()
@@ -215,8 +223,11 @@ class IHP:
             id7 = self.WRITE + 4 # Write mode + 4 aditional bytes
             self.command = self.VREF
             id9 = 0x03
-            # Pendiente agregar límites de voltaje para no mandar valores fuera de rango
-            # Mejor aún configurar el voltaje como función porcentual 0-100%
+
+            if(voltage<=self.maxVoltage):
+                self.str2log("voltage has to be between 0 and {} V".format(self.maxVoltage), 3)
+                return False
+            if(voltage < 0): voltage = 0    
             mult = voltage * 10000
             fmt = "<{}".format("L")
             bytes = struct.pack(fmt, int(mult))
@@ -224,16 +235,19 @@ class IHP:
             id10 = int(parameters[:2], 16)
             id11 = int(parameters[2:4], 16)
             id12 = int(parameters[-4:-2], 16)
+            self.timing = 0.06
+            self.waitRequest = False
             bytes2send = bytearray([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9, id10, id11, id12])
             return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
 
+    # DEBUG function does not work properly
     def setVoltagePercentage(self, device, voltage): return self.setVoltage(device, voltage*self.maxVoltage/100)
 
     # Change device Current
-    def setCurrent(self, device, current): # READ RESPONSE AS DIRECT multiplier=10000 A
+    def setCurrent(self, device, current):
         if self.connected:
             self.str2log("Change current from module {} to {} A".format(device, current))
             self.RandomValues()
@@ -245,8 +259,11 @@ class IHP:
             id7 = self.WRITE + 4 # self.WRITE + 4 aditional bytes
             self.command = self.IREF
             id9 = 0x03
-            # Pendiente agregar límites de corriente para no mandar valores fuera de rango
-            # Mejor aún configurar la corriente como función porcentual 0-100%
+
+            if(current<=self.maxCurrent):
+                self.str2log("current has to be between 0 and {} A".format(self.maxCurrent), 3)
+                return False
+            if(current < 0): current = 0
             mult = current * 10000
             fmt = "<{}".format("L")
             bytes = struct.pack(fmt, int(mult))
@@ -254,16 +271,19 @@ class IHP:
             id10 = int(parameters[:2], 16)
             id11 = int(parameters[2:4], 16)
             id12 = int(parameters[-4:-2], 16)
+            self.timing = 0.06
+            self.waitRequest = False
             bytes2send = bytearray([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9, id10, id11, id12])
             return self.communicationUDP(bytes2send)
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", 3)
             return False
 
+    # DEBUG function does not work properly
     def setCurrentPercentage(self, device, current): return self.setCurrent(device, current*self.maxCurrent/100)
 
     # Device Turn On/Off
-    def operation(self, device, en):   # READ RESPONSE AS BITMAPPED
+    def operation(self, device, en):
         if self.connected:
             self.str2log("Turning {} Module {}".format('on' if en else 'off', device))
             self.RandomValues()
@@ -276,6 +296,8 @@ class IHP:
             self.command = self.OPERATION
             if(en == True): id9 = 0x80
             elif(en == False): id9 = 0x00
+            self.timing = 0.06
+            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9])
             return self.communicationUDP(bytes2send)
         else:
@@ -283,7 +305,7 @@ class IHP:
             return False
 
     # Module Save to ISOCOMM
-    def save(self):
+    def save(self, device):
         if self.connected:
             self.str2log("Saving parameters to ISOCOMM")
             self.RandomValues()
@@ -291,7 +313,12 @@ class IHP:
             id6 = self.COMMS
             id7 = self.WRITE + 1 # Write mode + 1 aditional bytes
             self.command = self.SAVE
-            id9 = 0x00
+            if(device>=1 and device<=8): id9 = 0x00 + device - 1
+            else:
+                self.str2log("save() parameter device is wrong, provide a correct value", 3)
+                return False
+            self.timing = 0.06
+            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9])
             return self.communicationUDP(bytes2send)
         else:
@@ -310,6 +337,8 @@ class IHP:
                 return False
             id7 = self.READ + 0 # Read Mode without aditional bytes
             self.command = self.READ_VOUT
+            self.timing = 0
+            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
             return self.communicationUDP(bytes2send)
         else:
@@ -328,6 +357,8 @@ class IHP:
                 return False
             id7 = self.READ + 0 # Read Mode without aditional bytes
             self.command = self.READ_IOUT
+            self.timing = 0
+            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
             return self.communicationUDP(bytes2send)
         else:
@@ -346,6 +377,8 @@ class IHP:
             else:
                 self.str2log("readVin() parameter line is wrong, provide a correct value", 3)
                 return False
+            self.timing = 0
+            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
             return self.communicationUDP(bytes2send)
         else:
@@ -364,6 +397,8 @@ class IHP:
             else:
                 self.str2log("readIin() parameter line is wrong, provide a correct value", 3)
                 return False
+            self.timing = 0
+            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
             return self.communicationUDP(bytes2send)
         else:
@@ -547,9 +582,11 @@ class IHP:
                 command = self.check9Byte(bytes)                    # Return true if command is the same that was sent
                 if(command):
                     self.decodeResponse(bytes, outputLen)  # Decode the response
+                    self.actualTime = time()
+                    self.waitRequest = True
                     return True
 
-        # fail after 2 second of no activity
+        # fail after self.TIMEOUT seconds of no activity
         except socket.timeout: self.str2log("Didn't receive data! [Timeout]", 4)
         # Untracked error
         except Exception as e: self.str2log("Error Unknown: {}".format(e), 3)
@@ -569,7 +606,7 @@ class IHP:
                     command3 = self.WRITE_PROTECT
                     data3 = {'device': self.COMMS, 'enable': False}
                     command4 = self.SAVE
-                    data4 = {}
+                    data4 = {'device': dev}
                     self.commandList.append({'commandNumber': commandNumber, 
                                             'request': 'Operation',
                                             0: {'command': command1, 'data': data1}, 
@@ -581,41 +618,29 @@ class IHP:
             elif(command == self.VREF):
                 dev, type, vref = data['device'], data['type'], data['vref']
                 if(dev>=1 and dev<=8):
-                    commandNumber = 4
+                    commandNumber = 2
                     command1 = self.WRITE_PROTECT
                     data1 = {'device': dev, 'enable': True}
                     command2 = self.VREF
                     data2 = {'device': dev, 'type': type, 'vref': vref}
-                    command3 = self.WRITE_PROTECT
-                    data3 = {'device': self.COMMS, 'enable': True}
-                    command4 = self.SAVE
-                    data4 = {}
                     self.commandList.append({'commandNumber': commandNumber, 
                                             'request': 'Vref',
                                             0: {'command': command1, 'data': data1}, 
-                                            1: {'command': command2, 'data': data2}, 
-                                            2: {'command': command3, 'data': data3},
-                                            3: {'command': command4, 'data': data4}})
+                                            1: {'command': command2, 'data': data2}})
                 else: self.str2log("Vref() device number should be between 1 and 8", 3)
 
             elif(command == self.IREF):
                 dev, type, iref = data['device'], data['type'], data['iref']
                 if(dev>=1 and dev<=8):
-                    commandNumber = 4
+                    commandNumber = 2
                     command1 = self.WRITE_PROTECT
                     data1 = {'device': dev, 'enable': True}
                     command2 = self.IREF
                     data2 = {'device': dev, 'type': type, 'iref': iref}
-                    command3 = self.WRITE_PROTECT
-                    data3 = {'device': self.COMMS, 'enable': True}
-                    command4 = self.SAVE
-                    data4 = {}
                     self.commandList.append({'commandNumber': commandNumber, 
                                             'request': 'Iref',
                                             0: {'command': command1, 'data': data1}, 
-                                            1: {'command': command2, 'data': data2}, 
-                                            2: {'command': command3, 'data': data3},
-                                            3: {'command': command4, 'data': data4}})
+                                            1: {'command': command2, 'data': data2}})
                 else: self.str2log("Iref() device number should be between 1 and 8", 3)
 
             elif(command == self.MODULE_CONFIG):
@@ -629,7 +654,7 @@ class IHP:
                     command3 = self.WRITE_PROTECT
                     data3 = {'device': self.COMMS, 'enable': False}
                     command4 = self.SAVE
-                    data4 = {}
+                    data4 = {'device': dev}
                     self.commandList.append({'commandNumber': commandNumber, 
                                             'request': 'Module Config',
                                             0: {'command': command1, 'data': data1}, 
@@ -683,61 +708,57 @@ class IHP:
         except Exception as e: self.str2log("Critical Error: {}".format(e), 4)
 
     def run(self):
+        # Pass to the next command in the list only if the waiting time has passed
+        if(time() - self.actualTime > self.timing and self.waitRequest): self.commandSucceed(self)
+        
+        # Run the next command in the list
         if(self.running and len(self.commandList)>0):
             cList = self.commandList[0] # Get the first array of commands
             if(self.actualCommand<cList['commandNumber']):
                 c = cList[self.actualCommand]['command']
                 data = cList[self.actualCommand]['data']
                 if(c == self.WRITE_PROTECT):
-                    if(self.WriteProtect(data['device'], data['enable'])): self.commandSucceed()
-                    else: self.errorWithCommand("We have problems with command WRITE_PROTECT")
+                    if(not self.WriteProtect(data['device'], data['enable'])): self.errorWithCommand("We have problems with command WRITE_PROTECT")
                 elif(c == self.OPERATION):
-                    if(self.operation(data['device'], data['enable'])): self.commandSucceed()
-                    else: self.errorWithCommand("We have problems with command OPERATION")
+                    if(not self.operation(data['device'], data['enable'])): self.errorWithCommand("We have problems with command OPERATION")
                 elif(c == self.VREF):
                     if(data['type']=='normal'):
-                        if(self.setVoltage(data['device'], data['vref'])): self.commandSucceed()
-                        else: self.str2log("We have problems with command VREF", 3)
+                        if(not self.setVoltage(data['device'], data['vref'])): self.str2log("We have problems with command VREF", 3)
                     elif(data['type']=='percentage'):
-                        if(self.setVoltagePercentage(data['device'], data['vref'])): self.commandSucceed()
-                        else: self.errorWithCommand("We have problems with command VREF")
+                        if(not self.setVoltagePercentage(data['device'], data['vref'])): self.errorWithCommand("We have problems with command VREF")
                     else: self.errorWithCommand("Vref() type should be 'normal' or 'percentage'")
                 elif(c == self.IREF):
                     if(data['type']=='normal'):
-                        if(self.setCurrent(data['device'], data['iref'])): self.commandSucceed()
-                        else: self.errorWithCommand("We have problems with command IREF")
+                        if(not self.setCurrent(data['device'], data['iref'])): self.errorWithCommand("We have problems with command IREF")
                     elif(data['type']=='percentage'):
-                        if(self.setCurrentPercentage(data['device'], data['iref'])): self.commandSucceed()
-                        else: self.errorWithCommand("We have problems with command IREF")
+                        if(not self.setCurrentPercentage(data['device'], data['iref'])): self.errorWithCommand("We have problems with command IREF")
                     else: self.errorWithCommand("Iref() type should be 'normal' or 'percentage'")
                 elif(c == self.MODULE_CONFIG):
                     if(data['type']=='DCS'):
-                        if(self.DCS(data['device'])): self.commandSucceed()
-                        else: self.errorWithCommand("We have problems with command MODULE_CONFIG")
+                        if(not self.DCS(data['device'])): self.errorWithCommand("We have problems with command MODULE_CONFIG")
                     else: self.errorWithCommand("ModuleConfig() types supported currently: 'DCS'")
                 elif(c == self.SAVE):
-                    if(self.save()): self.commandSucceed()
-                    else: self.errorWithCommand("We have problems with command SAVE")
+                    if(not self.save(data['device'])): self.errorWithCommand("We have problems with command SAVE")
                 elif(c == self.READ_VOUT):
-                    if(self.readVout(data['device'])): self.commandSucceed()
-                    else: self.errorWithCommand("We have problems with command READ_VOUT")
+                    if(not self.readVout(data['device'])): self.errorWithCommand("We have problems with command READ_VOUT")
                 elif(c == self.READ_IOUT):
-                    if(self.readIout(data['device'])): self.commandSucceed()
-                    else: self.errorWithCommand("We have problems with command READ_IOUT")
+                    if(not self.readIout(data['device'])): self.errorWithCommand("We have problems with command READ_IOUT")
                 elif(c>=self.READ_VIN and c<=self.READ_VIN+2):
-                    if(self.readVin(c-self.READ_VIN+1)): self.commandSucceed()
-                    else: self.errorWithCommand("We have problems with command READ_VIN")
+                    if(not self.readVin(c-self.READ_VIN+1)): self.errorWithCommand("We have problems with command READ_VIN")
                 elif(c>=self.READ_IIN and c<=self.READ_IIN+2):
-                    if(self.readIin(c-self.READ_IIN+1)): self.commandSucceed()
-                    else: self.errorWithCommand("We have problems with command READ_IIN")
+                    if(not self.readIin(c-self.READ_IIN+1)): self.errorWithCommand("We have problems with command READ_IIN")
                 else: self.errorWithCommand("Command {} not supported".format(c))
-            else: 
+            else:
                 self.commandList = self.commandList[1:] # Delete the first request because it is finished
                 self.actualCommand = 0
                 self.str2log("Request {} solved".format(cList['request']))
+        
+        # If there are new command, start the thread
         elif(not self.running and len(self.commandList)>0): 
             self.running = True
             self.str2log("There is(are) request(s). Communication is running")
+        
+        # If there is no more commands to run, stop the thread
         elif(self.running and len(self.commandList)==0):
             self.running = False
             self.str2log("All request are solved. Communication is stopped")
@@ -746,37 +767,18 @@ class IHP:
 def main():
     from time import sleep
     ihp = IHP('D0:03:EB:A2:DD:14', '192.168.6.1/23', 8888)
-    for i in range(1,9,1):
-        ihp.WriteProtect(i, True)
-        sleep(0.06)
-        ihp.setCurrent(i, 0)
-        sleep(0.06)
-    #ihp.WriteProtect(2, True)
-    #ihp.WriteProtect(0, True)
-    #ihp.save()
+
     
-    #ihp.setCurrent(2, 10)
-    
-    
+    #for i in range(2,3,1): ihp.request(ihp.MODULE_CONFIG, {'device': i, 'type': 'DCS'})
+    for i in range(1,9,1): ihp.request(ihp.IREF, {'device': i, 'type': 'normal', 'iref': 10})
+
     # Functions tested
     for i in range(1,4,1):
         ihp.request(ihp.READ_VIN, {'line': i})
         ihp.request(ihp.READ_IIN, {'line': i})
     
-    #for i in range(2,3,1): ihp.request(ihp.MODULE_CONFIG, {'device': i, 'type': 'DCS'})
-    #for i in range(1,9,1): ihp.request(ihp.IREF, {'device': i, 'type': 'normal', 'iref': 10})
     while True:
         ihp.run()
-    """
-    ihp.self.WriteProtect(6, True)
-    ihp.DCS(6)
-    ihp.setVoltage()
-    ihp.setVoltagePercentage()
-    ihp.setCurrent(2, 35)
-    ihp.setCurrentPercentage()
-    ihp.operation()
-    ihp.save()
-    """
 
 if __name__ == '__main__':
     main()
