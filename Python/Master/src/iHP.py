@@ -127,6 +127,7 @@ class IHP:
     def commandSucceed(self):
         self.actualCommand += 1
         self.errorCounter = 0
+        self.waitRequest = False
 
     # Returns 4 Random bytes
     def RandomValues(self):
@@ -181,7 +182,6 @@ class IHP:
             if(enable == True): id9 = 0x00
             elif(enable == False): id9 = 0x80
             self.timing = 0.06
-            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9])
             return self.communicationUDP(bytes2send)
         else:
@@ -203,7 +203,6 @@ class IHP:
                 return False
             id10 = 0x08
             self.timing = 0.06
-            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9, id10])
             return self.communicationUDP(bytes2send)
         else:
@@ -224,7 +223,7 @@ class IHP:
             self.command = self.VREF
             id9 = 0x03
 
-            if(voltage<=self.maxVoltage):
+            if(voltage>self.maxVoltage):
                 self.str2log("voltage has to be between 0 and {} V".format(self.maxVoltage), 3)
                 return False
             if(voltage < 0): voltage = 0    
@@ -236,7 +235,6 @@ class IHP:
             id11 = int(parameters[2:4], 16)
             id12 = int(parameters[-4:-2], 16)
             self.timing = 0.06
-            self.waitRequest = False
             bytes2send = bytearray([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9, id10, id11, id12])
             return self.communicationUDP(bytes2send)
         else:
@@ -260,7 +258,7 @@ class IHP:
             self.command = self.IREF
             id9 = 0x03
 
-            if(current<=self.maxCurrent):
+            if(current>self.maxCurrent):
                 self.str2log("current has to be between 0 and {} A".format(self.maxCurrent), 3)
                 return False
             if(current < 0): current = 0
@@ -272,7 +270,6 @@ class IHP:
             id11 = int(parameters[2:4], 16)
             id12 = int(parameters[-4:-2], 16)
             self.timing = 0.06
-            self.waitRequest = False
             bytes2send = bytearray([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9, id10, id11, id12])
             return self.communicationUDP(bytes2send)
         else:
@@ -297,7 +294,6 @@ class IHP:
             if(en == True): id9 = 0x80
             elif(en == False): id9 = 0x00
             self.timing = 0.06
-            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9])
             return self.communicationUDP(bytes2send)
         else:
@@ -318,7 +314,6 @@ class IHP:
                 self.str2log("save() parameter device is wrong, provide a correct value", 3)
                 return False
             self.timing = 0.06
-            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command, id9])
             return self.communicationUDP(bytes2send)
         else:
@@ -338,7 +333,6 @@ class IHP:
             id7 = self.READ + 0 # Read Mode without aditional bytes
             self.command = self.READ_VOUT
             self.timing = 0
-            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
             return self.communicationUDP(bytes2send)
         else:
@@ -358,7 +352,6 @@ class IHP:
             id7 = self.READ + 0 # Read Mode without aditional bytes
             self.command = self.READ_IOUT
             self.timing = 0
-            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
             return self.communicationUDP(bytes2send)
         else:
@@ -378,7 +371,6 @@ class IHP:
                 self.str2log("readVin() parameter line is wrong, provide a correct value", 3)
                 return False
             self.timing = 0
-            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
             return self.communicationUDP(bytes2send)
         else:
@@ -398,7 +390,6 @@ class IHP:
                 self.str2log("readIin() parameter line is wrong, provide a correct value", 3)
                 return False
             self.timing = 0
-            self.waitRequest = False
             bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
             return self.communicationUDP(bytes2send)
         else:
@@ -709,10 +700,10 @@ class IHP:
 
     def run(self):
         # Pass to the next command in the list only if the waiting time has passed
-        if(time() - self.actualTime > self.timing and self.waitRequest): self.commandSucceed(self)
+        if(time() - self.actualTime > self.timing and self.waitRequest): self.commandSucceed()
         
         # Run the next command in the list
-        if(self.running and len(self.commandList)>0):
+        if(self.running and len(self.commandList)>0 and not self.waitRequest):
             cList = self.commandList[0] # Get the first array of commands
             if(self.actualCommand<cList['commandNumber']):
                 c = cList[self.actualCommand]['command']
@@ -768,17 +759,18 @@ def main():
     from time import sleep
     ihp = IHP('D0:03:EB:A2:DD:14', '192.168.6.1/23', 8888)
 
-    
     #for i in range(2,3,1): ihp.request(ihp.MODULE_CONFIG, {'device': i, 'type': 'DCS'})
-    for i in range(1,9,1): ihp.request(ihp.IREF, {'device': i, 'type': 'normal', 'iref': 10})
 
     # Functions tested
+    """
+    for i in range(1,9,1): ihp.request(ihp.IREF, {'device': i, 'type': 'percentage', 'iref': 0})
+    
     for i in range(1,4,1):
         ihp.request(ihp.READ_VIN, {'line': i})
         ihp.request(ihp.READ_IIN, {'line': i})
     
     while True:
         ihp.run()
-
+    """
 if __name__ == '__main__':
     main()
