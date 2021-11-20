@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import struct
 import socket
 from time import time
@@ -757,6 +758,7 @@ class IHP:
 # Debug
 def main():
     from time import sleep
+    # Look the MAC address, range and PORT
     ihp = IHP('D0:03:EB:A2:DD:14', '192.168.6.1/23', 8888)
 
     #for i in range(2,3,1): ihp.request(ihp.MODULE_CONFIG, {'device': i, 'type': 'DCS'})
