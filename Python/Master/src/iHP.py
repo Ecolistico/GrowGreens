@@ -7,10 +7,11 @@ from sysMaster import scan_for_hosts, find_ip_address_for_mac_address, splitByte
 
 class IHP:
     # Initialize the class
-    def __init__(self, MAC, ip_range, port, logger = None):
-        self.MAC = MAC
-        self.ip_range = ip_range
-        self.port = port
+    def __init__(self, data, logger = None):
+
+        self.MAC = data['MAC']
+        self.ip_range = data['ip_range']
+        self.port = data['port']
         self.log = logger
         # Create a UDP socket at client side
         self.TIMEOUT = 2 # timeout grater than 1s is required (from experimental test)
@@ -758,8 +759,10 @@ class IHP:
 # Debug
 def main():
     from time import sleep
+    data = {'MAC': 'D0:03:EB:A2:DD:14', 'ip_range': '192.168.6.1/23', 'port': 8888}
+    
     # Look the MAC address, range and PORT
-    ihp = IHP('D0:03:EB:A2:DD:14', '192.168.6.1/23', 8888)
+    ihp = IHP(data)
 
     #for i in range(2,3,1): ihp.request(ihp.MODULE_CONFIG, {'device': i, 'type': 'DCS'})
 

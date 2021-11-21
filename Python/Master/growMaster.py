@@ -14,10 +14,12 @@ from time import time, sleep, strftime, localtime
 sys.path.insert(0, './src/')
 import EnvControl
 from gui import GUI
+from iHP import IHP
 from smtp import Mail
 from logger import logger
-from sensor import BMP280, BME680
 from asciiART import asciiArt
+from artificialDay import Day
+from sensor import BMP280, BME680
 #from Calendar import Calendar
 from credentials import broker, sensor
 from growerData import multiGrower
@@ -152,9 +154,17 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
         brokerIP = data["staticIP"]
         city = data["city"]
         state = data["state"]
+        ihp_data = data["ihp"]      # Must include 'MAC', 'ip_range' and 'port'
+        artDay_data = data["day"]   # Include all the configuration to control the artifitial light
 
     # Charge GUI parameters and connect logger and serialControl
     gui = GUI(ID, log.logger, serialControl)
+
+    # Define day object
+    myDay = Day()
+
+    # Define IHP object and connect logger
+    ihp = IHP(ihp_data, log.logger)
 
     # Define Mail object
     #mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
