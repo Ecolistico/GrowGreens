@@ -162,6 +162,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
 
     # Define day object
     myDay = Day()
+    myDay.set_function(artDay_data) # Initialize functions
 
     # Define IHP object and connect logger
     ihp = IHP(ihp_data, log.logger)
@@ -271,6 +272,14 @@ try:
         if minute!=now.minute:
             # Update Minute
             minute = now.minute
+
+            # Update day info and send it to iHP
+            myDay.get_intensity(hour*60+minute)
+            for i in range(myDay.fl):
+                if myDay.update[i]: 
+                    ihp.request(ihp.IREF, {'device': i, 'type': 'percentage', 'iref': 0})
+                    myDay.update[i] = False
+
             # Save last ESP32 info and request an update
             if(boot):
                 # Upload sensor data
@@ -281,6 +290,7 @@ try:
                 serialControl.write(serialControl.generalControl, "updateHour,{0},{1}".format(
                     now.hour, now.minute))
             else: boot = True
+            
             # Check if ESP32's and Growers are connected
             mqttControl.mGrower.updateStatus()
             mqttControl.ESP32.updateStatus()

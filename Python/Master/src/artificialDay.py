@@ -118,9 +118,6 @@ class Day:
             if(abs(aux-self.intensity[i])>1):
                 self.intensity[i] = aux*self.multiplier[i]
                 self.update[i] = True
-    
-    def reset_update(self):
-        for i in range(self.fl): self.update[i] = False
 
 # Debug
 def main():
