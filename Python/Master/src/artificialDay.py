@@ -64,32 +64,32 @@ class Day:
         self.update = []
         
     def set_function(self, data):
-        self.fl = data['floors']
+        self.fl = int(data['floors'])
         
         for i in range(self.fl):
-            fn = data[i+1]
+            fn = data["{}".format(i+1)]
             # Linear Composition of multiple functions
             if(fn['type']=='multiple'):
                 functionComposition = ''
-                for j in range(fn['number_functions']):
-                    func = fn[j+1]
-                    start = func['start']['hour']*60 + func['start']['minute']
-                    end = func['end']['hour']*60 + func['end']['minute']
+                for j in range(int(fn['number_functions'])):
+                    func = fn["{}".format(j+1)]
+                    start = int(func['start']['hour'])*60 + int(func['start']['minute'])
+                    end = int(func['end']['hour'])*60 + int(func['end']['minute'])
                     if(func['type'] == 'rectangle'): singleFun = 'rectangle(a, {}, {}) '.format(start, end)
-                    elif(func['type'] == 'triangle'): singleFun = 'triangle(a, {}, {}, {}) '.format(start, end, func['top'])
-                    elif(func['type'] == 'trapezoid'): singleFun = 'trapezoid(a, {}, {}, {}, {}) '.format(start, end, func['q1'], func['q2'])
+                    elif(func['type'] == 'triangle'): singleFun = 'triangle(a, {}, {}, {}) '.format(start, end, float(func['top']))
+                    elif(func['type'] == 'trapezoid'): singleFun = 'trapezoid(a, {}, {}, {}, {}) '.format(start, end, float(func['q1']), float(func['q2']))
                     elif(func['type'] == 'sine'): singleFun = 'sine(a, {}, {}) '.format(start, end)
                     else: singleFun = '0'
-                    functionComposition += '{}*{}'.format(func['multiplier'], singleFun)
-                    if (j+1<fn['number_functions']): functionComposition += '+'
+                    functionComposition += '{}*{}'.format(float(func['multiplier']), singleFun)
+                    if (j+1<int(fn['number_functions'])): functionComposition += '+'
                 myCode = 'def generic(a): return ({}) '.format(functionComposition)
             # Single function case
             else:
-                start = fn['start']['hour']*60 + fn['start']['minute']
-                end = fn['end']['hour']*60 + fn['end']['minute']
+                start = int(fn['start']['hour'])*60 + int(fn['start']['minute'])
+                end = int(fn['end']['hour'])*60 + int(fn['end']['minute'])
                 if(fn['type'] == 'rectangle'): myCode = 'def generic(a): return rectangle(a, {}, {}) '.format(start, end)
-                elif(fn['type'] == 'triangle'): myCode = 'def generic(a): return triangle(a, {}, {}, {}) '.format(start, end, fn['top'])
-                elif(fn['type'] == 'trapezoid'): myCode = 'def generic(a): return trapezoid(a, {}, {}, {}, {}) '.format(start, end, fn['q1'], fn['q2'])
+                elif(fn['type'] == 'triangle'): myCode = 'def generic(a): return triangle(a, {}, {}, {}) '.format(start, end, float(fn['top']))
+                elif(fn['type'] == 'trapezoid'): myCode = 'def generic(a): return trapezoid(a, {}, {}, {}, {}) '.format(start, end, float(fn['q1']), float(fn['q2']))
                 elif(fn['type'] == 'sine'): myCode = 'def generic(a): return sine(a, {}, {}) '.format(start, end)
                 else: myCode = 'def generic(actual_minute): return 0'
             
@@ -99,7 +99,7 @@ class Day:
             
             # Normalize the resulting function
             norm = 1
-            if(fn['normalize']==True):
+            if(fn['normalize']=="True"):
                 self.normalize.append(True)
                 for j in range(24*60):
                     aux = self.functions[i](j)
@@ -107,15 +107,15 @@ class Day:
             else: self.normalize.append(False)
             
             # Fill the list
-            self.multiplier.append(fn['multiplier']/norm)
+            self.multiplier.append(int(fn['multiplier'])/norm)
             self.intensity.append(0) 
             self.update.append(False)
                 
     def get_intensity(self, actual_minute):
         for i in range(self.fl): 
-            aux = int(self.functions[i](actual_minute))
+            aux = self.functions[i](actual_minute)
             if (aux>1 and not self.normalize[i]): aux = 1
-            if(abs(aux-self.intensity[i])>1):
+            if(abs(aux-self.intensity[i])>0.01):
                 self.intensity[i] = aux*self.multiplier[i]
                 self.update[i] = True
 

@@ -163,10 +163,12 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     # Define day object
     myDay = Day()
     myDay.set_function(artDay_data) # Initialize functions
-
+            
     # Define IHP object and connect logger
-    ihp = IHP(ihp_data, log.logger)
-
+    ihp = IHP(ihp_data, log.logger, log.logger_ihp)
+    # Set all floors OFF by default
+    for i in range(myDay.fl): ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': 0})
+    
     # Define Mail object
     #mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
     # Main logger, me and @IFTTT
@@ -277,7 +279,7 @@ try:
             myDay.get_intensity(hour*60+minute)
             for i in range(myDay.fl):
                 if myDay.update[i]: 
-                    ihp.request(ihp.IREF, {'device': i, 'type': 'percentage', 'iref': 0})
+                    ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': myDay.intensity[i]})
                     myDay.update[i] = False
 
             # Save last ESP32 info and request an update
