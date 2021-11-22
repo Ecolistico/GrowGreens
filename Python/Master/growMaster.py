@@ -349,6 +349,9 @@ try:
         checkMqttMsg(mGrower.Gr3)
         checkMqttMsg(mGrower.Gr4)
 
+        # Check iHP pending requests
+        ihp.run()
+        
         if inputControl.exit:
             ex = input("Are you sure? y/n\n")
             if (ex.startswith("y") or start.startswith("Y")):
