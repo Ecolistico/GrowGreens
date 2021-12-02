@@ -36,8 +36,8 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "AccelStepper.h" // Include AccelStepper library
 
-#define MOTOR_SPEED 4000 // Maximum Steps Per Second
-#define MOTOR_ACCEL 1000 // Steps/second/Second of acceleration
+#define MOTOR_SPEED 3000 // Maximum Steps Per Second
+#define MOTOR_ACCEL 500 // Steps/second/Second of acceleration
 #define DEFAULT_MICROSTEP 8 // By default we use configuration of 1/8 microSteps
 #define DEFAULT_PULLEY_TEETH 20 // By default we use pulley of 20 teeth
 #define DEFAULT_X_MM_TOOTH 2 // By default we use toothed tape of 2mm in X
