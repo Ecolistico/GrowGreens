@@ -98,7 +98,7 @@ class growerStepper
 
         /*   Limit Switches   */
         bool __HX1, __HX2, __HY;
-        uint_8 __CheckX1, __CheckX2, __CheckY;
+        uint8_t __CheckX1, __CheckX2, __CheckY;
 
         /*   Communication   */
         uint8_t __Floor;
