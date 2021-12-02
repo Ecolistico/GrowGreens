@@ -36,8 +36,8 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "AccelStepper.h" // Include AccelStepper library
 
-#define MOTOR_SPEED 3000 // Maximum Steps Per Second
-#define MOTOR_ACCEL 500 // Steps/second/Second of acceleration
+#define MOTOR_SPEED 4000 // Maximum Steps Per Second
+#define MOTOR_ACCEL 1000 // Steps/second/Second of acceleration
 #define DEFAULT_MICROSTEP 8 // By default we use configuration of 1/8 microSteps
 #define DEFAULT_PULLEY_TEETH 20 // By default we use pulley of 20 teeth
 #define DEFAULT_X_MM_TOOTH 2 // By default we use toothed tape of 2mm in X
@@ -47,7 +47,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define Y_HOME_DISTANCE_MM 3000 // The max distance to get home in y
 #define WAIT_TIME_FOR_GO_HOME 1800000 // By default 30min the value is given in ms
 #define MIN_LIMIT_SECURITY_DISTANCE 15 // The min distance when moving to not touch the limit switch
-#define DEBOUNCE_TIME 5 // The time for debouncing limit switch in ms
+#define MAX_LS_READ 5 // The number of consecutives readings to avoid limit switch false readings
 
 // Class to control the motors of a Grower
 class growerStepper
@@ -98,8 +98,7 @@ class growerStepper
 
         /*   Limit Switches   */
         bool __HX1, __HX2, __HY;
-        bool __CheckX1, __CheckX2, __CheckY;
-        unsigned long __X1Time, __X2Time, __YTime; // Timers to debounce limit switch
+        uint_8 __CheckX1, __CheckX2, __CheckY;
 
         /*   Communication   */
         uint8_t __Floor;
