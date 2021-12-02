@@ -538,7 +538,7 @@ bool growerStepper::home()
           if(!__IsEnable){ enable(); }
           // Move all the motors to home
           long moveX = MMToSteps_X(-X_HOME_DISTANCE_MM); // Move -12.5m in X
-          long moveY = MMToSteps_Y(-Y_HOME_DISTANCE_MM); // Move -2.5m in Y
+          long moveY = MMToSteps_Y(-Y_HOME_DISTANCE_MM); // Move -3m in Y
           if(!__OutHomeX1 || __Calibration!=0){stepperX1->move(moveX);}
           if(!__OutHomeX2 || __Calibration!=0){stepperX2->move(moveX);}
           if(!__OutHomeY || __Calibration!=0){stepperY->move(moveY);}
@@ -825,7 +825,7 @@ void growerStepper::run()
           // If calibration is at stage 1 then starts stage 2
           if(__Calibration == 1){
             long moveX = MMToSteps_X(X_HOME_DISTANCE_MM); // Move 12.5m in X
-            long moveY = MMToSteps_Y(Y_HOME_DISTANCE_MM); // Move 2.5m in Y
+            long moveY = MMToSteps_Y(Y_HOME_DISTANCE_MM); // Move 3m in Y
             stepperX1->move(moveX);
             stepperX2->move(moveX);
             stepperY->move(moveY);
