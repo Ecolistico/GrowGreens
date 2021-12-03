@@ -47,7 +47,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define Y_HOME_DISTANCE_MM 3000 // The max distance to get home in y
 #define WAIT_TIME_FOR_GO_HOME 1800000 // By default 30min the value is given in ms
 #define MIN_LIMIT_SECURITY_DISTANCE 15 // The min distance when moving to not touch the limit switch
-#define MAX_LS_READ 5 // The number of consecutives readings to avoid limit switch false readings
+#define DEBOUNCE_TIME 5 // The time for debouncing limit switch in ms
 
 // Class to control the motors of a Grower
 class growerStepper
@@ -98,7 +98,8 @@ class growerStepper
 
         /*   Limit Switches   */
         bool __HX1, __HX2, __HY;
-        uint8_t __CheckX1, __CheckX2, __CheckY;
+        bool __CheckX1, __CheckX2, __CheckY;
+        unsigned long __X1Time, __X2Time, __YTime; // Timers to debounce limit switch
 
         /*   Communication   */
         uint8_t __Floor;

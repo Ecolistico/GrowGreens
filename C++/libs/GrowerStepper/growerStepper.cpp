@@ -82,9 +82,12 @@ growerStepper::growerStepper(
     __HX1 = false;
     __HX2 = false;
     __HY = false;
-    __CheckX1 = 0;
-    __CheckX2 = 0;
-    __CheckY = 0;
+    __CheckX1 = false;
+    __CheckX2 = false;
+    __CheckY = false;
+    __X1Time = millis();
+    __X2Time = millis();
+    __YTime = millis();
 
     resetTime();
   }
@@ -635,14 +638,15 @@ void growerStepper::run()
     }
 
     // Maybe limit switch X1 was touched
-    if(__HX1!=!digitalRead(__HomeX1)){
-      __CheckX1++;
-      if(__CheckX1>=MAX_LS_READ){
-        __HX1 = !__HX1;
-        __CheckX1 = 0;
-      }
+    if(__HX1!=!digitalRead(__HomeX1) && !__CheckX1){
+      __CheckX1 = true;
+      __X1Time = millis();
     }
-    else { __CheckX1 = 0; }
+    else if(__CheckX1 && millis()-__X1Time>DEBOUNCE_TIME){
+      bool limitX1 = !digitalRead(__HomeX1);
+      if(__HX1!=limitX1){ __HX1=limitX1; }
+      __CheckX1 = false;
+    }
 
     // Stop X1 when limit switch touched
     if(__HX1 && !__OutHomeX1){
@@ -653,15 +657,16 @@ void growerStepper::run()
       __OutHomeX1 = false;
     }
 
-    // Maybe limit switch X1 was touched
-    if(__HX2!=!digitalRead(__HomeX2)){
-      __CheckX2++;
-      if(__CheckX2>=MAX_LS_READ){
-        __HX2 = !__HX2;
-        __CheckX2 = 0;
-      }
+    // Maybe limit switch X2 was touched
+    if(__HX2!=!digitalRead(__HomeX2) && !__CheckX2){
+      __CheckX2 = true;
+      __X2Time = millis();
     }
-    else { __CheckX2 = 0; }
+    else if(__CheckX2 && millis()-__X2Time>DEBOUNCE_TIME){
+      bool limitX2 = !digitalRead(__HomeX2);
+      if(__HX2!=limitX2){ __HX2=limitX2; }
+      __CheckX2 = false;
+    }
 
     // Stop X2 when limit switch touched
     if(__HX2 && !__OutHomeX2){
@@ -673,14 +678,15 @@ void growerStepper::run()
     }
 
     // Maybe limit switch Y was touched
-    if(__HY!=!digitalRead(__HomeY)){
-      __CheckY++;
-      if(__CheckY>=MAX_LS_READ){
-        __HY = !__HY;
-        __CheckY = 0;
-      }
+    if(__HY!=!digitalRead(__HomeY) && !__CheckY){
+      __CheckY = true;
+      __YTime = millis();
     }
-    else { __CheckY = 0; }
+    else if(__CheckY && millis()-__YTime>DEBOUNCE_TIME){
+      bool limitY = !digitalRead(__HomeY);
+      if(__HY!=limitY){ __HY=limitY; }
+      __CheckY = false;
+    }
 
     // Stop Y when limit switch touched
     if(__HY && !__OutHomeY){
