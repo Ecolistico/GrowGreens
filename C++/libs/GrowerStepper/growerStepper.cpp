@@ -85,6 +85,9 @@ growerStepper::growerStepper(
     __CheckX1 = false;
     __CheckX2 = false;
     __CheckY = false;
+    __CounterX1 = 0;
+    __CounterX2 = 0;
+    __CounterY = 0;
     __X1Time = millis();
     __X2Time = millis();
     __YTime = millis();
@@ -644,7 +647,14 @@ void growerStepper::run()
     }
     else if(__CheckX1 && millis()-__X1Time>DEBOUNCE_TIME){
       bool limitX1 = !digitalRead(__HomeX1);
-      if(__HX1!=limitX1){ __HX1=limitX1; }
+      if(__HX1!=limitX1){ 
+        __CounterX1++;
+        if(__CounterX1>=MAX_LS_COUNTER){
+          __HX1=limitX1;
+          __CounterX1 = 0;
+        } 
+      }
+      else __CounterX1 = 0;
       __CheckX1 = false;
     }
 
@@ -664,7 +674,14 @@ void growerStepper::run()
     }
     else if(__CheckX2 && millis()-__X2Time>DEBOUNCE_TIME){
       bool limitX2 = !digitalRead(__HomeX2);
-      if(__HX2!=limitX2){ __HX2=limitX2; }
+      if(__HX2!=limitX2){ 
+        __CounterX2++;
+        if(__CounterX2>=MAX_LS_COUNTER){
+          __HX2=limitX2;
+          __CounterX2 = 0;
+        } 
+      }
+      else __CounterX2 = 0;
       __CheckX2 = false;
     }
 
@@ -684,7 +701,14 @@ void growerStepper::run()
     }
     else if(__CheckY && millis()-__YTime>DEBOUNCE_TIME){
       bool limitY = !digitalRead(__HomeY);
-      if(__HY!=limitY){ __HY=limitY; }
+      if(__HY!=limitY){ 
+        __CounterY++;
+        if(__CounterY>=MAX_LS_COUNTER){
+          __HY=limitY;
+          __CounterY = 0;
+        } 
+      }
+      else __CounterY = 0;
       __CheckY = false;
     }
 
@@ -696,35 +720,6 @@ void growerStepper::run()
     else if(!__HY && __OutHomeY){
       __OutHomeY = false;
     }
-
-    /*
-    // Stop X1 when limit switch touched
-    if(!digitalRead(__HomeX1) && !__OutHomeX1){
-      __OutHomeX1 = true;
-      stop(0);
-    }
-    else if(digitalRead(__HomeX1) && __OutHomeX1){
-      __OutHomeX1 = false;
-    }
-
-    // Stop X2 when limit switch touched
-    if(!digitalRead(__HomeX2) && !__OutHomeX2){
-      __OutHomeX2 = true;
-      stop(1);
-    }
-    else if(digitalRead(__HomeX2) && __OutHomeX2){
-      __OutHomeX2 = false;
-    }
-
-    // Stop Y when limit switch touched
-    if(!digitalRead(__HomeY) && !__OutHomeY){
-      __OutHomeY = true;
-      stop(2);
-    }
-    else if(digitalRead(__HomeY) && __OutHomeY){
-      __OutHomeY = false;
-    }
-    */
 
     // If X1 was running and stop it substract 1 to __steppersRunning
     if(__MoveX1 && !stepperX1->isRunning()){
