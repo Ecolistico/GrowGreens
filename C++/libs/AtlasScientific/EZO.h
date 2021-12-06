@@ -102,7 +102,7 @@ class EZO
         void readWithTempCompensation(float temp); // returns a single reading compensating temperature
         void sleep(); // enter sensor into sleep mode/low power consumption
         void infoStatus(); // Returns information Status
-        void tempCompensation(bool act, float temp = 0); // temperature compensation
+        void tempCompensation(bool act, float temp); // temperature compensation
 
         /* Just phMeter */
         void slope(); // Returns slope for the equation

@@ -33,10 +33,10 @@ EZO::EZO(uint8_t type)
 
 void EZO::printAction(String act)
   { if(__Type == EZO_PH){
-      Serial.print(F("PH")); 
+      Serial.print(F("PH"));
     }
     else if(__Type == EZO_EC) {
-      Serial.print(F("EC")); 
+      Serial.print(F("EC"));
     }
     Serial.print(F(" EZO sensor: "));
     Serial.println(act);
@@ -70,7 +70,7 @@ void EZO::requestResponse()
         __ActualTime = millis();
         break;
       case 255:                      // There is not request
-        printAction(F("No Request"));
+        //printAction(F("No Request"));
         __ActualTime = millis();
         break;
       default:
