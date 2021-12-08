@@ -567,7 +567,7 @@ void EZO::infoStatus()
     else{printAction(F("Busy, waiting response for before command"));}
   }
 
-void EZO::tempCompensation(bool act, float temp = 0)
+void EZO::tempCompensation(bool act, float temp)
   { if(!__Request){
       if(act<2){
         if(temp>0){
