@@ -29,41 +29,41 @@ void read_EEPROM(bool pr){
   byte cal12 = EEPROM.read(11); // ph pump2
   
   if(cal1!=0){
-    sMaker.setCalibrationParameter(cal1, 0);
+    my_sMaker.setCalibrationParameter(cal1, 0);
   }
   if(cal2!=0){
-    sMaker.setCalibrationParameter(cal2, 1);
+    my_sMaker.setCalibrationParameter(cal2, 1);
   }
   if(cal3!=0){
-    sMaker.setCalibrationParameter(cal3, 2);
+    my_sMaker.setCalibrationParameter(cal3, 2);
   }
   if(cal4!=0){
-    sMaker.setCalibrationParameter(cal4, 3);
+    my_sMaker.setCalibrationParameter(cal4, 3);
   }
   if(cal5!=0){
-    sMaker.setCalibrationParameter(cal5, 4);
+    my_sMaker.setCalibrationParameter(cal5, 4);
   }
   if(cal6!=0){
-    sMaker.setCalibrationParameter(cal6, 5);
+    my_sMaker.setCalibrationParameter(cal6, 5);
   }
 
   if(cal7!=0){
-    sMaker.setCalibrationParameter1(cal7, 0);
+    my_sMaker.setCalibrationParameter1(cal7, 0);
   }
   if(cal8!=0){
-    sMaker.setCalibrationParameter1(cal8, 1);
+    my_sMaker.setCalibrationParameter1(cal8, 1);
   }
   if(cal9!=0){
-    sMaker.setCalibrationParameter1(cal9, 2);
+    my_sMaker.setCalibrationParameter1(cal9, 2);
   }
   if(cal10!=0){
-    sMaker.setCalibrationParameter1(cal10,3);
+    my_sMaker.setCalibrationParameter1(cal10,3);
   }
   if(cal11!=0){
-    sMaker.setCalibrationParameter1(cal11, 4);
+    my_sMaker.setCalibrationParameter1(cal11, 4);
   }
   if(cal12!=0){
-    sMaker.setCalibrationParameter1(cal12, 5);
+    my_sMaker.setCalibrationParameter1(cal12, 5);
   }
   
   if(pr){Serial.println(F("EEPROM calibration parameters readed and charged"));}

@@ -1,54 +1,13 @@
-// solutionMaker.cpp
+// sMaker.cpp
 //
 // Copyright (C) 2019 Grow
 
 #include "sMaker.h"
 
-/***   solutionMaker   ***/
+/***   sMaker   ***/
 // Statics variables definitions
 
-solutionMaker::solutionMaker(
-  uint8_t dirS1,
-  uint8_t stepS1,
-  uint8_t dirS2,
-  uint8_t stepS2,
-  uint8_t dirS3,
-  uint8_t stepS3,
-  uint8_t dirS4,
-  uint8_t stepS4,
-  uint8_t enable1,
-  uint8_t mS1A,
-  uint8_t mS1B,
-  uint8_t mS2A,
-  uint8_t mS2B,
-  uint8_t mS3A,
-  uint8_t mS3B,
-  uint8_t mS4A,
-  uint8_t mS4B,
-  //uint8_t enable2,
-  //uint8_t enable3,
-  //uint8_t enable4,
-  uint8_t motor1,
-  uint8_t motor2,
-  //uint8_t en1,
-  //uint8_t en2,
-  //uint8_t led1,
-  //uint8_t led2,
-  //uint8_t led3,
-  //uint8_t led4,
-  //uint8_t led5,
-  //uint8_t led6,
-  //uint8_t led7,
-  //uint8_t led8,
-  uint8_t tempSens,
-  uint8_t lcdButton,
-  uint8_t relay1,
-  uint8_t limitS1,
-  uint8_t limitS2,
-  uint8_t limitS3,
-  uint8_t limitS4,
-  uint8_t limitS5
-  ){
+sMaker::sMaker(){
     // Define motors pins
     __DirS[0] = dirS1;
     __StepS[0] = stepS1;
@@ -58,66 +17,63 @@ solutionMaker::solutionMaker(
     __StepS[2] = stepS3;
     __DirS[3] = dirS4;
     __StepS[3] = stepS4;
-    __mS[0] = mS1A;
-    __mS[1] = mS1B;
-    __mS[2] = mS2A;
-    __mS[3] = mS2B;
-    __mS[4] = mS3A;
-    __mS[5] = mS3B;
-    __mS[6] = mS4A;
-    __mS[7] = mS4B;
-    __limitS[0]=limitS1;
-    __limitS[1]=limitS2;
-    __limitS[2]=limitS3;
-    __limitS[3]=limitS4;
-    __limitS[4]=limitS5;
-    __En = enable1;
-    //__En[1] = enable2;
-    //__En[2] = enable3;
-    //__En[3] = enable4;
+    __DirS[4] = dirS5;
+    __StepS[4] = stepS5;
+
+    __En = en;
 
     __MicroSteps = 0;
     __StepPerRev = 0;
     __PumpVelocity = 0;
+    __limitS_salts=0;
+    __moveCar = false;
+    __dispensing = false;
+    __HOMED = false;
 
     // Define the motors
-    stepperS[0] = new AccelStepper(1, __StepS[0], __DirS[0]);
-    stepperS[1] = new AccelStepper(1, __StepS[1], __DirS[1]);
-    stepperS[2] = new AccelStepper(1, __StepS[2], __DirS[2]);
-    stepperS[3] = new AccelStepper(1, __StepS[3], __DirS[3]);
+    stepperS[0] = new AccelStepper(1, __StepS[0], __DirS[0]); //Car motor
+    stepperS[1] = new AccelStepper(1, __StepS[1], __DirS[1]); //Cargo motor
+    stepperS[2] = new AccelStepper(1, __StepS[2], __DirS[2]); //Releasemotor
+    stepperS[3] = new AccelStepper(1, __StepS[3], __DirS[3]); //Dispenser motor
+    stepperS[4] = new AccelStepper(1, __StepS[4], __DirS[4]); //Extra, not in use for the moment
 
     // Define pumps pins
-    __Motor[0] = motor1;
-    __Motor[1] = motor2;
+    __Motor[0] = pump1;
+    __Motor[1] = pump2;
+    __PumpOn[0] = false;
+    __PumpOn[1] = false;
+    __HOMEING[0] = true;
+    __HOMEING[1] = true;
+    __HOMEING[2] = true;
+    __limitS[0] = limitS1;
+    __limitS[1] = limitS2;
+    __limitS[2] = limitS3;
+    __limitS[3] = limitS4;
+    __limitS[4] = limitS5;
 
-    //__En[4] = en1;
-    //__En[5] = en2;
+    // Define relay pins only one relay is in used by mixer motor
+    __Relay[0] = relay1;
+    __Relay[1] = relay2;
+    __Relay[2] = relay3;
+    __Relay[3] = relay4;
 
-    // Define relay pin
-    __Relay1 = relay1;
-    __RelayState = LOW;
 
-    // At boot solution not ready
-    SolFinished = false;
 
     // Default parameters
-    for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER;i++){
-      __IsEnable[i] = false;
-      __Available[i] = true;
+    __SteppersEnabled = false;
+    for(int i=0; i<MAX_PUMPS_NUMBER;i++){
       __Calibration[i] = 1;
+    }
+    for(int i=0; i<SOLUTIONS;i++){
       __Calibration1[i] = 1;
     }
-    __Work = false;
 
-    // Define Led´s pin
-    //__Led[0] = led1;
-    //__Led[1] = led2;
-    //__Led[2] = led3;
-    //__Led[3] = led4;
-    //__Led[4] = led5;
-    //__Led[5] = led6;
-    //__Led[6] = led7;
-    //__Led[7] = led8;
+    //Set Limit Switches state
+    for(int i=0; i<LIMIT_SWITCHES;i++){
+      __limitS_State[i] = false;
+    }
+
+    __HOMED = false;
 
     // Atlas Scientific Sensors
     __pH = 0;
@@ -129,867 +85,697 @@ solutionMaker::solutionMaker(
     phMeter = new EZO(EZO_PH);
     ecMeter = new EZO(EZO_EC);
 
-    // Define temperature tempSensor
-    dhtSensor = new dht(tempSens, DHTTYPE);
+    //Define temperature tempSensor
+    scale = new HX711;
     __Temp = 0;
 
-    // LCD screen object
-    __LCDButton = lcdButton;
-    lcd = new LiquidCrystal_I2C(LCD_I2C_DIR, LCD_COLUMNS, LCD_ROWS);
-    __StatusLCD = false;
-    __LCDLightOn = false;
+    //Define new HX711 scale
+    dhtSensor = new DHT(tempSens, DHTTYPE);
 
     // Filters
     __Filter = 0;
     __Alpha = 0; __Noise = 0; __Err = 0;
   }
 
-void solutionMaker::begin(
-  uint8_t steps_per_rev = MOTOR_STEP_PER_REV,
-  uint8_t microStep = DEFAULT_MICROSTEP,
-  uint8_t pump_velocity = PUMP_VELOCITY,
-  bool invertPump = false
-){    Serial.println(F("debug,Solution Maker: Starting..."));
+void sMaker::begin(
+  uint8_t steps_per_rev,
+  uint8_t microStep,
+  uint8_t pump_velocity
+){
+Serial.println(F("debug, Solution Maker: Starting..."));
 
-      // Init LCD screen
-      lcd->init();
-
-      // Turn on back light on LCD.
-      lcd->backlight();
-      __StatusLCD = true;
-
-      // Show message in Screen.
-      printLCD(F("Preparando"));
-      //for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER+2;i++){
-          //pinMode(__Led[i], OUTPUT);
-          //digitalWrite(__Led[i], HIGH);
-      //}
-      // Animate message
-      unsigned long prepare = millis();
-      while(millis()-prepare<3000){
-          lcd->print(".");
-          delay(250);
-      }
-
-      pinMode(__LCDButton, INPUT_PULLUP); // Set button as input pullup
-
-      for (int i=0; i<MAX_SOLUTIONS_NUMBER*2; i++){
-        pinMode(__mS[i],OUTPUT);
-      }
-      if (microStep == 4){
-        for (int i=0; i<MAX_SOLUTIONS_NUMBER*2; i++){
-          digitalWrite(__mS[i], LOW);
-        }
-      }else if(microStep == 16){
-        for (int i=0; i<MAX_SOLUTIONS_NUMBER*2; i++){
-          digitalWrite(__mS[i], HIGH);
-        }
-      }else if(microStep == 8){
-        for (int i=0; i<MAX_SOLUTIONS_NUMBER*2; i = i+2){
-          digitalWrite(__mS[i], HIGH);
-        }
-        for (int i=1; i<MAX_SOLUTIONS_NUMBER*2; i = i+2){
-          digitalWrite(__mS[i], LOW);
-        }
-      }
-
-
-      __StepPerRev = steps_per_rev;
-      __MicroSteps = microStep;
-
-      __PumpVelocity = pump_velocity;
-      __InvertPump = invertPump;
-
-      // Initial Configuration
-      for(int i=0; i<MAX_SOLUTIONS_NUMBER; i++){
-        stepperS[i]->setMaxSpeed(MOTOR_SPEED);
-        stepperS[i]->setSpeed(0);
-        stepperS[i]->setAcceleration(MOTOR_ACCEL);
-        pinMode(__StepS[i], OUTPUT);
-        pinMode(__DirS[i], OUTPUT);
-        // Check if we want this configuration of pinsInverted
-        /* setPinsInverted parameters:
-         1- bool directionInvert = false
-         2- bool 	stepInvert = false
-         2- bool 	enableInvert = false
-        */
-        stepperS[i]->setPinsInverted(true,false,false);
-      }
-      for (int i = 0; i < LIMIT_SWITCHES; i++) {
-        pinMode(__limitS[i],INPUT_PULLUP);
-      }
-
-      for(int i=0; i<MAX_PUMPS_NUMBER; i++){
-        pinMode(__Motor[i], OUTPUT);
-      }
-      //Pin to enable motors
-      pinMode(__En, OUTPUT);
-
-      // Disable motors/pumps
-      digitalWrite(__En, HIGH);
-
-      // By default turn off relay at start
-      pinMode(__Relay1, OUTPUT);
-      digitalWrite(__Relay1, !__RelayState);
-
-      // Init Atlas Scientific Sensors
-      pinMode(EZO_PH_OFF, OUTPUT);
-      pinMode(EZO_EC_OFF, OUTPUT);
-      digitalWrite(EZO_PH_OFF, HIGH);
-      digitalWrite(EZO_EC_OFF, HIGH);
-      phMeter->init();
-      ecMeter->init();
-
-      // Init temperature tempSensor
-      dhtSensor->begin();
-      __Temp = dhtSensor->readTemperature();
-      //tempSensor->begin();
-      //tempSensor->requestTemperatures();
-      //__Temp = tempSensor->getTempCByIndex(0);
-      defaultFilter(); // Set by default exponential filter with alpha=0.2
-
-      // Show message in Screen.
-      printLCD(F("Preparado"));
-
-      // Turn off led´s
-      //for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER+2;i++){
-        //if(i!=6){digitalWrite(__Led[i], LOW); } // Except ready led
-      //}
-      delay(3000);
-
-      // Request phMeter and ecMeter readings
-      EZOReadRequest(__Temp);
-
-      // Erase message in Screen and turn off.
-      lcd->clear();
-      printLCD("T="+String(__Temp)+"C", String(__pH)+","+String(__eC));
-      __LCDTemp = __Temp;
-      __StatusLCD = false;
-      __LCDLightOn = true;
-
-      __ReadTime = millis();
-      __RelayTime = millis();
-      __LCDTime = millis();
-      Serial.println(F("debug,Solution Maker: Started Correctly"));
-   }
-
-bool solutionMaker::isWorking()
-  { for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER; i++){
-      if(!isAvailable(i)){return true;}
-    }
-    return false;
+//Micro stepps setup
+for (int i=0; i<MAX_STEPPERS*2; i++){
+  pinMode(__mS[i],OUTPUT);
+}
+if(microStep == 16){ //DEFAULT_MICROSTEP 16
+  for (int i=0; i<MAX_STEPPERS*2; i++){
+    digitalWrite(__mS[i], HIGH);
   }
+}else if(microStep == 8){ //DEFAULT_MICROSTEP 8
+  for (int i=0; i<MAX_STEPPERS*2; i = i+2){
+    digitalWrite(__mS[i], HIGH);
+  }
+  for (int i=1; i<MAX_STEPPERS*2; i = i+2){
+    digitalWrite(__mS[i], LOW);
+  }
+} else { //DEFAULT_MICROSTEP 4
+  for (int i=0; i<MAX_STEPPERS*2; i++){
+    digitalWrite(__mS[i], LOW);
+  }
+  Serial.println(F("debug, Solution Maker: Microsteppin to 1/4"));
+}
 
-void solutionMaker::enable(uint8_t actuator)
-  { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){ // If actuator in range
-      if(!__IsEnable[actuator]){ // If disable
-        if(actuator<MAX_SOLUTIONS_NUMBER){
-          digitalWrite(__En, LOW);
-        }
-        __IsEnable[actuator] = true;
-        printAction(F("Enable"), actuator, 0);
-        return;
-      }
-      printAction(F("Already enabled"), actuator, 0);
-      return;
-    }
-    printAction(F("Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
+
+
+__StepPerRev = steps_per_rev;
+if (microStep==16 || microStep==8){
+  __MicroSteps = microStep;
+} else {
+  __MicroSteps = 4;
+}
+
+__PumpVelocity = pump_velocity;
+
+// Initial Configuration
+for(int i=0; i<MAX_STEPPERS; i++){
+  stepperS[i]->setMaxSpeed(MOTOR_SPEED);
+  stepperS[i]->setSpeed(0);
+  stepperS[i]->setAcceleration(MOTOR_ACCEL);
+  pinMode(__StepS[i], OUTPUT);
+  pinMode(__DirS[i], OUTPUT);
+  // Check if we want this configuration of pinsInverted
+  /* setPinsInverted parameters:
+   1- bool directionInvert = false
+   2- bool 	stepInvert = false
+   2- bool 	enableInvert = false
+  */
+  stepperS[i]->setPinsInverted(false,false,false);
+}
+//Pin to enable stepper motors
+pinMode(__En, OUTPUT);
+// Disable motors/pumps
+digitalWrite(__En, HIGH);
+
+for (int i = 0; i < LIMIT_SWITCHES; i++) {
+  pinMode(__limitS[i],INPUT_PULLUP);
+}
+checkLS();
+Serial.println(__limitS_State[0]);
+Serial.println(__limitS_State[1]);
+Serial.println(__limitS_State[2]);
+
+for(int i=0; i<MAX_PUMPS_NUMBER; i++){
+  pinMode(__Motor[i], OUTPUT);
+  digitalWrite(__Motor[i], LOW);
+}
+
+// By default turn off relay at start
+for (int i = 0; i < RELAY_NUMBER; i++) {
+  pinMode(__Relay[i], OUTPUT);
+  __RelayState[i] = LOW;
+  digitalWrite(__Relay[i], __RelayState[i]);
+}
+
+// Init Atlas Scientific Sensors
+pinMode(EZO_PH_OFF, OUTPUT);
+pinMode(EZO_EC_OFF, OUTPUT);
+digitalWrite(EZO_PH_OFF, HIGH); //Turned ON
+digitalWrite(EZO_EC_OFF, HIGH); //Turned ON
+phMeter->init();
+ecMeter->init();
+
+// Init temperature tempSensor
+dhtSensor->begin();
+//__Temp = dhtSensor->readTemperature();
+__Temp = 20;
+defaultFilter(); // Set by default exponential filter with alpha=0.2
+
+//Init scale
+__loadCellCalibration = loadCellCalibration;
+scale->begin(loadCellDT,loadCellSCK);
+scale->set_scale(__loadCellCalibration);
+scale->tare();
+Serial.print(F("debug,Solution Maker: First scale medition for calibration purpose "));
+Serial.println(scale->get_units(5));
+delay(1000);
+
+// Request phMeter and ecMeter readings
+EZOReadRequest(__Temp, false);
+
+Serial.println(F("debug,Solution Maker: Started Correctly"));
+}
+
+void sMaker::enable(uint8_t motor){
+  digitalWrite(__En, LOW);
+  printAction(F("Steppers enabled"), motor);
+}
+
+void sMaker::disable(){
+  if(digitalRead(__En)==LOW){
+    digitalWrite(__En, HIGH);
+    printAction(F("Steppers disabled"),0);
     return;
   }
+  printAction(F("Steppers already disabled"),0);
+  return;
+}
 
-void solutionMaker::disable(uint8_t actuator)
-  { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){ // If actuator in range
-      if(__IsEnable[actuator]){ // If enable
-        if(actuator<MAX_SOLUTIONS_NUMBER){
-          digitalWrite(__En, HIGH);
-        }
-        __IsEnable[actuator] = false;
-        printAction(F("Disable"), actuator, 0);
-        return;
-      }
-      printAction(F("Already disable"), actuator, 0);
-      return;
-    }
-    printAction(F("Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
+void sMaker::turnOnPump(unsigned long time1, uint8_t pump){
+  if(pump<MAX_PUMPS_NUMBER){
+    digitalWrite(__Motor[pump], HIGH);
+    __PumpOnTime[pump] = time1;
+    __PumpTime[pump] = millis();
+    __PumpOn[pump] = true;
+    printAction(F("Turned pump On"), MAX_STEPPERS+pump, 0);
     return;
   }
+  printAction(F("Pump does not exist"), MAX_STEPPERS+MAX_PUMPS_NUMBER, 3);
+  return;
+}
 
-void solutionMaker::turnOnPump(unsigned long time1, uint8_t pump)
-  { if(pump<MAX_PUMPS_NUMBER){
-      // If disable then enable
-      if(!isEnable(pump+MAX_SOLUTIONS_NUMBER)){enable(pump+MAX_SOLUTIONS_NUMBER);}
-      digitalWrite(__Motor[pump], HIGH);
-      //digitalWrite(__Led[pump+MAX_SOLUTIONS_NUMBER], HIGH);
-      __Available[pump+MAX_SOLUTIONS_NUMBER] = false;
-      __PumpOnTime[pump] = time1;
-      __PumpTime[pump] = millis();
-      printAction(F("Turn On"), MAX_SOLUTIONS_NUMBER+pump, 0);
-      return;
-    }
-    printAction(F("Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
+void sMaker::turnOffPump(uint8_t pump){
+  if(pump<MAX_PUMPS_NUMBER){
+    digitalWrite(__Motor[pump], LOW);
+    __PumpOnTime[pump] = 0;
+    printAction(F("Turned pump Off"), MAX_STEPPERS+pump, 0);
+    __PumpOn[pump] = false;
     return;
   }
+  printAction(F("Pump does not exist"), MAX_STEPPERS+MAX_PUMPS_NUMBER, 3);
+  return;
+}
 
-void solutionMaker::turnOffPump(uint8_t pump)
-  { if(pump<MAX_PUMPS_NUMBER){
-      digitalWrite(__Motor[pump], LOW);
-      disable(MAX_SOLUTIONS_NUMBER+pump);
-      //digitalWrite(__Led[pump+MAX_SOLUTIONS_NUMBER], LOW);
-      __Available[pump+MAX_SOLUTIONS_NUMBER] = true;
-      printAction(F("Turn Off"), MAX_SOLUTIONS_NUMBER+pump, 0);
-      return;
-    }
-    printAction(F("Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
-    return;
+unsigned long sMaker::TimeToML(float seconds, uint8_t pump){
+  if(seconds>0 && pump<MAX_PUMPS_NUMBER){
+    return  seconds*(float(__Calibration[pump])/100);
   }
+  return 0;
+}
 
-unsigned long solutionMaker::TimeToML(float seconds, uint8_t pump)
-  { if(seconds>0 && pump<MAX_PUMPS_NUMBER){
-      return  seconds*(float(__Calibration[MAX_SOLUTIONS_NUMBER+pump])/100);
-    }
+unsigned long sMaker::MLToTime(float mililiters, uint8_t pump){
+  if(mililiters>0 && pump<MAX_PUMPS_NUMBER){
+    // __Calibration/100 = ml/s
+    return mililiters/(float(__Calibration[pump])/100);
+  }
+  return 0;
+}
+
+long sMaker::RevToSteps(float rev){ return rev*__MicroSteps*__StepPerRev;}
+
+float sMaker::StepsToRev(long st){ return st/(__MicroSteps*__StepPerRev);}
+
+float sMaker::balanceEC(float EC_init, float EC_final, float liters, uint8_t salt){
+  float deltaEC = EC_final-EC_init;
+  float mg = 0;
+  if(deltaEC>=0){ // We need add solution powder
+    float slope = float(__Calibration1[salt])*0.004; // Get the slope in (mg/l)/(uS/cm)
+    float mgPerLiter = deltaEC*slope; // Get mg/l needed
+    mg = mgPerLiter*liters; // Get mg needed
+  }else{
+    Serial.println(F("EC is to high, water needed"));
+  }
+  return mg; // Return mg
+}
+
+float sMaker::balancePH(float PH_init, float PH_final, float liters, uint8_t pump){
+  if(PH_init-PH_final>=0.1){
+    float PH_acid = float(__Calibration1[SOLUTIONS-2+pump])*0.05; // Get the ph of the acid
+    float ml = (pow(10, -1*PH_init)-pow(10, -1*PH_final))/(pow(10, -1*PH_final)-pow(10, -1*PH_acid))*liters*1000;
+    return ml; // Returns the ml of the acid that are needed
+  }
+  else if(PH_init-PH_final>=0 && PH_init-PH_final<0.1){ // Do nothing
     return 0;
   }
-
-unsigned long solutionMaker::MLToTime(float mililiters, uint8_t pump)
-  { if(mililiters>0 && pump<MAX_PUMPS_NUMBER){
-      // __Calibration/100 = ml/s
-      return mililiters/(float(__Calibration[MAX_SOLUTIONS_NUMBER+pump])/100);
-    }
-    return 0;
+  else {
+    //Serial.println(F("error,Solution Maker: balancePH function error"));
+    return 0;// Key Error: ph is already to low it is necessary to send an alarm
   }
+}
 
-long solutionMaker::RevToMG(long rev, uint8_t st)
-  { if(rev>0 && st<MAX_SOLUTIONS_NUMBER){
-      float mgPerRev = float(__Calibration[st])*40; // mg/rev
-      return (rev*mgPerRev);
-    }
-    return -1;
-  }
+void sMaker::moveStepper(long steps, uint8_t st){
+  enable(st);
+  //resetPosition(st);
+  stepperS[st]->move(steps);
+  return;
+}
 
-long solutionMaker::MGToRev(long mg, uint8_t st)
-  { if(mg>0 && st<MAX_SOLUTIONS_NUMBER){
-      float mgPerRev = float(__Calibration[st])*40; // mg/rev
-      float resp = float(mg)/mgPerRev;
-      uint16_t intResp = int(resp);
-      if(resp-intResp>0.5){return intResp+1;}
-      else{return intResp;}
-    }
-    return -1;
-  }
-
-long solutionMaker::RevToSteps(long rev)
-  { return rev*__MicroSteps*__StepPerRev;}
-
-long solutionMaker::StepsToRev(long st)
-  { return st/(__MicroSteps*__StepPerRev); }
-
-float solutionMaker::balanceEC(float EC_init, float EC_final, float liters, uint8_t st)
-  { float deltaEC = EC_final-EC_init;
-    if(deltaEC>=0){ // We need add solution powder
-      float slope = float(__Calibration1[st])*0.004; // Get the slope in (mg/l)/(uS/cm)
-      float mgPerLiter = deltaEC*slope; // Get mg/l needed
-      float mg = mgPerLiter*liters; // Get mg needed
-      return mg; // Return mg
-    }
-    else{ // We need add water
-      float percentageOfWater = 1-(EC_init/EC_final);
-      float litersToAdd = -liters*percentageOfWater;
-      // If we have to add more than 15% of total water return error
-      if(litersToAdd>liters*.15){
-        return -1; // -1 is an error key
-      }
-      return litersToAdd; // return liters to add
-    }
-  }
-
-float solutionMaker:: balancePH(float PH_init, float PH_final, float liters, uint8_t pump)
-  { if(PH_init-PH_final>=0.1){
-      float PH_acid = float(__Calibration1[pump+MAX_SOLUTIONS_NUMBER])*0.05; // Get the ph of the acid
-      float ml = (pow(10, -1*PH_init)-pow(10, -1*PH_final))/(pow(10, -1*PH_final)-pow(10, -1*PH_acid))*liters*1000;
-      return ml; // Returns the ml of the acid that are needed
-    }
-    else if(PH_init-PH_final>=0 && PH_init-PH_final<0.1){ // Do nothing
-      return 0;
-    }
-    else return -1; // Key Error: ph is already to low it is necessary to send an alarm
-  }
-
-void solutionMaker::moveStepper(long steps, uint8_t st)
-  { // If disable then enable
-    if(!isEnable(st)){enable(st);}
-    resetPosition(st);
-    stepperS[st]->move(steps);
-    //digitalWrite(__Led[st], HIGH);
-    __Available[st] = false;
-  }
-
-void solutionMaker::resetPosition(uint8_t st)
-  { if(st<MAX_SOLUTIONS_NUMBER){
-      stepperS[st]->setCurrentPosition(0);
-      printAction(F("Reset Position"), st, 0);
-      return;
-    }
-    printAction(F("Cannot reset position. Motor does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
+void sMaker::stopStepper(uint8_t st){
+  if(st<MAX_STEPPERS){
+    stepperS[st]->setCurrentPosition(0);
+    stepperS[st]->moveTo(0);
+    printAction(F("Stopped Stepper"), st, 0);
     return;
   }
+  printAction(F("Cannot stop Stepper. Motor does not exist"), MAX_STEPPERS, 3);
+  return;
+}
 
-void solutionMaker::printAction(String act, uint8_t actuator, uint8_t level=0)
-  { if(level==0){ Serial.print(F("debug,")); } // Debug
-    else if(level==1){ Serial.print(F("info,")); } // Info
-    else if(level==2){ Serial.print(F("warning,")); } // Warning
-    else if(level==3){ Serial.print(F("error,")); } // Error
-    else if(level==4){ Serial.print(F("critical,")); } // Error
-
-    Serial.print(F("Solution Maker ("));
-
-    if(actuator==0){Serial.print(F("Motor 1"));}
-    else if(actuator==1){Serial.print(F("Motor 2"));}
-    else if(actuator==2){Serial.print(F("Motor 3"));}
-    else if(actuator==3){Serial.print(F("Motor 4"));}
-    else if(actuator==4){Serial.print(F("Pump 1"));}
-    else if(actuator==5){Serial.print(F("Pump 2"));}
-    else{Serial.print(F("Actuator does not match"));}
-
-    Serial.print(F("):\t"));
-    Serial.println(act);
-  }
-
-void solutionMaker::printEZOAction(String act, uint8_t sensorType, uint8_t level=0)
-  { if(level==0){ Serial.print(F("debug,")); } // Debug
-    else if(level==1){ Serial.print(F("info,")); } // Info
-    else if(level==2){ Serial.print(F("warning,")); } // Warning
-    else if(level==3){ Serial.print(F("error,")); } // Error
-    else if(level==4){ Serial.print(F("critical,")); } // Error
-
-    Serial.print(F("Solution Maker (EZO "));
-
-    if(sensorType==EZO_PH){Serial.print(F("PH"));}
-    else if(sensorType==EZO_EC){Serial.print(F("EC"));}
-    else{Serial.print(F("Unkwown"));}
-
-    Serial.print(F(" Sensor): "));
-    Serial.println(act);
-  }
-
-void solutionMaker::printLCD(String main, String subAction = "")
-  { lcd->clear();
-    if(!__StatusLCD){
-      __StatusLCD = true;
-      lcd->backlight();
-    }
-    lcd->print(main);
-    lcd->setCursor(0, 1);
-    lcd->print(subAction);
-  }
-
-void solutionMaker::checkButtonLCD()
-  { if(!digitalRead(__LCDButton) && !__LCDLightOn){
-      __LCDLightOn = true;
-      // Erase message in Screen and rewrite.
-      printLCD("T="+String(__Temp)+"C", String(__pH)+","+String(__eC));
-      __StatusLCD = false;
-      __LCDTemp = __Temp;
-      __LCDTime = millis();
-      Serial.println(F("debug,Solution Maker (LCD Screen): Button Pressed"));
-    }
-  }
-
-float solutionMaker::filter(float val, float preVal)
-  {  switch(__Filter){
-      case 0:
-        return val;
-        break;
-      case 1:
-        return exponential_filter(__Alpha, val, preVal);
-        break;
-      case 2:
-        return kalman_filter(val, preVal);
-        break;
-    }
-  }
-
-float solutionMaker::exponential_filter(float alpha, float t, float t_1)
-  { if(isnan(alpha) || isnan(t) || isnan(t_1)){
-      return t;
-    }
-    else{
-      return (t*alpha+(1-alpha)*t_1);
-    }
-  }
-
-float solutionMaker::kalman_filter(float t, float t_1)
-  { if( __Err==0 || isnan(t) || isnan(t_1) ){
-      if(__Err==0){
-        __Err = 0.1;
-      }
-      return t;
-    }
-    else{
-      float kalman_gain = __Err/(__Err+__Noise);
-      __Err = (1-kalman_gain)*__Err;
-      return (t_1+kalman_gain*(t-t_1));
-    }
-  }
-
-void solutionMaker::readTemp()
-  { //tempSensor->requestTemperatures();
-    float temp= dhtSensor->readTemperature();
-    if(temp>0) __Temp = filter(temp, __Temp);
-  }
-
-void solutionMaker::EZOReadRequest(float temp, bool sleep = false)
-  { if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_EC)){
-      if(!__SleepEzo && !__ImportEzo){ // If sensors are not sleeping and are not importing cal.
-        phMeter->readWithTempCompensation(temp);
-        ecMeter->readWithTempCompensation(temp);
-      }
-      else if(sleep){ // If we want to force to awake the sensors
-        __SleepEzo = false;
-        phMeter->readWithTempCompensation(temp);
-        ecMeter->readWithTempCompensation(temp);
-      }
-    }
-    else{Serial.println(F("debug,Solution Maker (EZO Sensors): They are not available"));}
-  }
-
-void solutionMaker::readRequest()
-  { // Take temperature readings every 5 seconds
-    if(millis()-__ReadTime>5000){
-      __ReadTime = millis();
-      if(!__Work){
-        __pH = phMeter->getValue(); // Save last read from phmeter
-        __eC = ecMeter->getValue(); // Save last read from ecMeter
-        readTemp(); // Read temp
-        EZOReadRequest(__Temp); // Request new read
-      }
-    }
-  }
-
-void solutionMaker::EZOexportFinished()
-  { if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_PH) && __ExportEzo) __ExportEzo = false;  }
-
-void solutionMaker::relayControl()
-  { if(!digitalRead(__Relay1) && __RelayState && !__Work){
-      __RelayState = LOW;
-      __RelayTime = millis();
-      Serial.println(F("warning,Solution Maker: 15 seconds to finish the solution"));
-    }
-    else if(!digitalRead(__Relay1) && !__RelayState && !__Work && millis()-__RelayTime>RELAY_ACTION_TIME){
-      digitalWrite(__Relay1, !__RelayState);
-      Serial.println(F("info,Solution Finished"));
-      Serial.println(F("Solution Finished"));
-      SolFinished = true;
-    }
-  }
-
-bool solutionMaker::dispense(long some_mg )
-  { uint8_t st = 1;
-    if(st<MAX_SOLUTIONS_NUMBER){ // Check that stepper exist
-      if(some_mg>0){ // Check that parameter is correct
-        long rev = MGToRev(some_mg, st);
-        if(rev>=0){
-          long steps = RevToSteps(rev);
-          if(steps>=0){
-            moveStepper(steps, st);
-            printAction("Dispensing " + String(some_mg) + " mg", st, 0);
-            return true;
-          }
-          printAction(F("RevToSteps equation problem"), st, 3);
-          return false;
-        }
-        printAction(F("MGToRev equation problem"), st, 3);
-        return false;
-      }
-      printAction(F("mg parameter incorrect"), st, 3);
-      return false;
-    }
-    printAction(F("Cannot dispense. Motor does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
-    return false;
-  }
-
-void solutionMaker::stepperCalibration(long rev, uint8_t st)
-  { if(st<MAX_SOLUTIONS_NUMBER){
-      long steps = RevToSteps(abs(rev));
-      moveStepper(steps, st);
-      printAction("Running " + String(rev) + " revolutions for calibration purpose", st, 0);
-      return;
-    }
-    printAction(F("Cannot run calibration. Motor does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
-  }
-
-bool solutionMaker::dispenseAcid(float some_ml, uint8_t pump)
-  { if(pump<MAX_PUMPS_NUMBER){ // Check that pumps exists
-      if(some_ml>0){ // Check that parameter is correct
-        unsigned long time1 = MLToTime(some_ml, pump)*1000; // *1000 to convert s to ms
-        if(time1>0){ // Check equation result
-          turnOnPump(time1, pump);
-          printAction("Dispensing " + String(some_ml) + " ml", pump+MAX_SOLUTIONS_NUMBER, 0);
-          return true;
-        }
-        printAction(F("MLToTime equation problem"), pump+MAX_SOLUTIONS_NUMBER, 3);
-        return false;
-      }
-      printAction(F("Mililiters parameter incorrect"), pump+MAX_SOLUTIONS_NUMBER, 3);
-      return false;
-    }
-    printAction(F("Cannot dispense. Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
-    return false;
-  }
-
-void solutionMaker::pumpCalibration(float time1, uint8_t pump)
-  { if(pump<MAX_PUMPS_NUMBER){ // Check that the pump exists
-      turnOnPump(abs(time1*1000), pump);
-    }
-    else{printAction(F("Cannot run calibration. Pump does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);}
-  }
-
-void solutionMaker::setCalibrationParameter(uint8_t param, uint8_t actuator)
-  { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
-      __Calibration[actuator] = param;
-      printAction(String(param) + " is the new calibration param (motors/pumps)", actuator, 0);
-      return;
-    }
-      printAction(F("Cannot set calibration Param. Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
-  }
-
-void solutionMaker::setCalibrationParameter1(uint8_t param, uint8_t actuator)
-  { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
-      __Calibration1[actuator] = param;
-      printAction(String(param) + " is the new calibration param (ph/ec equations)", actuator, 0);
-      return;
-    }
-      printAction(F("Cannot set calibration Param. Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
-  }
-
-bool solutionMaker::isEnable(uint8_t actuator)
-  { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){return __IsEnable[actuator];}
-    return false;
-  }
-
-bool solutionMaker::isAvailable(uint8_t actuator)
-  { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){return __Available[actuator];}
-    return false;
-  }
-
-long solutionMaker::getMG(uint8_t st)
-  { if(st<MAX_SOLUTIONS_NUMBER){
-      long steps = stepperS[st]->currentPosition();
-      long rev = StepsToRev(steps);
-      long mg = RevToMG(rev, st);
-      return mg;
-    }
-    else{return -1;}
-  }
-
-void solutionMaker::stop(uint8_t actuator)
-  { if(actuator<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
-      if(actuator<MAX_SOLUTIONS_NUMBER){
-        stepperS[actuator]->setAcceleration(MOTOR_ACCEL*10);
-        if(stepperS[actuator]->speed()<0){stepperS[actuator]->setSpeed(1);}
-        else{stepperS[actuator]->setSpeed(-1);}
-        stepperS[actuator]->stop();
-      }
-      else{turnOffPump(actuator-MAX_SOLUTIONS_NUMBER);}
-      printAction(F("Stopped"), actuator, 0);
-      return;
-    }
-    printAction(F("Cannot stop. Actuator does not exist"), MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER, 3);
+void sMaker::resetPosition(uint8_t st){
+  if(st<MAX_STEPPERS){
+    stepperS[st]->setCurrentPosition(0);
+    //printAction(F("Reset Position"), st, 0);
     return;
   }
+  printAction(F("Cannot reset position. Motor does not exist"), MAX_STEPPERS, 3);
+  return;
+}
 
-void solutionMaker::notFilter()
-  { __Filter = 0; __Alpha = 0; __Noise = 0; __Err = 0; printFilter();}
+void sMaker::moveCar(int dist){
+  moveStepper(RevToSteps(dist/8), CarMotor);
+  return;
+}
 
-void solutionMaker::defaultFilter()
-  { __Filter = 1; __Alpha = 0.2; printFilter();}
+void sMaker::home(){
+  if (!__HOMED){
+    if (__HOMEING[CarMotor] && !__HOMEING[CargoMotor] && !__HOMEING[ReleaseMotor] && stepperS[CarMotor]->distanceToGo()==0) moveStepper(RevToSteps(-150), CarMotor);
+    if (__HOMEING[CargoMotor] && stepperS[CargoMotor]->distanceToGo()==0) moveStepper(RevToSteps(-1), CargoMotor);
+    if (__HOMEING[ReleaseMotor] && stepperS[ReleaseMotor]->distanceToGo()==0) moveStepper(RevToSteps(-1), ReleaseMotor);
 
-bool solutionMaker::setExponentialFilter(float alpha = 0.5)
-  { if(alpha>0 && alpha<1){
-      __Filter = 1; __Alpha = alpha;
-      printFilter();
-      return true;
-    }
-    else{
-      Serial.println(F("error,Solution Maker: Parameter alpha wrong"));
-      return false;
-    }
-  }
-
-bool solutionMaker::setKalmanFilter(float noise)
-  { if(noise!=0){
-      __Filter = 2;
-      __Noise = noise; // Enviromental Noise
-      __Err = 1; // Initial Error
-      printFilter();
-      return true;
-    }
-    else{
-      Serial.print(F("error,Solution Maker: Parameter noise wrong"));
-      return false;
+    for (int i = 0; i<3; i++){
+      if (!__HOMEING[i]){
+        stepperS[i]->setCurrentPosition(0);
+        stepperS[i]->stop();
+      }
     }
   }
+    checkLS();
+    if(!__HOMEING[CarMotor] && !__HOMEING[CargoMotor] && !__HOMEING[ReleaseMotor] && millis()-homeTimer>500) {
+      __HOMED=true;
+      Serial.println("Homeing completed");
+      scale->tare();
+      __limitS_salts=0;
+      __moveCar = false;
+    }
 
-void solutionMaker::printFilter()
-  { Serial.print(F("debug,Solution Maker (Temperature readings): "));
-    switch(__Filter){
-      case 0:
-      Serial.println(F("It is not using any filter..."));
+
+    if(__limitS_State[carHomeLS] && __HOMEING[CarMotor]){
+      Serial.println("Car at home");
+      homeTimer=millis();
+    }
+    if(__limitS_State[cargoLS] && __HOMEING[CargoMotor]){
+      Serial.println("Cargo bay at home");
+
+    }
+    if(__limitS_State[openLS] && __HOMEING[ReleaseMotor]){
+      Serial.println("Hatch at home");
+    }
+
+    __HOMEING[CarMotor]=!__limitS_State[carHomeLS];
+    __HOMEING[CargoMotor]=!__limitS_State[cargoLS];
+    __HOMEING[ReleaseMotor]=!__limitS_State[openLS];
+
+  return;
+}
+
+void sMaker::checkLS(){
+  for (int i=0;i<LIMIT_SWITCHES;i++){
+    __limitS_State[i]=digitalRead(__limitS[i]);
+  }
+}
+
+void sMaker::printAction(String act, uint8_t actuator, uint8_t level){ //default level=0
+  if(level==0){ Serial.print(F("debug,")); } // Debug
+  else if(level==1){ Serial.print(F("info,")); } // Info
+  else if(level==2){ Serial.print(F("warning,")); } // Warning
+  else if(level==3){ Serial.print(F("error,")); } // Error
+  else if(level==4){ Serial.print(F("critical,")); } // Error
+
+  Serial.print(F("Solution Maker ("));
+
+  if(actuator==0){Serial.print(F("Motor 1"));}
+  else if(actuator==1){Serial.print(F("Motor 2"));}
+  else if(actuator==2){Serial.print(F("Motor 3"));}
+  else if(actuator==3){Serial.print(F("Motor 4"));}
+  else if(actuator==4){Serial.print(F("Motor 5"));}
+  else if(actuator==5){Serial.print(F("Pump 1"));}
+  else if(actuator==6){Serial.print(F("Pump 2"));}
+  else{Serial.print(F("Actuator does not match"));}
+
+  Serial.print(F("):\t"));
+  Serial.println(act);
+}
+
+void sMaker::printEZOAction(String act, uint8_t sensorType, uint8_t level){ //default level = 0
+  if(level==0){ Serial.print(F("debug,")); } // Debug
+  else if(level==1){ Serial.print(F("info,")); } // Info
+  else if(level==2){ Serial.print(F("warning,")); } // Warning
+  else if(level==3){ Serial.print(F("error,")); } // Error
+  else if(level==4){ Serial.print(F("critical,")); } // Error
+
+  Serial.print(F("Solution Maker (EZO "));
+
+  if(sensorType==EZO_PH){Serial.print(F("PH"));}
+  else if(sensorType==EZO_EC){Serial.print(F("EC"));}
+  else{Serial.print(F("Unkwown"));}
+
+  Serial.print(F(" Sensor): "));
+  Serial.println(act);
+}
+
+float sMaker::filter(float val, float preVal){
+  switch(__Filter){
+    case 0:
+      return val;
       break;
     case 1:
-      Serial.print(F("It is using an exponencial filter with Alpha = "));
-      Serial.println(__Alpha);
+      return exponential_filter(__Alpha, val, preVal);
       break;
     case 2:
-      Serial.print(F("It is using a Kalman filter with Noise = "));
-      Serial.print(__Noise); Serial.print(F(" and Actual Error = "));
-      Serial.println(__Err);
+      return kalman_filter(val, preVal);
       break;
-    default:
-      Serial.println(F("Filters parameters unknowns"));
+  }
+}
+
+float sMaker::exponential_filter(float alpha, float t, float t_1){
+  if(isnan(alpha) || isnan(t) || isnan(t_1)){
+    return t;
+  }
+  else{
+    return (t*alpha+(1-alpha)*t_1);
+  }
+}
+
+float sMaker::kalman_filter(float t, float t_1){
+  if( __Err==0 || isnan(t) || isnan(t_1) ){
+    if(__Err==0){
+      __Err = 0.1;
+    }
+    return t;
+  }
+  else{
+    float kalman_gain = __Err/(__Err+__Noise);
+    __Err = (1-kalman_gain)*__Err;
+    return (t_1+kalman_gain*(t-t_1));
+  }
+}
+
+void sMaker::readTemp(){
+  float temp = dhtSensor->readTemperature();
+  if(temp>0) __Temp = filter(temp, __Temp);
+}
+
+void sMaker::EZOReadRequest(float temp, bool sleep){ //sleep default = false
+  if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_EC)){
+    if(!__SleepEzo && !__ImportEzo){ // If sensors are not sleeping and are not importing cal.
+      phMeter->readWithTempCompensation(temp);
+      ecMeter->readWithTempCompensation(temp);
+    }
+    else if(sleep){ // If we want to force to awake the sensors
+      __SleepEzo = false;
+      phMeter->readWithTempCompensation(temp);
+      ecMeter->readWithTempCompensation(temp);
     }
   }
+  else{Serial.println(F("debug,Solution Maker (EZO Sensors): They are not available"));}
+}
 
-bool solutionMaker::EZOisEnable(uint8_t sensorType)
-  { if(sensorType == EZO_PH){ return phMeter->isEnable(); }
-    else if(sensorType == EZO_EC){ return ecMeter->isEnable(); }
+void sMaker::readRequest(){ // Take temperature readings every 5 seconds
+  if(millis()-__ReadTime>5000){
+    __ReadTime = millis();
+    __pH = phMeter->getValue(); // Save last read from phmeter
+    __eC = ecMeter->getValue(); // Save last read from ecMeter
+    __scaleMedition=scale->get_units(1);
+    Serial.print("Scale med = ");
+    Serial.println(__scaleMedition);
+    Serial.print("Salt number ");
+    Serial.println(__limitS_salts);
+    Serial.println(StepsToRev(stepperS[CarMotor]->currentPosition()));
+    Serial.println((StepsToRev(stepperS[CarMotor]->currentPosition())*8)/100);
+    Serial.println(round((StepsToRev(stepperS[CarMotor]->currentPosition())*8)/100));
+    readTemp(); // Read temp
+    EZOReadRequest(__Temp); // Request new read
+  }
+}
+
+void sMaker::EZOexportFinished(){
+  if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_PH) && __ExportEzo) __ExportEzo = false;
+}
+
+void sMaker::relayControl(){
+  if(!digitalRead(__Relay[MIXER_RELAY]) && __RelayState[MIXER_RELAY]){
+    __RelayState[MIXER_RELAY] = LOW;
+    __RelayTime[MIXER_RELAY] = millis();
+    Serial.println(F("warning,Solution Maker: mixing to finish"));
+  }
+  else if(!digitalRead(__Relay[MIXER_RELAY]) && !__RelayState[MIXER_RELAY] && millis()-__RelayTime[MIXER_RELAY]>RELAY_ACTION_TIME){
+    digitalWrite(__Relay[MIXER_RELAY], !__RelayState[MIXER_RELAY]);
+    Serial.println(F("info,Solution Finished"));
+    Serial.println(F("Solution Finished"));
+  }
+}
+
+void sMaker::dispense(long some_mg){
+  if (__scaleMedition > some_mg*0.97){
+    stopStepper(DispenserMotor);
+    Serial.print(F("Finished with salt "));
+    Serial.print(__limitS_salts);
+    Serial.print(F(" dispensed mg "));
+    Serial.println(some_mg);
+    scale->tare();
+    __dispensing = false;
+    __moveCar = false;
+  } else {
+    //Serial.println(stepperS[CarMotor]->distanceToGo());
+    if (stepperS[CarMotor]->distanceToGo()==0) {
+      if (stepperS[DispenserMotor]->distanceToGo()==0){
+        Serial.println(F("Dispensing salt"));
+        moveStepper(3200, DispenserMotor);//100 arbitrary steps unitll loadcell reads correct value
+      }
+    }
+  }
+}
+
+void sMaker::dispenseAcid(float some_ml, uint8_t pump){
+  if(some_ml>0){ // Check that parameter is correct
+    unsigned long time1 = MLToTime(some_ml, pump)*1000; // *1000 to convert s to ms
+    if(time1>0){ // Check equation result
+      turnOnPump(time1, pump);
+      printAction("Dispensing " + String(some_ml) + " ml", pump, 0);
+      return;
+    }
+    printAction(F("MLToTime equation problem"), pump, 3);
+    return;
+  }
+  printAction(F("Mililiters parameter incorrect"), pump, 3);
+  return;
+}
+
+void sMaker::pumpCalibration(float time1, uint8_t pump){
+  if(pump<MAX_PUMPS_NUMBER){ // Check that the pump exists
+    turnOnPump(abs(time1*1000), pump);
+  }
+  else{printAction(F("Cannot run calibration. Pump does not exist"), MAX_STEPPERS+MAX_PUMPS_NUMBER, 3);}
+}
+
+void sMaker::setCalibrationParameter(uint8_t param, uint8_t pump){
+  if(pump<MAX_PUMPS_NUMBER){
+    __Calibration[pump] = param;
+    printAction(String(param) + " is the new calibration param (motors/pumps)",  MAX_STEPPERS + pump, 0);
+    return;
+  }
+    printAction(F("Cannot set calibration Param. Actuator does not exist"), 7, 3);
+}
+
+void sMaker::setCalibrationParameter1(uint8_t param, uint8_t salt){ //salt or acid
+  if(salt<SOLUTIONS){
+    __Calibration1[salt] = param;
+    printAction(String(param) + " is the new calibration param (ph/ec equations)", 1, 0);
+    return;
+  }
+    printAction(F("Cannot set calibration Param. Actuator does not exist"), 1, 3);
+}
+
+void sMaker::notFilter(){ __Filter = 0; __Alpha = 0; __Noise = 0; __Err = 0; printFilter();}
+
+void sMaker::defaultFilter(){ __Filter = 1; __Alpha = 0.2; printFilter();}
+
+bool sMaker::setExponentialFilter(float alpha){ //alpha default = 0.5
+  if(alpha>0 && alpha<1){
+    __Filter = 1; __Alpha = alpha;
+    printFilter();
+    return true;
+  }
+  else{
+    Serial.println(F("error,Solution Maker: Parameter alpha wrong"));
     return false;
   }
+}
 
-void solutionMaker::EZOcalibration(uint8_t sensorType, uint8_t act, float value)
-  { if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
-      phMeter->calibration(act, value);
+bool sMaker::setKalmanFilter(float noise){
+  if(noise!=0){
+    __Filter = 2;
+    __Noise = noise; // Enviromental Noise
+    __Err = 1; // Initial Error
+    printFilter();
+    return true;
+  }
+  else{
+    Serial.print(F("error,Solution Maker: Parameter noise wrong"));
+    return false;
+  }
+}
+
+void sMaker::printFilter(){
+  Serial.print(F("debug,Solution Maker (Temperature readings): "));
+  switch(__Filter){
+    case 0:
+    Serial.println(F("It is not using any filter..."));
+    break;
+  case 1:
+    Serial.print(F("It is using an exponencial filter with Alpha = "));
+    Serial.println(__Alpha);
+    break;
+  case 2:
+    Serial.print(F("It is using a Kalman filter with Noise = "));
+    Serial.print(__Noise); Serial.print(F(" and Actual Error = "));
+    Serial.println(__Err);
+    break;
+  default:
+    Serial.println(F("Filters parameters unknowns"));
+  }
+}
+
+bool sMaker::EZOisEnable(uint8_t sensorType){
+  if(sensorType == EZO_PH){ return phMeter->isEnable(); }
+  else if(sensorType == EZO_EC){ return ecMeter->isEnable(); }
+  return false;
+}
+
+void sMaker::EZOcalibration(uint8_t sensorType, uint8_t act, float value){
+  if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
+    phMeter->calibration(act, value);
+  }
+  else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
+    ecMeter->calibration(act, value);
+  }
+  else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType, 3);}
+}
+
+void sMaker::EZOexportCal(uint8_t sensorType){
+  if(!__ExportEzo){
+    if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
+      __ExportEzo = true;
+      phMeter->exportCal();
     }
     else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
-      ecMeter->calibration(act, value);
+      __ExportEzo = true;
+      ecMeter->exportCal();
     }
     else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType, 3);}
   }
+  else{printEZOAction(F("Another export is running"), sensorType, 3);}
+}
 
-void solutionMaker::EZOexportCal(uint8_t sensorType)
-  { if(!__ExportEzo){
-      if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
-        __ExportEzo = true;
-        phMeter->exportCal();
-      }
-      else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
-        __ExportEzo = true;
-        ecMeter->exportCal();
-      }
-      else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType, 3);}
+void sMaker::EZOimportCalibration(uint8_t sensorType, String parameters){
+  if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
+    phMeter->importCalibration(parameters);
+  }
+  else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
+    ecMeter->importCalibration(parameters);
+  }
+  else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType, 3);}
+}
+
+void sMaker::EZOimport(bool start){
+  if(start!=__ImportEzo){
+    __ImportEzo = start;
+    if(__ImportEzo) Serial.println(F("warning,Solution Maker (EZO Sensors): Starting Calibration Import"));
+    else Serial.println(F("warning,Solution Maker (EZO Sensors): Stopping Calibration Import"));
+  }
+  else{
+    if(start) Serial.println(F("error,Solution Maker (EZO Sensors): Calibration Import already started"));
+    else Serial.println(F("error,Solution Maker (EZO Sensors): Calibration Import already stopped"));
+  }
+}
+
+void sMaker::EZOsleep(){
+  if(!__SleepEzo){
+    if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_EC)){
+      __SleepEzo = true;
+      phMeter->sleep();
+      ecMeter->sleep();
     }
-    else{printEZOAction(F("Another export is running"), sensorType, 3);}
+    else{Serial.println(F("error,Solution Maker (EZO Sensors): They are in another request"));}
+  }
+  else{Serial.println(F("warning,Solution Maker (EZO Sensors): They are already in sleep mode"));}
+}
+
+void sMaker::EZOawake(){
+  if(__SleepEzo){
+    EZOReadRequest(__Temp, true); // Take a read to awake the sensors
+  }
+  else{Serial.println(F("warning,Solution Maker (EZO Sensors): They are already awake"));}
+}
+
+bool sMaker::EZOisSleep(){ return __SleepEzo; }
+
+void sMaker::run(){
+  readRequest(); // Request read of temperature, ph and ec
+  phMeter->run(); // Handle phMeter functions
+  ecMeter->run(); // Handle ecMeter functions
+  EZOexportFinished(); // Check when EZO sensors finished export cal.
+  checkLS();
+
+  // For all the motors
+  for(int i=0; i<MAX_STEPPERS; i++){
+    stepperS[i]->run();
   }
 
-void solutionMaker::EZOimportCalibration(uint8_t sensorType, String parameters)
-  { if(sensorType == EZO_PH && EZOisEnable(EZO_PH)){
-      phMeter->importCalibration(parameters);
-    }
-    else if(sensorType == EZO_EC && EZOisEnable(EZO_EC)){
-      ecMeter->importCalibration(parameters);
-    }
-    else{printEZOAction(F("Sensor does not match a type or is in another request"), sensorType, 3);}
-  }
-
-void solutionMaker::EZOimport(bool start)
-  { if(start!=__ImportEzo){
-      __ImportEzo = start;
-      if(__ImportEzo) Serial.println(F("warning,Solution Maker (EZO Sensors): Starting Calibration Import"));
-      else Serial.println(F("warning,Solution Maker (EZO Sensors): Stopping Calibration Import"));
-    }
-    else{
-      if(start) Serial.println(F("error,Solution Maker (EZO Sensors): Calibration Import already started"));
-      else Serial.println(F("error,Solution Maker (EZO Sensors): Calibration Import already stopped"));
+  // For all the pumps
+  for(int i=0; i<MAX_PUMPS_NUMBER; i++){
+    if(millis()-__PumpTime[i]>__PumpOnTime[i] && __PumpOn[i]){
+      turnOffPump(i);
     }
   }
-
-void solutionMaker::EZOsleep()
-  { if(!__SleepEzo){
-      if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_EC)){
-        __SleepEzo = true;
-        phMeter->sleep();
-        ecMeter->sleep();
-      }
-      else{Serial.println(F("error,Solution Maker (EZO Sensors): They are in another request"));}
-    }
-    else{Serial.println(F("warning,Solution Maker (EZO Sensors): They are already in sleep mode"));}
-  }
-
-void solutionMaker::EZOawake()
-  { if(__SleepEzo){
-      EZOReadRequest(__Temp, true); // Take a read to awake the sensors
-    }
-    else{Serial.println(F("warning,Solution Maker (EZO Sensors): They are already awake"));}
-  }
-
-bool solutionMaker::EZOisSleep()
-  { return __SleepEzo; }
-
-void solutionMaker::eventLCD()
-  { String Main = "";
-    String subAct = "";
-    bool doubleAct = false;
-
-    for(int i=0; i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER; i++){
-      if(!isAvailable(i)){ // If something is working
-        // Print main message
-        //if(Main.length()<=1){Main += "Dispensando ";}
-        if(i<MAX_SOLUTIONS_NUMBER && Main.length()<=1){
-          Main += "Sol";
-        }
-        else if(i>=MAX_SOLUTIONS_NUMBER && i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
-          if(Main.length()<2){
-            Main += "Ac";
-          }
-          else if(Main.length()>=3 && Main.length()<6){Main += "/Ac";}
-        }
-
-        // Print subAct message
-        if(subAct.length()<1 && i<MAX_SOLUTIONS_NUMBER){subAct += String(i+1);}
-        else if(subAct.length()>=1 && i<MAX_SOLUTIONS_NUMBER){subAct += "," + String(i+1);}
-        else if(i>=MAX_SOLUTIONS_NUMBER && i<MAX_SOLUTIONS_NUMBER+MAX_PUMPS_NUMBER){
-          for(int j = 0; j<Main.length(); j++){
-            if(Main[j]=='/' && !doubleAct){
-              subAct += "/";
-              doubleAct = true;
-            }
-          }
-          if(i-MAX_SOLUTIONS_NUMBER==0){subAct += String(i-MAX_SOLUTIONS_NUMBER+1);}
-          else{
-            if(doubleAct){
-              String subString = "";
-              for(int j = 0; j<subAct.length(); j++){
-                if(subAct[j] == '/'){
-                  subString = subAct.substring(j);
-                }
-              }
-              if(subString.length()<=1){subAct += String(i-MAX_SOLUTIONS_NUMBER+1);}
-              else{subAct += "," + String(i-MAX_SOLUTIONS_NUMBER+1);}
-            }
-            else{
-              if(subAct.length()<1){subAct += String(i-MAX_SOLUTIONS_NUMBER+1);}
-              else if(subAct.length()>=1){subAct += "," + String(i-MAX_SOLUTIONS_NUMBER+1);}
-            }
-          }
-        }
-      }
-    }
-    printLCD(Main, subAct);
-  }
-
-void solutionMaker::run()
-  { readRequest(); // Request read of temperature, ph and ec
-    phMeter->run(); // Handle phMeter functions
-    ecMeter->run(); // Handle ecMeter functions
-    EZOexportFinished(); // Check when EZO sensors finished export cal.
-    checkButtonLCD(); // Check if LCD button is pressed
-
-    if(!__Work && isWorking()){
-      __Work = true;
-      //digitalWrite(__Led[7], HIGH);
-      //digitalWrite(__Led[6], LOW);
-    }
-    else if(__Work && !isWorking()){
-      __Work = false;
-      //digitalWrite(__Led[7], LOW);
-      //digitalWrite(__Led[6], HIGH);
-    }
-
-    if(!__Work && __StatusLCD){
-      __LCDLightOn = true;
-      // Erase message in Screen and rewrite.
-      printLCD("T="+String(__Temp)+"C", String(__pH)+","+String(__eC));
-      __StatusLCD = false;
-      __LCDTemp = __Temp;
-      __LCDTime = millis();
-    }
-    else if(!__Work && !__StatusLCD && abs(__LCDTemp-__Temp)>0.5){
-      __LCDLightOn = true;
-      // Erase message in Screen and rewrite.
-      printLCD("T="+String(__Temp)+"C", String(__pH)+","+String(__eC));
-      __StatusLCD = false;
-      __LCDTemp = __Temp;
-      __LCDTime = millis();
-    }
-    if(!__Work && millis()-__LCDTime>10000 && __LCDLightOn){
-      __LCDLightOn = false;
-      lcd->noBacklight();
-    }
-
-    // For all the motors
-    for(int i=0; i<MAX_SOLUTIONS_NUMBER; i++){
-      stepperS[i]->run();
-      // If it is not running and is not Available
-      if(!stepperS[i]->isRunning() && !isAvailable(i)){
-        __Available[i] = true;
-        //digitalWrite(__Led[i], LOW);
-        disable(i);
-        eventLCD();
-        printAction(String(getMG(i)) + " mg were dispensed", i, 0);
-      }
-    }
-
-    // For all the pumps
-    for(int i=0; i<MAX_PUMPS_NUMBER; i++){
-      if(!isAvailable(MAX_SOLUTIONS_NUMBER+i) && millis()-__PumpTime[i]>__PumpOnTime[i]){
-        turnOffPump(i);
-        eventLCD();
-      }
-    }
-
-    // Control the relay
+  if (!__HOMED) {
+    home();
+  } else if (__HOMED){
+    prepareSolution(500, 5.0, 2000, __limitS_salts);
     relayControl();
   }
+}
 
-void solutionMaker::prepareSolution(float liters, uint8_t sol, float ph, float ec)
-  { if(!__Work){
-      if(liters>0 && ph>0 && ph<14 && ec>0){
-        float mgPowder = -1;
-        float mlAcid = -1;
-        bool success = true;
-
-        switch(sol){
-          case 0: // Solution 1
-            mgPowder = balanceEC(__eC, ec, liters, sol);
-            if(mgPowder!=-1 && mgPowder>0) dispense(long(mgPowder), sol);
-            mlAcid = balancePH(__pH, ph, liters, 0); // Solution 1 -> Acid 1
-            if(mlAcid!=-1 && mlAcid>0) dispenseAcid(mlAcid, 0);
-            break;
-          case 1: // Solution 2
-            mgPowder = balanceEC(__eC, ec, liters, sol);
-            if(mgPowder!=-1 && mgPowder>0) dispense(long(mgPowder), sol);
-            mlAcid = balancePH(__pH, ph, liters, 0); // Solution 2 -> Acid 1
-            if(mlAcid!=-1 && mlAcid>0) dispenseAcid(mlAcid, 0);
-            break;
-          case 2: // Solution 3
-            mgPowder = balanceEC(__eC, ec, liters, sol);
-            if(mgPowder!=-1 && mgPowder>0) dispense(long(mgPowder), sol);
-            mlAcid = balancePH(__pH, ph, liters, 1); // Solution 3 -> Acid 2
-            if(mlAcid!=-1 && mlAcid>0) dispenseAcid(mlAcid, 1);
-            break;
-          case 3: // Solution 4
-            mgPowder = balanceEC(__eC, ec, liters, sol);
-            if(mgPowder!=-1 && mgPowder>0) dispense(long(mgPowder), sol);
-            mlAcid = balancePH(__pH, ph, liters, 1); // Solution 4 -> Acid 2
-            if(mlAcid!=-1 && mlAcid>0) dispenseAcid(mlAcid, 0);
-            break;
-          default:
-            success = false;
-            Serial.println(F("error,Solution Maker: Solution Powder not defined"));
-            break;
-        }
-        if(mgPowder==-1 && success){Serial.println(F("error,Solution Maker: balanceEC function error"));}
-        else if(mlAcid==-1 && success){Serial.println(F("error,Solution Maker: balancePH function error"));}
-        if(success){
-          SolFinished = false;
-          Serial.print(F("debug,Solution Maker: mgPowder="));
-          Serial.print(mgPowder);
-          Serial.print(F(", mlAcid="));
-          Serial.println(mlAcid);
-          __RelayState = HIGH;
-          digitalWrite(__Relay1, !__RelayState);
-        }
-      }
-      else{Serial.println(F("error,Solution Maker: Parameter liters, ph or ec wrong"));}
-    }
-    else{Serial.println(F("error,Solution Maker: Working on another solution, please wait"));}
+void sMaker::prepareSolution(float liters, float ph, float ec, uint8_t salt){
+  float mgPowder = balanceEC(__eC, ec, liters, salt);
+  float mlAcid = balancePH(__pH, ph, liters, 0); // Solution 1 -> Acid 1
+  if (!__limitS_State[cargoLS] && !__limitS_State[carEndLS]) {
+    moveStepper(RevToSteps(-1), CargoMotor);
+    __HOMEING[CargoMotor]=!__limitS_State[cargoLS];
   }
+  else if (__limitS_State[cargoLS] && __HOMEING[CargoMotor] && !__limitS_State[carEndLS]) {
+    stepperS[CargoMotor]->setCurrentPosition(0);
+    stepperS[CargoMotor]->stop();
+    __HOMEING[CargoMotor]=!__limitS_State[cargoLS];
+  }
+  if (!__limitS_State[carEndLS] && !__moveCar){ //No en el final
+      moveCar(1000);
+      __moveCar = true;
+      Serial.println("moving car to dispensers");
+  } else if(!__limitS_State[dispenserLS] && __moveCar && __dispensing) {
+    //stepperS[CarMotor]->moveTo(stepperS[CarMotor]->currentPosition());
+    __limitS_salts = __limitS_salts+round((StepsToRev(stepperS[CarMotor]->currentPosition())*8)/100);
+    stepperS[CarMotor]->setCurrentPosition(0);
+    stepperS[CarMotor]->stop();
+    if(mgPowder>0){
+      //Serial.println("dispensing");
+      dispense(long(mgPowder/20));
+    } else {
+      __dispensing = false;
+      __moveCar = false;
+      Serial.println("Dispenser finished with 0 mg");
+    }
+
+  } else if(__limitS_State[dispenserLS] && __moveCar && !__dispensing) {
+    __dispensing = true;
+  } else if (__limitS_State[carEndLS]){
+    __moveCar = false;
+    if (carEndDetected == false){
+      endTimer = millis();
+      carEndDetected = true;
+    }
+    if (millis()-endTimer > 500){
+      stepperS[CarMotor]->setCurrentPosition(0);
+      stepperS[CarMotor]->stop();
+    }
+
+    if(__limitS_State[cargoLS] && stepperS[CargoMotor]->distanceToGo()==0 && millis()-endTimer > 1000){
+      moveStepper(RevToSteps(4), CargoMotor);
+      moveStepper(RevToSteps(0.3), ReleaseMotor);
+    }
+    if (!__limitS_State[cargoLS] && stepperS[CargoMotor]->distanceToGo()==0 && stepperS[ReleaseMotor]->distanceToGo()==0 & millis()-endTimer > 5000){
+      Serial.print(F("debug,Solution Maker: mgPowder="));
+      Serial.print(mgPowder);
+      Serial.print(F(", mlAcid="));
+      Serial.println(mlAcid);
+      __RelayState[MIXER_RELAY] = HIGH;
+      digitalWrite(__Relay[MIXER_RELAY], !__RelayState[MIXER_RELAY]);
+      __HOMED=false;
+    }
+
+  }
+  else if (!__limitS_State[carEndLS]){
+    carEndDetected = false;
+  }
+  if(mlAcid>0) dispenseAcid(mlAcid, 0);
+}

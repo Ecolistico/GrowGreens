@@ -1,7 +1,7 @@
-#include <sMakerCun.h>
+#include <sMaker.h>
 #include <EEPROM.h>
 
-solutionMaker sMaker(
+sMaker my_sMaker(
           48, // Dir1
           49, // Step1
           52, // Dir2
@@ -49,10 +49,10 @@ void serialEvent();
 
 void setup() {
   Serial.begin(115200);
-  sMaker.begin();
+  my_sMaker.begin();
   read_EEPROM(HIGH); // Charge calibration parameters
 }
 
 void loop() {
-  sMaker.run();  
+  my_sMaker.run();  
 }
