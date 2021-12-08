@@ -63,6 +63,7 @@ growerStepper::growerStepper(
     __SequenceDir = 1;
     __SequenceXmm = 0;
     __SequenceYmm = 0;
+    __SequenceData = true;
 
     __MaxX = 0; // Until read eeprom is zero
     __MaxY = 0; // Until read eeprom is zero
@@ -500,26 +501,27 @@ void growerStepper::stopSequence()
     else{printAction(F("Cannot stop routine because it has not started"), 3);}
   }
 
-bool growerStepper::sequence(long mm_X, long mm_Y)
+bool growerStepper::sequence(long mm_X, long mm_Y, bool captureData)
   { if(__Available){ // If available
       if(__Sequence == 0){ // Ready to start a sequence
         long secureXDistance = getMaxDistanceX()-2*MIN_LIMIT_SECURITY_DISTANCE;
         long secureYDistance = getMaxDistanceY()-2*MIN_LIMIT_SECURITY_DISTANCE;
 
         if(mm_X>5 && mm_X<(secureXDistance*2/3) && mm_Y>5 && mm_Y<(secureYDistance*2/3) ){ // If parameters are valid
-          __Sequence = 1; // First stage of the calibration is go home
+          __Sequence = 1; // First stage of the sequence is go home
           __SequenceDir = 1; // Direction is positive at least the first time
           __SequenceStop = false; // By default enable to continue
           __SequenceXmm = mm_X;
           __SequenceYmm = mm_Y;
           __SequenceXMoves = int(secureXDistance/__SequenceXmm);
           __SequenceYMoves = int(secureYDistance/__SequenceYmm);
-          // Number of movements is all the points + home()
-          __SequenceMovements = __SequenceXMoves*(__SequenceYMoves+1) + __SequenceYMoves + 1;
+          // Number of movements is all the points
+          __SequenceMovements = (__SequenceYMoves+1)*(__SequenceXMoves+ 1);
           printAction(F("Starting Routine Stage "), String(__Sequence), F(""), 1);
           if(!home()){
             __Home = true;
           }
+          __SequenceData = captureData;
           return true;
         }
         printAction(F("Imposible start that routine. Parameters are wrong"), 3);
@@ -530,6 +532,20 @@ bool growerStepper::sequence(long mm_X, long mm_Y)
     }
     printAction(F("Unavailable"), 3);
     return false;
+  }
+
+bool growerStepper::sequence_n(uint8_t nodes_X, uint8_t nodes_Y, bool captureData)
+  { if(nodes_X>1 && nodes_Y>1){
+      long secureXDistance = getMaxDistanceX()-2*MIN_LIMIT_SECURITY_DISTANCE;
+      long secureYDistance = getMaxDistanceY()-2*MIN_LIMIT_SECURITY_DISTANCE;
+      long mm_X = secureXDistance/(nodes_X-1);
+      long mm_Y = secureYDistance/(nodes_Y-1);
+      return sequence(mm_X, mm_Y, captureData);
+    }
+    else {
+      printAction(F("Imposible start that routine. Parameters are wrong"), 3);
+      return false;
+    }
   }
 
 bool growerStepper::home()
@@ -767,6 +783,7 @@ void growerStepper::run()
         if(!__SequenceStageFinished){
           __SequenceStageFinished = true;
           printAction(F("In Position"), 0);
+          if(!__SequenceData) continueSequence();
         }
         // If the central computer gives the permission to continue then
         if(!__SequenceStop){
@@ -774,7 +791,7 @@ void growerStepper::run()
           long x2 = StepsToMM_X(stepperX2->currentPosition()/2);
           long x = x1 + x2 + 3; // +3 is to assure that long variable not cut decimals
 
-          int whatNext = whatNext =  __Sequence-2-int(x/__SequenceXmm)*(__SequenceYMoves+1);
+          int whatNext = __Sequence-2-int(x/__SequenceXmm)*(__SequenceYMoves+1);
           __Sequence++;
           __SequenceStop = true;
           __SequenceStageFinished = false;
@@ -794,6 +811,7 @@ void growerStepper::run()
         if(!__SequenceStageFinished){
           __SequenceStageFinished = true;
           printAction(F("In Position"), 0);
+          if(!__SequenceData) continueSequence();
         }
         if(!__SequenceStop){
           __Sequence = 0;

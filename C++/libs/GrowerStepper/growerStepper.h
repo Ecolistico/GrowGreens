@@ -91,6 +91,7 @@ class growerStepper
         int  __SequenceXMoves, __SequenceYMoves; // Variable to know the number of moves in x and y
         int  __SequenceDir;
         long __SequenceXmm, __SequenceYmm;
+        bool __SequenceData;  // Variable to know when continue with the sequence without wait for data capture
 
         /*   Others   */
         unsigned long __MaxX, __MaxY; // Maximun security distances
@@ -169,7 +170,8 @@ class growerStepper
         bool continueSequence(); // Allow the grower to continue if is in sequence
         void stopSequence(); // Stop a sequence if there is one running
         // Check if it is possible start a sequence and calculate some parameters
-        bool sequence(long mm_X, long mm_Y);
+        bool sequence(long mm_X, long mm_Y, bool captureData = true);
+        bool sequence_n(uint8_t nodes_X, uint8_t nodes_Y, bool captureData = true);
         bool home(); // Go to Home
         void stop(); // Stops all the motors
         void stop(uint8_t st); // Stops just 1 motor
