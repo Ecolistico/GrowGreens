@@ -171,7 +171,7 @@ void serialEvent() {                                  //if the hardware serial p
       long x_mm = parameter[2].toInt();
       long y_mm = parameter[3].toInt();
       bool capture = true;
-      if (parameter[4]==F("false")) capture = false;
+      if (parameter[4]==F("false") || parameter[4]==F("false\n")) capture = false;
       switch(gr){
         case 1:
           grower1.sequence(x_mm, y_mm, capture);
@@ -197,7 +197,7 @@ void serialEvent() {                                  //if the hardware serial p
       uint8_t nodes_x = parameter[2].toInt();
       uint8_t nodes_y = parameter[3].toInt();
       bool capture = true;
-      if (parameter[4]==F("false")) capture = false;
+      if (parameter[4]==F("false") || parameter[4]==F("false\n")) capture = false;
       switch(gr){
         case 1:
           grower1.sequence_n(nodes_x, nodes_y, capture);
