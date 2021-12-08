@@ -536,8 +536,8 @@ bool growerStepper::sequence(long mm_X, long mm_Y, bool captureData)
 
 bool growerStepper::sequence_n(uint8_t nodes_X, uint8_t nodes_Y, bool captureData)
   { if(nodes_X>1 && nodes_Y>1){
-      long secureXDistance = getMaxDistanceX()-3*MIN_LIMIT_SECURITY_DISTANCE;
-      long secureYDistance = getMaxDistanceY()-3*MIN_LIMIT_SECURITY_DISTANCE;
+      long secureXDistance = getMaxDistanceX()-2*MIN_LIMIT_SECURITY_DISTANCE;
+      long secureYDistance = getMaxDistanceY()-2*MIN_LIMIT_SECURITY_DISTANCE;
       long mm_X = secureXDistance/(nodes_X-1);
       long mm_Y = secureYDistance/(nodes_Y-1);
       return sequence(mm_X, mm_Y, captureData);
@@ -872,8 +872,8 @@ void growerStepper::run()
 
           // If the grower is starting routine then send it to the start position
           if(__Sequence==1){
-            long moveX = MMToSteps_X(MIN_LIMIT_SECURITY_DISTANCE); // Move minDist in X
-            long moveY = MMToSteps_Y(MIN_LIMIT_SECURITY_DISTANCE); // Move minDist in Y
+            long moveX = MMToSteps_X(MIN_LIMIT_SECURITY_DISTANCE+1); // Move minDist in X
+            long moveY = MMToSteps_Y(MIN_LIMIT_SECURITY_DISTANCE+1); // Move minDist in Y
             stepperX1->move(moveX);
             stepperX2->move(moveX);
             stepperY->move(moveY);
