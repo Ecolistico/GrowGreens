@@ -201,26 +201,24 @@ void setup() {
 }
 
 void loop() {
-  if(memoryReady){
+  if(memoryReady && bootParameters){
     emergencyButtonPressed(); // Check if emergency button is pressed
 
-    if(bootParameters){
-      // Update objects and variables
-      myFans->run();
-      myValves ->run();
-      myIrrigation->update();
-      mySensors->read(); // Scale timeOut killing other process
-  
-      // Run main control
-      mainControl();
-  
-      // Update outputs
-      myMux->update(); 
-    }
-    else if(millis() - bootTimer > 60000){
-      Serial.println(F("boot?"));
-      bootTimer = millis();
-    }
+    // Update objects and variables
+    myFans->run();
+    myValves ->run();
+    myIrrigation->update();
+    mySensors->read(); // Scale timeOut killing other process
+
+    // Run main control
+    mainControl();
+
+    // Update outputs
+    myMux->update(); 
+  }
+  else if(millis() - bootTimer > 60000 && !bootParameters){
+    Serial.println(F("boot?"));
+    bootTimer = millis();
   }
 
   // Reboot manage
