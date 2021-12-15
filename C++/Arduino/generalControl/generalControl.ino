@@ -1,256 +1,235 @@
-/*
- * To do:
- * 1- Change EEPROM to externalEEPROM and all its functions
- *
- * 2- Add scale calibration procedure
- * 2.1- Get offset
- * 2.2- Get scale
- * 2.3- Save it in EEPROM
- * 2.4 Possible troubles with interrupts and flowmeters sensors.
- * 2.5 Possible troubles with cable length. It could possible tried to change the Shift In function to make delayMicroseconds about 15-20us and see how it works
- *
- * 3- Add analog sensor calibration procedure
- * 3.1- Ask user for the type of curve (constant, linear, cuadratic, etc.)
- * 3.2- Get the number of meditions necesary to calculate the equation
- * 3.3- Save the parameters get it
- *
- * 4- Add flowmters sensor calibration procedura
- * 4.1 Set interrupts and open the valve for x seconds/minutes
- * 4.2 Ask user for the number of liters that crossed the flowmeter
- * 4.3 Get and save in EEPROM the factor K
- *
- * 5- Create MUX/DEMUX Class to manage the commutation towers
- *
- * 6- Reestructure EEPROM with all this information
- *
- * 7- Redo flow chart of each process
-*/
-// This is a test
+/* PENDIENTE:
+ *    
+ *    BUGS:
+ *    1- Unexpected changes of variables before calling EEPROM functions in serial communications
+ *        solenoid,setTimeOn,7,2,5,11 usually failed
+ *        fan,setTimeOn,4,50 usually failed
+ *        
+ *    2- EEPROM write(pos, value) write 0 at pos+1
+ *    2.1- Import EEPROM() is too slow and make mistakes
+ *    
+ *    3- When Scale is not found Multiplexers towers start flashing in a similar way that when turn latch ON
+ */
+
 /*** Include Libraries ***/
-#include <Wire.h>
-#include <External_EEPROM.h> // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
-/* You need to define the buffer lengths in SparkFun_External_EEPROM.h for
-generic arduino mega 2560 board. For more details ask Eleazar Dominguez(eleazardg@sippys.com.mx). */
-#include <solenoid.h>
+#include <commonStructures.h>
+#include <dynamicMemory.h>
+#include <fan.h>
+#include <processControl.h>
+#include <irrigationController.h>
 #include <sensor.h>
-/*** EEPROM object ***/
-ExternalEEPROM myEEPROM;
+#include <solenoid.h>
+#include <mux.h>
 
-/*** Config Variables ***/
-byte floors = 0;
-byte solenoids = 0;
-byte minutes = 0;
-byte analogSensors = 0;
-byte flowMeters = 0;
-byte scales = 0;
-byte ultrasonicSensors = 0;
-byte switches = 0;
-bool configFinished = false;
+//#define TEST true   // Define test mode to integrate or test new functions/classes
 
-/*** Multiplexor Definitions ***/
-const uint8_t ds = 31; // Data
-const uint8_t stcp = 29; // Latch
-const uint8_t shcp = 27; // Clock
-const uint8_t mR = 33; // Relay
+/*** Special Functions ***/
+//void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
-/*** Emergency Stop***/
-const uint8_t emergencyUser = 35;
-bool emergencyState = false;
-bool emergencyButton = false;
-unsigned long buttonTime;
-const unsigned long debounceTime = 1000;
-bool debounce = false;
+/*** Objects ***/
+dynamicMem myMem;                     // Dynamic Memory
+systemFan * myFans;                   // Fan Control pointer
+irrigationController * myIrrigation;  // Compressor and Recirculation Control pointer
+systemValves * myValves;              // Solenoid control pointer
+sensorController * mySensors;         // Sensor Control pointer
+muxController * myMux;                // Multiplexer Control Pointer
+processControl irrigationState;       // Indicate irrigation stage
+processControl controlState;          // Indicate actions to be taken to reach desire operation coditions
 
-// Control when update solutionConsumption and h2oConsumption
-bool emergency = false;
+// Structures
+basicConfig bconfig;    // Basic config
+pressureConfig pconfig; // Pressure config
+sensorConfig sconfig;   // Sensor config
+logicConfig lconfig;    // Logic config
+dateTime dTime;         // Time info
 
-// Control pressure
-float max_pressure = 100; // Default Maximum Pressure in the system (psi)
-float min_pressure = 80; // Minimun Pressure in the system to start a new irrigation cycle (psi)
-float critical_pressure = 60; // Default Critical Pressure in the system (psi)
-float free_pressure = 10; // Set pressure to free air in kegs
-
-// Control Actions that has to be taken the first time an irrigation valve is activated
-bool firstValve = HIGH;
-
-// Control action that has to be executed at least once when booting/rebooting
-bool firstHourUpdate = false;
-bool bootParameters = false;
-unsigned long bootTimer;
+// auxVariables
+bool memoryReady = false;
 
 // Serial comunication
 String inputstring = "";
 bool input_string_complete = false;
 
-// DateTime Info
-uint8_t dateHour;
-uint8_t dateMinute;
+// Dev & Testing
+#ifdef TEST
+bool test = true;
+#else
+bool test = false;
+#endif
 
-// Multiplexer timer
-unsigned long multiplexerTime;
+// Boot variables
+bool firstHourUpdate = false;     // Update first time we get the time
+bool bootParameters = false;      // Update first time we get initial parameters
+bool bootEmergencyRelay = false;  // Update first time to activate multiplexors relay
+// Aux variables
+float h2oConsumption;             // Store water constumption per irrigation cycle
+float initialWeight;              // Get the difference in weight to know water consumption
+// Emergency Variables
+bool emergencyFlag = false;       // Flag to set an emergency
+bool emergencyPrint = false;      // Flag to know when emergency message is printed
+bool emergencyButtonFlag = false;// Flag to know when emergency button is pressed
+// Reboot variables
+bool rebootFlag = false;          // Flag to know when we need to reboot
+bool rebootPrint = false;         // Flag to know when reboot message is printed
+unsigned long rebootTimer;        // Timer start counting when rebootFlag true
 
-// logSens timer
-unsigned long logSensTime;
+// Need redefinition as class to add them in dynamicMem as parameters
+uint8_t relay1 = 9;
+uint8_t relay2 = 8;
 
-/*** Name functions ***/
-// EEPROM
-void begin_EEPROM();
-void write_EEPROM(int pos, byte val);
-byte read_byte(int pos);
-void write_EEPROM(int pos, int val);
-int read_int(int pos);
-void write_EEPROM(int pos, float val);
-float read_float(int pos);
-void write_EEPROM(int pos, long val);
-long read_long(int pos);
-void write_EEPROM(int pos, unsigned long val);
-unsigned long read_ulong(int pos);
-void clean_EEPROM(bool truncate = true);
-void print_EEPROM(bool truncate = true)
-void configEEPROM(byte floors, byte solenoids, byte minutes, byte analogSensors, byte flowMeters, byte scales, byte ultrasonicSensors, byte switches);
-void getConfig();
-bool checkConfig();
-void saveRegion(int Floor, bool side, int region);
-void saveSolenoidTimeOn(int Floor, int region, byte timeOn);
-void saveCycleTime(int val);
-void saveAnalog(byte pin, float A, float B, float C);
-/*
-void analogSaveFilter(int Type, int filt, float filterParam);
-void analogSaveModel(int Type, float a, float b, float c);
-bool chargeAnalogParameters(int Type);
-void ultrasonicSaveFilter(int Type, int filt, float filterParam);
-void ultrasonicSaveModel(int Type, int model, float modelParam, float height);
-bool chargeUltrasonicParameters(int Type);
-void pressureSave(int Type, float Press);
-void chargePressureParameter();
-*/
-// async
-/*
-void solenoidValverunAll();
-void async();
-void asyncIrrigation();
-void initialPreconditions(void (*ptr2function)());
-void middlePreconditions(void (*ptr2function)());
-void doNothing();
-void startIrrigation();
-void startMiddleIrrigation();
-void irrigationEmergency();
-*/
-// Multiplexers
-void allMultiplexerOff();
-void codification_Multiplexer();
-void multiplexerRun();
-// Serial Communication
-void requestSolution();
-void updateSystemState();
-void serialEvent();
-// Setup
-void solenoid_setup();
-void sensors_setup();
-void enableSolenoid(int fl, int reg);
-void enableLED(int fl, int reg);
-bool isDayInThatSolenoid(uint8_t solenoid);
-uint8_t inWhatFloorIsNight();
-void updateDay();
-void substractSolutionConsumption(bool updateConsumption = false);
-void substractWaterConsumption(bool updateConsumption = false);
-void rememberState(int ipc, int mpc, int pumpIn, float missedNut, float missedH2O);
-// Aux Functions
-void emergencyStop();
-void boot();
-float litersRequire();
-void logSens();
+void emergencyButtonPressed() {
+  if(!bootEmergencyRelay){
+    bootEmergencyRelay = true;
+    myMux->update(); // Update to set all state as LOW
+    for(int i = 0; i<3; i++) mySensors->read();
+    if(mySensors->_mySwitches[0]->getState()){
+      for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
+      myValves->enable(true);
+      digitalWrite(relay2, !true);
+    }
+  }
+  
+  if(!mySensors->_mySwitches[0]->getState() && !emergencyButtonFlag) {
+    emergencyButtonFlag = true;
+    for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(false);
+    myMux->update(); // Update to set all state as LOW
+    myValves->enable(false);
+    digitalWrite(relay2, !false);
+  }
+  else if(mySensors->_mySwitches[0]->getState() && emergencyButtonFlag){
+    emergencyButtonFlag = false;
+    for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
+    myValves->enable(true);
+    digitalWrite(relay2, !true);
+  }
+}
 
 void setup() {
-  // Initialize Serial
-  Serial.begin(115200); Serial.println(F("Setting up Device..."));
+  // Initialize serial
+  Serial.begin(115200);
 
-  // Begin EEPROM
-  begin_EEPROM();
-  getConfig();
-  // Check EEPROM Config
-  configFinished = checkConfig();
-
-  if(configFinished) {
-    // Define INPUTS&OUTPUTS
-    solenoidValve::flowSensorBegin();
-    recirculationController::flowSensorBegin();
-
-    pinMode(stcp, OUTPUT);
-    pinMode(shcp, OUTPUT);
-    pinMode(ds, OUTPUT);
-    pinMode(mR, OUTPUT);
-    pinMode(emergencyUser, INPUT_PULLUP);
-    digitalWrite(mR, !LOW); // Turn off Relays
-    allMultiplexerOff(); // Set multiplexors off
-
-    // Initialize objects
-    sensors_setup(); // Initialize sensors
-    Actuator::beginAll(); // Initialize actuators
-    solenoid_setup(); // Initialize solenoids valves
-    // Initialize recirculationController
-    Recirculation.begin(US0, US1, US2, US3, US4, US5, US6);
-    Serial.flush();
-
-    // Charge EEPROM parameters saved
-    chargeMultidayParameters(); // For multiDay
-    chargeLedRegion(); // For LED´s
-    chargeSolenoidRegion(); // For solenoidValves
-    chargeIrrigationParameters(); // For irrigation control
-    chargePressureParameter(); // For pressure control
-
-    // Set initial state
-    inputstring.reserve(30); // Reserve 30 bytes for serial strings
-    codification_Multiplexer(); // Initialize Multiplexers
-    // Initialize counters
-    multiplexerTime = millis();
-    logSensTime = millis();
-    buttonTime = millis();
-    bootTimer = millis();
-
-    // Finished
-    Serial.println(F("Device Ready"));
-    Serial.flush();
-    delay(1000);
-
-    if(!digitalRead(emergencyUser)){ // Enable Relays
-      digitalWrite(mR, !HIGH); // Turn on multiplexors
-    }
-
-    // Testing settings
-    //solenoidValve::enableGroup(true); delete
+  if(test){
+    bool nothing;
+    /*
+    myMem.begin(bconfig, pconfig, sconfig, lconfig); // Begin EEPROM
+    //myMem.write(170, 255);
+    //for(int i = 126; i<170; i++) myMem.write(i, 255);
+    //myMem.clean(); // Set all bytes at 255 in EEPROM
+    myMem.print();
+    */
   }
-  else {
-    Serial.println(F("critical,System does not have basic configuration please provide it."));
+  
+  else{
+    Serial.println(F("info,Setting up Device..."));
+
+    // Initialize timers
+    rebootTimer = millis();
+  
+    // Initialize dynamic memory
+    memoryReady = myMem.begin(bconfig, pconfig, sconfig, lconfig);
+    
+    // Charge eeprom parameters for each fan and load it
+    // Turn on each fan with delay (to avoid EMI)
+    if(memoryReady){  
+      // Initialize fan control
+      myFans = new systemFan(bconfig.floors, myMem);
+  
+      // Initialize irrigation control
+      myIrrigation = new irrigationController(lconfig);
+  
+      // Initialize sensorController
+      mySensors = new sensorController(sconfig, myMem);
+  
+      // Initialize solenoid control
+      myValves = new systemValves(bconfig, myMem);
+
+      // Initialize multiplexer control
+      myMux = new muxController(bconfig.mux, myMem); 
+      
+      // Configuration for DC Multiplexers (only solenodis)
+      for (int i = 0; i<bconfig.floors; i++) {
+         for(int j=0; j<bconfig.solenoids; j++){
+            int orderA = myMem.read_stateOrder(0, i*bconfig.solenoids*bconfig.regions + j);
+            int orderB = myMem.read_stateOrder(0, i*bconfig.solenoids*bconfig.regions + j + bconfig.solenoids);
+            myMux->_myMux[0]->addState(myValves->_floor[i]->_regA[j]->_State, orderA);
+            myMux->_myMux[0]->addState(myValves->_floor[i]->_regB[j]->_State, orderB);
+         }
+      }
+      // Add 4 Extra Solenoids
+      int readPos = bconfig.floors*bconfig.solenoids*bconfig.regions;
+      for(int i = 0; i<AUX_ACTUATORS; i++){
+        int order = myMem.read_stateOrder(0, readPos+i);
+        if(i==0) myMux->_myMux[0]->addState(myIrrigation->_VAirL, order);
+        else if(i==1) myMux->_myMux[0]->addState(myIrrigation->_VConnectedL, order);
+        else if(i==2) myMux->_myMux[0]->addState(myIrrigation->_VFreeL, order);
+        else if(i==3) myMux->_myMux[0]->addState(myIrrigation->_PumpL, order);
+        else Serial.println(F("error,main setup(): Cannot add extra solenoid"));
+      }
+
+      // Configuration fo AC Multiplexers (only fans)
+      for (int i = 0; i<bconfig.floors; i++) {
+          int order1 = myMem.read_stateOrder(1, i);
+          int order2 = myMem.read_stateOrder(1, i+bconfig.floors);
+          myMux->_myMux[1]->addState(myFans->_fan[i]->_State, order1);
+          myMux->_myMux[1]->addState(myFans->_fan[i]->_State, order2);
+      }
+
+      for(int i = 0; i<bconfig.mux; i++ ) myMux->_myMux[i]->orderMux();
+
+      myValves->invertOrder(true); // Start irrigation from floor 8
+      Serial.println(F("info,Device is ready"));
+
+      /*** DEBUG ***/
+      /*
+      myMux->_myMux[0]->enable(true);
+      myMux->_myMux[1]->enable(true);
+      */
+      
+      // Redefinition
+      pinMode(relay1, OUTPUT);
+      pinMode(relay2, OUTPUT);
+      digitalWrite(relay1, !false);
+      digitalWrite(relay2, !false);
+      
+      // Test Big Pump
+      //myIrrigation->turnOnPump();
+    }
+    else Serial.println(F("critical,Memory: Please provide the memory configuration missed to be able to start"));
   }
 }
 
 void loop() {
-  if(configFinished){
-    /*** Request boot info to raspberry ***/
-    boot();
+  if(memoryReady){
+    emergencyButtonPressed(); // Check if emergency button is pressed
+    
+    // Update objects and variables
+    myFans->run();
+    myValves ->run();
+    myIrrigation->update();
+    mySensors->read(); // Scale timeOut killing other process
 
-    /*** Emergency Conditions ***/
-    emergencyStop();
-    /*** Sensors ***/
-    analogSensor::readAll(); // Take reading from all the pressure sensors every 100ms
-    UltraSonic::readAll(); // Take reading from all the ultrasonics sensors every 100ms
-    waterSensor::readAll(); // Take reading from all the water sensors every 50ms
-    /*** Air Conditioner ***/
-    HVAC.run();
-    /*** Recirculation System ***/
-    Recirculation.run(checkRecirculation, checkWaterEvacuation.getState());
-    /*** Actuators ***/
-    Actuator::runAll();
-    /*** Irrigation Routine ***/
-    solenoidValverunAll();
-    async(); // Check the states with async Functions
-    /*** Multiplexers & Relays states ***/
-    multiplexerRun();
-    /*** log&debug***/
-    logSens();
+    // Run main control
+    mainControl();
+
+    // Update outputs
+    myMux->update();
   }
 
-  // Testing code
+  // Reboot manage
+  if(!rebootPrint && rebootFlag){
+    rebootPrint = true;
+    Serial.println(F("warning,System will reboot in 5 minutes to recharge modified parameters"));
+  }
+  
+  if(rebootFlag && millis()-rebootTimer>REBOOT_TIME){
+    rebootTimer = millis();
+    Serial.println(F("warning,REBOOTING SYSTEM"));
+  }
 
+  // Emergency manage
+  if(emergencyPrint!=emergencyFlag){
+    if(emergencyFlag) Serial.println(F("warning,System in emergency mode"));
+    else Serial.println(F("warning,System leaving in emergency mode"));
+    emergencyPrint = emergencyFlag;
+  }
 }
