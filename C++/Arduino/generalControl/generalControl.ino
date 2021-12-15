@@ -60,6 +60,7 @@ bool test = false;
 // Boot variables
 bool firstHourUpdate = false;     // Update first time we get the time
 bool bootParameters = false;      // Update first time we get initial parameters
+unsigned long bootTimer;          // Timer to request by serial for boot parameters
 bool bootEmergencyRelay = false;  // Update first time to activate multiplexors relay
 // Aux variables
 float h2oConsumption;             // Store water constumption per irrigation cycle
@@ -110,7 +111,7 @@ void setup() {
 
   if(test){
     bool nothing;
-    /*
+    /* Clean eeprom first time we charge the sketch
     myMem.begin(bconfig, pconfig, sconfig, lconfig); // Begin EEPROM
     //myMem.write(170, 255);
     //for(int i = 126; i<170; i++) myMem.write(i, 255);
@@ -124,7 +125,8 @@ void setup() {
 
     // Initialize timers
     rebootTimer = millis();
-  
+    bootTimer = millis();
+    
     // Initialize dynamic memory
     memoryReady = myMem.begin(bconfig, pconfig, sconfig, lconfig);
     
@@ -201,18 +203,24 @@ void setup() {
 void loop() {
   if(memoryReady){
     emergencyButtonPressed(); // Check if emergency button is pressed
-    
-    // Update objects and variables
-    myFans->run();
-    myValves ->run();
-    myIrrigation->update();
-    mySensors->read(); // Scale timeOut killing other process
 
-    // Run main control
-    mainControl();
-
-    // Update outputs
-    myMux->update();
+    if(bootParameters){
+      // Update objects and variables
+      myFans->run();
+      myValves ->run();
+      myIrrigation->update();
+      mySensors->read(); // Scale timeOut killing other process
+  
+      // Run main control
+      mainControl();
+  
+      // Update outputs
+      myMux->update(); 
+    }
+    else if(millis() - bootTimer > 60000){
+      Serial.println(F("boot?"));
+      bootTimer = millis();
+    }
   }
 
   // Reboot manage
