@@ -6,7 +6,7 @@ void updateSystemState(){
   Serial.print(F("updateSystemState,"));
   Serial.print(controlState._state); // Control State
   Serial.print(F(","));
-  Serial.print(h2oConsumption);      // H2O Consumption
+  Serial.println(h2oConsumption);    // H2O Consumption
 }
 
 void serialEvent(){                                   //if the hardware serial port_0 receives a char
