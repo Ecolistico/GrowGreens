@@ -48,7 +48,7 @@ void irrigation() {
      myIrrigation->keepConnected(false);
      h2oConsumption = initialWeight - mySensors->_myScales[0]->getWeight();
      // Pressure low in air tank
-     if(mySensors->_myAnalogs[0]->getValue()>pconfig.min_pressure){
+     if(mySensors->_myAnalogs[0]->getValue()<=pconfig.min_pressure){
       myIrrigation->pressurizeAir();
       controlState.setState(1);
       updateSystemState();
@@ -56,7 +56,7 @@ void irrigation() {
      // Do we have enough water
      if(mySensors->_myScales[0]->getWeight()-mySensors->_myScales[0]->getMinWeight()>h2oConsumption){
       // Do we have enough pressure?
-      if(!(mySensors->_myAnalogs[1]->getValue()>pconfig.min_pressure)){
+      if(mySensors->_myAnalogs[1]->getValue()<=pconfig.min_pressure){
         myIrrigation->pressurizeAll();
         controlState.setState(10);
         updateSystemState();
