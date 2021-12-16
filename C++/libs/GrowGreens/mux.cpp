@@ -106,7 +106,7 @@ void MUX::codificationMultiplexer() {
 
   if(millis() - _printTimer>60000){
     _printTimer = millis();
-    for(int i = 0; i<_config.pcb_mounted; i++) muxPrint(F("74HC595-"), String(i), F("= "), String(value_Multiplexer[i]));
+    //for(int i = 0; i<_config.pcb_mounted; i++) muxPrint(F("74HC595-"), String(i), F("= "), String(value_Multiplexer[i]));
   }
 
 }

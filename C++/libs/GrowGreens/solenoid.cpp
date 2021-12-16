@@ -432,9 +432,10 @@ void systemValves::run()
           }
         }
       }
-      else if(_actualNumber>=solenoid::_numberSolenoid && getTime()>=_CycleTime){
+    }
+    if(_actualNumber>=solenoid::_numberSolenoid && getTime()>=_CycleTime){
         _actualNumber = 0;
+        resetTime();
         systemPrint(F("Restarting cycle"), F(""), F(""), 0);
       }
-    }
   }
