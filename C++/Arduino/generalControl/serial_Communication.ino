@@ -351,7 +351,10 @@ void serialEvent(){                                   //if the hardware serial p
     }
 
     else if(parameter[0]==F("solenoid")){
-      if(parameter[1]==F("systemEnable") || parameter[1]==F("systemEnable\n")) myValves->enable(true);
+      if(parameter[1]==F("systemEnable") || parameter[1]==F("systemEnable\n")) {
+        if(!emergencyButtonFlag) myValves->enable(true);
+        else Serial.println(F("error, Cannot enable solenoid system, emergency button is pressed"));
+      }
       else if(parameter[1]==F("systemDisable") || parameter[1]==F("systemDisable\n")) myValves->enable(false);
       else if(parameter[1]==F("regionEnable")){
         uint8_t fl = parameter[2].toInt()-1;

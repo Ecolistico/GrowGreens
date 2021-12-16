@@ -39,7 +39,7 @@ void emergencyConditions() {
 void startIrrigation() {
   initialWeight = mySensors->_myScales[0]->getWeight();
   myIrrigation->keepConnected(true);
-  myValves->enable(true);
+  if(!emergencyButtonFlag) myValves->enable(true);
   irrigationState.setState(1);
 }
 
@@ -147,7 +147,7 @@ void correctiveProcess(){
   else if(controlState._state==60){
     if(mySensors->_myAnalogs[1]->getValue()>=pconfig.max_pressure){
       myIrrigation->Off(true);
-      myValves->enable(true);
+      if(!emergencyButtonFlag) myValves->enable(true);
       emergencyFlag = false;
       controlState.setState(0);
       updateSystemState();
