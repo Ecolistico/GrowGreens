@@ -4,55 +4,103 @@ from math import sin, pi
 from types import FunctionType
 
 def rectangle(actual_minute, minute_start, minute_end):
-    if minute_end < minute_start: 
-        actual_minute += minute_end
-        minute_end += 60 * 24
-
-    if actual_minute < minute_start or actual_minute > minute_end: return 0
-    else: return 1
+    if (minute_end < minute_start):
+        if (actual_minute < minute_end or actual_minute > minute_start): return 1
+        else: return 0
+    else:  
+        if (actual_minute < minute_start or actual_minute > minute_end): return 0
+        else: return 1
 
 def triangle(actual_minute, minute_start, minute_end, top = 0.5):
-    if minute_end < minute_start: 
-        actual_minute += minute_end
-        minute_end += 60 * 24
-    
-    gap = (minute_end - minute_start)
-    minute_top = minute_start + gap*top
-    
-    if(actual_minute < minute_start or actual_minute > minute_end): return 0
-    elif(actual_minute >= minute_start and actual_minute <= minute_top):
-        m = 1 / (minute_top - minute_start)
-        b = -m*minute_start
+    if minute_end < minute_start:
+        gap = (24*60 - minute_start + minute_end)
+        if (minute_start + gap*top > 24*60): minute_top = minute_start + gap*top - 24*60
+        else: minute_top = minute_start + gap*top
+        
+        if(actual_minute < minute_start and actual_minute > minute_end): return 0
+        elif(actual_minute >= minute_start):
+            if(minute_top >= minute_start):
+                if(actual_minute <= minute_top):
+                    m = 1 / (minute_top - minute_start)
+                    b = -m*minute_start
+                else:
+                    m = -1 / (24*60 - minute_top + minute_end)
+                    b = -m*(24*60 + minute_end)
+            else:
+                m = 1 / (24*60 - minute_start + minute_top)
+                b = -m*minute_start
+        else:
+            if(minute_top <= minute_end):
+                if(actual_minute <= minute_top):
+                    m = 1 / (24*60 - minute_start + minute_top)
+                    b = -m*((minute_start - 24*60))
+                else:
+                    m = 1 / (minute_top - minute_end)
+                    b = -m*minute_end
+            else:
+                m = -1 / (24*60 - minute_top + minute_end)
+                b = -m*minute_end
+                
     else:
-        m = 1 / (minute_top - minute_end)
-        b = -m*minute_end
+        gap = (minute_end - minute_start)
+        minute_top = minute_start + gap*top
+
+        if(actual_minute < minute_start or actual_minute > minute_end): return 0
+        elif(actual_minute >= minute_start and actual_minute <= minute_top):
+            m = 1 / (minute_top - minute_start)
+            b = -m*minute_start
+        else:
+            m = 1 / (minute_top - minute_end)
+            b = -m*minute_end
+    
     return m*actual_minute + b
 
 def trapezoid(actual_minute, minute_start, minute_end, q1 = 0.25, q2 = 0.75):
-    if minute_end < minute_start: 
-        actual_minute += minute_end
-        minute_end += 60 * 24
-    
-    gap = (minute_end - minute_start)
-    minute_q1 = minute_start + gap*q1
-    minute_q2 = minute_start + gap*q2
+    if minute_end < minute_start:
+        gap = (24*60 - minute_start + minute_end)
+        
+        if (minute_start + gap*q1 > 24*60): minute_q1 = minute_start + gap*q1 - 24*60
+        else: minute_q1 = minute_start + gap*q1
+            
+        if (minute_start + gap*q2 > 24*60): minute_q2 = minute_start + gap*q2 - 24*60
+        else: minute_q2 = minute_start + gap*q2
+        
+        if actual_minute < minute_start and actual_minute > minute_end: return 0
+        elif actual_minute >= minute_start:
+            if((minute_q1 >= minute_start and actual_minute <= minute_q1) or (minute_q1 <= minute_end)): return triangle(actual_minute, minute_start, minute_q1, 1)
+            elif((minute_q2 >= minute_start and actual_minute >= minute_q1 and actual_minute <= minute_q2 + 1) or (actual_minute >= minute_q2 and minute_q2 <= minute_end)): return rectangle(actual_minute, minute_q1, minute_q2+1)
+            elif(actual_minute >= minute_q2 and minute_q2 >= minute_start): return triangle(actual_minute, minute_q2, minute_end, 0.001)
+            else: return triangle(actual_minute, minute_start, minute_q1, 1)
+        elif actual_minute <= minute_end:    
+            if(minute_q1 <= minute_end and actual_minute <= minute_q1): return triangle(actual_minute, minute_start, minute_q1, 1)
+            elif(minute_q2 <= minute_end and actual_minute <= minute_q2 - 1): return rectangle(actual_minute, minute_q1, minute_q2)
+            else: return triangle(actual_minute, minute_q2-1, minute_end, 0.001)
+    else:
+        gap = (minute_end - minute_start)
+        minute_q1 = minute_start + gap*q1
+        minute_q2 = minute_start + gap*q2
 
-    if actual_minute < minute_start or actual_minute > minute_end: return 0
-    elif actual_minute >= minute_start and actual_minute <= minute_q1: return triangle(actual_minute, minute_start, minute_q1, 1)
-    elif actual_minute >= minute_q1 and actual_minute <= minute_q2: return rectangle(actual_minute, minute_q1, minute_q2)
-    else: return triangle(actual_minute, minute_q2, minute_end, 0.001)
+        if actual_minute < minute_start or actual_minute > minute_end: return 0
+        elif actual_minute >= minute_start and actual_minute <= minute_q1: return triangle(actual_minute, minute_start, minute_q1, 1)
+        elif actual_minute >= minute_q1 and actual_minute <= minute_q2: return rectangle(actual_minute, minute_q1, minute_q2)
+        else: return triangle(actual_minute, minute_q2, minute_end, 0.001)
 
 
 def sine(actual_minute, minute_start, minute_end):
     if minute_end < minute_start: 
-        actual_minute += minute_end
-        minute_end += 60 * 24
-    
-    if actual_minute < minute_start or actual_minute > minute_end:
-        return 0
+        if (actual_minute < minute_start and actual_minute > minute_end): return 0
+        else:
+            if(actual_minute >= minute_start): 
+                f = pi/(24*60 + minute_end - minute_start)
+                return sin(f*(actual_minute - minute_start))
+            else:
+                f = pi/(24*60 + minute_end - minute_start)
+                return sin(f*(minute_end - actual_minute))
     else:
-        f = pi/(minute_end - minute_start)
-        return sin(f*(actual_minute - minute_start))
+        if (actual_minute < minute_start or actual_minute > minute_end): return 0
+        else:
+            f = pi/(minute_end - minute_start)
+            return sin(f*(actual_minute - minute_start))
 
 class Day:
     def __init__(self):
