@@ -70,10 +70,15 @@ class dataESP32:
         self.T4L = self.checkValue(float(strSplit[14]), self.T4L, self.missingData, "T4L")
         self.H4L = self.checkValue(float(strSplit[15]), self.H4L, self.missingData, "H4L")
         
-        self.M1 = self.checkValue(bool(strSplit[16]), self.M1, self.missingData, "M1")
-        self.M2 = self.checkValue(bool(strSplit[17]), self.M2, self.missingData, "M2")
-        self.M3 = self.checkValue(bool(strSplit[18]), self.M3, self.missingData, "M3")
-        self.M4 = self.checkValue(bool(strSplit[19]), self.M4, self.missingData, "M4")
+        #self.M1 = self.checkValue(bool(strSplit[16]), self.M1, self.missingData, "M1")
+        #self.M2 = self.checkValue(bool(strSplit[17]), self.M2, self.missingData, "M2")
+        #self.M3 = self.checkValue(bool(strSplit[18]), self.M3, self.missingData, "M3")
+        #self.M4 = self.checkValue(bool(strSplit[19]), self.M4, self.missingData, "M4")
+        
+        self.M1 = strSplit[16]
+        self.M2 = strSplit[17]
+        self.M3 = strSplit[18]
+        self.M4 = strSplit[19]
         
         self.logValues()
         
@@ -95,8 +100,10 @@ class dataESP32:
         self.log.debug("T{0}R={1}, H{2}R={3}, T{4}L={5}, H{6}L={7}".format(3+lv*4, self.T3R, 3+lv*4, self.H3R, 3+lv*4, self.T3L, 3+lv*4, self.H3L))
         self.log.debug("T{0}R={1}, H{2}R={3}, T{4}L={5}, H{6}L={7}".format(4+lv*4, self.T4R, 4+lv*4, self.H4R, 4+lv*4, self.T4L, 4+lv*4, self.H4L))
         self.log.debug("M{0}={1}, M{2}={3}, M{4}={5}, M{6}={7}".format(1+lv*4, self.isOpen(self.M1), 2+lv*4, self.isOpen(self.M2), 3+lv*4, self.isOpen(self.M3), 4+lv*4, self.isOpen(self.M4)))
-    
-    def isOpen(self, val): return "OPEN" if (val==0) else "CLOSE"
+        
+        
+    def isOpen(self, val): return "OPEN" if (val=="1") else "CLOSE"
+        
     
     def connectionFailed(self):
         self.failedConnection += 1
