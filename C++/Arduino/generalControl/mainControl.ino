@@ -47,6 +47,8 @@ void irrigation() {
   if(myValves->getActualNumber()>=bconfig.floors*bconfig.solenoids*bconfig.regions){
      myIrrigation->keepConnected(false);
      h2oConsumption = initialWeight - mySensors->_myScales[0]->getWeight();
+     if (h2oConsumption < 1) h2oConsumption = 1; // Avoid negatives number and zero water consumption. Min value is set as 1 liters as default
+     
      // Pressure low in air tank
      if(mySensors->_myAnalogs[0]->getValue()<=pconfig.min_pressure){
       myIrrigation->pressurizeAir();
