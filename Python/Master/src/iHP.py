@@ -76,6 +76,7 @@ class IHP:
 
         # Command codes
         self.OPERATION      = 0x01  # Set Operation ON/OFF
+        self.CLEAR_FAULTS   = 0x03  # Clear faults
         self.WRITE_PROTECT  = 0x10  # Enable/Disable write protection
         self.READ_VOUT      = 0x8B  # Read the output voltage
         self.READ_IOUT      = 0x8C  # Read the output current
@@ -399,7 +400,23 @@ class IHP:
         else:
             self.str2log("is disconnected, please provide a correct MAC or IP address", self.log_ihp, 3)
             return False
-            
+    
+    # Clear Faults works on (PFC1, PFC2, ISOCOMM, any MODULE and GROUP)
+    def clearFaults(self, device):
+        if self.connected:
+            self.str2log("Clear faults to Device {}".format(device), self.log_ihp)
+            self.RandomValues()
+            id5 = self.REQUEST
+            id6 = device # Condition to avoid wrong device addresses is missing here
+            id7 = self.WRITE + 0 # Write Mode without aditional bytes
+            self.command = self.CLEAR_FAULTS
+            self.timing = 0
+            bytes2send = bytes([self.id1, self.id2, self.id3, self.id4, id5, id6, id7, self.command])
+            return self.communicationUDP(bytes2send)
+        else: 
+            self.str2log("is disconnected, please provide a correct MAC or IP address", self.log_ihp, 3)
+            return False
+    
     # Compare first 4 bytes with the first ones that we sent
     def check4FBytes(self, bytes):
         id1 = int(bytes[0], 16)
@@ -699,7 +716,15 @@ class IHP:
                                             'request': 'Read Iin',
                                             0: {'command': command1, 'data': {} }})
                 else: self.str2log("ReadIin() device number should be between 1 and 3", self.log_ihp, 3)
-    
+
+            elif(command == self.CLEAR_FAULTS):
+                commandNumber = 1
+                command1 = self.CLEAR_FAULTS
+                data1 = {'device': data['device']}
+                self.commandList.append({'commandNumber': commandNumber, 
+                                        'request': 'Clear Faults',
+                                        0: {'command': command1, 'data': data1}})
+
         except Exception as e: self.str2log("Critical Error: {}".format(e), self.log, 4)
 
     def run(self):
@@ -742,6 +767,8 @@ class IHP:
                     if(not self.readVin(c-self.READ_VIN+1)): self.errorWithCommand("We have problems with command READ_VIN")
                 elif(c>=self.READ_IIN and c<=self.READ_IIN+2):
                     if(not self.readIin(c-self.READ_IIN+1)): self.errorWithCommand("We have problems with command READ_IIN")
+                elif(c == self.CLEAR_FAULTS):
+                    if(not self.clearFaults(data['device'])): self.errorWithCommand("We have problems with command CLEAR_FAULTS")
                 else: self.errorWithCommand("Command {} not supported".format(c))
             else:
                 self.commandList = self.commandList[1:] # Delete the first request because it is finished
@@ -769,6 +796,9 @@ def main():
     #for i in range(2,3,1): ihp.request(ihp.MODULE_CONFIG, {'device': i, 'type': 'DCS'})
 
     # Functions tested
+    ihp.request(ihp.CLEAR_FAULTS, {'device': ihp.COMMS})
+    ihp.request(ihp.CLEAR_FAULTS, {'device': ihp.PFC1})
+    ihp.request(ihp.CLEAR_FAULTS, {'device': ihp.PFC2})
     """
     for i in range(1,9,1): ihp.request(ihp.IREF, {'device': i, 'type': 'percentage', 'iref': 0})
     
