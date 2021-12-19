@@ -18,7 +18,7 @@ void preconditions() {
 
 void emergencyConditions() {
   if(mySensors->_myScales[0]->getWeight()>mySensors->_myScales[0]->getMinWeight()){
-    if(mySensors->_myAnalogs[1]->getValue()<=pconfig.min_pressure){
+    if(mySensors->_myAnalogs[1]->getValue()<=pconfig.critical_pressure){
       emergencyFlag = true;
       myValves->enable(false);
       myIrrigation->pressurizeAll();
