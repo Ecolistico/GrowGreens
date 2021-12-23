@@ -163,7 +163,7 @@ class Day:
         for i in range(self.fl): 
             aux = self.functions[i](actual_minute)
             if (aux>1 and not self.normalize[i]): aux = 1
-            if(abs(aux-self.intensity[i])>0.01):
+            if(abs(aux-self.intensity[i])>0.01 or (aux==0 and self.intensity[i]!=0)):
                 self.intensity[i] = aux*self.multiplier[i]
                 self.update[i] = True
 
