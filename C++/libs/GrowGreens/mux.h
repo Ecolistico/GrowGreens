@@ -47,6 +47,8 @@ class MUX
       bool _stcpEn;                              // To know if Latch Pin Must Be On or Off
       bool _false;                               // Save false to assign it to a pointer
       bool _off[OUT_PER_PCB];                    // To set al states as false when need it
+      bool _delayTimer, _delayStart;             // To know if delay is active
+      unsigned long _delayTime;                  // Timer to control the initial delay
       MuxOut _muxOut[MAX_MODULES];               // Output States per single PCB
       MuxOut _demuxOut[MAX_MODULES];             // Input States per single PCB
       MuxState _mux[MAX_MODULES*OUT_PER_PCB];    // List of all outputs
@@ -62,6 +64,7 @@ class MUX
       MUX(Mux config); // Constructor for the class
 
       void begin(); // Initialize pins and states
+      void activeDelay(); // Active the delay timer
       void addState(bool & state, uint8_t order); // Add a new output value
       void printState(uint8_t quotient, uint8_t reminder); // Debug function
       void orderMux();   // Order Output States in array of 8

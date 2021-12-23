@@ -175,7 +175,9 @@ void setup() {
           myMux->_myMux[1]->addState(myFans->_fan[i]->_State, order1);
           myMux->_myMux[1]->addState(myFans->_fan[i]->_State, order2);
       }
-
+      
+      myMux->_myMux[1]->activeDelay(); // Enable delay at start to avoid fans turning on the first 30 seconds
+      
       for(int i = 0; i<bconfig.mux; i++ ) myMux->_myMux[i]->orderMux();
 
       myValves->invertOrder(true); // Start irrigation from floor 8

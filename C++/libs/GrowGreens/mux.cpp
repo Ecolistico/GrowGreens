@@ -13,6 +13,8 @@ MUX::MUX(Mux config) // Constructor
     _en = false;
     _stcpEn = true;
     _false = false;
+    _delayTimer = false;
+    _delayStart = false;
     _number = _total++;
     for(int i = 0; i < OUT_PER_PCB; i++) _off[i] = false;
   }
@@ -56,6 +58,9 @@ void MUX::begin()
     pinMode(_config.shcp1, OUTPUT);
     pinMode(_config.ds1, INPUT);
   }
+
+void MUX::activeDelay()
+  { _delayTimer = true; }
 
 void MUX::addState(bool &state, uint8_t order)
   { if(_numStates < MAX_MODULES*OUT_PER_PCB){
@@ -122,7 +127,22 @@ void MUX::enable(bool en)
 void MUX::update()
   { if(millis() - _timer > 50) {
       _timer = millis();
-      codificationMultiplexer();
+      if(_delayTimer) { // If delay is active
+        if(!_delayStart) { // If delay is not started
+          // Set output to false
+          _en = false;
+          codificationMultiplexer();
+          _en = true;
+          // Start delay
+          _delayStart = true;
+          _delayTime = millis();
+        } 
+        else if(millis() - _delayTime > 30000) { // If delay is started and time is over
+          _delayTimer = false;
+          _delayStart = false;
+        }
+      } 
+      else codificationMultiplexer();
     }
   }
 
