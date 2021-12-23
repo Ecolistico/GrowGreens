@@ -85,7 +85,7 @@ void emergencyButtonPressed() {
     for(int i = 0; i<3; i++) mySensors->read();
     if(mySensors->_mySwitches[0]->getState()){
       for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
-      if(controlState._state==0) myValves->enable(true);
+      if(controlState._state==0 && irrigationState._state==1) myValves->enable(true);
       digitalWrite(relay2, !true);
     }
   }
@@ -100,7 +100,7 @@ void emergencyButtonPressed() {
   else if(mySensors->_mySwitches[0]->getState() && emergencyButtonFlag){
     emergencyButtonFlag = false;
     for(int i=0; i<bconfig.mux; i++) myMux->_myMux[i]->enable(true);
-    if(controlState._state==0) myValves->enable(true);
+    if(controlState._state==0 && irrigationState._state==1) myValves->enable(true);
     digitalWrite(relay2, !true);
   }
 }
