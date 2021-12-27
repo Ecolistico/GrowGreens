@@ -80,7 +80,7 @@ void irrigation() {
      irrigationState.setState(2);
      updateSystemState();
   }
-  else emergencyConditions();
+  else if(!emergencyFlag) emergencyConditions();
 }
 
 void correctiveProcess(){
