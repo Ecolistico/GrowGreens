@@ -177,7 +177,7 @@ void correctiveProcess(){
 void mainControl(){
   if(irrigationState._state==0 && controlState._state==0 && bootParameters && firstHourUpdate) preconditions();
   else if(irrigationState._state==1) irrigation();
-  else if(irrigationState._state==2 && myValves->getTime()>myValves->getCycleTime()) irrigationState.setState(0);
+  else if(irrigationState._state==2 && (myValves->getTime()>myValves->getCycleTime() || myValves->getTime()<500)) irrigationState.setState(0);
   correctiveProcess();
 }
 
