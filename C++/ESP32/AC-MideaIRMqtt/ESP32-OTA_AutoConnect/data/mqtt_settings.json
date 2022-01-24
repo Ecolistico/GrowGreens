@@ -40,17 +40,9 @@
       "name": "esp32Type",
       "type": "ACInput",
       "value": "",
-      "placeholder": "front, center or back",
+      "placeholder": "return or principal",
       "label": "What ESP32 are you setting?",
       "pattern": "(front|back|center)"
-    },
-    {
-      "name": "esp32Floor",
-      "type": "ACInput",
-      "value": "",
-      "placeholder": "Example: 9",
-      "label": "ESP32 Floor:",
-      "pattern": "^([0-9])$"
     },
     {
       "name": "newline1",

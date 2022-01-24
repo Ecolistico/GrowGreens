@@ -12,6 +12,8 @@
 #include <Preferences.h>
 #include <SPI.h>
 #include <EthernetENC.h>
+#include <Arduino.h>
+#include <midea_ir.h>
 
 /*** Include files ***/
 // All files are stored in flash memory
@@ -39,57 +41,19 @@ IPAddress addr;
 //IPAddress ipEnt;
 String mqttBrokerIp;
 String container_ID;
-String esp32Type;
-String esp32Floor;
+String esp32Type; //Return or principal
 byte container_ID_length = 10;
 //byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
 byte mac[6];
 //byte mac[] = { random(2), random(2), random(2), random(2), random(2), random(2) };
 uint8_t mqttAttempt = 0;
 
-/***** Sensors Definitions *****/
-byte dht_1R_pin = 14;
-byte dht_1L_pin = 33; // D12 cannot be used. Flash error
-byte dht_2R_pin = 27;
-byte dht_2L_pin = 32;
-byte dht_3R_pin = 26;
-byte dht_3L_pin = 22; // SCL
-byte dht_4R_pin = 25;
-byte dht_4L_pin = 21; // SDA
-byte pinM1 = 16;
-byte pinM2 = 17;
-byte pinM3 = 13;
-byte pinM4 = 4;
+/***** Hardware IR Definitions *****/
+const uint8_t MIDEA_RMT_CHANNEL = 0;
+const uint8_t MIDEA_TX_PIN = 4;
 
-/***** Sensors objects *****/
-DHTesp dht_1R;
-DHTesp dht_1L;
-DHTesp dht_2R;
-DHTesp dht_2L;
-DHTesp dht_3R;
-DHTesp dht_3L;
-DHTesp dht_4R;
-DHTesp dht_4L;
-bool Puerta1;
-bool Puerta2;
-bool Puerta3;
-bool Puerta4;
+MideaIR ir;
 
-/***** Sensors auxiliar variables *****/
-TempAndHumidity data_1R;
-TempAndHumidity data_1L;
-TempAndHumidity data_2R;
-TempAndHumidity data_2L;
-TempAndHumidity data_3R;
-TempAndHumidity data_3L;
-TempAndHumidity data_4R;
-TempAndHumidity data_4L;
-
-// Filter Settings
-uint8_t filter; // = 0; // Set filter to use: 0=none, 1=exponential, 2=kalman
-uint8_t exp_alpha; // = 40; // Smooth Constant in Exponencial Filter. uint8_8 divided by 100
-uint8_t kalman_noise; // = 50; // Noise in Kalman Filter. uint8_8 divided by 100
-float kalman_err; // = 1; // Error in Kalman Filter. uint8_8 divided by 100
 
 // Portal aux variable handler
 bool portalAux = false;
@@ -110,25 +74,13 @@ bool loadAux(const String auxName); // OK
 void setup_AutoConnect(AutoConnect &Portal, AutoConnectConfig &Config);
 bool testContainerId(String ID);
 // Memory
-void memorySetup();
-void memorySave(uint8_t par);
-void memoryGet(uint8_t par);
-// Sensors
-bool setExponentialFilter(uint8_t alpha);
-float exponential_filter(uint8_t alpha, float t, float t_1);
-bool setKalmanFilter(uint8_t noise);
-float kalman_filter(float t, float t_1);
-TempAndHumidity getData(DHTesp &dht, TempAndHumidity &input_data);
-void updateData();
-void setupSensors();
+
 // MQTT
 bool mqttConnect();
 void mqttPublish(String top, String msg);
 void callback(char* topic, byte* message, unsigned int length);
-void sendData();
 void resetCredentials();
 bool startCP(IPAddress ip);
-bool PuertaEstado(byte PinM);
 
 void setup() {
   WiFi.mode(WIFI_MODE_STA);
@@ -136,6 +88,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println(F("Initial setup"));
   Serial.print(F("Please wait"));
+  midea_ir_init(&ir, MIDEA_RMT_CHANNEL, MIDEA_TX_PIN); // init IR library
   for(int i=0;i<30;i++){
     Serial.print(F("."));
     delay(1000);  
@@ -169,7 +122,7 @@ void setup() {
 
   loadSettings(false);
   
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length && esp32Floor.toInt()<10){
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && container_ID.length()==container_ID_length){
     Serial.println(F("Parameters are ok"));
     mqttClient.setServer(mqttBrokerIp.c_str(), 1883);
     mqttClient.setCallback(callback); // Function to execute actions with entries of mqtt messages
@@ -189,13 +142,11 @@ void setup() {
     }
   }
   
-  if(Ethernet.begin(mac)) Serial.println(F("Ethernet begin"));
+  if(Ethernet.begin(mac)) Serial.println(F("Ethernet begin")); 
   else Serial.println(F("Ethernet failed"));
   
   // Allow the hardware to sort itself out
   delay(1500);
-  memorySetup();
-  setupSensors();
   update_time = millis();  
 }
 
@@ -205,7 +156,6 @@ void loop() {
     } else if (portalAux==false) mqttClient.loop();   
    
     if(millis()-update_time>update_constant*1000){ // Update sensor data
-      updateData();
       update_time = millis();
     }
     

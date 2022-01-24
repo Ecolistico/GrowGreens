@@ -16,20 +16,17 @@ void loadSettings(bool rst){
     JsonObject root_0 = jsonBuffer[0];
     JsonObject root_1 = jsonBuffer[1];
     JsonObject root_2 = jsonBuffer[2];
-    JsonObject root_3 = jsonBuffer[3];
 
     mqttBrokerIp = root_0["value"].as<String>();
     container_ID = root_1["value"].as<String>();
     esp32Type = root_2["value"].as<String>();
-    esp32Floor = root_3["value"].as<String>();
 
     file.close();
-    if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && container_ID.length()==container_ID_length && esp32Floor.toInt()<10){
+    if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && container_ID.length()==container_ID_length){
       Serial.println(F("Uploading Settings..."));
       Serial.print(F("MQTT Broker Ip: ")); Serial.println(mqttBrokerIp);
       Serial.print(F("Container ID: ")); Serial.println(container_ID);
       Serial.print(F("ESP32 Type: ")); Serial.println(esp32Type);
-      Serial.print(F("ESP32 Floor: ")); Serial.println(esp32Floor);
     }else{
       if(rst){
         Serial.println(F("Settings are wrong\nReseting credentials and rebooting..."));
@@ -56,13 +53,12 @@ String clearParams(AutoConnectAux& aux, PageArgument& args) {
   mqttBrokerIp = "";
   container_ID = "";
   esp32Type = "";
-  esp32Floor = "";
   
   // The entered value is owned by AutoConnectAux of /mqtt_setting.
   // To retrieve the elements of /mqtt_setting, it is necessary to get
   // the AutoConnectAux object of /mqtt_setting.
   File param1 = SPIFFS.open(PARAM_FILE, "w");
-  Portal.aux("/mqtt_settings_clear")->saveElement(param1, { "ip_mqttServer", "containerID", "esp32Type","esp32Floor" });
+  Portal.aux("/mqtt_settings_clear")->saveElement(param1, { "ip_mqttServer", "containerID", "esp32Type" });
   param1.close();
 
   // Echo back saved parameters to AutoConnectAux page.
@@ -70,7 +66,6 @@ String clearParams(AutoConnectAux& aux, PageArgument& args) {
   echo.value = "MQTT Broker IP: " + mqttBrokerIp + "<br>";
   echo.value += "Container ID: " + container_ID + "<br>";
   echo.value += "ESP32 Type: " + esp32Type + "<br>";
-  echo.value += "ESP32 Floor: " + esp32Floor + "<br>";
   
   return String("");
 }
@@ -79,13 +74,12 @@ void deleteParams() {
   mqttBrokerIp = "";
   container_ID = "";
   esp32Type = "";
-  esp32Floor = "";
   
   // The entered value is owned by AutoConnectAux of /mqtt_setting.
   // To retrieve the elements of /mqtt_setting, it is necessary to get
   // the AutoConnectAux object of /mqtt_setting.
   File param1 = SPIFFS.open(PARAM_FILE, "w");
-  Portal.aux("/mqtt_settings_clear")->saveElement(param1, { "ip_mqttServer", "containerID", "esp32Type","esp32Floor" });
+  Portal.aux("/mqtt_settings_clear")->saveElement(param1, { "ip_mqttServer", "containerID", "esp32Type" });
   param1.close();
 }
 
@@ -100,22 +94,20 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   esp32Type = args.arg("esp32Type");
   esp32Type.trim();
 
-  esp32Floor = args.arg("esp32Floor");
-  esp32Floor.trim();
 
   bool testContID = testContainerId(container_ID);
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && testContID && esp32Floor.toInt()<10) {
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && testContID) {
     // The entered value is owned by AutoConnectAux of /mqtt_setting.
     // To retrieve the elements of /mqtt_setting, it is necessary to get
     // the AutoConnectAux object of /mqtt_setting.
     File param = SPIFFS.open(PARAM_FILE, "w");
-    Portal.aux("/mqtt_settings")->saveElement(param, { "ip_mqttServer", "containerID", "esp32Type", "esp32Floor" });
+    Portal.aux("/mqtt_settings")->saveElement(param, { "ip_mqttServer", "containerID", "esp32Type"});
     param.close();
   }
   
   // Echo back saved parameters to AutoConnectAux page.
   AutoConnectText&  echo = aux.getElement<AutoConnectText>("parameters");
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="front" || esp32Type=="center" || esp32Type=="back") && testContID && esp32Floor.toInt()<10) {
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && testContID) {
     echo.value = "<p style='color:green;'>Parameters were saved correcty!</p><br>";
   }
   else{
@@ -131,15 +123,10 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   }else{
     echo.value += "Container ID: <p style='color:red;'>The ID does not have the correct size/form</p><br>";
   }
-  if(esp32Type=="front" || esp32Type=="center" || esp32Type=="back"){
+  if(esp32Type=="return" || esp32Type=="principal"){
     echo.value += "ESP32 Type: " + esp32Type + "<br>";
   }else{
-    echo.value += "ESP32 Type: <p style='color:red;'>It has to be 'front', 'center' or 'back'</p><br>";
-  }
-  if(esp32Floor.toInt()<10){
-    echo.value += "ESP32 Floor " + esp32Floor + "<br>";
-  }else{
-    echo.value += "ESP32 Floor: <p style='color:red;'>The ESP does not have the correct size/form</p><br>";
+    echo.value += "ESP32 Type: <p style='color:red;'>It has to be 'return' or 'principal'</p><br>";
   }
   
   return String("");
