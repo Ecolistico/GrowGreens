@@ -152,6 +152,7 @@ void request() {
   Wire.write(f6.hour_begin); Wire.write(f6.minute_begin); Wire.write(f6.hour_end); Wire.write(f6.minute_end);
   Wire.write(f7.hour_begin); Wire.write(f7.minute_begin); Wire.write(f7.hour_end); Wire.write(f7.minute_end);
   Wire.write(f8.hour_begin); Wire.write(f8.minute_begin); Wire.write(f8.hour_end); Wire.write(f8.minute_end);
+  digitalWrite(updatePin, LOW);
 }
 
 void i2c_debug() {
