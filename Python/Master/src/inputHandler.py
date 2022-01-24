@@ -29,13 +29,13 @@ class inputHandler:
         if self.serialControl.gcIsConnected: self.serialControl.write(self.serialControl.generalControl, mssg)
         else: self.log.error("Cannot write to serial device [generalControl]. It is disconnected.")
             
-    def writeMG(self, mssg): # Write in motorsGrower
-        if self.serialControl.mgIsConnected: self.serialControl.write(self.serialControl.motorsGrower, mssg)
-        else: self.log.error("Cannot write to serial device [motorsGrower]. It is disconnected.")
+    def writeMG1(self, mssg): # Write in motorsGrower1
+        if self.serialControl.mg1IsConnected: self.serialControl.write(self.serialControl.motorsGrower1, mssg)
+        else: self.log.error("Cannot write to serial device [motorsGrower1]. It is disconnected.")
             
-    def writeSM(self, mssg): # Write in solutionMaker
-        if self.serialControl.smIsConnected: self.serialControl.write(self.serialControl.solutionMaker, mssg)
-        else: self.log.error("Cannot write to serial device [solutionMaker]. It is disconnected.")
+    def writeMG2(self, mssg): # Write in motorsGrower1
+        if self.serialControl.mg2IsConnected: self.serialControl.write(self.serialControl.motorsGrower2, mssg)
+        else: self.log.error("Cannot write to serial device [motorsGrower2]. It is disconnected.")
             
     def valInteger(self, integer):
         try:
@@ -120,6 +120,7 @@ class inputHandler:
         if(line.lower()=="exit"):
             self.log.debug("Exit command activated")
             self.exit = True
+            
         elif(line.startswith("raw")):
             param = self.valSplit(line)
             if(param!=None):
@@ -128,14 +129,14 @@ class inputHandler:
                     self.writeGC(cmd)
                     self.log.info("inputHandler-[generalControl] Raw Command={}".format(cmd))
                     self.handleGUI(cmd, param)
-                elif(param[1]=="motorsGrower" and self.valLenList1(param, 3) and self.serialControl.mgIsConnected):
+                elif(param[1]=="motorsGrower1" and self.valLenList1(param, 3) and self.serialControl.mg1IsConnected):
                     cmd = ",".join(param[2:])
-                    self.writeMG(cmd)
-                    self.log.info("inputHandler-[motorsGrower] Raw Command={}".format(cmd)) 
-                elif(param[1]=="solutionMaker" and self.valLenList1(param, 3) and self.serialControl.smIsConnected):
+                    self.writeMG1(cmd)
+                    self.log.info("inputHandler-[motorsGrower1] Raw Command={}".format(cmd)) 
+                elif(param[1]=="motorsGrower2" and self.valLenList1(param, 3) and self.serialControl.mg2IsConnected):
                     cmd = ",".join(param[2:])
-                    self.writeSM(cmd)
-                    self.log.info("inputHandler-[solutionMaker] Raw Command={}".format(cmd))
+                    self.writeMG2(cmd)
+                    self.log.info("inputHandler-[motorsGrower2] Raw Command={}".format(cmd)) 
                 elif( (param[1]=="esp32" or param[1]=="Grower") and self.valLenList1(param, 4)):
                     cmd = ",".join(param[3:])
                     topic = "{}/{}{}".format(self.mqttControl.ID, param[1], param[2])
@@ -146,47 +147,14 @@ class inputHandler:
                     except Exception as e:
                         self.log.error("LAN/WLAN not found- Impossible use publish() [{}]".format(e))
                 else: self.log.info("inputHandler- {} Command Unknown".format(line))
-        elif(line.startswith("irr")):
-            param = self.valSplit(line)
-            if(param!=None):
-                if(param[1].startswith("en")):
-                    self.writeGC("solenoid,enableGroup,1")
-                    self.log.warning("Irrigation - Enable")
-                elif(param[1].startswith("dis")):
-                    self.writeGC("solenoid,enableGroup,0")
-                    self.log.warning("Irrigation - Disable")
-                elif(param[1].startswith("setCyc")):
-                    if(self.valLenList(param,3) and self.valInteger(param[2]) and
-                       self.valGreater0(int(param[2]))):
-                        cycleTime = int(param[2])
-                        self.writeGC("solenoid,setCycleTime,{}".format(cycleTime))
-                        self.log.warning("Irrigation- Change cycle time to {} min".format(cycleTime))
-                elif(param[1].startswith("setTim")):
-                    if(self.valLenList(param,6) and self.valInteger(param[2]) and
-                       self.valInteger(param[3]) and self.valInteger(param[4]) and
-                       self.valInteger(param[5])):
-                        fl = int(param[2])
-                        reg = int(param[3])
-                        sol = int(param[4])
-                        time_s = int(param[5])
-                        self.writeGC("solenoid,setTimeOn,{},{},{},{}".format(fl-1, reg-1, sol, time_s))
-                        self.log.warning("Irrigation- Solenoid of fl {}, reg {} change time to {}s with sol {}".format(
-                            fl, reg, time_s, sol))
-                else: self.log.error("inputHandler- {} Command Unknown".format(line))
         
-        elif(line.startswith("debug")):
-            param = self.valSplit(line)
-            if(param!=None):
-                if(param[1].startswith("whatSol")):
-                    self.writeGC("debug,irrigation,whatSolution")
-                    self.log.debug("Asking for next solution")
-                elif(param[1].startswith("getEC")):
-                    self.writeGC("debug,irrigation,getEC")
-                    self.log.debug("Asking for the actual EC parameter")
-                else: self.log.error("inputHandler- {} Command Unknown".format(line))
-        
+        elif(line.startswith("importEeprom")):
+            self.log.info("Importing eeprom to generalControl")
+            self.serialControl.importEeprom = 0
+            self.serialControl.writeEeprom()
+                    
         elif(line.startswith("startRoutine")):
-            if self.serialControl.mgIsConnected:
+            if self.serialControl.mg1IsConnected:
                 param = self.valSplit(line)
                 if(param!=None and len(param)>=2):
                     fl = param[1]
@@ -222,6 +190,7 @@ class inputHandler:
                     if mssg != '':
                         try:
                             top = "{}/Grower{}".format(self.ID,fl)
+                            # Update MQTT command to start routine
                             msgs = [{"topic": top, "payload": "OnLED1"},
                                     {"topic": top, "payload": "OnLED2"},
                                     {"topic": top, "payload": "DisableStream"}]

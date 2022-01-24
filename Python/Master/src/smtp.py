@@ -13,13 +13,14 @@ class Mail:
         self.city = city
         self.state = state
         self.ID = ID
+        self.trigger = "99-999-999"
 
     def sendMail(self, subject, mssg):
         msg = MIMEText("Ubicación: {0}, {1}\nContainer:{2}\n{3} - {4}".format(
             self.city, self.state, self.ID,strftime("%Y-%m-%d %H:%M:%S", localtime()),
             mssg))
         recipients = self.logMail
-        msg['Subject'] = "#{} {}".format(self.ID, subject)
+        msg['Subject'] = "#{} {}".format(self.trigger, subject)
         msg['From'] = email['username']
         msg['To'] = ", ".join(recipients)
         try:

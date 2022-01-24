@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# This file it is in development
 from time import time, sleep
 
 class Alert():
@@ -28,8 +30,7 @@ class Alert():
             elif (level==2 or level=='WARNING'): self.log.warning(msg)
             elif (level==3 or level=='ERROR'): self.log.error(msg)
             elif (level==4 or level=='CRITICAL'): self.log.critical(msg)
-        else:
-            print(msg)
+        else: print('{0},{1}'.format(level,msg))
 
     def addAlert(self, alertName, alertMsg, waitTime = 10, extraInfo = ''):
         # waitTime is in minutes

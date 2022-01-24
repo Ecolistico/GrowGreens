@@ -1,22 +1,24 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
-import io
-import re
-import csv
-import time
-import base64
-from sysMaster import runShellCommand
 import PySimpleGUI as sg
-from PIL import Image, ImageTk
+from datetime import datetime
+import time
 
-# Pendiente integrar serialController to manage connection between devices
 class GUI:
-    def __init__(self, logger = None, serialControl = None):
+    def __init__(self, ID = "99-999-999", logger = None, serialControl = None):
         # Logger
         self.log = logger
         # Serial controller
         self.ser = serialControl
-
+        
+        # Main Window
+        self.window = None
+        self.isOpen = True
+        
+        # Timer
+        self.timer = time.time()
+        
+        # Visuals
         # Colors
         self.black90 = '#3c3c3b'
         self.green1 = '#00783e'
@@ -24,83 +26,85 @@ class GUI:
         self.green3 = '#00b44f'
         self.green4 = '#82bc00'
         self.disable_color = (self.black90, self.black90)
-
-        # Tables variables
-        actualDirectory = os.getcwd()
-        if actualDirectory.endswith('src'):
-            self.filename = 'config.csv'
-            self.paths = ['./GUI_Pics/Siembra.png',
-                          './GUI_Pics/Siembra8.png',
-                          './GUI_Pics/Siembra7.png',
-                          './GUI_Pics/Siembra6.png',
-                          './GUI_Pics/Siembra5.png',
-                          './GUI_Pics/Siembra4.png',
-                          './GUI_Pics/Siembra3.png',
-                          './GUI_Pics/Siembra2.png',
-                          './GUI_Pics/Siembra1.png',
-                          './GUI_Pics/Tina.png',
-                          './GUI_Pics/minus.png',
-                          './GUI_Pics/plus.png']
-            self.timeout = 200;
-        else:
-            self.filename = './src/config.csv'
-            self.paths = ['./src/GUI_Pics/Siembra.png',
-                          './src/GUI_Pics/Siembra8.png',
-                          './src/GUI_Pics/Siembra7.png',
-                          './src/GUI_Pics/Siembra6.png',
-                          './src/GUI_Pics/Siembra5.png',
-                          './src/GUI_Pics/Siembra4.png',
-                          './src/GUI_Pics/Siembra3.png',
-                          './src/GUI_Pics/Siembra2.png',
-                          './src/GUI_Pics/Siembra1.png',
-                          './src/GUI_Pics/Tina.png',
-                          './src/GUI_Pics/minus.png',
-                          './src/GUI_Pics/plus.png']
-            self.timeout = 0;
-
-        self.data = []
-        self.header_list = []
-
-        self.timer = 0
-        self.timerAux = False
-
-        # UI Variables
-        self.cycleTime = 15
-        self.evTime = 5
-        self.piso = '1'
-        self.lado = 'A'
-        self.etapa = '1'
-        self.solucion = 'H2O'
-
-        # Aux variables
-        self.total = 0
-
-        # Main Window
-        self.window = None
-        self.isOpen = True
-
-        self.DEF_BUTTON_COLOR = ('red', self.black90)
-
-        # Seeding variables
-        self.SeedValues = {'SA1':0, 'SA2':0, 'SA3':0, 'SA4':0, 'SB1':0, 'SB2':0, 'SB3':0, 'SB4':0}
-
-        # array path
-
-
+        self.BORDER_COLOR = '#C7D5E0'
+        self.DARK_HEADER_COLOR = '#1B2838'
+        # Padding
+        self.BPAD_TOP = ((0,0), (10, 10))
+        self.BPAD_LEFT = ((20,10), (0, 10))
+        self.BPAD_LEFT_INSIDE = (0, 10)
+        self.BPAD_RIGHT = ((10,20), (10, 20))
+        
         # Add your new theme colors and settings
-        sg.LOOK_AND_FEEL_TABLE['GrowGreens'] = {'BACKGROUND': self.black90,
-                                                'TEXT': self.green4,
+        sg.LOOK_AND_FEEL_TABLE['Dashboard'] = {'BACKGROUND': self.black90,
+                                                'TEXT': 'white',
                                                 'INPUT': '#d2d2d2',
                                                 'TEXT_INPUT': 'black',
                                                 'SCROLL': '#d2d2d2',
                                                 'BUTTON': ('black', self.green1),
                                                 'PROGRESS': ('white', self.green2),
-                                                'BORDER': 3, 'SLIDER_DEPTH': 3, 'PROGRESS_DEPTH': 3,
-                                                }
-        # Switch to use your newly created theme
-        sg.theme('GrowGreens')
+                                                'BORDER': 3,'SLIDER_DEPTH': 3, 'PROGRESS_DEPTH': 3}
+                                                #'BORDER': 1,'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0}
+        sg.theme('Dashboard')
+        
+        # Tables variables
+        actualDirectory = os.getcwd()
+        if actualDirectory.endswith('src'): self.timeout = 200;
+        else: self.timeout = 0;
+            
+        # Variables to update in Window
+        timestampStr = datetime.now().strftime("%d-%b-%Y %H:%M")
+        hum = float("NaN")
+        temp = float("NaN")
+        ID = ID
+        lastCommand = ""
+        
+        # List of devices
+        self.devicesUSB = ['master', 'generalControl', 'motorsG1', 'motorsG2']
+        self.devicesGrower = ['grower{}'.format(i+1) for i in range(4)]
+        self.devicesESP = ['esp32front1', 'esp32front2', 'esp32center1', 'esp32center2', 'esp32back1', 'esp32back2']
+        self.devicesConnected = []
+        
+        # List of levels
+        self.levels = ['Piso {}'.format(i+1) for i in range(8)]
+        # Checbox for devices
+        CB1 = [sg.Checkbox(x, default = False, disabled= True, font='Any 10', key="CB1_{}".format(i)) for i, x in enumerate(self.devicesUSB)]
+        CB2 = [sg.Checkbox(x, default = False, disabled= True, font='Any 10', key="CB2_{}".format(i)) for i, x in enumerate(y for y in self.devicesESP if '1' in y[-1])]
+        CB3 = [sg.Checkbox(x, default = False, disabled= True, font='Any 10', key="CB3_{}".format(i)) for i, x in enumerate(y for y in self.devicesESP if '2' in y[-1])]
+        CB4 = [sg.Checkbox(x, default = False, disabled= True, font='Any 10', key="CB4_{}".format(i)) for i, x in enumerate(self.devicesGrower)]
+        
+        top_banner = [[sg.Text(' '*31 + 'Grow Greens', font='Any 28')]]
 
+        top  = [[sg.Text('ID: {}'.format(ID), font='Any 12', key='ID'), sg.Text(' '*27 + 'Estatus General', font='Any 20'), sg.Text(' '*33 + timestampStr, font='Any 12')],
+                [sg.Text(' '*43 + 'Frío' + ' '*35 + 'Óptimo' + ' '*35 + 'Caliente' + ' '*38 + 'Seco' + ' '*35 + 'Óptimo' + ' '*35 + 'Húmedo', font='Any 8')],
+                [sg.Text('Temp: {}°C'.format(temp), font='Any 12', key='temp'), sg.ProgressBar(100, size=(30, 10), key='tempBar', bar_color=("red", "white")),
+                 sg.Text('HR: {}%'.format(hum), font='Any 12', key='hum'), sg.ProgressBar(100, size=(30, 10), key='humBar', bar_color=("blue", "white"))]]
 
+        block_2 = [[sg.Text(' '*20 + 'Rutinas', font='Any 18')],
+                    [sg.Text('Seleccione:', font='Any 12', key="rut"), sg.Combo(self.levels, font='Any 12'),
+                     sg.Text('Estatus', font='Any 12'), sg.Input('No hay selección', size=(20,10), key="rut_status")],
+                    [sg.Text(' '*25), sg.Button('Iniciar', key="data_start"), sg.Text(' '*10), sg.Button('Parar', key="data_stop")]]
+
+        block_3 = [[sg.Text(' '*15 + 'Dispósitivos', font='Any 18')], CB1, CB2, CB3, CB4]
+
+        block_4 = [[sg.Text(' '*18 + 'Comunicación', font='Any 18')],
+                    [sg.Output(size=(60,10), key="stdout")],
+                    [sg.Text('Último comando enviado:', font='Any 10'), sg.Text('{}'.format(lastCommand), font='Any 10', text_color='black', key="last_command")],
+                    [sg.Text(' '*20 + 'Enviar a:', font='Any 10'), sg.Combo(self.devicesUSB, font='Any 12', key="select_device")],
+                    [sg.Input(size=(50,10)), sg.Button('Enviar', key="send_data")]]
+
+        self.layout = [[sg.Column(top_banner, size=(960, 60), pad=(0,0), background_color=self.black90)],
+                  [sg.Column(top, size=(960, 120), pad=self.BPAD_TOP)],
+                  [sg.Column([[sg.Column(block_2, size=(450,120), pad=self.BPAD_LEFT_INSIDE)],
+                              [sg.Column(block_3, size=(450,180),  pad=self.BPAD_LEFT_INSIDE)]], pad=self.BPAD_LEFT, background_color=self.BORDER_COLOR),
+                   sg.Column(block_4, size=(450, 320), pad=self.BPAD_RIGHT)]]
+    
+    def begin(self):
+        self.window = sg.Window('Dashboard', self.layout, background_color=self.BORDER_COLOR, finalize=True)
+        self.window['CB1_0'].Update(value=True)
+        self.temp_bar = self.window['tempBar']
+        self.hum_bar = self.window['humBar']
+        self.str2log('GUI started correctly', level = 1)
+        
     def str2log(self, msg, level = 'DEBUG'):
         if self.log!=None:
             if (level==0 or level=='DEBUG'): self.log.debug(msg)
@@ -110,499 +114,53 @@ class GUI:
             elif (level==4 or level=='CRITICAL'): self.log.critical(msg)
         else:
             print(msg)
-
+    
+    # update to send serial messages to all devices
     def serialMsg(self, msg):
         if self.ser != None:
             self.ser.write(self.ser.generalControl, msg)
         else:
             self.str2log(msg, 3)
-
-    def str2UpdateCycle(self, valor):
-        msg = 'solenoid,setCycleTime,'
-        msg += str(valor)
-        return msg
-
-    def str2UpdateEV(self, piso, lado, etapa, solucion, valor):
-        if(lado=='A'): ladoInt = 0
-        else: ladoInt = 4
-        if(solucion=='H2O'): sol = 0
-        else: sol = int(solucion)
-
-        msg = 'solenoid,setTimeOn,'
-        msg += str(int(piso)-1)
-        msg += ','
-        msg += str(etapa+ladoInt-1)
-        msg += ','
-        msg += str(sol)
-        msg += ','
-        msg += str(valor)
-
-        return msg
-
-    def getEVlimits(self, cycle, etapa):
-        evNumber = 32
-        minSec = 3
-        factor = 0.0833*etapa+0.1567
-        maxSec = int((cycle*60/evNumber)*factor)
-        if maxSec < minSec: maxSec = minSec
-        return minSec, maxSec
-
-    def getTotalIrrigationTime(self, dataSource):
-        sum = [0, 0, 0, 0, 0]
-        for i in range(len(dataSource)-1):
-            for j in range(len(sum)):
-                sum[j] += int(dataSource[i][j+1])
-        return max(sum)
-
-    def getEVvalue(self, piso, lado, etapa, solucion, dataSource):
-        if(lado=='A'): ladoInt = 0
-        else: ladoInt = 4
-        if(solucion=='H2O'): sol = 1
-        else: sol = int(solucion) + 1
-        columna = ((piso-1)*8) + (etapa+ladoInt) - 1
-        return dataSource[columna][sol]
-
-    def changeEVvalue(self, piso, lado, etapa, solucion, dataSource, cycleTime, value, factor = 0.5):
-        if(lado=='A'): ladoInt = 0
-        else: ladoInt = 4
-        if(solucion=='H2O'): sol = 1
-        else: sol = int(solucion) + 1
-        columna = ((piso-1)*8) + (etapa+ladoInt) - 1
-        oldValue = dataSource[columna][sol]
-        dataSource[columna][sol] = value
-        if (self.getTotalIrrigationTime(dataSource)<=(int(cycleTime)*60*factor)):
-            return True
-        else:
-            dataSource[columna][sol] = oldValue
-            return False
-
-    def rewriteCSV(self, file, header, dataSource):
-        with open(file, mode='w', newline='') as outfile:
-            writer = csv.writer(outfile)
-            writer.writerow(header)
-            writer.writerows(dataSource)
-
-    def checkEV(self):
-        if self.piso!='' and self.lado!='' and self.etapa!='' and self.solucion!='':
-            evMin, evMax = self.getEVlimits(self.cycleTime, int(self.etapa))
-            val = self.getEVvalue(int(self.piso), self.lado, int(self.etapa), self.solucion, self.data)
-            self.window['evTime'].Update(range=(evMin, evMax))
-            self.window['evTime'].Update(value=val)
-        else:
-            self.window['evTime'].Update(value=5, range=(5, 5))
-            self.window['Actualizar'].Update(button_color=self.disable_color, disabled=True)
-
-    def updateCurrentTimeValues(self):
-        if(self.lado=='A'): ladoInt = 0
-        else: ladoInt = 4
-        if(self.solucion=='H2O'): sol = 1
-        else: sol = int(self.solucion) + 1
-        columna = ((int(self.piso)-1)*8)
-        self.window['GerminacionATxt'].update(str(self.data[columna][sol])+' s')
-        self.window['Etapa1ATxt'].update(str(self.data[columna+1][sol])+' s')
-        self.window['Etapa2ATxt'].update(str(self.data[columna+2][sol])+' s')
-        self.window['CosechaATxt'].update(str(self.data[columna+3][sol])+' s')
-        self.window['GerminacionBTxt'].update(str(self.data[columna+4][sol])+' s')
-        self.window['Etapa1BTxt'].update(str(self.data[columna+5][sol])+' s')
-        self.window['Etapa2BTxt'].update(str(self.data[columna+6][sol])+' s')
-        self.window['CosechaBTxt'].update(str(self.data[columna+7][sol])+' s')
-
-
-    def get_img_data(self, f, maxsize=(450, 300), first=False):
-        """Generate image data using PIL
-        """
-        img = Image.open(f)
-        img.thumbnail(maxsize)
-        if first:                     # tkinter is inactive the first time
-            bio = io.BytesIO()
-            img.save(bio, format="PNG")
-            del img
-            return bio.getvalue()
-        return ImageTk.PhotoImage(img)
-
-    def GraphicButton(self,text, key, image_data, maxsize=(200, 50)):
-        '''
-        A user defined element.  Use this function inside of your layouts as if it were a Button element (it IS a Button Element)
-        Only 3 parameters are required.
-
-        :param text: (str) Text you want to display on the button
-        :param key:  (Any) The key for the button
-        :param image_data: (str) The Base64 image to use on the button
-        :param color: Tuple[str, str] Button color
-        :param size: Tuple[int, int] Size of the button to display in pixels (width, height)
-        :return: (PySimpleGUI.Button) A button with a resized Base64 image applied to it
-        '''
-        return sg.Button(text, image_data=self.get_img_data(image_data, maxsize,first=True), button_color=self.DEF_BUTTON_COLOR, font='Any 15', pad=(0, 0), key=key, border_width=0)
-
-    def ResetSeedValues(self):
-        self.SeedValues = {'SA1':0, 'SA2':0, 'SA3':0, 'SA4':0, 'SB1':0, 'SB2':0, 'SB3':0, 'SB4':0}
-        self.window['B_A4'].Update(value=self.SeedValues['SA4'])
-        self.window['B_A3'].Update(value=self.SeedValues['SA3'])
-        self.window['B_A2'].Update(value=self.SeedValues['SA2'])
-        self.window['B_A1'].Update(value=self.SeedValues['SA1'])
-        self.window['B_B4'].Update(value=self.SeedValues['SB4'])
-        self.window['B_B3'].Update(value=self.SeedValues['SB3'])
-        self.window['B_B2'].Update(value=self.SeedValues['SB2'])
-        self.window['B_B1'].Update(value=self.SeedValues['SB1'])
-
-    def Seed2DB(self, hostname):
-        numberSeeds = '{}{}{}{}{}{}{}{}'.format(self.SeedValues['SA1'],
-                                                self.SeedValues['SB1'],
-                                                self.SeedValues['SA2'],
-                                                self.SeedValues['SB2'],
-                                                self.SeedValues['SA3'],
-                                                self.SeedValues['SB3'],
-                                                self.SeedValues['SA4'],
-                                                self.SeedValues['SB4'])
-        actualDirectory = os.getcwd()
-        if actualDirectory.endswith('src'):
-            runShellCommand('python plant2DB.py {} {}'.format(hostname, numberSeeds))
-        else:
-            runShellCommand('python src/plant2DB.py {} {}'.format(hostname, numberSeeds))
-
-    def begin(self):
-         if self.filename is not None:
-             if os.path.exists(self.filename):
-                 with open(self.filename, "r") as infile:
-                     reader = csv.reader(infile)
-                     self.header_list = next(reader)
-                     try:
-                         self.data = list(reader)  # read everything else into a list of rows
-                     except:
-                         sg.popup_error('Error reading file')
-                         return
-             else:
-                 with open(self.filename, 'w', encoding="utf-8", newline='') as infile:
-                     infile_writer = csv.writer(infile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                     infile_writer.writerow(['﻿EV','H2O','Sol1','Sol2','Sol3','Sol4'])
-                     infile_writer.writerow(['1A1','5','5','5','5','5'])
-                     infile_writer.writerow(['1A2','5','5','5','5','5'])
-                     infile_writer.writerow(['1A3','5','5','5','5','5'])
-                     infile_writer.writerow(['1A4','5','5','5','5','5'])
-                     infile_writer.writerow(['1B1','5','5','5','5','5'])
-                     infile_writer.writerow(['1B2','5','5','5','5','5'])
-                     infile_writer.writerow(['1B3','5','5','5','5','5'])
-                     infile_writer.writerow(['1B4','5','5','5','5','5'])
-                     infile_writer.writerow(['2A1','5','5','5','5','5'])
-                     infile_writer.writerow(['2A2','5','5','5','5','5'])
-                     infile_writer.writerow(['2A3','5','5','5','5','5'])
-                     infile_writer.writerow(['2A4','5','5','5','5','5'])
-                     infile_writer.writerow(['2B1','5','5','5','5','5'])
-                     infile_writer.writerow(['2B2','5','5','5','5','5'])
-                     infile_writer.writerow(['2B3','5','5','5','5','5'])
-                     infile_writer.writerow(['2B4','5','5','5','5','5'])
-                     infile_writer.writerow(['3A1','5','5','5','5','5'])
-                     infile_writer.writerow(['3A2','5','5','5','5','5'])
-                     infile_writer.writerow(['3A3','5','5','5','5','5'])
-                     infile_writer.writerow(['3A4','5','5','5','5','5'])
-                     infile_writer.writerow(['3B1','5','5','5','5','5'])
-                     infile_writer.writerow(['3B2','5','5','5','5','5'])
-                     infile_writer.writerow(['3B3','5','5','5','5','5'])
-                     infile_writer.writerow(['3B4','5','5','5','5','5'])
-                     infile_writer.writerow(['4A1','5','5','5','5','5'])
-                     infile_writer.writerow(['4A2','5','5','5','5','5'])
-                     infile_writer.writerow(['4A3','5','5','5','5','5'])
-                     infile_writer.writerow(['4A4','5','5','5','5','5'])
-                     infile_writer.writerow(['4B1','5','5','5','5','5'])
-                     infile_writer.writerow(['4B2','5','5','5','5','5'])
-                     infile_writer.writerow(['4B3','5','5','5','5','5'])
-                     infile_writer.writerow(['4B4','5','5','5','5','5'])
-                     infile_writer.writerow(['Ciclo (Min)','15','','','',''])
-                 with open(self.filename, "r") as infile:
-                     reader = csv.reader(infile)
-                     self.header_list = next(reader)
-                     try:
-                         self.data = list(reader)  # read everything else into a list of rows
-                     except:
-                         sg.popup_error('Error reading file')
-                         return
-
-         self.total = self.getTotalIrrigationTime(self.data)
-         self.cycleTime = self.data[-1][1]
-
-         col1 = sg.Column([
-                      [sg.Text('Grow Greens', size=(44, 1), justification='center', font=("Helvetica 30 bold"), relief=sg.RELIEF_RIDGE, border_width=5)],
-                      [sg.Text('_' * 150)]
-               ])
-
-         col2 = sg.Column([
-                      [sg.Frame(layout=[
-                          #[sg.Text(' '*50, key='Error1', text_color='red')],
-                          [sg.Text('Selección de piso a visualizar:')],
-                          [sg.Radio('Piso 1             ', "PISO", key='Piso1', default=True, text_color='white'),
-                           sg.Radio('Piso 2             ', "PISO", key='Piso2', text_color='white'),
-                           sg.Radio('Piso 3             ', "PISO", key='Piso3', text_color='white'),
-                           sg.Radio('Piso 4', "PISO", key='Piso4', text_color='white')],
-                          [sg.Text('Selección de solución a visualizar:')],
-                          [sg.Radio('Agua', "SOL", key='H2O', default=True, text_color='white'),
-                           sg.Radio('Solución 1', "SOL", key='S1', text_color='white'),
-                           sg.Radio('Solución 2', "SOL", key='S2', text_color='white'),
-                           sg.Radio('Solución 3', "SOL", key='S3', text_color='white'),
-                           sg.Radio('Solución 4', "SOL", key='S4', text_color='white')],
-                          #[sg.Text('')],
-                          [sg.Text('Selección de etapa a editar:'),
-                          sg.Text('Tiempo (s)'),
-                           sg.Slider(range=(5, 5), orientation='h', key='evTime', size=(10, 15), default_value=self.evTime),
-                           #sg.Text(' '*10),
-                           sg.Button('Actualizar', size=(8, 1), key="Actualizar", pad=(10,10), disabled=True, button_color=self.disable_color)],
-                          [sg.Radio('Germinación A', "Etapa", key='GerminacionA', default=True, text_color='white'),
-                           sg.Radio('Etapa 1 A  ', "Etapa", key='Etapa1A', text_color='white'),
-                           sg.Radio('Etapa 2 A  ', "Etapa", key='Etapa2A', text_color='white'),
-                           sg.Radio('Cosecha A', "Etapa", key='CosechaA', text_color='white')],
-                          [sg.Text(self.data[0][1]+' s', key='GerminacionATxt', size=(13, 1), justification='center'),
-                           sg.Text(self.data[1][1]+' s', key='Etapa1ATxt', size=(10, 1), justification='center'),
-                           sg.Text(self.data[2][1]+' s', key='Etapa2ATxt', size=(13, 1), justification='center'),
-                           sg.Text(self.data[3][1]+' s', key='CosechaATxt', size=(11, 1), justification='center')],
-                          [sg.Image(data=self.get_img_data(self.paths[9], first=True))],
-                          [sg.Text(self.data[7][1]+' s', key='CosechaBTxt', size=(13, 1), justification='center'),
-                           sg.Text(self.data[6][1]+' s', key='Etapa2BTxt', size=(10, 1), justification='center'),
-                           sg.Text(self.data[5][1]+' s', key='Etapa1BTxt', size=(13, 1), justification='center'),
-                           sg.Text(self.data[4][1]+' s', key='GerminacionBTxt', size=(11, 1), justification='center')],
-                          [sg.Radio('Cosecha B     ', "Etapa", key='CosechaB', text_color='white'),
-                           sg.Radio('Etapa 2 B  ', "Etapa", key='Etapa2B', text_color='white'),
-                           sg.Radio('Etapa 1 B  ', "Etapa", key='Etapa1B', text_color='white'),
-                           sg.Radio('Germinación B', "Etapa", key='GerminacionB', text_color='white')],
-                          #[sg.Table(values=self.data,
-                         #           key='Table',
-                         #           headings=self.header_list,
-                         #           max_col_width=25,
-                         #           auto_size_columns=True,
-                         #           justification='center',
-                         #           num_rows=min(len(self.data), 8))],
-                          [sg.Text('Ciclo de riego:', size=(10, 1)),
-                          sg.Text(self.data[-1][1]+' min', key='TiempoCiclo', size=(6,1), justification='center'),
-                          sg.Slider(range=(int(self.total/30)+1, 20), key='cycleTime', orientation='h', size=(15, 15), default_value=self.cycleTime),
-                          sg.Button('Actualizar Ciclo', size=(12, 1), key="Actualizar Ciclo", pad=(10,10), disabled=True, button_color=self.disable_color)],
-                          #[sg.Text('Piso:'),
-                           #sg.Text('Lado:'),
-                           #sg.Text('Etapa:'),
-                           #sg.Text('Solución:'),
-                           #sg.Text(' '*40, key='Error2', text_color='red')],
-                          #[sg.Combo(('', '1', '2', '3', '4'), key="Piso", default_value='', size=(4, 1)),
-                           #sg.Combo(('', 'A', 'B'), key="Lado", default_value='', size=(4, 1)),
-                           #sg.Combo(('', '1', '2', '3', '4'), key="Etapa", default_value='', size=(4, 1)),
-                           #sg.Combo(('', 'H2O', '1', '2', '3', '4'), key="Sol", default_value='', size=(4, 1)),
-
-                          ], title='Configuración de riego', relief=sg.RELIEF_SUNKEN)]
-                ])
-
-         colB1 = sg.Column([
-                      [self.GraphicButton('','B_A4+',self.paths[11],maxsize=(30,30))],
-                      [sg.Text(self.SeedValues['SA4'] ,key='B_A4')],
-                      [self.GraphicButton('','B_A4-',self.paths[10],maxsize=(30,30))],
-                      [sg.Text('')],
-                      [self.GraphicButton('','B_A3+',self.paths[11],maxsize=(30,30))],
-                      [sg.Text(self.SeedValues['SA3'],key='B_A3')],
-                      [self.GraphicButton('','B_A3-',self.paths[10],maxsize=(30,30))],
-                      [sg.Text('')],
-                      [self.GraphicButton('','B_A2+',self.paths[11],maxsize=(30,30))],
-                      [sg.Text(self.SeedValues['SA2'],key='B_A2')],
-                      [self.GraphicButton('','B_A2-',self.paths[10],maxsize=(30,30))],
-                      [sg.Text('')],
-                      [self.GraphicButton('','B_A1+',self.paths[11],maxsize=(30,30))],
-                      [sg.Text(self.SeedValues['SA1'],key='B_A1')],
-                      [self.GraphicButton('','B_A1-',self.paths[10],maxsize=(30,30))],
-         ])
-         colB2 = sg.Column([
-                      [self.GraphicButton('','B_B4+',self.paths[11],maxsize=(30,30))],
-                      [sg.Text(self.SeedValues['SB4'],key='B_B4')],
-                      [self.GraphicButton('','B_B4-',self.paths[10],maxsize=(30,30))],
-                      [sg.Text('')],
-                      [self.GraphicButton('','B_B3+',self.paths[11],maxsize=(30,30))],
-                      [sg.Text(self.SeedValues['SB3'],key='B_B3')],
-                      [self.GraphicButton('','B_B3-',self.paths[10],maxsize=(30,30))],
-                      [sg.Text('')],
-                      [self.GraphicButton('','B_B2+',self.paths[11],maxsize=(30,30))],
-                      [sg.Text(self.SeedValues['SB2'],key='B_B2')],
-                      [self.GraphicButton('','B_B2-',self.paths[10],maxsize=(30,30))],
-                      [sg.Text('')],
-                      [self.GraphicButton('','B_B1+',self.paths[11],maxsize=(30,30))],
-                      [sg.Text(self.SeedValues['SB1'],key='B_B1')],
-                      [self.GraphicButton('','B_B1-',self.paths[10],maxsize=(30,30))],
-         ])
-
-         col3 = sg.Column([
-                      [sg.Frame(layout=[
-                          [sg.Text('Presiona el botón de + o - para indicar en que piso se siembra', size = (56, 1), justification='center')],
-                          [sg.Text('presiona la cantidad de veces que se haya sembrado', size = (56, 1), justification='center')],
-                          [colB1,
-                          sg.Image(data=self.get_img_data(self.paths[0], maxsize=(380,443), first=True), key='siembra'),
-                          colB2],
-                      ], title='Bitácora de siembra', relief=sg.RELIEF_SUNKEN)]
-                ])
-
-         layout = [[col1],[col2, col3]]
-
-         self.window = sg.Window('GG GUI', layout, no_titlebar=False,
-                            auto_size_text=True, finalize=True)
-
-         self.str2log('GUI started correctly', level = 1)
-
+    
+    def updateGeneral(self, temp, hum):
+        self.window['temp'].Update(value='Temp: {}°C'.format(temp))
+        self.window['hum'].Update(value='HR: {}%'.format(hum))
+        
+        minTemp = 10
+        maxTemp = 40
+        adjustTemp = (temp - minTemp)*100/(maxTemp-minTemp)
+        
+        minHum = 40
+        maxHum = 100
+        adjustHum = (hum - minHum)*100/(maxHum-minHum)
+        
+        self.temp_bar.UpdateBar(adjustTemp)
+        self.hum_bar.UpdateBar(adjustHum)
+ 
+    def updateDevicesConnected(self, values):
+        connected = []
+        for i, value in enumerate(self.devicesUSB):
+            if(values['CB1_{}'.format(i)]): connected.append(value)
+        for i, value in enumerate([x for x in self.devicesESP if '1' in x[-1]]):
+            if(values['CB2_{}'.format(i)]): connected.append(value)
+        for i, value in enumerate([x for x in self.devicesESP if '2' in x[-1]]):
+            if(values['CB3_{}'.format(i)]): connected.append(value)
+        for i, value in enumerate(self.devicesGrower):
+            if(values['CB4_{}'.format(i)]): connected.append(value)
+        if(len(connected)!=len(self.devicesConnected)): self.window['select_device'].Update(values=connected)
+   
+    # Needs to be called in an Event Loop
     def run(self):
         try:
             event, values = self.window.read(timeout=self.timeout, timeout_key='timeout')
-            regex = re.findall('B_[AB][1-4][+-]', event)
-
-            if int(values['cycleTime']) != self.cycleTime:
-                self.cycleTime = int(values['cycleTime'])
-                if(self.data[-1][1] == str(self.cycleTime)):
-                    self.window['Actualizar Ciclo'].Update(button_color=self.disable_color, disabled=True)
-                else: self.window['Actualizar Ciclo'].Update(button_color=('black', self.green1), disabled=False)
-                if self.piso=='' or self.lado=='' or self.etapa=='' or self.solucion=='':
-                    self.window['evTime'].Update(range=(5, 5))
-
-            if int(values['evTime']) != self.evTime:
-                self.evTime = int(values['evTime'])
-                if self.piso!='' and self.lado!='' and self.etapa!='' and self.solucion!='':
-                    ev = self.getEVvalue(int(self.piso), self.lado, int(self.etapa), self.solucion, self.data)
-                    if (int(ev) == self.evTime): self.window['Actualizar'].Update(button_color=self.disable_color, disabled=True)
-                    else: self.window['Actualizar'].Update(button_color=('black', self.green1), disabled=False)
-
-            # Check floor
-            if values['Piso1']:
-                if (self.piso!=1):
-                    self.piso = 1
-                    self.checkEV()
-                    self.updateCurrentTimeValues()
-            if values['Piso2']:
-                if (self.piso!=2):
-                    self.piso = 2
-                    self.checkEV()
-                    self.updateCurrentTimeValues()
-            if values['Piso3']:
-                if (self.piso!=3):
-                    self.piso = 3
-                    self.checkEV()
-                    self.updateCurrentTimeValues()
-            if values['Piso4']:
-                if (self.piso!=4):
-                    self.piso = 4
-                    self.checkEV()
-                    self.updateCurrentTimeValues()
-
-            # Check Region
-            if values['GerminacionA']:
-                if (self.lado!='A' or self.etapa!=1):
-                    self.lado = 'A'
-                    self.etapa = 1
-                    self.checkEV()
-            if values['Etapa1A']:
-                if (self.lado!='A' or self.etapa!=2):
-                    self.lado = 'A'
-                    self.etapa = 2
-                    self.checkEV()
-            if values['Etapa2A']:
-                if (self.lado!='A' or self.etapa!=3):
-                    self.lado = 'A'
-                    self.etapa = 3
-                    self.checkEV()
-            if values['CosechaA']:
-                if (self.lado!='A' or self.etapa!=4):
-                    self.lado = 'A'
-                    self.etapa = 4
-                    self.checkEV()
-            if values['GerminacionB']:
-                if (self.lado!='B' or self.etapa!=1):
-                    self.lado = 'B'
-                    self.etapa = 1
-                    self.checkEV()
-            if values['Etapa1B']:
-                if (self.lado!='B' or self.etapa!=2):
-                    self.lado = 'B'
-                    self.etapa = 2
-                    self.checkEV()
-            if values['Etapa2B']:
-                if (self.lado!='B' or self.etapa!=3):
-                    self.lado = 'B'
-                    self.etapa = 3
-                    self.checkEV()
-            if values['CosechaB']:
-                if (self.lado!='B' or self.etapa!=4):
-                    self.lado = 'B'
-                    self.etapa = 4
-                    self.checkEV()
-
-            # Check solution
-            if values['H2O']:
-                if (self.solucion!='H2O'):
-                    self.solucion = 'H2O'
-                    self.checkEV()
-                    self.updateCurrentTimeValues()
-            if values['S1']:
-                if (self.solucion!='1'):
-                    self.solucion = '1'
-                    self.checkEV()
-                    self.updateCurrentTimeValues()
-            if values['S2']:
-                if (self.solucion!='2'):
-                    self.solucion = '2'
-                    self.checkEV()
-                    self.updateCurrentTimeValues()
-            if values['S3']:
-                if (self.solucion!='3'):
-                    self.solucion = '3'
-                    self.checkEV()
-                    self.updateCurrentTimeValues()
-            if values['S4']:
-                if (self.solucion!='4'):
-                    self.solucion = '4'
-                    self.checkEV()
-                    self.updateCurrentTimeValues()
-
-            if event == 'Actualizar':
-                resp = self.changeEVvalue(int(self.piso), self.lado, int(self.etapa), self.solucion, self.data, self.cycleTime, self.evTime)
-                if(resp):
-                    #self.window['Table'].Update(values=self.data)
-                    self.window['Actualizar'].Update(button_color=self.disable_color, disabled=True)
-                    self.total = self.getTotalIrrigationTime(self.data)
-                    self.window['cycleTime'].Update(range=(int(self.total/30)+1, 20))
-                    self.rewriteCSV(self.filename, self.header_list, self.data)
-                    self.serialMsg(self.str2UpdateEV(int(self.piso), self.lado, int(self.etapa), self.solucion, self.evTime))
-                    self.str2log("Update Success")
-                    self.updateCurrentTimeValues()
-                else: self.str2log("Update Failed")
-
-            if event == 'Actualizar Ciclo':
-                self.total = self.getTotalIrrigationTime(self.data)
-                if self.total<=(int(self.cycleTime)*30):
-                    self.data[-1][1] = str(self.cycleTime)
-                    #self.window['Table'].Update(values=self.data)
-                    self.window['Actualizar Ciclo'].Update(button_color=self.disable_color, disabled=True)
-                    self.rewriteCSV(self.filename, self.header_list, self.data)
-                    self.serialMsg(self.str2UpdateCycle(self.cycleTime))
-                    if self.piso!='' and self.lado!='' and self.etapa!='' and self.solucion!='':
-                        evMin, evMax = self.getEVlimits(self.cycleTime, int(self.etapa))
-                        val = self.getEVvalue(int(self.piso), self.lado, int(self.etapa), self.solucion, self.data)
-                        self.window['evTime'].Update(range=(evMin, evMax))
-                        self.window['TiempoCiclo'].Update(self.data[-1][1]+' min')
-                    self.str2log("Update Cycle Success")
-                else:
-                    self.str2log("Update Cycle Failed")
-
-            if len(regex)==1:
+            # Update connected devices every 15 seconds
+            if time.time()-self.timer>15:
                 self.timer = time.time()
-                self.timerAux = True
-                self
-                lado = regex[0][2]
-                path = int(regex[0][3])
-                if(lado=='B'):
-                    path=path*2-1
-                else:
-                    path=path*2
-                self.window['siembra'].Update(data=self.get_img_data(self.paths[path], maxsize=(380,443), first=True))
-
-                txtBKey=regex[0][:-1]
-                txtSeedValueKey='S'+regex[0][2]+regex[0][3]
-                if regex[0][4]=='+':
-                    self.SeedValues[txtSeedValueKey]=self.SeedValues[txtSeedValueKey]+1
-                    self.window[txtBKey].Update(value=self.SeedValues[txtSeedValueKey])
-                else:
-                    if self.SeedValues[txtSeedValueKey]>0: self.SeedValues[txtSeedValueKey]=self.SeedValues[txtSeedValueKey]-1
-                    self.window[txtBKey].Update(value=self.SeedValues[txtSeedValueKey])
-            if (time.time()-self.timer>1 and self.timerAux == True):
-                self.window['siembra'].Update(data=self.get_img_data(self.paths[0], maxsize=(380,443), first=True))
-                self.timerAux = False
-
+                self.updateDevicesConnected(values)
+            if event == sg.WIN_CLOSED:
+                sg.popup('ERROR', 'No puedes hacer eso') # Handle error
+                self.isOpen = False
+        
         except Exception as e:
             self.str2log("GUI Closed: {}".format(e), 2)
             self.isOpen = False
@@ -612,8 +170,9 @@ class GUI:
 def main():
     gui = GUI()
     gui.begin()
+    gui.updateGeneral(22, 70) # Set temperature and humidity data
     while gui.isOpen:
         gui.run()
-
+        
 if __name__ == '__main__':
     main()

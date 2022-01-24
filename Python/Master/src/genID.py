@@ -62,8 +62,7 @@ with open(file, 'r') as f:
 
 with open(file, 'w') as f:
     if(genID!=None):
-        if(len(staticIP)>3):
-            data['staticIP'] = staticIP
+        if(len(staticIP)>3): data['staticIP'] = staticIP
         data['ID'] = genID
         print("Se generó el ID del sistema={}".format(genID))
         json.dump(data, f)

@@ -14,7 +14,7 @@ void serialEvent() {                                  //if the hardware serial p
 
   
   if(input_string_complete==true){
-    String parameter[5];
+    String parameter[7];
     int k = 0;
     int l = 0;
     // Split the parameters
@@ -170,21 +170,49 @@ void serialEvent() {                                  //if the hardware serial p
       int gr = parameter[1].toInt();
       long x_mm = parameter[2].toInt();
       long y_mm = parameter[3].toInt();
+      bool capture = true;
+      if (parameter[4]==F("false") || parameter[4]==F("false\n")) capture = false;
       switch(gr){
         case 1:
-          grower1.sequence(x_mm, y_mm);
+          grower1.sequence(x_mm, y_mm, capture);
           break;
         case 2:
-          grower2.sequence(x_mm, y_mm);
+          grower2.sequence(x_mm, y_mm, capture);
           break;
         case 3:
-          grower3.sequence(x_mm, y_mm);
+          grower3.sequence(x_mm, y_mm, capture);
           break;
         case 4:
-          grower4.sequence(x_mm, y_mm);
+          grower4.sequence(x_mm, y_mm, capture);
           break;
         default:
           Serial.println(F("error,sequence(): Grower number do not exist"));
+          break;
+      }
+    }
+
+    // sequence_n()
+    else if(parameter[0]==F("sequence_n")){
+      int gr = parameter[1].toInt();
+      uint8_t nodes_x = parameter[2].toInt();
+      uint8_t nodes_y = parameter[3].toInt();
+      bool capture = true;
+      if (parameter[4]==F("false") || parameter[4]==F("false\n")) capture = false;
+      switch(gr){
+        case 1:
+          grower1.sequence_n(nodes_x, nodes_y, capture);
+          break;
+        case 2:
+          grower2.sequence_n(nodes_x, nodes_y, capture);
+          break;
+        case 3:
+          grower3.sequence_n(nodes_x, nodes_y, capture);
+          break;
+        case 4:
+          grower4.sequence_n(nodes_x, nodes_y, capture);
+          break;
+        default:
+          Serial.println(F("error,sequence_n(): Grower number do not exist"));
           break;
       }
     }
@@ -413,6 +441,17 @@ void serialEvent() {                                  //if the hardware serial p
       else if(parameter[1]==F("read") || parameter[1]==F("read\n")){ read_EEPROM(HIGH); }
       else if(parameter[1]==F("clean")|| parameter[1]==F("clean\n")){ clean_EEPROM(); }
       else{ Serial.println(F("warning,eeprom(): parameter[1] does not match a type")); }
+    }
+
+    // Config EEPROM
+    else if(parameter[0]==F("config")){
+      int gr = parameter[1].toInt();
+      int steps = parameter[2].toInt();
+      int microsteps = parameter[3].toInt();
+      int pulleyTeeth = parameter[4].toInt();
+      int xTooth = parameter[5].toInt();
+      int yTooth = parameter[6].toInt();
+      saveConfig(gr, steps, microsteps, pulleyTeeth, xTooth, yTooth);
     }
 
     else{ Serial.println(F("warning, Serial Command Unknown")); }

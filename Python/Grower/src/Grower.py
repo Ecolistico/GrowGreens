@@ -18,9 +18,9 @@ Functions resume:
 """
 
 class Grower:
-    def __init__(self, logger, out1 = 22, out2 = 23):
+    def __init__(self, logger, out1 = 24, out2 = 12):
         self.log = logger
-        
+
         self.day = 0
         self.month = 0
         self.year = 0
@@ -28,7 +28,10 @@ class Grower:
 
         self.OUT1 = out1     # GPIO to activate IR
         self.OUT2 = out2    # GPIO to activate LED
-                # Setting Up Cozir
+        self.SDA = 2
+        self.SCL = 3
+
+        # Setting Up Cozir
         try:
             self.coz = cozir.Cozir(self.log)
             checkCozir = 0
@@ -36,7 +39,7 @@ class Grower:
             if(self.coz.opMode(self.coz.polling)):
                 self.log.info("Cozir: Set Mode = K{0}".format(self.coz.act_OpMode))
             else: checkCozir +=1
-            # Get hum, temp and co2_filter        
+            # Get hum, temp and co2_filter
             if(self.coz.setData_output(self.coz.Hum + self.coz.Temp + self.coz.CO2_filt)):
                 self.log.info("Cozir: Data Mode = M{}".format(self.coz.act_OutMode))
             else: checkCozir +=1
@@ -47,16 +50,20 @@ class Grower:
         except Exception as e:
             self.coz = None
             self.log.critical("Cozir not found: sensor disconnected. {}".format(e))
-            
+
         # Setting Up GPIO
         GPIO.setmode(GPIO.BCM)
 
         GPIO.setup(self.OUT1, GPIO.OUT)
         GPIO.setup(self.OUT2, GPIO.OUT)
-        
+        GPIO.setup(self.SDA, GPIO.OUT)
+        GPIO.setup(self.SCL, GPIO.OUT)
+
         GPIO.output(self.OUT1, GPIO.LOW)
         GPIO.output(self.OUT2, GPIO.LOW)
-        
+        GPIO.output(self.SDA, GPIO.LOW)
+        GPIO.output(self.SCL, GPIO.LOW)
+
     def getState(self, gpio):
         return GPIO.input(gpio)
 
@@ -69,11 +76,11 @@ class Grower:
     def wait(self, timeout):
         actualTime = time()
         while(time()-actualTime<timeout): continue
-        
+
     def checkDayDirectory(self):
         if os.path.exists('data/{}-{}-{}'.format(self.day, self.month, self.year)): return True
         else: return False
-        
+
     def createDayDirectory(self):
         os.makedirs('data/{}-{}-{}'.format(self.day, self.month, self.year))
         os.makedirs('data/{}-{}-{}/sequence'.format(self.day, self.month, self.year))
@@ -83,15 +90,14 @@ class Grower:
     def getDateFormat(self):
         now = datetime.now()
         if now.day<10: self.day = "0{}".format(now.day)
-        else: self.day = "{}".format(now.day) 
+        else: self.day = "{}".format(now.day)
         if now.month<10: self.month = "0{}".format(now.month)
         else: self.month = "{}".format(now.month)
         self.year = now.year
-    
+
     def whatIsMyIP(self):
         return getIPaddr()
- 
+
     def close(self):
         GPIO.cleanup() # Clean GPIO
         if(self.coz != None): self.coz.close() # Close serial Cozir port
-

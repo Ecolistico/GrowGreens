@@ -2,12 +2,16 @@
 **/temp
 **/__pycache__
 
+# All binaries
+**.bin
+
 # Data folders
 Python/Master/data/
 Python/Grower/data/
 
 # Config Files
 Python/Master/*.json
+Python/Master/*.config
 Python/Master/src/*.csv
 GUI/*.csv
 
