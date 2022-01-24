@@ -58,6 +58,7 @@ class logger:
         self.logger_generalControl = logging.getLogger('generalControl')
         self.logger_motorsGrower1 = logging.getLogger('motorsGrower1')
         self.logger_motorsGrower2 = logging.getLogger('motorsGrower2')
+        self.logger_ihp = logging.getLogger('iHP')
         # Create a file handler for each logger
         handler = logging.handlers.RotatingFileHandler('./temp/master.log', maxBytes = 5000000, backupCount = 3)
         handler.setLevel(logging.DEBUG)
@@ -87,6 +88,8 @@ class logger:
         handler_motorsGrower1.setLevel(logging.DEBUG)
         handler_motorsGrower2 = logging.handlers.RotatingFileHandler('./temp/motorsGrower2.log', maxBytes = 5000000, backupCount = 3)
         handler_motorsGrower2.setLevel(logging.DEBUG)
+        handler_ihp = logging.handlers.RotatingFileHandler('./temp/iHP.log', maxBytes = 5000000, backupCount = 3)
+        handler_ihp.setLevel(logging.DEBUG)
         
         # Create logging format and linking it to all the handlers
         formatter = logging.Formatter(fmt = '%(asctime)s %(levelname)-8s %(message)s',
@@ -105,6 +108,7 @@ class logger:
         handler_generalControl.setFormatter(formatter)
         handler_motorsGrower1.setFormatter(formatter)
         handler_motorsGrower2.setFormatter(formatter)
+        handler_ihp.setFormatter(formatter)
         # Add the handler to the logger
         self.logger.addHandler(handler)
         self.logger_esp32front1.addHandler(handler_esp32front1)
@@ -120,3 +124,4 @@ class logger:
         self.logger_generalControl.addHandler(handler_generalControl)
         self.logger_motorsGrower1.addHandler(handler_motorsGrower1)
         self.logger_motorsGrower2.addHandler(handler_motorsGrower2)
+        self.logger_ihp.addHandler(handler_ihp)

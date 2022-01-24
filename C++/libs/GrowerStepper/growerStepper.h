@@ -47,7 +47,8 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define Y_HOME_DISTANCE_MM 3000 // The max distance to get home in y
 #define WAIT_TIME_FOR_GO_HOME 1800000 // By default 30min the value is given in ms
 #define MIN_LIMIT_SECURITY_DISTANCE 15 // The min distance when moving to not touch the limit switch
-#define DEBOUNCE_TIME 5 // The time for debouncing limit switch in ms
+#define DEBOUNCE_TIME 5  // The time for debouncing limit switch in ms
+#define MAX_LS_COUNTER 3 // The max number of times the limit switch can be pressed before it is considered a real reading
 
 // Class to control the motors of a Grower
 class growerStepper
@@ -90,6 +91,7 @@ class growerStepper
         int  __SequenceXMoves, __SequenceYMoves; // Variable to know the number of moves in x and y
         int  __SequenceDir;
         long __SequenceXmm, __SequenceYmm;
+        bool __SequenceData;  // Variable to know when continue with the sequence without wait for data capture
 
         /*   Others   */
         unsigned long __MaxX, __MaxY; // Maximun security distances
@@ -99,6 +101,7 @@ class growerStepper
         /*   Limit Switches   */
         bool __HX1, __HX2, __HY;
         bool __CheckX1, __CheckX2, __CheckY;
+        uint8_t __CounterX1, __CounterX2, __CounterY;
         unsigned long __X1Time, __X2Time, __YTime; // Timers to debounce limit switch
 
         /*   Communication   */
@@ -167,7 +170,8 @@ class growerStepper
         bool continueSequence(); // Allow the grower to continue if is in sequence
         void stopSequence(); // Stop a sequence if there is one running
         // Check if it is possible start a sequence and calculate some parameters
-        bool sequence(long mm_X, long mm_Y);
+        bool sequence(long mm_X, long mm_Y, bool captureData = true);
+        bool sequence_n(uint8_t nodes_X, uint8_t nodes_Y, bool captureData = true);
         bool home(); // Go to Home
         void stop(); // Stops all the motors
         void stop(uint8_t st); // Stops just 1 motor

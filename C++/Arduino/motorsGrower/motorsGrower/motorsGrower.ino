@@ -8,7 +8,6 @@ generic arduino mega 2560 board. For more details ask Eleazar Dominguez(eleazard
 */
 /* To do:
  *  1- Check Magnetic Sensor functionality and improve it
- *  2- Create an inner class switch sensor to improve false detection of limit and magnetics switch
  *  
  */
 

@@ -11,7 +11,10 @@ MUX::MUX(Mux config) // Constructor
   { _config = config;
     _numStates = 0;
     _en = false;
+    _stcpEn = true;
     _false = false;
+    _delayTimer = false;
+    _delayStart = false;
     _number = _total++;
     for(int i = 0; i < OUT_PER_PCB; i++) _off[i] = false;
   }
@@ -56,6 +59,9 @@ void MUX::begin()
     pinMode(_config.ds1, INPUT);
   }
 
+void MUX::activeDelay()
+  { _delayTimer = true; }
+
 void MUX::addState(bool &state, uint8_t order)
   { if(_numStates < MAX_MODULES*OUT_PER_PCB){
       _mux[_numStates].number = order;
@@ -99,11 +105,13 @@ void MUX::codificationMultiplexer() {
 
   digitalWrite(_config.stcp, LOW);
   for(int i = 0; i<_config.pcb_mounted; i++) shiftOut(_config.ds, _config.shcp, MSBFIRST, value_Multiplexer[i]);
-  if(_en) digitalWrite(_config.stcp, HIGH);
+  if(_stcpEn) digitalWrite(_config.stcp, HIGH);
+
+  _stcpEn = _en; // Copy _en to latch enable. This allow to write one last time the state before turn off latch
 
   if(millis() - _printTimer>60000){
     _printTimer = millis();
-    for(int i = 0; i<_config.pcb_mounted; i++) muxPrint(F("74HC595-"), String(i), F("= "), String(value_Multiplexer[i]));
+    //for(int i = 0; i<_config.pcb_mounted; i++) muxPrint(F("74HC595-"), String(i), F("= "), String(value_Multiplexer[i]));
   }
 
 }
@@ -119,7 +127,26 @@ void MUX::enable(bool en)
 void MUX::update()
   { if(millis() - _timer > 50) {
       _timer = millis();
-      codificationMultiplexer();
+      if(_delayTimer) { // If delay is active
+        if(!_delayStart) { // If delay is not started
+          // Set output to false
+          _en = false;
+          codificationMultiplexer();
+          codificationMultiplexer();
+          _en = true;
+          // Start delay
+          _delayStart = true;
+          _delayTime = millis();
+        } 
+        else if(millis() - _delayTime > 30000) { // If delay is started and time is over
+          _delayTimer = false;
+          _delayStart = false;
+        }
+      } 
+      else {
+        codificationMultiplexer();
+        codificationMultiplexer();
+      }
     }
   }
 

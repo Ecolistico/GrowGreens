@@ -2,6 +2,9 @@
 **/temp
 **/__pycache__
 
+# All binaries
+**.bin
+
 # Data folders
 Python/Master/data/
 Python/Grower/data/

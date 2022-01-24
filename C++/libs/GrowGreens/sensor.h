@@ -98,6 +98,8 @@ class Flowmeter
 // Class for scale
 class ScaleSens
   { private:
+      bool _en;
+      unsigned long _printTimer;
       uint8_t _pin1, _pin2, _number;
       float _weight, _minWeight, _maxWeight;
 
@@ -112,6 +114,7 @@ class ScaleSens
       float getMaxWeight();
       void setMinWeight(float weight);
       void setMaxWeight(float weight);
+      void printVal(String value);
       void printRead(); // Print in serial last read
       void printRead_notScale(); // Print in serial read with scale = 1
       void printRead_notOffset(); // Print in serial read with scale = 1 and offset = 0

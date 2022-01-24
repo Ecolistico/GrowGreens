@@ -1,0 +1,79 @@
+{
+  "title": "MQTT Settings",
+  "uri": "/mqtt_settings",
+  "menu": true,
+  "element": [
+    {
+      "name": "header",
+      "type": "ACText",
+      "value": "<h2>MQTT Broker settings</h2>",
+      "style": "text-align:center;color:#3C3C3B;"
+    },
+    {
+      "name": "newline",
+      "type": "ACElement",
+      "value": "<hr>"
+    },
+    {
+      "name": "caption",
+      "type": "ACText",
+      "value": "<p>Save your MQTT server credential to connect with the central computer<br></p>",
+      "style": "font-family:serif;color:#002514;text-align:center;"
+    },
+    {
+      "name": "ip_mqttServer",
+      "type": "ACInput",
+      "value": "",
+      "placeholder": "Example: 192.168.8.70",
+      "label": "MQTT Server IP:",
+      "pattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+    },
+    {
+      "name": "containerID",
+      "type": "ACInput",
+      "value": "",
+      "placeholder": "Example: 99-999-999",
+      "label": "Container ID:",
+      "pattern": "^([0][1-9]|[1-9][0-9])([-])([0][0][1-9]|[1-9][0-9][0-9]|[0-9][1-9][0-9])([-])([0][0][0-9]|[1-9][0-9][0-9]|[0-9][1-9][0-9])$"
+    },
+    {
+      "name": "esp32Type",
+      "type": "ACInput",
+      "value": "",
+      "placeholder": "germination",
+      "label": "What ESP32 are you setting?",
+      "pattern": "(germination)"
+    },
+    {
+      "name": "esp32Floor",
+      "type": "ACInput",
+      "value": "",
+      "placeholder": "Example: 9",
+      "label": "ESP32 Floor:",
+      "pattern": "^([0-9])$"
+    },
+    {
+      "name": "newline1",
+      "type": "ACElement",
+      "value": "<hr>"
+    },
+    {
+      "name": "save",
+      "type": "ACSubmit",
+      "value": "Save",
+      "uri": "/mqtt_save"
+    },
+    {
+      "name": "discard",
+      "type": "ACSubmit",
+      "value": "Discard",
+      "uri": "/_ac"
+    },
+    {
+      "name": "reset",
+      "type": "ACSubmit",
+      "value": "Reset",
+      "uri": "/mqtt_clear"
+    }
+  ]
+}

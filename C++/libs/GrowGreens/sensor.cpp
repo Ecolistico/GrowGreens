@@ -293,6 +293,7 @@ ScaleSens::ScaleSens(uint8_t pin1, uint8_t pin2, uint8_t num)
     _weight = 0;
     _minWeight = 0;
     _maxWeight = 0;
+    _en = false;
     _sc = new HX711;
   }
 
@@ -302,24 +303,41 @@ void ScaleSens::begin(long offset, float scale, float min_weight, float max_weig
     _sc->set_scale(scale); // Set Scale
     _minWeight = min_weight; // Set minimun weight to control purposes
     _maxWeight = max_weight; // Set maximun weight to control purposes
-    Serial.print(F("info,Sensor: Scale number "));
-    Serial.print(_number);
-    Serial.println(F(" started correctly"));
+    _printTimer = millis();
+
+    if (_sc->is_ready()) {
+      Serial.print(F("info,Sensor: Scale number "));
+      Serial.print(_number);
+      Serial.println(F(" started correctly"));
+      _en = true;
+    }
+    else {
+      Serial.print(F("error,Sensor: Scale number "));
+      Serial.print(_number);
+      Serial.println(F(" not found"));
+    }
   }
 
 void ScaleSens::read()
-  { _weight = _sc->get_units(10); }
+  { if(_en) _weight = _sc->get_units(10);
+    else if(millis()-_printTimer>10000){  // Each 10 seconds print a warning
+      _printTimer = millis();
+      Serial.print(F("error,Sensor: Scale number "));
+      Serial.print(_number);
+      Serial.println(F(" not found"));
+    }
+  }
 
 float ScaleSens::getWeight()
   { return _weight; }
 
 float ScaleSens::getMinWeight()
-  { float resp = _minWeight + (_sc->get_offset()/_sc->get_scale());
+  { float resp = _minWeight; /*+ (_sc->get_offset()/_sc->get_scale());*/
     return resp;
   }
 
 float ScaleSens::getMaxWeight()
-  { float resp = _maxWeight + (_sc->get_offset()/_sc->get_scale());
+  { float resp = _maxWeight; /*+ (_sc->get_offset()/_sc->get_scale());*/
     return resp;
   }
 
@@ -328,6 +346,13 @@ void ScaleSens::setMinWeight(float weight)
 
 void ScaleSens::setMaxWeight(float weight)
   { _maxWeight = weight; }
+
+void ScaleSens::printVal(String value)
+  { Serial.print(F("info,Sensor: Scale number "));
+    Serial.print(_number);
+    Serial.print(F(" value = "));
+    Serial.println(value);
+  }
 
 void ScaleSens::printRead()
   { Serial.print(F("info,Sensor: Scale number "));
@@ -338,19 +363,23 @@ void ScaleSens::printRead()
   }
 
 void ScaleSens::printRead_notScale()
-  { double value = _sc->get_value(10); // Get the average of 10 readings
+  { double value;
+    if(_en) value = _sc->get_value(10); // Get the average of 10 readings
+    else value = 0;
     Serial.print(F("info,Sensor: Scale number "));
     Serial.print(_number);
     Serial.print(F(" value (scale@1) = "));
-    Serial.print(value);
+    Serial.println(value);
   }
 
 void ScaleSens::printRead_notOffset()
-  { long value = _sc->read_average(10); // Get the average of 10 readings
+  { long value;
+    if(_en) value = _sc->read_average(10); // Get the average of 10 readings
+    else value = 0;
     Serial.print(F("info,Sensor: Scale number "));
     Serial.print(_number);
     Serial.print(F(" value (offset@0) = "));
-    Serial.print(value);
+    Serial.println(value);
   }
 
 /*** SwitchSens    ***/

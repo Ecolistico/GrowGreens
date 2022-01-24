@@ -44,8 +44,11 @@ class MUX
       uint8_t _number;                           // Actual number of the MUX object
       unsigned long _timer, _printTimer;         // Internal timer to send output
       bool _en;                                  // To know if multiplexers should be enable or disable
+      bool _stcpEn;                              // To know if Latch Pin Must Be On or Off
       bool _false;                               // Save false to assign it to a pointer
       bool _off[OUT_PER_PCB];                    // To set al states as false when need it
+      bool _delayTimer, _delayStart;             // To know if delay is active
+      unsigned long _delayTime;                  // Timer to control the initial delay
       MuxOut _muxOut[MAX_MODULES];               // Output States per single PCB
       MuxOut _demuxOut[MAX_MODULES];             // Input States per single PCB
       MuxState _mux[MAX_MODULES*OUT_PER_PCB];    // List of all outputs
@@ -61,12 +64,13 @@ class MUX
       MUX(Mux config); // Constructor for the class
 
       void begin(); // Initialize pins and states
+      void activeDelay(); // Active the delay timer
       void addState(bool & state, uint8_t order); // Add a new output value
       void printState(uint8_t quotient, uint8_t reminder); // Debug function
       void orderMux();   // Order Output States in array of 8
       void codificationMultiplexer(); // Write State to PCB´s
       void enable(bool en);      // Set all states off
-      void update();        // Rewrite states
+      void update();  // Rewrite states
   };
 
 // Class to manage all the multiplexers at once
@@ -75,10 +79,10 @@ class muxController
        uint8_t _muxNumber;   // Number of Mux systems
 
      public:
-       MUX * _myMux[MAX_MUX_SYSTEMS];                      // Multiplexer pointer
+       MUX * _myMux[MAX_MUX_SYSTEMS];                        // Multiplexer pointer
 
        muxController(uint8_t muxNumber, dynamicMem & myMem); // Constructor
-       void update();                                        // Update states for all multiplexors systems
+       void update();                    // Update states for all multiplexors systems
 
   };
   #endif
