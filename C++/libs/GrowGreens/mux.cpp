@@ -132,6 +132,7 @@ void MUX::update()
           // Set output to false
           _en = false;
           codificationMultiplexer();
+          codificationMultiplexer();
           _en = true;
           // Start delay
           _delayStart = true;
@@ -142,7 +143,10 @@ void MUX::update()
           _delayStart = false;
         }
       } 
-      else codificationMultiplexer();
+      else {
+        codificationMultiplexer();
+        codificationMultiplexer();
+      }
     }
   }
 

@@ -283,144 +283,152 @@ class serialController:
 
     def loop(self):
         if self.gcIsConnected:
-            # Called the next Eeprom import line
-            if (not "importEeprom" in self.resp and self.importEeprom>0 and self.importEeprom<=1000): self.writeEeprom()
+            try:
+                # Called the next Eeprom import line
+                if (not "importEeprom" in self.resp and self.importEeprom>0 and self.importEeprom<=1000): self.writeEeprom()
 
-            # If bytes available in generalControl
-            while self.generalControl.in_waiting>0:
-                line1 = str(self.generalControl.readline(), "utf-8")[0:-1]
+                # If bytes available in generalControl
+                while self.generalControl.in_waiting>0:
+                    line1 = str(self.generalControl.readline(), "utf-8")[0:-1]
 
-                # Check if we are not exporting eeprom to file
-                if(self.exportEeprom and not line1.startswith("info,EXPORT EEPROM FINISHED")):
-                    if(not line1.startswith("info")):
-                        with open("eeprom.config", "a") as f:
-                            print(line1[:-1])
-                            f.write(line1)
-                else:
-                    self.Msg2Log(self.logGC, line1)
+                    # Check if we are not exporting eeprom to file
+                    if(self.exportEeprom and not line1.startswith("info,EXPORT EEPROM FINISHED")):
+                        if(not line1.startswith("info")):
+                            with open("eeprom.config", "a") as f:
+                                print(line1[:-1])
+                                f.write(line1)
+                    else:
+                        self.Msg2Log(self.logGC, line1)
 
-                if(line1.startswith("boot")):
-                    self.concatResp("boot", line1)
-                elif(line1.startswith("updateSystemState")):
-                    self.concatResp("updateSystemState", line1)
-                elif(line1.startswith("info,EXPORT EEPROM STARTED")):
-                    open('eeprom.config', 'w').close()
-                    self.exportEeprom = True
-                elif(line1.startswith("info,EXPORT EEPROM FINISHED")):
-                    self.exportEeprom = False
+                    if(line1.startswith("boot")):
+                        self.concatResp("boot", line1)
+                    elif(line1.startswith("updateSystemState")):
+                        self.concatResp("updateSystemState", line1)
+                    elif(line1.startswith("info,EXPORT EEPROM STARTED")):
+                        open('eeprom.config', 'w').close()
+                        self.exportEeprom = True
+                    elif(line1.startswith("info,EXPORT EEPROM FINISHED")):
+                        self.exportEeprom = False
+            
+            except UnicodeDecodeError as e: self.logGC.error(e)
 
         if self.mg1IsConnected:
-            # If bytes available in motorsGrower
-            while self.motorsGrower1.in_waiting>0:
-                line2 = str(self.motorsGrower1.readline(), "utf-8")[0:-1]
-                self.Msg2Log(self.logMG1, line2)
+            try:
+                # If bytes available in motorsGrower
+                while self.motorsGrower1.in_waiting>0:
+                    line2 = str(self.motorsGrower1.readline(), "utf-8")[0:-1]
+                    self.Msg2Log(self.logMG1, line2)
 
-                decition = False
-                # If we are waiting for a particular response from Grower1
-                if(self.mGrower.Gr1.serialRequest!="" and not decition):
-                    decition = self.decideStartOrStopGrower(self.cleanLine(line2))
+                    decition = False
+                    # If we are waiting for a particular response from Grower1
+                    if(self.mGrower.Gr1.serialRequest!="" and not decition):
+                        decition = self.decideStartOrStopGrower(self.cleanLine(line2))
 
-                # If we are waiting for a particular response from Grower2
-                if(self.mGrower.Gr2.serialRequest!="" and not decition):
-                    decition = self.decideStartOrStopGrower(self.cleanLine(line2))
+                    # If we are waiting for a particular response from Grower2
+                    if(self.mGrower.Gr2.serialRequest!="" and not decition):
+                        decition = self.decideStartOrStopGrower(self.cleanLine(line2))
 
-                # If we are waiting for a particular response from Grower3
-                if(self.mGrower.Gr3.serialRequest!="" and not decition):
-                    decition = self.decideStartOrStopGrower(self.cleanLine(line2))
+                    # If we are waiting for a particular response from Grower3
+                    if(self.mGrower.Gr3.serialRequest!="" and not decition):
+                        decition = self.decideStartOrStopGrower(self.cleanLine(line2))
 
-                # If we are waiting for a particular response from Grower4
-                if(self.mGrower.Gr4.serialRequest!="" and not decition):
-                    decition = self.decideStartOrStopGrower(self.cleanLine(line2))
+                    # If we are waiting for a particular response from Grower4
+                    if(self.mGrower.Gr4.serialRequest!="" and not decition):
+                        decition = self.decideStartOrStopGrower(self.cleanLine(line2))
 
-                # If we are waiting Gr1 to reach home and start the sequence
-                if(self.mGrower.Gr1.serialRequest=="" and self.mGrower.Gr1.startRoutine and not decition):
-                    resp, num = self.getGrowerLine(line2)
-                    if(num==1):
-                        resp = self.cleanGrowerLine(resp)
-                        if resp.startswith("Starting Routine Stage 2"):
-                            decition = True
-                            self.GrowerInRoutine(num)
+                    # If we are waiting Gr1 to reach home and start the sequence
+                    if(self.mGrower.Gr1.serialRequest=="" and self.mGrower.Gr1.startRoutine and not decition):
+                        resp, num = self.getGrowerLine(line2)
+                        if(num==1):
+                            resp = self.cleanGrowerLine(resp)
+                            if resp.startswith("Starting Routine Stage 2"):
+                                decition = True
+                                self.GrowerInRoutine(num)
 
-                # If we are waiting Gr2 to reach home and start the sequence
-                if(self.mGrower.Gr2.serialRequest=="" and self.mGrower.Gr2.startRoutine and not decition):
-                    resp, num = self.getGrowerLine(line2)
-                    if(num==2):
-                        resp = self.cleanGrowerLine(resp)
-                        if resp.startswith("Starting Routine Stage 2"):
-                            decition = True
-                            self.GrowerInRoutine(num)
+                    # If we are waiting Gr2 to reach home and start the sequence
+                    if(self.mGrower.Gr2.serialRequest=="" and self.mGrower.Gr2.startRoutine and not decition):
+                        resp, num = self.getGrowerLine(line2)
+                        if(num==2):
+                            resp = self.cleanGrowerLine(resp)
+                            if resp.startswith("Starting Routine Stage 2"):
+                                decition = True
+                                self.GrowerInRoutine(num)
 
-                # If we are waiting Gr3 to reach home and start the sequence
-                if(self.mGrower.Gr3.serialRequest=="" and self.mGrower.Gr3.startRoutine and not decition):
-                    resp, num = self.getGrowerLine(line2)
-                    if(num==3):
-                        resp = self.cleanGrowerLine(resp)
-                        if resp.startswith("Starting Routine Stage 2"):
-                            decition = True
-                            self.GrowerInRoutine(num)
+                    # If we are waiting Gr3 to reach home and start the sequence
+                    if(self.mGrower.Gr3.serialRequest=="" and self.mGrower.Gr3.startRoutine and not decition):
+                        resp, num = self.getGrowerLine(line2)
+                        if(num==3):
+                            resp = self.cleanGrowerLine(resp)
+                            if resp.startswith("Starting Routine Stage 2"):
+                                decition = True
+                                self.GrowerInRoutine(num)
 
-                # If we are waiting Gr4 to reach home and start the sequence
-                if(self.mGrower.Gr4.serialRequest=="" and self.mGrower.Gr4.startRoutine and not decition):
-                    resp, num = self.getGrowerLine(line2)
-                    if(num==4):
-                        resp = self.cleanGrowerLine(resp)
-                        if resp.startswith("Starting Routine Stage 2"):
-                            decition = True
-                            self.GrowerInRoutine(num)
+                    # If we are waiting Gr4 to reach home and start the sequence
+                    if(self.mGrower.Gr4.serialRequest=="" and self.mGrower.Gr4.startRoutine and not decition):
+                        resp, num = self.getGrowerLine(line2)
+                        if(num==4):
+                            resp = self.cleanGrowerLine(resp)
+                            if resp.startswith("Starting Routine Stage 2"):
+                                decition = True
+                                self.GrowerInRoutine(num)
 
-                # If we are waiting Gr1 to reach next sequence position
-                if(self.mGrower.Gr1.inRoutine and not decition):
-                    resp, num = self.getGrowerLine(line2)
-                    if(num==1):
-                        resp = self.cleanGrowerLine(resp)
-                        if resp.startswith("In Position"):
-                            decition = True
-                            self.GrowerInPosition(num)
-                        elif resp.startswith("Routine Finished"):
-                            decition = True
-                            self.GrowerRoutineFinish(num)
+                    # If we are waiting Gr1 to reach next sequence position
+                    if(self.mGrower.Gr1.inRoutine and not decition):
+                        resp, num = self.getGrowerLine(line2)
+                        if(num==1):
+                            resp = self.cleanGrowerLine(resp)
+                            if resp.startswith("In Position"):
+                                decition = True
+                                self.GrowerInPosition(num)
+                            elif resp.startswith("Routine Finished"):
+                                decition = True
+                                self.GrowerRoutineFinish(num)
 
-                # If we are waiting Gr2 to reach next sequence position
-                if(self.mGrower.Gr2.inRoutine and not decition):
-                    resp, num = self.getGrowerLine(line2)
-                    if(num==2):
-                        resp = self.cleanGrowerLine(resp)
-                        if resp.startswith("In Position"):
-                            decition = True
-                            self.GrowerInPosition(num)
-                        elif resp.startswith("Routine Finished"):
-                            decition = True
-                            self.GrowerRoutineFinish(num)
+                    # If we are waiting Gr2 to reach next sequence position
+                    if(self.mGrower.Gr2.inRoutine and not decition):
+                        resp, num = self.getGrowerLine(line2)
+                        if(num==2):
+                            resp = self.cleanGrowerLine(resp)
+                            if resp.startswith("In Position"):
+                                decition = True
+                                self.GrowerInPosition(num)
+                            elif resp.startswith("Routine Finished"):
+                                decition = True
+                                self.GrowerRoutineFinish(num)
 
-                # If we are waiting Gr3 to reach next sequence position
-                if(self.mGrower.Gr3.inRoutine  and not decition):
-                    resp, num = self.getGrowerLine(line2)
-                    if(num==3):
-                        resp = self.cleanGrowerLine(resp)
-                        if resp.startswith("In Position"):
-                            decition = True
-                            self.GrowerInPosition(num)
-                        elif resp.startswith("Routine Finished"):
-                            decition = True
-                            self.GrowerRoutineFinish(num)
+                    # If we are waiting Gr3 to reach next sequence position
+                    if(self.mGrower.Gr3.inRoutine  and not decition):
+                        resp, num = self.getGrowerLine(line2)
+                        if(num==3):
+                            resp = self.cleanGrowerLine(resp)
+                            if resp.startswith("In Position"):
+                                decition = True
+                                self.GrowerInPosition(num)
+                            elif resp.startswith("Routine Finished"):
+                                decition = True
+                                self.GrowerRoutineFinish(num)
 
-                # If we are waiting Gr4 to reach next sequence position
-                if(self.mGrower.Gr4.inRoutine and not decition):
-                    resp, num = self.getGrowerLine(line2)
-                    if(num==4):
-                        resp = self.cleanGrowerLine(resp)
-                        if resp.startswith("In Position"):
-                            decition = True
-                            self.GrowerInPosition(num)
-                        elif resp.startswith("Routine Finished"):
-                            decition = True
-                            self.GrowerRoutineFinish(num)
-
+                    # If we are waiting Gr4 to reach next sequence position
+                    if(self.mGrower.Gr4.inRoutine and not decition):
+                        resp, num = self.getGrowerLine(line2)
+                        if(num==4):
+                            resp = self.cleanGrowerLine(resp)
+                            if resp.startswith("In Position"):
+                                decition = True
+                                self.GrowerInPosition(num)
+                            elif resp.startswith("Routine Finished"):
+                                decition = True
+                                self.GrowerRoutineFinish(num)
+                                
+            except UnicodeDecodeError as e: self.logMG1.error(e)
+                
         if self.mg2IsConnected:
-            # If bytes available in motorsGrower
-            while self.motorsGrower2.in_waiting>0:
-                line2 = str(self.motorsGrower2.readline(), "utf-8")[0:-1]
-                self.Msg2Log(self.logMG2, line2)
+            try:
+                # If bytes available in motorsGrower
+                while self.motorsGrower2.in_waiting>0:
+                    line2 = str(self.motorsGrower2.readline(), "utf-8")[0:-1]
+                    self.Msg2Log(self.logMG2, line2)
+            except UnicodeDecodeError as e: self.logMG2.error(e)
 
         # Send all responses
         self.response()
