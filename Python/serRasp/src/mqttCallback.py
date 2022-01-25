@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Import SDirectories
+# Import Directories
 from time import time
 import paho.mqtt.publish as publish
 

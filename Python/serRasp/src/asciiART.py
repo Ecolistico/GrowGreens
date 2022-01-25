@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+# Import Directories
 from PIL import Image
 
 class asciiArt:
