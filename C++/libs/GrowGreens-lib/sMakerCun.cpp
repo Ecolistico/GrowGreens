@@ -33,7 +33,7 @@ solutionMaker::solutionMaker(){
     // Define the motors
     stepperS[0] = new AccelStepper(1, __StepS[0], __DirS[0]); //Car motor
     stepperS[1] = new AccelStepper(1, __StepS[1], __DirS[1]); //Cargo motor
-    stepperS[2] = new AccelStepper(1, __StepS[2], __DirS[2]); //Releasemotor
+    stepperS[2] = new AccelStepper(1, __StepS[2], __DirS[2]); //Releasemotor not in use currently (desegined for release hatch)
     stepperS[3] = new AccelStepper(1, __StepS[3], __DirS[3]); //Dispenser motor
     stepperS[4] = new AccelStepper(1, __StepS[4], __DirS[4]); //Extra, not in use for the moment
 
@@ -520,7 +520,7 @@ void solutionMaker::dispense(long some_mg){
     if (stepperS[CarMotor]->distanceToGo()==0) {
       if (stepperS[DispenserMotor]->distanceToGo()==0){
         Serial.println(F("Dispensing salt"));
-        moveStepper(3200, DispenserMotor);//100 arbitrary steps unitll loadcell reads correct value
+        moveStepper(800, DispenserMotor);//100 arbitrary steps unitll loadcell reads correct value
       }
     }
   }
@@ -711,7 +711,7 @@ void solutionMaker::run(){
   if (!__HOMED) {
     home();
   } else if (__HOMED){
-    prepareSolution(500, 5.0, 2000, __limitS_salts);
+    prepareSolution(1000, 5.0, 2000, __limitS_salts);
     relayControl();
   }
 }
