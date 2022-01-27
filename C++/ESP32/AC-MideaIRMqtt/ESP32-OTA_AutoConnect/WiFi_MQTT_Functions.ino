@@ -87,7 +87,7 @@ void callback(char* topic, byte* message, unsigned int length) {
       mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Turning off air conditioner");      
     }
 
-    else if(messageTemp.startsWith("AcOn")){
+    else if(messageTemp.startsWith("AcOn")){ // A/C on
       String parameter[5];
       int k = 0;
       int l = 0;
@@ -101,10 +101,10 @@ void callback(char* topic, byte* message, unsigned int length) {
           parameter[k] = messageTemp.substring(l,j+1);
         } 
       }
-
-      if(parameter[0]==F("AcOn")){ // Functions executed in Actuator class
-        int Temp = parameter[1].toInt();
-        int Fan = parameter[2].toInt();
+      int Temp = parameter[1].toInt();
+      int Fan = parameter[2].toInt();
+      
+      if(parameter[0]==F("AcOn") && Temp>=17 && Temp<=30 && Fan>=0 && Fan<=3){
         // Set mode, temperature and fan level and internal state to enabled
         ir.enabled = true;
         ir.mode = MODE_COOL;
@@ -143,4 +143,3 @@ void resetCredentials(){
   ESP.restart();
   delay(1000);
 }
-
