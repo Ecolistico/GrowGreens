@@ -122,10 +122,10 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   }else{
     echo.value += "Container ID: <p style='color:red;'>The ID does not have the correct size/form</p><br>";
   }
-  if(esp32Type=="return" || esp32Type=="principal"){
+  if(esp32Type=="AirReturn" || esp32Type=="AirPrincipal"){
     echo.value += "ESP32 Type: " + esp32Type + "<br>";
   }else{
-    echo.value += "ESP32 Type: <p style='color:red;'>It has to be 'return' or 'principal'</p><br>";
+    echo.value += "ESP32 Type: <p style='color:red;'>It has to be 'AirPrincipal' or 'AirReturn'</p><br>";
   }
   
   return String("");
