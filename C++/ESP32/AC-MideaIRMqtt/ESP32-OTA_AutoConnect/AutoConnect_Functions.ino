@@ -22,7 +22,7 @@ void loadSettings(bool rst){
     esp32Type = root_2["value"].as<String>();
 
     file.close();
-    if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && container_ID.length()==container_ID_length){
+    if (addr.fromString(mqttBrokerIp) && (esp32Type=="AirReturn" || esp32Type=="AirPrincipal") && container_ID.length()==container_ID_length){
       Serial.println(F("Uploading Settings..."));
       Serial.print(F("MQTT Broker Ip: ")); Serial.println(mqttBrokerIp);
       Serial.print(F("Container ID: ")); Serial.println(container_ID);
@@ -94,9 +94,8 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   esp32Type = args.arg("esp32Type");
   esp32Type.trim();
 
-
   bool testContID = testContainerId(container_ID);
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && testContID) {
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="AirReturn" || esp32Type=="AirPrincipal") && testContID) {
     // The entered value is owned by AutoConnectAux of /mqtt_setting.
     // To retrieve the elements of /mqtt_setting, it is necessary to get
     // the AutoConnectAux object of /mqtt_setting.

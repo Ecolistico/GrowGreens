@@ -1,7 +1,6 @@
 /* Tested with AutoConnect 1.1.7 */
 
 /*** Include Libraries ***/
-#include <DHTesp.h>
 #include <WiFi.h>
 #include <SPIFFS.h>
 #include <FS.h>
@@ -9,7 +8,6 @@
 #include <PubSubClient.h>
 #include <AutoConnect.h>
 #include <AutoConnectCredential.h>
-#include <Preferences.h>
 #include <SPI.h>
 #include <EthernetENC.h>
 #include <Arduino.h>
@@ -26,9 +24,6 @@
 /*** Redifine existing functions ***/
 #define GET_CHIPID()  ((uint16_t)(ESP.getEfuseMac()>>32))
 
-/*** Create memory object ***/
-Preferences memory;
-
 /*** Initialization of object and variables ***/
 AutoConnect Portal;
 AutoConnectConfig Config;
@@ -41,7 +36,7 @@ IPAddress addr;
 //IPAddress ipEnt;
 String mqttBrokerIp;
 String container_ID;
-String esp32Type; //Return or principal
+String esp32Type; // Principal or return
 byte container_ID_length = 10;
 //byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
 byte mac[6];
@@ -51,17 +46,12 @@ uint8_t mqttAttempt = 0;
 /***** Hardware IR Definitions *****/
 const uint8_t MIDEA_RMT_CHANNEL = 0;
 const uint8_t MIDEA_TX_PIN = 4;
-
+// Ir Controller
 MideaIR ir;
-
 
 // Portal aux variable handler
 bool portalAux = false;
 bool startPortalAux = false;
-
-// Temporal variables
-unsigned long update_time;
-uint8_t update_constant; // Update time every X seconds
 
 /*** Name functions ***/
 // AutoConnect Functions
@@ -73,8 +63,6 @@ String saveParams(AutoConnectAux& aux, PageArgument& args);
 bool loadAux(const String auxName); // OK
 void setup_AutoConnect(AutoConnect &Portal, AutoConnectConfig &Config);
 bool testContainerId(String ID);
-// Memory
-
 // MQTT
 bool mqttConnect();
 void mqttPublish(String top, String msg);
@@ -88,7 +76,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println(F("Initial setup"));
   Serial.print(F("Please wait"));
-  midea_ir_init(&ir, MIDEA_RMT_CHANNEL, MIDEA_TX_PIN); // init IR library
+  midea_ir_init(&ir, MIDEA_RMT_CHANNEL, MIDEA_TX_PIN); // init IR Controller
   for(int i=0;i<30;i++){
     Serial.print(F("."));
     delay(1000);  
@@ -146,19 +134,14 @@ void setup() {
   else Serial.println(F("Ethernet failed"));
   
   // Allow the hardware to sort itself out
-  delay(1500);
-  update_time = millis();  
+  delay(1500); 
 }
 
 void loop() {  
     if (!mqttClient.connected() && portalAux==false) { // If MQTT disconnected retry connection 
       mqttConnect(); 
     } else if (portalAux==false) mqttClient.loop();   
-   
-    if(millis()-update_time>update_constant*1000){ // Update sensor data
-      update_time = millis();
-    }
-    
+      
     Portal.handleClient(); // Handle Portal
     Ethernet.maintain();
 
