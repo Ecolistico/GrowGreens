@@ -106,7 +106,7 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   
   // Echo back saved parameters to AutoConnectAux page.
   AutoConnectText&  echo = aux.getElement<AutoConnectText>("parameters");
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && testContID) {
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="AirReturn" || esp32Type=="AirPincipal") && testContID) {
     echo.value = "<p style='color:green;'>Parameters were saved correcty!</p><br>";
   }
   else{
