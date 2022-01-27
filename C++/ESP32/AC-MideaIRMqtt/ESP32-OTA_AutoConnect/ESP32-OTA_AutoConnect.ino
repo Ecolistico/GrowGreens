@@ -110,7 +110,7 @@ void setup() {
 
   loadSettings(false);
   
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && container_ID.length()==container_ID_length){
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="AirReturn" || esp32Type=="AirPrincipal") && container_ID.length()==container_ID_length){
     Serial.println(F("Parameters are ok"));
     mqttClient.setServer(mqttBrokerIp.c_str(), 1883);
     mqttClient.setCallback(callback); // Function to execute actions with entries of mqtt messages
