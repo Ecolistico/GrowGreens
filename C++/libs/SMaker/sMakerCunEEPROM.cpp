@@ -2,149 +2,171 @@
 //
 // Copyright (C) 2019 Grow
 
-#include "sMakerCun.h"
+#include "sMakerCunEEPROM.h"
 
 /***   solutionMaker   ***/
 // Statics variables definitions
 
 solutionMaker::solutionMaker(){
-    // Define motors pins
-    __DirS[0] = dirS1;
-    __StepS[0] = stepS1;
-    __DirS[1] = dirS2;
-    __StepS[1] = stepS2;
-    __DirS[2] = dirS3;
-    __StepS[2] = stepS3;
-    __DirS[3] = dirS4;
-    __StepS[3] = stepS4;
-    __DirS[4] = dirS5;
-    __StepS[4] = stepS5;
+  PREPARE_CYCLE=600000; //Default 10 mins before EEPROM read
+  //Setting defaults before EEPROM
+  __solutions = 10;
+  __max_pumps_number = 2;
+  __max_steppers =  5;
+  __relay_number = 4;
+  __limit_switches = 5;
 
-    __En = en;
-
-    __MicroSteps = 0;
-    __StepPerRev = 0;
-    __PumpVelocity = 0;
-    __limitS_salts=0;
-    __moveCar = false;
-    __dispensing = false;
-    __HOMED = false;
-
-    // Define the motors
-    stepperS[0] = new AccelStepper(1, __StepS[0], __DirS[0]); //Car motor
-    stepperS[1] = new AccelStepper(1, __StepS[1], __DirS[1]); //Cargo motor
-    stepperS[2] = new AccelStepper(1, __StepS[2], __DirS[2]); //Releasemotor
-    stepperS[3] = new AccelStepper(1, __StepS[3], __DirS[3]); //Dispenser motor
-    stepperS[4] = new AccelStepper(1, __StepS[4], __DirS[4]); //Extra, not in use for the moment
-
-    // Define pumps pins
-    __Motor[0] = pump1;
-    __Motor[1] = pump2;
-    __enableMotor = pumpEn;
-    __PumpOn[0] = false;
-    __PumpOn[1] = false;
-    __HOMEING[0] = true;
-    __HOMEING[1] = true;
-    __HOMEING[2] = true;
-    SolFinished=true;
-    __limitS[0] = limitS1;
-    __limitS[1] = limitS2;
-    __limitS[2] = limitS3;
-    __limitS[3] = limitS4;
-    __limitS[4] = limitS5;
-
-    // Define relay pins only one relay is in used by mixer motor
-    __Relay[0] = relay1;
-    __Relay[1] = relay2;
-    __Relay[2] = relay3;
-    __Relay[3] = relay4;
-
-
-
-    // Default parameters
-    __SteppersEnabled = false;
-    for(int i=0; i<MAX_PUMPS_NUMBER;i++){
-      __Calibration[i] = 1;
-    }
-    for(int i=0; i<SOLUTIONS;i++){
-      __Calibration1[i] = 1;
-    }
-
-    //Set Limit Switches state
-    for(int i=0; i<LIMIT_SWITCHES;i++){
-      __limitS_State[i] = false;
-    }
-
-    __HOMED = false;
-    prepareTimeState = true;
-
-    // Atlas Scientific Sensors
-    __pH = 0;
-    __eC = 0;
-    __ExportEzo = false;
-    __ImportEzo = false;
-    __SleepEzo = false;
-
-    phMeter = new EZO(EZO_PH);
-    ecMeter = new EZO(EZO_EC);
-
-    //Define temperature tempSensor
-    scale = new HX711;
-    __Temp = 0;
-
-    //Define new HX711 scale
-    dhtSensor = new DHT(tempSens, DHTTYPE);
-
-    // Filters
-    __Filter = 0;
-    __Alpha = 0; __Noise = 0; __Err = 0;
+  // Define motors pins defaults before EEPROM
+  __DirS[0] = dirS1;
+  __StepS[0] = stepS1;
+  __DirS[1] = dirS2;
+  __StepS[1] = stepS2;
+  __DirS[2] = dirS3;
+  __StepS[2] = stepS3;
+  __DirS[3] = dirS4;
+  __StepS[3] = stepS4;
+  __DirS[4] = dirS5;
+  __StepS[4] = stepS5;
+  for (int i=0;i<__max_steppers;i++){
+    __MOTOR_SPEED[i]=MOTOR_SPEED;
+    __MOTOR_ACCEL[i]=MOTOR_ACCEL;
   }
 
-void solutionMaker::begin(
-  uint8_t steps_per_rev,
-  uint8_t microStep,
-  uint8_t pump_velocity
-){
+
+  __En = en;
+
+  __MicroSteps = 0;
+  __StepPerRev = 0;
+  __limitS_salts=0;
+  __moveCar = false;
+  __dispensing = false;
+  __HOMED = false;
+
+  //Motor default order  before EEPROM
+  CarMotor = 0;
+  DispenserMotor = 3;
+  CargoMotor = 1;
+  ReleaseMotor = 2;
+  ExtraMotor = 4;
+
+  //LS default order before EEPROM
+  carHomeLS = 0; //LS 1 normally closed
+  dispenserLS = 3; //LS 4 normally open
+  carEndLS = 4; //LS 5 normally closed
+  cargoLS = 1; //LS 2 normally closed
+  openLS = 2; //LS 3 normally closed
+
+  // Define pumps pins defaults before EEPROM
+  __Motor[0] = pump1;
+  __Motor[1] = pump2;
+
+  __enableMotor = pumpEn;
+  __PumpOn[0] = false;
+  __PumpOn[1] = false;
+  __PumpVelocity[0] = 0;
+  __PumpVelocity[1] = 0;
+  __HOMEING[0] = true;
+  __HOMEING[1] = true;
+  __HOMEING[2] = true;
+  SolFinished=true;
+
+  //Define limitSwitch pins before EEPROM
+  __limitS[0] = limitS1;
+  __limitS[1] = limitS2;
+  __limitS[2] = limitS3;
+  __limitS[3] = limitS4;
+  __limitS[4] = limitS5;
+
+  // Define relay pins before EEPROM
+  __Relay[0] = relay1;
+  __Relay[1] = relay2;
+  __Relay[2] = relay3;
+  __Relay[3] = relay4;
+  for (int i=0;i<__relay_number;i++){
+    __relay_action_time[i]=RELAY_ACTION_TIME;
+  }
+
+
+
+  // Default parameters
+  __SteppersEnabled = false;
+  for(int i=0; i<__max_pumps_number;i++){
+    __Calibration[i] = 1;
+  }
+  for(int i=0; i<__solutions;i++){
+    __Calibration1[i] = 1;
+  }
+
+  //Set Limit Switches state
+  for(int i=0; i<LIMIT_SWITCHES;i++){
+    __limitS_State[i] = false;
+  }
+
+  __HOMED = false;
+  prepareTimeState = true;
+
+  // Atlas Scientific Sensors
+  __pH = 0;
+  __eC = 0;
+  __ExportEzo = false;
+  __ImportEzo = false;
+  __SleepEzo = false;
+
+  phMeter = new EZO(EZO_PH);
+  ecMeter = new EZO(EZO_EC);
+
+  //Define temperature tempSensor
+  scale = new HX711;
+  __Temp = 0;
+
+  //Define new HX711 scale
+  dhtSensor = new DHT(tempSens, DHTTYPE);
+
+  // Filters
+  __Filter = 0;
+  __Alpha = 0; __Noise = 0; __Err = 0;
+}
+
+void solutionMaker::begin(){
+  // Define the motors
+  for (int i=0;i<__max_steppers;i++){
+    stepperS[i] = new AccelStepper(1, __StepS[i], __DirS[i]);
+  }
+
 Serial.println(F("debug, Solution Maker: Starting..."));
 
+__StepPerRev = MOTOR_STEP_PER_REV;
+//__PumpVelocity = PUMP_VELOCITY;
+__MicroSteps = DEFAULT_MICROSTEP;
+
 //Micro stepps setup
-for (int i=0; i<MAX_STEPPERS*2; i++){
+for (int i=0; i<__max_steppers*2; i++){
   pinMode(__mS[i],OUTPUT);
 }
-if(microStep == 16){ //DEFAULT_MICROSTEP 16
-  for (int i=0; i<MAX_STEPPERS*2; i++){
+if(__MicroSteps == 16){ //DEFAULT_MICROSTEP 16
+  for (int i=0; i<__max_steppers*2; i++){
     digitalWrite(__mS[i], HIGH);
   }
-}else if(microStep == 8){ //DEFAULT_MICROSTEP 8
-  for (int i=0; i<MAX_STEPPERS*2; i = i+2){
+}else if(__MicroSteps == 8){ //DEFAULT_MICROSTEP 8
+  for (int i=0; i<__max_steppers*2; i = i+2){
     digitalWrite(__mS[i], HIGH);
   }
-  for (int i=1; i<MAX_STEPPERS*2; i = i+2){
+  for (int i=1; i<__max_steppers*2; i = i+2){
     digitalWrite(__mS[i], LOW);
   }
 } else { //DEFAULT_MICROSTEP 4
-  for (int i=0; i<MAX_STEPPERS*2; i++){
+  for (int i=0; i<__max_steppers*2; i++){
     digitalWrite(__mS[i], LOW);
+    __MicroSteps = 4;
   }
   Serial.println(F("debug, Solution Maker: Microsteppin to 1/4"));
 }
 
-
-
-__StepPerRev = steps_per_rev;
-if (microStep==16 || microStep==8){
-  __MicroSteps = microStep;
-} else {
-  __MicroSteps = 4;
-}
-
-__PumpVelocity = pump_velocity;
-
 // Initial Configuration
-for(int i=0; i<MAX_STEPPERS; i++){
-  stepperS[i]->setMaxSpeed(MOTOR_SPEED);
+for(int i=0; i<__max_steppers; i++){
+  stepperS[i]->setMaxSpeed(__MOTOR_SPEED[i]);
   stepperS[i]->setSpeed(0);
-  stepperS[i]->setAcceleration(MOTOR_ACCEL);
+  stepperS[i]->setAcceleration(__MOTOR_ACCEL[i]);
   pinMode(__StepS[i], OUTPUT);
   pinMode(__DirS[i], OUTPUT);
   // Check if we want this configuration of pinsInverted
@@ -168,7 +190,7 @@ Serial.println(__limitS_State[0]);
 Serial.println(__limitS_State[1]);
 Serial.println(__limitS_State[2]);
 
-for(int i=0; i<MAX_PUMPS_NUMBER; i++){
+for(int i=0; i<__max_pumps_number; i++){
   pinMode(__Motor[i], OUTPUT);
   digitalWrite(__Motor[i], LOW);
 }
@@ -227,41 +249,41 @@ void solutionMaker::disable(){
 }
 
 void solutionMaker::turnOnPump(unsigned long time1, uint8_t pump){
-  if(pump<MAX_PUMPS_NUMBER){
+  if(pump<__max_pumps_number){
     digitalWrite(__enableMotor, HIGH);
     digitalWrite(__Motor[pump], HIGH);
     __PumpOnTime[pump] = time1;
     __PumpTime[pump] = millis();
-    if (!__PumpOn[pump])printAction(F("Turned pump On"), MAX_STEPPERS+pump, 0);
+    if (!__PumpOn[pump])printAction(F("Turned pump On"), __max_steppers+pump, 0);
     __PumpOn[pump] = true;
     return;
   }
-  printAction(F("Pump does not exist"), MAX_STEPPERS+MAX_PUMPS_NUMBER, 3);
+  printAction(F("Pump does not exist"), __max_steppers+__max_pumps_number, 3);
   return;
 }
 
 void solutionMaker::turnOffPump(uint8_t pump){
-  if(pump<MAX_PUMPS_NUMBER){
+  if(pump<__max_pumps_number){
     digitalWrite(__Motor[pump], LOW);
     digitalWrite(__enableMotor, LOW);
     __PumpOnTime[pump] = 0;
-    printAction(F("Turned pump Off"), MAX_STEPPERS+pump, 0);
+    printAction(F("Turned pump Off"), __max_steppers+pump, 0);
     __PumpOn[pump] = false;
     return;
   }
-  printAction(F("Pump does not exist"), MAX_STEPPERS+MAX_PUMPS_NUMBER, 3);
+  printAction(F("Pump does not exist"), __max_steppers+__max_pumps_number, 3);
   return;
 }
 
 unsigned long solutionMaker::TimeToML(float seconds, uint8_t pump){
-  if(seconds>0 && pump<MAX_PUMPS_NUMBER){
+  if(seconds>0 && pump<__max_pumps_number){
     return  seconds*(float(__Calibration[pump])/100);
   }
   return 0;
 }
 
 unsigned long solutionMaker::MLToTime(float mililiters, uint8_t pump){
-  if(mililiters>0 && pump<MAX_PUMPS_NUMBER){
+  if(mililiters>0 && pump<__max_pumps_number){
     // __Calibration/100 = ml/s
     return mililiters/(float(__Calibration[pump])/100);
   }
@@ -287,7 +309,7 @@ float solutionMaker::balanceEC(float EC_init, float EC_final, float liters, uint
 
 float solutionMaker::balancePH(float PH_init, float PH_final, float liters, uint8_t pump){
   if(PH_init-PH_final>=0.1){
-    float PH_acid = float(__Calibration1[SOLUTIONS-2+pump])*0.05; // Get the ph of the acid
+    float PH_acid = float(__Calibration1[__solutions-__max_pumps_number+pump])*0.05; // Get the ph of the acid
     float ml = (pow(10, -1*PH_init)-pow(10, -1*PH_final))/(pow(10, -1*PH_final)-pow(10, -1*PH_acid))*liters*1000;
     return ml; // Returns the ml of the acid that are needed
   }
@@ -308,23 +330,23 @@ void solutionMaker::moveStepper(long steps, uint8_t st){
 }
 
 void solutionMaker::stopStepper(uint8_t st){
-  if(st<MAX_STEPPERS){
+  if(st<__max_steppers){
     stepperS[st]->setCurrentPosition(0);
     stepperS[st]->moveTo(0);
     printAction(F("Stopped Stepper"), st, 0);
     return;
   }
-  printAction(F("Cannot stop Stepper. Motor does not exist"), MAX_STEPPERS, 3);
+  printAction(F("Cannot stop Stepper. Motor does not exist"), __max_steppers, 3);
   return;
 }
 
 void solutionMaker::resetPosition(uint8_t st){
-  if(st<MAX_STEPPERS){
+  if(st<__max_steppers){
     stepperS[st]->setCurrentPosition(0);
     //printAction(F("Reset Position"), st, 0);
     return;
   }
-  printAction(F("Cannot reset position. Motor does not exist"), MAX_STEPPERS, 3);
+  printAction(F("Cannot reset position. Motor does not exist"), __max_steppers, 3);
   return;
 }
 
@@ -379,7 +401,7 @@ void solutionMaker::home(){
 }
 
 void solutionMaker::checkLS(){
-  for (int i=0;i<LIMIT_SWITCHES;i++){
+  for (int i=0;i<__limit_switches;i++){
     __limitS_State[i]=digitalRead(__limitS[i]);
   }
 }
@@ -502,15 +524,15 @@ void solutionMaker::EZOexportFinished(){
   if(EZOisEnable(EZO_PH) && EZOisEnable(EZO_PH) && __ExportEzo) __ExportEzo = false;
 }
 
-void solutionMaker::relayControl(){
-  if(__RelayState[MIXER_RELAY] && __HOMED){
-    __RelayState[MIXER_RELAY] = LOW;
+void solutionMaker::relayControl(int rel){
+  if(__RelayState[rel] && __HOMED){
+    __RelayState[rel] = LOW;
     SolFinished = false;
-    __RelayTime[MIXER_RELAY] = millis();
+    __RelayTime[rel] = millis();
     Serial.println(F("warning,Solution Maker: mixing to finish"));
   }
-  else if(!__RelayState[MIXER_RELAY] && millis()-__RelayTime[MIXER_RELAY]>RELAY_ACTION_TIME && !SolFinished){
-    digitalWrite(__Relay[MIXER_RELAY], LOW);
+  else if(!__RelayState[rel] && millis()-__RelayTime[rel]>__relay_action_time[rel] && !SolFinished){
+    digitalWrite(__Relay[rel], LOW);
     Serial.println(F("info,Solution Finished"));
     Serial.println(F("Solution Finished"));
     SolFinished = true;
@@ -554,23 +576,23 @@ void solutionMaker::dispenseAcid(float some_ml, uint8_t pump){
 }
 
 void solutionMaker::pumpCalibration(float time1, uint8_t pump){
-  if(pump<MAX_PUMPS_NUMBER){ // Check that the pump exists
+  if(pump<__max_pumps_number){ // Check that the pump exists
     turnOnPump(abs(time1*1000), pump);
   }
-  else{printAction(F("Cannot run calibration. Pump does not exist"), MAX_STEPPERS+MAX_PUMPS_NUMBER, 3);}
+  else{printAction(F("Cannot run calibration. Pump does not exist"), __max_steppers+__max_pumps_number, 3);}
 }
 
 void solutionMaker::setCalibrationParameter(uint8_t param, uint8_t pump){
-  if(pump<MAX_PUMPS_NUMBER){
+  if(pump<__max_pumps_number){
     __Calibration[pump] = param;
-    printAction(String(param) + " is the new calibration param (motors/pumps)",  MAX_STEPPERS + pump, 0);
+    printAction(String(param) + " is the new calibration param (motors/pumps)",  __max_steppers + pump, 0);
     return;
   }
     printAction(F("Cannot set calibration Param. Actuator does not exist"), 7, 3);
 }
 
 void solutionMaker::setCalibrationParameter1(uint8_t param, uint8_t salt){ //salt or acid
-  if(salt<SOLUTIONS){
+  if(salt<__solutions){
     __Calibration1[salt] = param;
     printAction(String(param) + " is the new calibration param (ph/ec equations)", 1, 0);
     return;
@@ -708,15 +730,19 @@ void solutionMaker::run(){
   ecMeter->run(); // Handle ecMeter functions
   EZOexportFinished(); // Check when EZO sensors finished export cal.
   checkLS();
-  relayControl();
+
+  // For all the relays
+  for (int i=0;i<__relay_number;i++){
+    relayControl(i);
+  }
 
   // For all the motors
-  for(int i=0; i<MAX_STEPPERS; i++){
+  for(int i=0; i<__max_steppers; i++){
     stepperS[i]->run();
   }
 
   // For all the pumps
-  for(int i=0; i<MAX_PUMPS_NUMBER; i++){
+  for(int i=0; i<__max_pumps_number; i++){
     if(millis()-__PumpTime[i]>__PumpOnTime[i] && __PumpOn[i]){
       turnOffPump(i);
     }
@@ -726,7 +752,9 @@ void solutionMaker::run(){
   } else if (__HOMED && prepareTimeState){
     prepareSolution(500, 5.0, 2000, __limitS_salts);
   } else if (__HOMED && !prepareTimeState){
-    if(!SolFinished)digitalWrite(__Relay[MIXER_RELAY], HIGH);
+    for (int i=0;i<__relay_number;i++){
+      if(!SolFinished && __relay_action_time[i]!=0)digitalWrite(__Relay[i], HIGH);
+    }
     if (millis()-prepareTimeAux>PREPARE_CYCLE) prepareTimeState=true;
   }
 }
@@ -786,16 +814,141 @@ void solutionMaker::prepareSolution(float liters, float ph, float ec, uint8_t sa
       Serial.print(mgPowder);
       Serial.print(F(", mlAcid="));
       Serial.println(mlAcid);
-      __RelayState[MIXER_RELAY] = HIGH;
+      for (int i=0;i<__relay_number;i++){
+        if (__relay_action_time[i]!=0)__RelayState[i] = HIGH;
+      }
+
       if(mlAcid>0 && __HOMED) dispenseAcid(mlAcid, 0);
       if(mlAcid2>0 && __HOMED) dispenseAcid(mlAcid2, 1);
       __HOMED=false;
       prepareTimeState = false;
       prepareTimeAux = millis();
     }
-
   }
   else if (!__limitS_State[carEndLS]){
     carEndDetected = false;
+  }
+}
+
+void solutionMaker::clean_EEPROM(){
+  Serial.println(F("warning,EEPROM: Deleting Memory..."));
+  for (int i = 0 ; i < EEPROM.length() ; i++) {
+    EEPROM.write(i, 0);
+  }
+}
+
+void solutionMaker::print_EEPROM(int i){
+  Serial.println(F("EEPROM: Printing Memory Info"));
+  Serial.print(i); Serial.print(F(": ")); Serial.println(EEPROM.read(i));
+}
+
+void solutionMaker::read_EEPROM(bool pr){
+  for (int i=0;i<8+SOLUTIONS+3*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+2*RELAY_NUMBER+2*LIMIT_SWITCHES;i++){
+    __EEPROM[i] = EEPROM.read(i);
+  }
+  if (pr == true){
+    if(__EEPROM[0]!=0){
+      __solutions = __EEPROM[0];
+      for (int i=0;i<__EEPROM[0];i++){
+        if (__EEPROM[8+i] !=0)setCalibrationParameter1(__EEPROM[8+i], i);
+      }
+    }
+    else{Serial.println(F("warning, Solutions number in EEPROM = 0: Not possible to load salt and acid calibration parameters"));}
+    if(__EEPROM[1]!=0){
+      __max_pumps_number = __EEPROM[1];
+      for (int i=0;i<__EEPROM[1];i++){
+        if (__EEPROM[8+SOLUTIONS+i] !=0)setCalibrationParameter(__EEPROM[8+SOLUTIONS+i], i);
+        if (__EEPROM[8+SOLUTIONS+MAX_PUMPS_NUMBER+i] !=0)__PumpVelocity[i]=__EEPROM[8+SOLUTIONS+MAX_PUMPS_NUMBER+i];
+        if (__EEPROM[8+SOLUTIONS+2*MAX_PUMPS_NUMBER+i] !=0)__Motor[i]=__EEPROM[8+SOLUTIONS+2*MAX_PUMPS_NUMBER+i];
+
+      }
+    }
+    else{Serial.println(F("warning, Acid pump number in EEPROM = 0: Not possible to load pump calibration parameters"));}
+    if(__EEPROM[2]!=0){
+      __loadCellOffset = __EEPROM[2];
+    }
+    if(__EEPROM[3]!=0){
+      __loadCellCalibration = __EEPROM[3]*10;
+    }
+    if(__EEPROM[4]!=0){
+      __max_steppers = __EEPROM[4];
+      for (int i=0;i<__EEPROM[4];i++){
+        motorOrderCfg(i,__EEPROM[8+SOLUTIONS+3*MAX_PUMPS_NUMBER+i]);
+        __MOTOR_SPEED[i] =__EEPROM[8+SOLUTIONS+3*MAX_PUMPS_NUMBER+MAX_STEPPERS+i]*10;
+        __MOTOR_ACCEL[i] =__EEPROM[8+SOLUTIONS+3*MAX_PUMPS_NUMBER+2*MAX_STEPPERS+i]*10;
+        __StepS[i] =__EEPROM[8+SOLUTIONS+3*MAX_PUMPS_NUMBER+3*MAX_STEPPERS+i];
+        __DirS[i] =__EEPROM[8+SOLUTIONS+3*MAX_PUMPS_NUMBER+4*MAX_STEPPERS+i];
+      }
+    }
+    if(__EEPROM[5]!=0){
+      PREPARE_CYCLE = __EEPROM[5]*15*1000; //Time given in seconds divided by 15 (this allows up to 1 hour)
+    }
+    if(__EEPROM[6]!=0){
+      __relay_number = __EEPROM[6];
+      for (int i=0;i<__EEPROM[6];i++){
+        __Relay[i]=__EEPROM[8+SOLUTIONS+3*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+i];
+        __relay_action_time[i]=__EEPROM[8+SOLUTIONS+3*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+RELAY_NUMBER+i]*3*1000; //Since max storage is 255, storage is setup in seconds and divided by 3 allowing a max of 765 seconds
+      }
+    }
+    if(__EEPROM[7]!=0){
+      __limit_switches = __EEPROM[7];
+      for (int i=0;i<__EEPROM[7];i++){
+        limitOrderCfg(i,__EEPROM[8+SOLUTIONS+3*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+2*RELAY_NUMBER+i]);
+        __limitS[i]=__EEPROM[8+SOLUTIONS+3*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+2*RELAY_NUMBER+LIMIT_SWITCHES+i];
+      }
+    }
+
+    Serial.println(F("EEPROM calibration parameters readed and charged"));
+  }
+}
+
+void solutionMaker::write_EEPROM(unsigned int pos, byte val){
+  EEPROM.write(pos, val);
+  Serial.print(F("EEPROM: Parameter saved in pos: ")); Serial.print(pos); Serial.print(F("\tval= ")); Serial.println(val);
+}
+
+void solutionMaker::motorOrderCfg(byte id, byte param){
+  switch (id) {
+  case 0:
+  CarMotor = param;
+    break;
+  case 1:
+    DispenserMotor = param;
+    break;
+  case 2:
+    CargoMotor = param;
+    break;
+  case 3:
+    ReleaseMotor = param;
+    break;
+  case 4:
+    ExtraMotor = param;
+    break;
+  default:
+    Serial.println(F("Current SMaker code used only 5 motors"));
+    break;
+  }
+}
+
+void solutionMaker::limitOrderCfg(byte id, byte param){
+  switch (id) {
+  case 0:
+    carHomeLS = param;
+    break;
+  case 1:
+    dispenserLS = param;
+    break;
+  case 2:
+    carEndLS = param;
+    break;
+  case 3:
+    cargoLS = param;
+    break;
+  case 4:
+    openLS = param;
+    break;
+  default:
+    Serial.println(F("Current SMaker code used only 5 limit switches"));
+    break;
   }
 }
