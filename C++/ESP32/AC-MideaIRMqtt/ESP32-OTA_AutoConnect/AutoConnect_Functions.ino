@@ -22,7 +22,7 @@ void loadSettings(bool rst){
     esp32Type = root_2["value"].as<String>();
 
     file.close();
-    if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && container_ID.length()==container_ID_length){
+    if (addr.fromString(mqttBrokerIp) && (esp32Type=="AirReturn" || esp32Type=="AirPrincipal") && container_ID.length()==container_ID_length){
       Serial.println(F("Uploading Settings..."));
       Serial.print(F("MQTT Broker Ip: ")); Serial.println(mqttBrokerIp);
       Serial.print(F("Container ID: ")); Serial.println(container_ID);
@@ -94,9 +94,8 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   esp32Type = args.arg("esp32Type");
   esp32Type.trim();
 
-
   bool testContID = testContainerId(container_ID);
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && testContID) {
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="AirReturn" || esp32Type=="AirPrincipal") && testContID) {
     // The entered value is owned by AutoConnectAux of /mqtt_setting.
     // To retrieve the elements of /mqtt_setting, it is necessary to get
     // the AutoConnectAux object of /mqtt_setting.
@@ -107,7 +106,7 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   
   // Echo back saved parameters to AutoConnectAux page.
   AutoConnectText&  echo = aux.getElement<AutoConnectText>("parameters");
-  if (addr.fromString(mqttBrokerIp) && (esp32Type=="return" || esp32Type=="principal") && testContID) {
+  if (addr.fromString(mqttBrokerIp) && (esp32Type=="AirReturn" || esp32Type=="AirPrincipal") && testContID) {
     echo.value = "<p style='color:green;'>Parameters were saved correcty!</p><br>";
   }
   else{
@@ -123,10 +122,10 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   }else{
     echo.value += "Container ID: <p style='color:red;'>The ID does not have the correct size/form</p><br>";
   }
-  if(esp32Type=="return" || esp32Type=="principal"){
+  if(esp32Type=="AirReturn" || esp32Type=="AirPrincipal"){
     echo.value += "ESP32 Type: " + esp32Type + "<br>";
   }else{
-    echo.value += "ESP32 Type: <p style='color:red;'>It has to be 'return' or 'principal'</p><br>";
+    echo.value += "ESP32 Type: <p style='color:red;'>It has to be 'AirPrincipal' or 'AirReturn'</p><br>";
   }
   
   return String("");

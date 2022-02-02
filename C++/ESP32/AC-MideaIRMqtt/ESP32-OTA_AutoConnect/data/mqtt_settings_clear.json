@@ -40,9 +40,9 @@
       "name": "esp32Type",
       "type": "ACInput",
       "value": "",
-      "placeholder": "return or principal",
+      "placeholder": "AirPrincipal or AirReturn",
       "label": "What ESP32 are you setting?",
-      "pattern": "(front|back|center)"
+      "pattern": "(AirReturn|AirPrincipal)"
     },
     {
       "name": "newline1",

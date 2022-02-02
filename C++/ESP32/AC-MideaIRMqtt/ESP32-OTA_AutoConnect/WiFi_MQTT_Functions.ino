@@ -79,17 +79,16 @@ void callback(char* topic, byte* message, unsigned int length) {
     }
     
     else if(messageTemp == "AcOff"){ // AC OFF
-    // set state to disabled
-    ir.enabled = false;
+      ir.enabled = false; // Set state to disabled
 
-    // send the IR signal which will turn the A/C off
-    midea_ir_send(&ir);
-    Serial.println(F("AcOFF"));
-    mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "AcOFF");      
+      // Send the IR signal which will turn the A/C off
+      midea_ir_send(&ir);
+      Serial.println(F("Turning off air conditioner"));
+      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Turning off air conditioner");      
     }
 
-    else if(messageTemp.startsWith("AcOn")){
-      String parameter[12];
+    else if(messageTemp.startsWith("AcOn")){ // A/C on
+      String parameter[5];
       int k = 0;
       int l = 0;
       for (int j = 0; j<messageTemp.length(); j++){
@@ -102,24 +101,26 @@ void callback(char* topic, byte* message, unsigned int length) {
           parameter[k] = messageTemp.substring(l,j+1);
         } 
       }
-
-    if(parameter[0]==F("AcOn")){ // Functions executed in Actuator class
-       int Temp = parameter[1].toInt();
-       int Fan = parameter[2].toInt();
-      // set mode, temperature and fan level and internal state to enabled
-      ir.enabled = true;
-      ir.mode = MODE_COOL;
-      ir.fan_level = Fan;
-      ir.temperature = Temp;
-      // send the IR signal with the previously set properties which will switch the A/C on
-      midea_ir_send(&ir);
-      Serial.print(F("Attempt to change AC set mode, temperature and fan level")); Serial.print(Temp); Serial.println(F(",")); Serial.print(Fan);
-      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Attempt to change AC set mode, temperature and fan level "+String(Temp)+ "," + String(Fan));       
-       
+      int Temp = parameter[1].toInt();
+      int Fan = parameter[2].toInt();
+      
+      if(parameter[0]==F("AcOn") && Temp>=17 && Temp<=30 && Fan>=0 && Fan<=3){
+        // Set mode, temperature and fan level and internal state to enabled
+        ir.enabled = true;
+        ir.mode = MODE_COOL;
+        ir.fan_level = Fan;
+        ir.temperature = Temp;
+        // Send the IR signal with the previously set properties which will switch the A/C on
+        midea_ir_send(&ir);
+        Serial.print(F("Turning on air conditioner with temperature and fan level ")); Serial.print(Temp); Serial.print(F(",")); Serial.println(Fan);
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Turning on air conditioner with temperature and fan level "+ String(Temp) + "," + String(Fan));
+      }
+      else{
+        Serial.println(F("error,Turn on air conditioner failed parameter [1-2] wrong"));
+        mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "error,Turn on air conditioner failed parameter [1-2] wrong");
+      } 
     }
-     else{Serial.println(F("error,AcOn(): Parameter[1-2] wrong"));} 
   }
-}
 }
 
 /***** WiFi Functions *****/
@@ -142,4 +143,3 @@ void resetCredentials(){
   ESP.restart();
   delay(1000);
 }
-

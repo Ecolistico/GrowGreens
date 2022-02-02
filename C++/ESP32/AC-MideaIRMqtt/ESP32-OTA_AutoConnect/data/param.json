@@ -19,8 +19,8 @@
     "name": "esp32Type",
     "type": "ACInput",
     "value": "",
-    "placeholder": "return or principal",
+    "placeholder": "AirPrincipal or AirReturn",
     "label": "What ESP32 are you setting?",
-    "pattern": "(return|principal)"
+    "pattern": "(AirReturn|AirPrincipal)"
   }
 ]
