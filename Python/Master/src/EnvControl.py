@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import numpy as np
-from time import time
 
 # Calculation of Vapor Pressure Deficit (VPD) with the equation of Penman-Montheith
 def DVP(temperature, humidity):
@@ -23,18 +22,15 @@ def MideaControl(value):
     return msgs
 
 class EnvControl:
-    def __init__(self, configData, esp32Data = None, waitTime = 300):
+    def __init__(self, configData, esp32Data = None):
         self.enable = True # For future use if we want to disable Air Control
         self.config = configData
         self.configError = False
         self.esp32Data = esp32Data
-        self.waitTime = waitTime
-        self.timer = time()
+        self.AC = None
 
     def update(self):
-        if self.enable and not self.configError and time()-self.timer>self.waitTime:
-            self.timer = time()
-
+        if self.enable and not self.configError:
             if self.config['controlType'].lower() == 'onoff':
                 if self.esp32Data != None:
                     temp = self.esp32Data.averageTemp()
@@ -67,20 +63,29 @@ class EnvControl:
         else: return [] # Do nothing and wait for next update
 
     def On_Off(self, actual, max, min):
-        if(actual>max): return 1    # Turn On
-        elif(actual<min): return -1 # Turn Off
-        else: return 0              # Do nothing
+        # Turn On
+        if actual>max and self.AC!=True:
+            self.AC = True
+            return 1
+        # Turn Off
+        elif actual<min and self.AC!=False:
+            self.AC = False
+            return -1
+        # Do nothing
+        return 0
 
 # Debug
 def main():
-    data = {'controlType': 'OnOff', 'controlMode': 'temperature', 'max': '28', 'min': '24', 'controller': 'midea'}
-    env = EnvControl(data, None, 3)
+    from time import sleep
+    data = {'controlType': 'OnOff', 'controlMode': 'temperature', 'max': '22', 'min': '17', 'controller': 'midea'}
+    env = EnvControl(data, None)
     while True: 
         env_msgs = env.update()
         new_msgs = []
         for msg in env_msgs:
             new_msgs.append({"topic": "{}/{}".format("23-009-006", msg["device"]), "payload": msg["payload"]})
         if len(new_msgs) > 0: print(new_msgs)
+        sleep(3)
     
 if __name__ == '__main__':
     main()

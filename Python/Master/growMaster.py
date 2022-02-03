@@ -294,7 +294,7 @@ try:
             for msg in resp:
                 if env_counter==0:
                     env_counter += 1
-                    if msg["payload"].startswith("AcOn"): log.logger.info("EnvControl: Turn on AC")
+                    if msg["payload"].startswith("AcOn"): log.logger.info("EnvControl: Turning on AC")
                     elif msg["payload"].startswith("AcOff"): log.logger.info("EnvControl: Turning off AC")
                     else: log.logger.error("EnvControl: Unknown command [{}]".format(msg["payload"]))
                 env_msgs.append({"topic": "{}/{}".format(ID, msg["device"]), "payload": msg["payload"]})
