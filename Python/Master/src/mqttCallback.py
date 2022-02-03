@@ -11,33 +11,25 @@ class mqttController:
                  brokerIP,
                  connector,
                  multiGrower,
-                 loggerMain,
-                 loggerGr1,
-                 loggerGr2,
-                 loggerGr3,
-                 loggerGr4,
-                 loggerFront1,
-                 loggerCenter1,
-                 loggerBack1,
-                 loggerFront2,
-                 loggerCenter2,
-                 loggerBack2):
+                 logger):
         # Define container parameters
         self.ID = ID
         self.brokerIP = brokerIP
         self.conn = connector
         # Define loggers
-        self.logMain = loggerMain
-        self.logGr1 = loggerGr1
-        self.logGr2 = loggerGr2
-        self.logGr3 = loggerGr3
-        self.logGr4 = loggerGr4
-        self.logFront1 = loggerFront1
-        self.logCenter1 = loggerCenter1
-        self.logBack1 = loggerBack1
-        self.logFront2 = loggerFront2
-        self.logCenter2 = loggerCenter2
-        self.logBack2 = loggerBack2
+        self.logMain = logger.logger
+        self.logGr1 = logger.logger_grower1
+        self.logGr2 = logger.logger_grower2
+        self.logGr3 = logger.logger_grower3
+        self.logGr4 = logger.logger_grower4
+        self.logFront1 = logger.logger_esp32front1
+        self.logCenter1 = logger.logger_esp32center1
+        self.logBack1 = logger.logger_esp32back1
+        self.logFront2 = logger.logger_esp32front2
+        self.logCenter2 = logger.logger_esp32center2
+        self.logBack2 = logger.logger_esp32back2
+        self.AirPrincipal = logger.logger_AirPrincipal
+        self.AirReturn = logger.logger_AirReturn
         # Define ESP32´s object
         self.ESP32 = ESPdata.multiESP(self.logFront1, self.logCenter1, self.logBack1, self.logFront2, self.logCenter2, self.logBack2)
         # Define multiGrower´s object
@@ -125,6 +117,8 @@ class mqttController:
             elif(device == "esp32front2"): self.logFront2.debug(message)
             elif(device == "esp32center2"): self.logCenter2.debug(message)
             elif(device == "esp32back2"): self.logBack2.debug(message)
+            elif(device == "esp32AirPrincipal"): self.AirPrincipal.debug(message)
+            elif(device == "esp32AirReturn"): self.AirReturn.debug(message)
             else: self.logMain.warning("Unknown mqtt log recieve - device={}, message={}".format(device, message))
         
         # Get MQTT errors from ESP32´s
@@ -135,6 +129,8 @@ class mqttController:
             if(device == "esp32front2"): self.logFront2.error(message)
             elif(device == "esp32center2"): self.logCenter2.error(message)
             elif(device == "esp32back2"): self.logBack2.error(message)
+            elif(device == "esp32AirPrincipal"): self.AirPrincipal.error(message)
+            elif(device == "esp32AirReturn"): self.AirReturn.error(message)
             else: self.logMain.error("Unknown mqtt log recieve - device={}, message={}".format(device, message))
             
         # Get data from ESP32 front, center and back
@@ -167,10 +163,10 @@ class mqttController:
         if(device == 'Server' and not message.startswith('whatIsMyIP')):
             self.serverIP = message
             
-    def on_publish(client, userdata, mid):
+    def on_publish(self, client, userdata, mid):
         self.logMain.debug("Message delivered")
 
-    def on_disconnect(client, userdata, rc):
+    def on_disconnect(self, client, userdata, rc):
         self.logMain.warning("Client MQTT Disconnected")
         self.clientConnected = False
         self.actualTime = time()

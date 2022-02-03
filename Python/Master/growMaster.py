@@ -22,6 +22,7 @@ from artificialDay import Day
 from sensor import BMP280, BME680
 #from Calendar import Calendar
 from credentials import broker, sensor
+from EnvControl import EnvControl
 from growerData import multiGrower
 from inputHandler import inputHandler
 from mqttCallback import mqttController
@@ -51,15 +52,10 @@ log = logger()
 #growCal = Calendar()
 
 # From communication
-mGrower = multiGrower(log.logger_grower1, log.logger_grower2, log.logger_grower3, log.logger_grower4)
+mGrower = multiGrower(log)
 
 # From Serial Callback
-serialControl = serialController(mGrower,
-                                 log.logger,
-                                 log.logger_generalControl,
-                                 log.logger_motorsGrower1,
-                                 log.logger_motorsGrower2,
-                                 "state.json")
+serialControl = serialController(mGrower, log, "state.json")
 
 # Define functions
 def mainClose(): # When program is finishing
@@ -156,6 +152,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
         state = data["state"]
         ihp_data = data["ihp"]      # Must include 'MAC', 'ip_range' and 'port'
         artDay_data = data["day"]   # Include all the configuration to control the artifitial light
+        env_data = data["env"]      # Include all the configuration to control the environment
 
     # Charge GUI parameters and connect logger and serialControl
     gui = GUI(ID, log.logger, serialControl)
@@ -180,17 +177,10 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
                                  brokerIP,
                                  conn,
                                  serialControl.mGrower,
-                                 log.logger,
-                                 log.logger_grower1,
-                                 log.logger_grower2,
-                                 log.logger_grower3,
-                                 log.logger_grower4,
-                                 log.logger_esp32front1,
-                                 log.logger_esp32center1,
-                                 log.logger_esp32back1,
-                                 log.logger_esp32front2,
-                                 log.logger_esp32center2,
-                                 log.logger_esp32back2)
+                                 log)
+
+    # Define environment controller
+    env = EnvControl(env_data, mqttControl.ESP32)
 
     # From inputHandler
     inputControl = inputHandler(ID, brokerIP, log.logger, serialControl, mqttControl, gui)
@@ -297,6 +287,18 @@ try:
             mqttControl.mGrower.updateStatus()
             mqttControl.ESP32.updateStatus()
 
+            # Update air conditioner controller
+            resp = env.update()
+            env_msgs = []
+            env_counter = 0
+            for msg in resp:
+                if env_counter==0:
+                    env_counter += 1
+                    if msg["payload"].startswith("AcOn"): log.logger.info("EnvControl: Turn on AC")
+                    elif msg["payload"].startswith("AcOff"): log.logger.info("EnvControl: Turning off AC")
+                    else: log.logger.error("EnvControl: Unknown command [{}]".format(msg["payload"]))
+                env_msgs.append({"topic": "{}/{}".format(ID, msg["device"]), "payload": msg["payload"]})
+
             if(mqttControl.clientConnected):
                 try:
                     msgs = [{"topic": "{}/Grower1".format(ID), "payload": "cozirData"},
@@ -309,7 +311,8 @@ try:
                             {"topic": "{}/esp32front2".format(ID), "payload": "sendData"},
                             {"topic": "{}/esp32center2".format(ID), "payload": "sendData"},
                             {"topic": "{}/esp32back2".format(ID), "payload": "sendData"}]
-                    # Request ESP32's and Growers data
+                    msgs += env_msgs
+                    # Request ESP32's and Growers data and update enviromental Controllers
                     publish.multiple(msgs, hostname = brokerIP)
                 except Exception as e:
                     log.logger.error("LAN/WLAN not found- Impossible use publish() to request ESP&Grower data [{}]".format(e))

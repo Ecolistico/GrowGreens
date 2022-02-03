@@ -70,11 +70,11 @@ class grower:
         return self.xSeq, self.ySeq
     
 class multiGrower:
-    def __init__(self, logger1, logger2, logger3, logger4):
-        self.Gr1 = grower(1, logger1)
-        self.Gr2 = grower(2, logger2)
-        self.Gr3 = grower(3, logger3)
-        self.Gr4 = grower(4, logger4)
+    def __init__(self, logger):
+        self.Gr1 = grower(1, logger.logger_grower1)
+        self.Gr2 = grower(2, logger.logger_grower2)
+        self.Gr3 = grower(3, logger.logger_grower3)
+        self.Gr4 = grower(4, logger.logger_grower4)
     
     def updateStatus(self):
         if(self.Gr1.connected == False): self.Gr1.connectionFailed()

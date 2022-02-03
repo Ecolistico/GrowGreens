@@ -59,6 +59,8 @@ class logger:
         self.logger_motorsGrower1 = logging.getLogger('motorsGrower1')
         self.logger_motorsGrower2 = logging.getLogger('motorsGrower2')
         self.logger_ihp = logging.getLogger('iHP')
+        self.logger_AirPrincipal = logging.getLogger('AirPrincipal')
+        self.logger_AirReturn = logging.getLogger('AirReturn')
         # Create a file handler for each logger
         handler = logging.handlers.RotatingFileHandler('./temp/master.log', maxBytes = 5000000, backupCount = 3)
         handler.setLevel(logging.DEBUG)
@@ -90,6 +92,10 @@ class logger:
         handler_motorsGrower2.setLevel(logging.DEBUG)
         handler_ihp = logging.handlers.RotatingFileHandler('./temp/iHP.log', maxBytes = 5000000, backupCount = 3)
         handler_ihp.setLevel(logging.DEBUG)
+        handler_AirPrincipal = logging.handlers.RotatingFileHandler('./temp/AirPrincipal.log', maxBytes = 5000000, backupCount = 3)
+        handler_AirPrincipal.setLevel(logging.DEBUG)
+        handler_AirReturn = logging.handlers.RotatingFileHandler('./temp/AirReturn.log', maxBytes = 5000000, backupCount = 3)
+        handler_AirReturn.setLevel(logging.DEBUG)
         
         # Create logging format and linking it to all the handlers
         formatter = logging.Formatter(fmt = '%(asctime)s %(levelname)-8s %(message)s',
@@ -109,6 +115,8 @@ class logger:
         handler_motorsGrower1.setFormatter(formatter)
         handler_motorsGrower2.setFormatter(formatter)
         handler_ihp.setFormatter(formatter)
+        handler_AirPrincipal.setFormatter(formatter)
+        handler_AirReturn.setFormatter(formatter)
         # Add the handler to the logger
         self.logger.addHandler(handler)
         self.logger_esp32front1.addHandler(handler_esp32front1)
@@ -125,3 +133,5 @@ class logger:
         self.logger_motorsGrower1.addHandler(handler_motorsGrower1)
         self.logger_motorsGrower2.addHandler(handler_motorsGrower2)
         self.logger_ihp.addHandler(handler_ihp)
+        self.logger_AirPrincipal.addHandler(handler_AirPrincipal)
+        self.logger_AirReturn.addHandler(handler_AirReturn)

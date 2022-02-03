@@ -6,12 +6,12 @@ from time import time, sleep
 from systemState import systemState
 
 class serialController:
-    def __init__(self, multiGrower, loggerMain, loggerGC, loggerMG1, loggerMG2, stateFile):
+    def __init__(self, multiGrower, logger, stateFile):
         # Define loggers
-        self.logMain = loggerMain
-        self.logGC = loggerGC
-        self.logMG1 = loggerMG1
-        self.logMG2 = loggerMG2
+        self.logMain = logger.logger
+        self.logGC = logger.logger_generalControl
+        self.logMG1 = logger.logger_motorsGrower1
+        self.logMG2 = logger.logger_motorsGrower2
 
         # Variable to export Eeprom from GC
         self.exportEeprom = False
