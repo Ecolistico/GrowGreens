@@ -46,8 +46,8 @@ class EnvControl:
                 if self.esp32Data != None:
                     temp = self.esp32Data.averageTemp()
                     hum = self.esp32Data.averageHum()
-                    print("TEMPERATURA PROMEDIO: ", temp)
-                    print("HUMEDAD PROMEDIO: ", hum)
+                    print("Temperatura promedio =  ", temp, "°C")
+                    print("Humedad promedio = ", hum, "%")
                 else: # Default values for testing purposes
                     temp = 23
                     hum = 75
@@ -57,7 +57,7 @@ class EnvControl:
                 else: 
                     if not self.configError:
                         self.configError = True
-                        self.str2log(3, "Environmental Control: Configuration error [controlMode] = {} is not implemented yet".format(self.config['controlMode']))
+                        self.str2log("Environmental Control: Configuration error [controlMode] = {} is not implemented yet".format(self.config['controlMode']), 3)
                     actual = (float(self.config['max']) + float(self.config['min']))/2
                 
                 if self.config['controller'].lower() == 'midea':
@@ -66,12 +66,12 @@ class EnvControl:
                 else: # Do nothing
                     if not self.configError:
                         self.configError = True
-                        self.str2log(3, "Environmental Control: Configuration error [controller] = {} is not implemented yet".format(self.config['controller']))
+                        self.str2log("Environmental Control: Configuration error [controller] = {} is not implemented yet".format(self.config['controller']), 3)
                     return [] 
             else: # Do nothing
                 if not self.configError:
                     self.configError = True
-                    self.str2log(3, "Environmental Control: Configuration error [controlType] = {} is not implemented yet".format(self.config['controlType']))
+                    self.str2log("Environmental Control: Configuration error [controlType] = {} is not implemented yet".format(self.config['controlType']), 3)
                 return [] 
         else: return [] # Do nothing and wait for next update
 
@@ -79,16 +79,16 @@ class EnvControl:
         # Turn On
         if actual>max and self.AC!=True:
             self.AC = True
-            self.str2log(1, "Environmental Control: Turning on AC")
+            self.str2log("Environmental Control: Turning on AC", 1)
             return 1
         # Turn Off
         elif actual<min and self.AC!=False:
             self.AC = False
-            self.str2log(1, "Environmental Control: Turning off AC")
+            self.str2log("Environmental Control: Turning off AC", 1)
             return -1
         elif self.AC == None:
             self.AC = False
-            self.str2log(1, "Environmental Control: Turning off AC")
+            self.str2log("Environmental Control: Turning off AC", 1)
             return -1
         # Do nothing
         return 0
