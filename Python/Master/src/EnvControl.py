@@ -86,6 +86,10 @@ class EnvControl:
             self.AC = False
             self.str2log(1, "Environmental Control: Turning off AC")
             return -1
+        elif self.AC == None:
+            self.AC = False
+            self.str2log(1, "Environmental Control: Turning off AC")
+            return -1
         # Do nothing
         return 0
 
