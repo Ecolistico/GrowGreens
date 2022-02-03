@@ -23,7 +23,7 @@ def MideaControl(value):
 
 class EnvControl:
     def __init__(self, configData, esp32Data = None, logger = None):
-        self.enable = True # For future use if we want to disable Air Control
+        self.enable = False # For future use if we want to disable Air Control
         self.config = configData
         self.configError = False
         self.esp32Data = esp32Data
@@ -46,6 +46,8 @@ class EnvControl:
                 if self.esp32Data != None:
                     temp = self.esp32Data.averageTemp()
                     hum = self.esp32Data.averageHum()
+                    print("TEMPERATURA PROMEDIO: ", temp)
+                    print("HUMEDAD PROMEDIO: ", hum)
                 else: # Default values for testing purposes
                     temp = 23
                     hum = 75

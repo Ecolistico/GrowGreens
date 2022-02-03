@@ -291,7 +291,8 @@ try:
             resp = env.update()
             env_msgs = []
             for msg in resp: env_msgs.append({"topic": "{}/{}".format(ID, msg["device"]), "payload": msg["payload"]})
-
+            env.enable = True
+            
             if(mqttControl.clientConnected):
                 try:
                     msgs = [{"topic": "{}/Grower1".format(ID), "payload": "cozirData"},
