@@ -22,12 +22,23 @@ def MideaControl(value):
     return msgs
 
 class EnvControl:
-    def __init__(self, configData, esp32Data = None):
+    def __init__(self, configData, esp32Data = None, logger = None):
         self.enable = True # For future use if we want to disable Air Control
         self.config = configData
         self.configError = False
         self.esp32Data = esp32Data
         self.AC = None
+        self.log = logger
+
+    def str2log(self, msg, level = 'DEBUG'):
+        if self.log!=None:
+            if (level==0 or level=='DEBUG'): self.log.debug(msg)
+            elif (level==1 or level=='INFO'): self.log.info(msg)
+            elif (level==2 or level=='WARNING'): self.log.warning(msg)
+            elif (level==3 or level=='ERROR'): self.log.error(msg)
+            elif (level==4 or level=='CRITICAL'): self.log.critical(msg)
+        else:
+            print(msg)
 
     def update(self):
         if self.enable and not self.configError:
@@ -44,7 +55,7 @@ class EnvControl:
                 else: 
                     if not self.configError:
                         self.configError = True
-                        print("Configuration Error: controlMode is not implemented yet")
+                        self.str2log(3, "Environmental Control: Configuration error [controlMode] = {} is not implemented yet".format(self.config['controlMode']))
                     actual = (float(self.config['max']) + float(self.config['min']))/2
                 
                 if self.config['controller'].lower() == 'midea':
@@ -53,12 +64,12 @@ class EnvControl:
                 else: # Do nothing
                     if not self.configError:
                         self.configError = True
-                        print("Configuration Error: controller is not implemented yet")
+                        self.str2log(3, "Environmental Control: Configuration error [controller] = {} is not implemented yet".format(self.config['controller']))
                     return [] 
             else: # Do nothing
                 if not self.configError:
                     self.configError = True
-                    print("Configuration Error: controlType is not implemented yet")
+                    self.str2log(3, "Environmental Control: Configuration error [controlType] = {} is not implemented yet".format(self.config['controlType']))
                 return [] 
         else: return [] # Do nothing and wait for next update
 
@@ -66,10 +77,12 @@ class EnvControl:
         # Turn On
         if actual>max and self.AC!=True:
             self.AC = True
+            self.str2log(1, "Environmental Control: Turning on AC")
             return 1
         # Turn Off
         elif actual<min and self.AC!=False:
             self.AC = False
+            self.str2log(1, "Environmental Control: Turning off AC")
             return -1
         # Do nothing
         return 0
