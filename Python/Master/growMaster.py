@@ -267,6 +267,9 @@ try:
 
             # Update day info and send it to iHP
             myDay.get_intensity(hour*60+minute)
+            for i in range(1,4,1):
+                ihp.request(ihp.READ_VIN, {'line': i})
+                ihp.request(ihp.READ_IIN, {'line': i})
             for i in range(myDay.fl):
                 if myDay.update[i]: 
                     ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': myDay.intensity[i]})
