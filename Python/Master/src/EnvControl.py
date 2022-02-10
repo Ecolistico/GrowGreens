@@ -69,12 +69,13 @@ class EnvControl:
         else: self.str2log("Environmental Control: Error in connectionSuccess() [device {} does not exist]".format(device), 3)
 
     def updateStatus(self):
-        if(self.mqttController.AirConnected['Principal']['status'] == False): self.connectionFailed(1)
-        else: self.connectionSuccess(1)
-        self.mqttController.AirConnected['Principal']['status'] = False
-        if(self.mqttController.AirConnected['Return']['status'] == False): self.connectionFailed(2)
-        else: self.connectionSuccess(2)
-        self.mqttController.AirConnected['Return']['status'] = False
+        if self.mqttController != None:
+            if(self.mqttController.AirConnected['Principal']['status'] == False): self.connectionFailed(1)
+            else: self.connectionSuccess(1)
+            self.mqttController.AirConnected['Principal']['status'] = False
+            if(self.mqttController.AirConnected['Return']['status'] == False): self.connectionFailed(2)
+            else: self.connectionSuccess(2)
+            self.mqttController.AirConnected['Return']['status'] = False
 
     def update(self):
         if self.boot == False:
@@ -139,7 +140,7 @@ class EnvControl:
 def main():
     from time import sleep
     data = {'controlType': 'OnOff', 'controlMode': 'temperature', 'max': '22', 'min': '17', 'controller': 'midea'}
-    env = EnvControl(data, None)
+    env = EnvControl(data)
     while True: 
         env_msgs = env.update()
         new_msgs = []
