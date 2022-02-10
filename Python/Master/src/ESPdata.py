@@ -109,11 +109,15 @@ class dataESP32:
 
     def averageTemp(self):
         data = [self.T1R, self.T1L, self.T2R, self.T2L, self.T3R, self.T3L, self.T4R, self.T4L]
-        return sum(data)/len(data)
+        data = [ele for ele in data if ele not in {0}]
+        if len(data)==0: return 0
+        else: return sum(data)/len(data)
     
     def averageHum(self):
         data = [self.H1R, self.H1L, self.H2R, self.H2L, self.H3R, self.H3L, self.H4R, self.H4L]
-        return sum(data)/len(data)
+        data = [ele for ele in data if ele not in {0}]
+        if len(data)==0: return 0
+        else: return sum(data)/len(data)
         
 # Define class for the 6 ESP
 class multiESP:
@@ -172,11 +176,15 @@ class multiESP:
 
     def averageTemp(self):
         data = [self.front1.averageTemp(), self.center1.averageTemp(), self.back1.averageTemp(), self.front2.averageTemp(), self.center2.averageTemp(), self.back2.averageTemp()]
-        return sum(data)/len(data)
+        data = [ele for ele in data if ele not in {0}]
+        if len(data)==0: return 0
+        else: return sum(data)/len(data)
     
     def averageHum(self):
         data = [self.front1.averageHum(), self.center1.averageHum(), self.back1.averageHum(), self.front2.averageHum(), self.center2.averageHum(), self.back2.averageHum()]
-        return sum(data)/len(data)
+        data = [ele for ele in data if ele not in {0}]
+        if len(data)==0: return 0
+        else: return sum(data)/len(data)
 
     def upload2DB(self, dbConnector):
         # Create cursor
