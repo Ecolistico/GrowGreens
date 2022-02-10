@@ -77,6 +77,11 @@ void callback(char* topic, byte* message, unsigned int length) {
       ESP.restart();
       delay(1000);
     }
+
+    else if(messageTemp == "ping"){ // Ping ESP32
+      Serial.println(F("Ping requested"));
+      mqttPublish(container_ID+"/esp32"+esp32Type+"/log", "Ping requested");
+    }
     
     else if(messageTemp == "AcOff"){ // AC OFF
       ir.enabled = false; // Set state to disabled

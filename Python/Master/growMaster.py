@@ -180,7 +180,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
                                  log)
 
     # Define environment controller
-    env = EnvControl(env_data, mqttControl.ESP32, log.logger)
+    env = EnvControl(env_data, mqttControl)
 
     # From inputHandler
     inputControl = inputHandler(ID, brokerIP, log.logger, serialControl, mqttControl, gui)
@@ -291,7 +291,6 @@ try:
             resp = env.update()
             env_msgs = []
             for msg in resp: env_msgs.append({"topic": "{}/{}".format(ID, msg["device"]), "payload": msg["payload"]})
-            env.enable = True
             
             if(mqttControl.clientConnected):
                 try:

@@ -28,12 +28,14 @@ class mqttController:
         self.logFront2 = logger.logger_esp32front2
         self.logCenter2 = logger.logger_esp32center2
         self.logBack2 = logger.logger_esp32back2
-        self.AirPrincipal = logger.logger_AirPrincipal
-        self.AirReturn = logger.logger_AirReturn
+        self.logAirPrincipal = logger.logger_AirPrincipal
+        self.logAirReturn = logger.logger_AirReturn
         # Define ESP32´s object
         self.ESP32 = ESPdata.multiESP(self.logFront1, self.logCenter1, self.logBack1, self.logFront2, self.logCenter2, self.logBack2)
         # Define multiGrower´s object
         self.mGrower = multiGrower
+        # Define AirPrincipal and AirReturn connected variables
+        self.AirConnected = {'Principal': {'status': False, 'counter': 0}, 'Return': {'status': False, 'counter': 0}}
         # Define aux variables
         self.clientConnected = False
         self.actualTime = time()
@@ -117,8 +119,12 @@ class mqttController:
             elif(device == "esp32front2"): self.logFront2.debug(message)
             elif(device == "esp32center2"): self.logCenter2.debug(message)
             elif(device == "esp32back2"): self.logBack2.debug(message)
-            elif(device == "esp32AirPrincipal"): self.AirPrincipal.debug(message)
-            elif(device == "esp32AirReturn"): self.AirReturn.debug(message)
+            elif(device == "esp32AirPrincipal"): 
+                self.logAirPrincipal.debug(message)
+                self.AirConnected['Principal']['status'] = True
+            elif(device == "esp32AirReturn"): 
+                self.logAirReturn.debug(message)
+                self.AirConnected['Return']['status'] = True
             else: self.logMain.warning("Unknown mqtt log recieve - device={}, message={}".format(device, message))
         
         # Get MQTT errors from ESP32´s
@@ -129,8 +135,8 @@ class mqttController:
             if(device == "esp32front2"): self.logFront2.error(message)
             elif(device == "esp32center2"): self.logCenter2.error(message)
             elif(device == "esp32back2"): self.logBack2.error(message)
-            elif(device == "esp32AirPrincipal"): self.AirPrincipal.error(message)
-            elif(device == "esp32AirReturn"): self.AirReturn.error(message)
+            elif(device == "esp32AirPrincipal"): self.logAirPrincipal.error(message)
+            elif(device == "esp32AirReturn"): self.logAirReturn.error(message)
             else: self.logMain.error("Unknown mqtt log recieve - device={}, message={}".format(device, message))
             
         # Get data from ESP32 front, center and back

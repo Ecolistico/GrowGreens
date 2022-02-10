@@ -18,17 +18,24 @@ def MideaControl(value):
         msgs = [{"device": "esp32AirPrincipal", "payload": "AcOff"}, 
                 {"device": "esp32AirReturn", "payload": "AcOff"}]
     # Do nothing
-    else: msgs = []
+    else: msgs = [{"device": "esp32AirPrincipal", "payload": "ping"}, 
+                  {"device": "esp32AirReturn", "payload": "ping"}]
     return msgs
-
 class EnvControl:
-    def __init__(self, configData, esp32Data = None, logger = None):
+    def __init__(self, configData, mqttController = None):
         self.enable = False # For future use if we want to disable Air Control
+        self.boot = False
         self.config = configData
         self.configError = False
-        self.esp32Data = esp32Data
+        self.mqttController = mqttController
+        if mqttController != None:
+            self.esp32Data = mqttController.ESP32
+            self.log = mqttController.logMain
+        else:
+            self.esp32Data = None
+            self.log = None
         self.AC = None
-        self.log = logger
+
 
     def str2log(self, msg, level = 'DEBUG'):
         if self.log!=None:
@@ -40,8 +47,43 @@ class EnvControl:
         else:
             print(msg)
 
+    def connectionFailed(self, device):
+        # AirPrincipal
+        if device == 1:
+            self.mqttController.AirConnected['Principal']['counter'] += 1
+            if(self.mqttController.AirConnected['Principal']['counter']>=5):
+                self.mqttController.AirConnected['Principal']['counter'] = 0
+                self.mqttController.logAirPrincipal.error("Device disconnected")
+        # AirReturn
+        elif device ==2:
+            self.mqttController.AirConnected['Return']['counter'] += 1
+            if(self.mqttController.AirConnected['Return']['counter']>=5):
+                self.mqttController.AirConnected['Return']['counter'] = 0
+                self.mqttController.logAirReturn.error("Device disconnected")
+        else: self.str2log("Environmental Control: Error in connectionFailed() [device {} does not exist]".format(device), 3)
+        
+            
+    def connectionSuccess(self, device):
+        if device == 1: self.mqttController.AirConnected['Principal']['counter'] = 0
+        elif device ==2: self.mqttController.AirConnected['Return']['counter'] = 0
+        else: self.str2log("Environmental Control: Error in connectionSuccess() [device {} does not exist]".format(device), 3)
+
+    def updateStatus(self):
+        if(self.mqttController.AirConnected['Principal']['status'] == False): self.connectionFailed(1)
+        else: self.connectionSuccess(1)
+        self.mqttController.AirConnected['Principal']['status'] = False
+        if(self.mqttController.AirConnected['Return']['status'] == False): self.connectionFailed(2)
+        else: self.connectionSuccess(2)
+        self.mqttController.AirConnected['Return']['status'] = False
+
     def update(self):
+        if self.boot == False:
+            self.boot = True
+            self.enable = True
+            return [] # Do nothing and wait for next update
+            
         if self.enable and not self.configError:
+            self.updateStatus()
             if self.config['controlType'].lower() == 'onoff':
                 if self.esp32Data != None:
                     temp = self.esp32Data.averageTemp()
@@ -74,7 +116,7 @@ class EnvControl:
                     self.str2log("Environmental Control: Configuration error [controlType] = {} is not implemented yet".format(self.config['controlType']), 3)
                 return [] 
         else: return [] # Do nothing and wait for next update
-
+        
     def On_Off(self, actual, max, min):
         # Turn On
         if actual>max and self.AC!=True:
