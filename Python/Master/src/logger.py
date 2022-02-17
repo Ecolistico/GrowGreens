@@ -8,11 +8,16 @@ import logging.handlers
 class logger:
     def __init__(self):
         # Logging config to file
+        root_handler = logging.handlers.RotatingFileHandler(filename='./temp/growMaster.log', mode='a', maxBytes = 100*1024*1024, backupCount = 2)
+        root_handler.setLevel(logging.DEBUG)
+        root_formatter = logging.Formatter('%(asctime)s %(name)-15s %(levelname)-8s %(message)s',
+                                           datefmt = '%Y-%m-%d %H:%M:%S')
+        root_handler.setFormatter(root_formatter)
+        
         logging.basicConfig(level = logging.DEBUG,
                             format = '%(asctime)s %(name)-15s %(levelname)-8s %(message)s',
                             datefmt = '%Y-%m-%d %H:%M:%S',
-                            filename = './temp/growMaster.log',
-                            filemode = 'a')
+                            handlers = [root_handler])
         
         # Define a Handler which writes WARNING messages or higher to the sys.stderr
         console = logging.StreamHandler()
@@ -62,42 +67,42 @@ class logger:
         self.logger_AirPrincipal = logging.getLogger('AirPrincipal')
         self.logger_AirReturn = logging.getLogger('AirReturn')
         # Create a file handler for each logger
-        handler = logging.handlers.RotatingFileHandler('./temp/master.log', maxBytes = 4000000, backupCount = 3)
+        handler = logging.handlers.RotatingFileHandler('./temp/master.log', maxBytes = 4*1024*1024, backupCount = 2)
         handler.setLevel(logging.DEBUG)
-        handler_esp32front1 = logging.handlers.RotatingFileHandler('./temp/esp32front1.log', maxBytes = 3000000, backupCount = 3)
+        handler_esp32front1 = logging.handlers.RotatingFileHandler('./temp/esp32front1.log', maxBytes = 3*1024*1024, backupCount = 2)
         handler_esp32front1.setLevel(logging.DEBUG)
-        handler_esp32center1 = logging.handlers.RotatingFileHandler('./temp/esp32center1.log', maxBytes = 3000000, backupCount = 3)
+        handler_esp32center1 = logging.handlers.RotatingFileHandler('./temp/esp32center1.log', maxBytes = 3*1024*1024, backupCount = 2)
         handler_esp32center1.setLevel(logging.DEBUG)
-        handler_esp32back1 = logging.handlers.RotatingFileHandler('./temp/esp32back1.log', maxBytes = 3000000, backupCount = 3)
+        handler_esp32back1 = logging.handlers.RotatingFileHandler('./temp/esp32back1.log', maxBytes = 3*1024*1024, backupCount = 2)
         handler_esp32back1.setLevel(logging.DEBUG)
-        handler_esp32front2 = logging.handlers.RotatingFileHandler('./temp/esp32front2.log', maxBytes = 3000000, backupCount = 3)
+        handler_esp32front2 = logging.handlers.RotatingFileHandler('./temp/esp32front2.log', maxBytes = 3*1024*1024, backupCount = 2)
         handler_esp32front2.setLevel(logging.DEBUG)
-        handler_esp32center2 = logging.handlers.RotatingFileHandler('./temp/esp32center2.log', maxBytes = 3000000, backupCount = 3)
+        handler_esp32center2 = logging.handlers.RotatingFileHandler('./temp/esp32center2.log', maxBytes = 3*1024*1024, backupCount = 2)
         handler_esp32center2.setLevel(logging.DEBUG)
-        handler_esp32back2 = logging.handlers.RotatingFileHandler('./temp/esp32back2.log', maxBytes = 3000000, backupCount = 3)
+        handler_esp32back2 = logging.handlers.RotatingFileHandler('./temp/esp32back2.log', maxBytes = 3*1024*1024, backupCount = 2)
         handler_esp32back2.setLevel(logging.DEBUG)
-        handler_grower1 = logging.handlers.RotatingFileHandler('./temp/grower1.log', maxBytes = 2000000, backupCount = 3)
+        handler_grower1 = logging.handlers.RotatingFileHandler('./temp/grower1.log', maxBytes = 2*1024*1024, backupCount = 2)
         handler_grower1.setLevel(logging.DEBUG)
-        handler_grower2 = logging.handlers.RotatingFileHandler('./temp/grower2.log', maxBytes = 2000000, backupCount = 3)
+        handler_grower2 = logging.handlers.RotatingFileHandler('./temp/grower2.log', maxBytes = 2*1024*1024, backupCount = 2)
         handler_grower2.setLevel(logging.DEBUG)
-        handler_grower3 = logging.handlers.RotatingFileHandler('./temp/grower3.log', maxBytes = 2000000, backupCount = 3)
+        handler_grower3 = logging.handlers.RotatingFileHandler('./temp/grower3.log', maxBytes = 2*1024*1024, backupCount = 2)
         handler_grower3.setLevel(logging.DEBUG)
-        handler_grower4 = logging.handlers.RotatingFileHandler('./temp/grower4.log', maxBytes = 2000000, backupCount = 3)
+        handler_grower4 = logging.handlers.RotatingFileHandler('./temp/grower4.log', maxBytes = 2*1024*1024, backupCount = 2)
         handler_grower4.setLevel(logging.DEBUG)
-        handler_generalControl = logging.handlers.RotatingFileHandler('./temp/generalControl.log', maxBytes = 5000000, backupCount = 3)
+        handler_generalControl = logging.handlers.RotatingFileHandler('./temp/generalControl.log', maxBytes = 5*1024*1024, backupCount = 2)
         handler_generalControl.setLevel(logging.DEBUG)
-        handler_motorsGrower1 = logging.handlers.RotatingFileHandler('./temp/motorsGrower1.log', maxBytes = 3000000, backupCount = 3)
+        handler_motorsGrower1 = logging.handlers.RotatingFileHandler('./temp/motorsGrower1.log', maxBytes = 3*1024*1024, backupCount = 2)
         handler_motorsGrower1.setLevel(logging.DEBUG)
-        handler_motorsGrower2 = logging.handlers.RotatingFileHandler('./temp/motorsGrower2.log', maxBytes = 3000000, backupCount = 3)
+        handler_motorsGrower2 = logging.handlers.RotatingFileHandler('./temp/motorsGrower2.log', maxBytes = 3*1024*1024, backupCount = 2)
         handler_motorsGrower2.setLevel(logging.DEBUG)
-        handler_ihp = logging.handlers.RotatingFileHandler('./temp/iHP.log', maxBytes = 4000000, backupCount = 3)
+        handler_ihp = logging.handlers.RotatingFileHandler('./temp/iHP.log', maxBytes = 4*1024*1024, backupCount = 2)
         handler_ihp.setLevel(logging.DEBUG)
-        handler_AirPrincipal = logging.handlers.RotatingFileHandler('./temp/AirPrincipal.log', maxBytes = 1000000, backupCount = 3)
+        handler_AirPrincipal = logging.handlers.RotatingFileHandler('./temp/AirPrincipal.log', maxBytes = 1*1024*1024, backupCount = 2)
         handler_AirPrincipal.setLevel(logging.DEBUG)
-        handler_AirReturn = logging.handlers.RotatingFileHandler('./temp/AirReturn.log', maxBytes = 1000000, backupCount = 3)
+        handler_AirReturn = logging.handlers.RotatingFileHandler('./temp/AirReturn.log', maxBytes = 1*1024*1024, backupCount = 2)
         handler_AirReturn.setLevel(logging.DEBUG)
         
-        # Create logging format and linking it to all the handlers
+        # Create logging format and linking it to all the handlers                                   
         formatter = logging.Formatter(fmt = '%(asctime)s %(levelname)-8s %(message)s',
                                       datefmt = '%Y-%m-%d %H:%M:%S')
         handler.setFormatter(formatter)
