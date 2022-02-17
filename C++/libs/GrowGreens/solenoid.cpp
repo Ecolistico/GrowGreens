@@ -433,6 +433,14 @@ void systemValves::run()
         }
       }
     }
+    else{
+      for(int i = 0; i<_floorNumber; i++){
+        for(int j = 0; j<_valvesPerRegion; j++){
+          if(_floor[i]->_regA[j]->getState()) _floor[i]->_regA[j]->turnOff(false); // If solenoid in action turnOff
+          if(_floor[i]->_regB[j]->getState()) _floor[i]->_regB[j]->turnOff(false); // If solenoid in action turnOff
+        }
+      }
+    }
     if(_actualNumber>=solenoid::_numberSolenoid && getTime()>=_CycleTime){
         _actualNumber = 0;
         resetTime();
