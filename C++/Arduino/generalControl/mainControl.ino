@@ -1,4 +1,8 @@
 void preconditions() {
+  // Print sensor information before each irrigation cycle
+  for(int i = 0; i<sconfig.analogs; i++) mySensors->_myAnalogs[i]->printRead();
+  for(int i = 0; i<sconfig.scales; i++) mySensors->_myScales[i]->printRead();
+  
   // Do we have enough water?
   if(mySensors->_myScales[0]->getWeight()-mySensors->_myScales[0]->getMinWeight()>h2oConsumption){
     // Do we have enough pressure?
