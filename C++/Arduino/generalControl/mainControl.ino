@@ -94,7 +94,7 @@ void correctiveProcess(){
 
   else if(controlState._state==10){
     if(mySensors->_myAnalogs[1]->getValue()>=pconfig.max_pressure){
-      myIrrigation->Off(true);
+      myIrrigation->Off(false);
       controlState.setState(0);
       updateSystemState();
     }
