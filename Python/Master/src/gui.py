@@ -99,7 +99,7 @@ class GUI:
                    sg.Column(block_4, size=(450, 320), pad=self.BPAD_RIGHT)]]
     
     def begin(self):
-        self.window = sg.Window('Dashboard', self.layout, background_color=self.BORDER_COLOR, finalize=True)
+        self.window = sg.Window('Dashboard', self.layout, background_color=self.BORDER_COLOR, return_keyboard_events=True, finalize=True)
         self.window['CB1_0'].Update(value=True)
         self.temp_bar = self.window['tempBar']
         self.hum_bar = self.window['humBar']
@@ -160,7 +160,9 @@ class GUI:
             if event == sg.WIN_CLOSED:
                 sg.popup('ERROR', 'No puedes hacer eso') # Handle error
                 self.isOpen = False
-        
+            elif event == "Left:113": print("LEFT")
+            elif event == "Right:114": print("RIGHT")
+            
         except Exception as e:
             self.str2log("GUI Closed: {}".format(e), 2)
             self.isOpen = False
