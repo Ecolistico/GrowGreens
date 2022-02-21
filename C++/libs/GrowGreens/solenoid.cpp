@@ -232,6 +232,7 @@ void floorValves::enable(bool en, uint8_t reg)
          _valvesPerRegion = bconfig.solenoids;
          _actualNumber = 0;
          _H2O_Consumption = 0;
+         _auxH2O = 0;
          resetTime();
          for (int i = 0; i<_floorNumber; i++) {
            unsigned long valveTime = 0;
@@ -358,7 +359,7 @@ void systemValves::invertOrder(bool invert){
   }
 }
 
-void systemValves::run()
+void systemValves::run(ScaleSens *scale)
   { if(_Enable==true){ // If system is enable
       // Look for solenoid that is next
       bool finished = false;
@@ -391,14 +392,14 @@ void systemValves::run()
           if(_floor[fl]->_regA[num]->isEnable()) { // Solenoid Enable
             if(_floor[fl]->_regA[num]->getState()==LOW){ // Solenoid Off
               printAtFirst();
+              _auxH2O = scale->getWeight();
               _floor[fl]->_regA[num]->turnOn(true);
             }
             else if(_floor[fl]->_regA[num]->getState()==HIGH && _floor[fl]->_regA[num]->getTime()>=_floor[fl]->_regA[num]->getTimeOn()) {
               _floor[fl]->_regA[num]->turnOff(false);
-               /* Requires flowMeter
-               //getConsumptionH2O();
-               // Find another way to calculate this function without need to insert scale sensor in here
-               */
+              float volume = _auxH2O - scale->getWeight();
+              if(volume<0) volume = 0;
+              _floor[fl]->_regA[num]->addConsumptionH2O(volume);
               _actualNumber++;
             }
           }
@@ -413,14 +414,14 @@ void systemValves::run()
           if(_floor[fl]->_regB[num]->isEnable()) { // Solenoid Enable
             if(_floor[fl]->_regB[num]->getState()==LOW){ // Solenoid Off
               printAtFirst();
+              _auxH2O = scale->getWeight();
               _floor[fl]->_regB[num]->turnOn(true);
             }
             else if(_floor[fl]->_regB[num]->getState()==HIGH && _floor[fl]->_regB[num]->getTime()>=_floor[fl]->_regB[num]->getTimeOn()) {
               _floor[fl]->_regB[num]->turnOff(false);
-              /* Requires flowMeter
-              //getConsumptionH2O();
-              // Find another way to calculate this function without need to insert scale sensor in here
-              */
+              float volume = _auxH2O - scale->getWeight();
+              if(volume<0) volume = 0;
+              _floor[fl]->_regB[num]->addConsumptionH2O(volume);
               _actualNumber++;
             }
           }

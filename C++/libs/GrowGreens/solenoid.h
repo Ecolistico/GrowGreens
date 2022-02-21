@@ -37,6 +37,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #include <wiring.h>
 #endif
 
+#include <sensor.h>
 #include <dynamicMemory.h>
 #include <commonStructures.h> // Shared structures bewtween differents classes
 
@@ -105,6 +106,7 @@ class systemValves
       unsigned long _ActualTime, _CycleTime; // Cycle time in minutes
       uint8_t _floorNumber, _valvesPerRegion, _actualNumber; // How many floors conforms the system
       float _H2O_Consumption; // Consumption of water
+      float _auxH2O; // Auxiliar variable to calculate the consumption of water
 
       void systemPrint(String act1, String act2, String act3, uint8_t level = 0); // Print an action for entire system
       void printAtFirst(); // Function that runs when _actualNumber == 0, print and reset water info
@@ -135,7 +137,7 @@ class systemValves
         2- Add Water Consumption functionality with scale sensor
      */
       void invertOrder(bool invert); // Fucntion to order system
-      void run(); // Let´s magic happen
+      void run(ScaleSens *scale); // Let´s magic happen
   };
 
 #endif
