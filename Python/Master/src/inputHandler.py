@@ -52,11 +52,11 @@ class inputHandler:
     
     def Msg2Log(self, mssg):
         if(self.log!=None):
-            if(mssg.startswith("debug,")): self.log.debug(mssg.split(",")[1])
-            elif(mssg.startswith("info,")): self.log.info(mssg.split(",")[1])
-            elif(mssg.startswith("warning,")): self.log.warning(mssg.split(",")[1])
-            elif(mssg.startswith("error,")): self.log.error(mssg.split(",")[1])
-            elif(mssg.startswith("critical,")): self.log.critical(mssg.split(",")[1])
+            if(mssg.startswith("debug,")): self.log.debug(mssg.split(",", 1)[1])
+            elif(mssg.startswith("info,")): self.log.info(mssg.split(",", 1)[1])
+            elif(mssg.startswith("warning,")): self.log.warning(mssg.split(",", 1)[1])
+            elif(mssg.startswith("error,")): self.log.error(mssg.split(",", 1)[1])
+            elif(mssg.startswith("critical,")): self.log.critical(mssg.split(",", 1)[1])
             else: self.log.debug(mssg)
         else: print(mssg)
             

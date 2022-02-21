@@ -208,7 +208,7 @@ void loop() {
 
     // Update objects and variables
     myFans->run();
-    myValves ->run(mySensors->_myScales[0]); // Pass scale as the sensor that can detect water consumption
+    myValves->run(mySensors->_myScales[0]); // Pass scale as the sensor that can detect water consumption
     myIrrigation->update();
     mySensors->read(); // Scale timeOut killing other process
 
