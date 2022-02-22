@@ -8,14 +8,13 @@ class mqttController:
     def __init__(self, logger, data):
         self.log = logger
         self.containerID = data["ID"]
-        self.number = data["number"]
         self.brokerIP = data["IP"]
-        self.log.info("Setting up serRasp..." )
+        self.log.info("Setting up Phenotype..." )
         self.clientConnected = False
         self.actualTime = time()
 
     def sendLog(self, mssg, logType = 0):
-        logTopic = "{}/serRasp{}/log".format(self.containerID, self.number)
+        logTopic = "{}/Phenotype/log".format(self.containerID)
         # Debug
         if(logType==0):
             self.log.info(mssg)
@@ -45,11 +44,11 @@ class mqttController:
         
     # On Connect Callback for MQTT
     def on_connect(self, client, userdata, flags, rc):
-        Topic = "{}/serRasp{}".format(self.containerID, self.number)
+        Topic = "{}/Phenotype".format(self.containerID)
         message = "MQTT"
         if(rc == 0):
             message += " Connection succesful"
-            mssg = "serRasp connected"
+            mssg = "Phenotype connected"
             client.subscribe(Topic)
             self.sendLog(mssg, 1)
             self.log.info(message)
@@ -66,10 +65,11 @@ class mqttController:
 
     # On Message Callback for MQTT
     def on_message(self, client, userdata, msg):        
-        logTopic = "{}/serRasp{}/log".format(self.containerID, self.number) # Output Topic
+        logTopic = "{}/Phenotype/log".format(self.containerID) # Output Topic
         top = msg.topic # Input Topic
         message = msg.payload.decode("utf-8") # Input message
         
+        # Change messages from the ones needed to be changed
         if(message == "OnOut1"):
             self.grower.turnOn(self.grower.OUT1)
             self.sendLog("Out1 On")

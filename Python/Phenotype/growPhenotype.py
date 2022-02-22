@@ -9,18 +9,17 @@ from time import time, sleep
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 sys.path.insert(0, './src/')
-import sysServRasp
 from logger import logger
 from asciiART import asciiArt
-from sysServRasp import runShellCommand
 from mqttCallback import mqttController
+from streamCallback import streamController
 
 # Colored traceback useful for raise exception with colors in terminal
 colored_traceback.add_hook()
 
 art = asciiArt()
 print("\033[1;32;40m", end='')
-print(" Welcome to GrowGreens (Serv Rasp Version)".center(75,'*'))
+print(" Welcome to GrowGreens (Data Server Version)".center(75,'*'))
 art.img_print('./img/GrowGreens1_Web.png')
 print("\033[0;37;40m")
 
