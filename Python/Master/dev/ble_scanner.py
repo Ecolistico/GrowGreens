@@ -1,0 +1,88 @@
+import sys
+import os
+import struct
+from ctypes import (CDLL, get_errno)
+from ctypes.util import find_library
+from socket import (
+    socket,
+    AF_BLUETOOTH,
+    SOCK_RAW,
+    BTPROTO_HCI,
+    SOL_HCI,
+    HCI_FILTER,
+)
+
+if not os.geteuid() == 0:
+    sys.exit("script only works as root")
+
+btlib = find_library("bluetooth")
+if not btlib:
+    raise Exception(
+        "Can't find required bluetooth libraries"
+        " (need to install bluez)"
+    )
+bluez = CDLL(btlib, use_errno=True)
+
+dev_id = bluez.hci_get_route(None)
+
+sock = socket(AF_BLUETOOTH, SOCK_RAW, BTPROTO_HCI)
+sock.bind((dev_id,))
+
+err = bluez.hci_le_set_scan_parameters(sock.fileno(), 0, 0x10, 0x10, 0, 0, 1000);
+if err < 0:
+    raise Exception("Set scan parameters failed")
+    # occurs when scanning is still enabled from previous call
+
+# allows LE advertising events
+hci_filter = struct.pack(
+    "<IQH", 
+    0x00000010, 
+    0x4000000000000000, 
+    0
+)
+sock.setsockopt(SOL_HCI, HCI_FILTER, hci_filter)
+
+err = bluez.hci_le_set_scan_enable(
+    sock.fileno(),
+    1,  # 1 - turn on;  0 - turn off
+    0, # 0-filtering disabled, 1-filter out duplicates
+    1000  # timeout
+)
+if err < 0:
+    errnum = get_errno()
+    raise Exception("{} {}".format(
+        errno.errorcode[errnum],
+        os.strerror(errnum)
+    ))
+
+import time
+while True:
+    data = sock.recv(1024)
+    # print bluetooth address from LE Advert. packet
+    filterMac = ':'.join("{0:02x}".format(x) for x in data[12:6:-1])
+    if filterMac in ["ac:23:3f:a9:bf:95", "ac:23:3f:a9:bf:7c", "b8:27:eb:ef:a5:87", "dc:a6:32:c1:20:46"]:
+        if filterMac=="ac:23:3f:a9:bf:95": print("1 ->", end = '')
+        elif filterMac=="ac:23:3f:a9:bf:7c": print("2 ->", end = '')
+        elif filterMac=="b8:27:eb:ef:a5:87": print("rasp ->", end = '')
+        elif filterMac=="dc:a6:32:c1:20:46": print("local ->", end = '')
+        #print(','.join("{}".format(int(x)) for x in data),end = ' ->')
+        #offset = 3
+        #if(data[0+offset]==0x02): print("data[0]: OK with iBeacon")
+        #if(data[1+offset]==0x01): print("data[1]: OK with iBeacon")
+        #if(data[2+offset]==0x01): print("data[2]: OK with iBeacon")
+        #print("Len of data = {} vs {}".format(data[3+offset], len(data)-offset))
+        #if(data[4+offset:5+offset].hex()==0x4c00): print("APPLE iBeacon")
+        #else: print("Another company iBeacon")
+        
+        #print(data[2+4])
+        #if(data[2+3]==0x06): print("data[2]: OK")
+        print("RSSI: {}".format(data[-1]-255))
+    """""
+    print(':'.join("{0:02x}".format(x) for x in data),end = '')
+    print(1)
+    for x in data[12:6:-1]:
+        print("{0:02x}".format(x))
+    print(1)
+    time.sleep(10)
+    """""
+    #print(':'.join("{0:02x}".format(x) for x in data[12:6:-1]))
