@@ -32,6 +32,8 @@ solutionMaker::solutionMaker(){
     __MOTOR_ACCEL[i]=MOTOR_ACCEL;
   }
 
+  __loadCellCalibration = loadCellCalibration;
+  tareAux=true;
 
   __En = en;
 
@@ -94,8 +96,14 @@ solutionMaker::solutionMaker(){
     __Calibration[i] = 1;
   }
   for(int i=0; i<__solutions;i++){
-    __Calibration1[i] = 1;
+    __Calibration1[i] = 0;
   }
+  __Calibration1[0] = 0.0870;
+  __Calibration1[1] = 0.0277;
+  __Calibration1[2] = 0.3440;
+  __Calibration1[3] = 0.2870;
+  __Calibration1[4] = 0.1440;
+  debugAux=millis();
 
   //Set Limit Switches state
   for(int i=0; i<LIMIT_SWITCHES;i++){
@@ -106,8 +114,8 @@ solutionMaker::solutionMaker(){
   prepareTimeState = true;
 
   // Atlas Scientific Sensors
-  __pH = 0;
-  __eC = 0;
+  __pH = phMeter->getValue();
+  __eC = ecMeter->getValue();
   __ExportEzo = false;
   __ImportEzo = false;
   __SleepEzo = false;
@@ -219,9 +227,10 @@ __Temp = 20;
 defaultFilter(); // Set by default exponential filter with alpha=0.2
 
 //Init scale
-__loadCellCalibration = loadCellCalibration;
+
 scale->begin(loadCellDT,loadCellSCK);
 scale->set_scale(__loadCellCalibration);
+delay(1000);
 scale->tare();
 Serial.print(F("debug,Solution Maker: First scale medition for calibration purpose "));
 Serial.println(scale->get_units(5));
@@ -298,13 +307,26 @@ float solutionMaker::balanceEC(float EC_init, float EC_final, float liters, uint
   float deltaEC = EC_final-EC_init;
   float mg = 0;
   if(deltaEC>=0){ // We need add solution powder
-    float slope = float(__Calibration1[salt])*0.004; // Get the slope in (mg/l)/(uS/cm)
+    float slope = float(__Calibration1[salt]); // Get the slope in (mg/l)/(uS/cm)
     float mgPerLiter = deltaEC*slope; // Get mg/l needed
     mg = mgPerLiter*liters; // Get mg needed
+    if (millis()-debugAux > 1000){
+      Serial.println(F("-----------------------"));
+      Serial.print(F("EC target = "));
+      Serial.println(EC_final);
+      Serial.print(F("EC meassurment = "));
+      Serial.println(EC_init);
+      Serial.print(F("Liters = "));
+      Serial.println(liters);
+      Serial.print(F("EC calculated grams = "));
+      Serial.println(mg/1000.00);
+      Serial.println(F("-----------------------"));
+      debugAux=millis();
+    }
   }else{
     Serial.println(F("EC is to high, water needed"));
   }
-  return mg; // Return mg
+  return mg/1000.00; // Return grams
 }
 
 float solutionMaker::balancePH(float PH_init, float PH_final, float liters, uint8_t pump){
@@ -374,10 +396,11 @@ void solutionMaker::home(){
     }
   }
 
-    if(!__HOMEING[CarMotor] && !__HOMEING[CargoMotor] && !__HOMEING[ReleaseMotor] && millis()-homeTimer>500) {
+    if(!__HOMEING[CarMotor] && !__HOMEING[CargoMotor] && !__HOMEING[ReleaseMotor] && millis()-homeTimer>1500) {
       __HOMED=true;
       Serial.println("Homeing completed");
-      scale->tare();
+      //delay(1000);
+      //scale->tare();
       __limitS_salts=0;
       __moveCar = false;
     }
@@ -483,7 +506,8 @@ float solutionMaker::kalman_filter(float t, float t_1){
 }
 
 void solutionMaker::readTemp(){
-  float temp = dhtSensor->readTemperature();
+  //float temp = dhtSensor->readTemperature();
+  float temp = 25;
   if(temp>0) __Temp = filter(temp, __Temp);
 }
 
@@ -503,20 +527,32 @@ void solutionMaker::EZOReadRequest(float temp, bool sleep){ //sleep default = fa
 }
 
 void solutionMaker::readRequest(){ // Take temperature readings every 5 seconds
-  if(millis()-__ReadTime>20000){
-    __ReadTime = millis();
-    __pH = phMeter->getValue(); // Save last read from phmeter
+  if(millis()-__ReadTime>1000){
+    digitalWrite(13,HIGH);
     __eC = ecMeter->getValue(); // Save last read from ecMeter
-    __scaleMedition=scale->get_units(1);
-    Serial.print("Scale med = ");
-    Serial.println(__scaleMedition);
-    Serial.print("Salt number ");
-    Serial.println(__limitS_salts);
+    __scaleMedition=scale->get_units();
+    if (millis()-__ReadTime>3000 && readAux==true){
+      __pH = phMeter->getValue(); // Save last read from phmeter
+      /*Serial.print(F("Scale med = "));
+      Serial.println(__scaleMedition);
+      Serial.print(F("PH ="));
+      Serial.println(__pH);
+      Serial.print(F("EC = "));
+      Serial.println(__eC);*/
+      readAux=false;
+    } else if (millis()-__ReadTime>5000){
+      digitalWrite(13,LOW);
+      __ReadTime = millis();
+      readAux=true;
+    }
+
+    //Serial.print(F("Salt number "));
+    //Serial.println(__limitS_salts);
     //Serial.println(StepsToRev(stepperS[CarMotor]->currentPosition()));
     //Serial.println((StepsToRev(stepperS[CarMotor]->currentPosition())*8)/100);
     //Serial.println(round((StepsToRev(stepperS[CarMotor]->currentPosition())*8)/100));
-    readTemp(); // Read temp
-    EZOReadRequest(__Temp); // Request new read
+    //readTemp(); // Read temp
+    //EZOReadRequest(__Temp); // Request new read
   }
 }
 
@@ -539,22 +575,30 @@ void solutionMaker::relayControl(int rel){
   }
 }
 
-void solutionMaker::dispense(long some_mg){
+void solutionMaker::dispense(float some_mg){
   if (__scaleMedition > some_mg*0.97){
     stopStepper(DispenserMotor);
     Serial.print(F("Finished with salt "));
     Serial.print(__limitS_salts);
     Serial.print(F(" dispensed mg "));
     Serial.println(some_mg);
+    __limitS_salts +=1;
     scale->tare();
+    delay(1000);
     __dispensing = false;
     __moveCar = false;
+    tareAux = true;
   } else {
     //Serial.println(stepperS[CarMotor]->distanceToGo());
     if (stepperS[CarMotor]->distanceToGo()==0) {
       if (stepperS[DispenserMotor]->distanceToGo()==0){
-        Serial.println(F("Dispensing salt"));
-        moveStepper(3200, DispenserMotor);//100 arbitrary steps unitll loadcell reads correct value
+        Serial.println(F("-----------------------"));
+        Serial.print(F("Dispensing salt "));
+        Serial.print(__limitS_salts+1);
+        Serial.print(F(": "));
+        Serial.println(some_mg);
+        Serial.println(F("-----------------------"));
+        moveStepper(32000, DispenserMotor);//arbitrary steps unitll loadcell reads correct value
       }
     }
   }
@@ -750,7 +794,7 @@ void solutionMaker::run(){
   if (!__HOMED) {
     home();
   } else if (__HOMED && prepareTimeState){
-    prepareSolution(500, 5.0, 2000, __limitS_salts);
+    prepareSolution(1500, 5.6, 1500, __limitS_salts);
   } else if (__HOMED && !prepareTimeState){
     for (int i=0;i<__relay_number;i++){
       if(!SolFinished && __relay_action_time[i]!=0)digitalWrite(__Relay[i], HIGH);
@@ -762,9 +806,9 @@ void solutionMaker::run(){
 void solutionMaker::prepareSolution(float liters, float ph, float ec, uint8_t salt){
   float mgPowder = balanceEC(__eC, ec, liters, salt);
   //Testing pumps
-  //float mlAcid = balancePH(__pH, ph, liters, 0); // Solution 1 -> Acid 1
-  float mlAcid=500;
-  float mlAcid2=500;
+  float mlAcid = balancePH(__pH, ph, liters, 0); // Solution 1 -> Acid 1
+  //float mlAcid=500;
+  //float mlAcid2=500;
   if (!__limitS_State[cargoLS] && !__limitS_State[carEndLS]) {
     moveStepper(RevToSteps(-1), CargoMotor);
     __HOMEING[CargoMotor]=!__limitS_State[cargoLS];
@@ -780,12 +824,23 @@ void solutionMaker::prepareSolution(float liters, float ph, float ec, uint8_t sa
       Serial.println("moving car to dispensers");
   } else if(!__limitS_State[dispenserLS] && __moveCar && __dispensing) {
     //stepperS[CarMotor]->moveTo(stepperS[CarMotor]->currentPosition());
-    __limitS_salts = __limitS_salts+round((StepsToRev(stepperS[CarMotor]->currentPosition())*8)/100);
+    //__limitS_salts = __limitS_salts+round((StepsToRev(stepperS[CarMotor]->currentPosition())*8)/100);
     stepperS[CarMotor]->setCurrentPosition(0);
     stepperS[CarMotor]->stop();
+    delay(1000);
+    if(tareAux==true){
+      Serial.println(F("-----------------------"));
+      Serial.print(F("EC calculated grams = "));
+      Serial.println(mgPowder);
+      Serial.println(F("-----------------------"));
+      scale->tare();
+      tareAux=false;
+      delay(1000);
+    }
+
     if(mgPowder>0){
       //Serial.println("dispensing");
-      dispense(long(mgPowder/20));
+      dispense(mgPowder);
     } else {
       __dispensing = false;
       __moveCar = false;
@@ -819,7 +874,7 @@ void solutionMaker::prepareSolution(float liters, float ph, float ec, uint8_t sa
       }
 
       if(mlAcid>0 && __HOMED) dispenseAcid(mlAcid, 0);
-      if(mlAcid2>0 && __HOMED) dispenseAcid(mlAcid2, 1);
+      //if(mlAcid2>0 && __HOMED) dispenseAcid(mlAcid2, 1);
       __HOMED=false;
       prepareTimeState = false;
       prepareTimeAux = millis();
@@ -832,7 +887,7 @@ void solutionMaker::prepareSolution(float liters, float ph, float ec, uint8_t sa
 
 void solutionMaker::clean_EEPROM(){
   Serial.println(F("warning,EEPROM: Deleting Memory..."));
-  for (int i = 0 ; i < EEPROM.length() ; i++) {
+  for (int i = 0 ; i < 500 ; i++) {
     EEPROM.write(i, 0);
   }
 }
@@ -850,7 +905,7 @@ void solutionMaker::read_EEPROM(bool pr){
     if(__EEPROM[0]!=0){
       __solutions = __EEPROM[0];
       for (int i=0;i<__EEPROM[0];i++){
-        if (__EEPROM[8+i] !=0)setCalibrationParameter1(__EEPROM[8+i], i);
+        if (__EEPROM[8+i] !=0)setCalibrationParameter1(__EEPROM[8+i]/700, i);
       }
     }
     else{Serial.println(F("warning, Solutions number in EEPROM = 0: Not possible to load salt and acid calibration parameters"));}
@@ -868,7 +923,7 @@ void solutionMaker::read_EEPROM(bool pr){
       __loadCellOffset = __EEPROM[2];
     }
     if(__EEPROM[3]!=0){
-      __loadCellCalibration = __EEPROM[3]*10;
+      __loadCellCalibration = -__EEPROM[3]*10;
     }
     if(__EEPROM[4]!=0){
       __max_steppers = __EEPROM[4];
