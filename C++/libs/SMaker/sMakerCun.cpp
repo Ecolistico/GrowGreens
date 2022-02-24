@@ -203,7 +203,7 @@ scale->set_scale(__loadCellCalibration);
 scale->tare();
 Serial.print(F("debug,Solution Maker: First scale medition for calibration purpose "));
 Serial.println(scale->get_units(5));
-delay(1000);
+/delay(1000);
 
 // Request phMeter and ecMeter readings
 EZOReadRequest(__Temp, false);

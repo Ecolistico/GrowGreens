@@ -34,6 +34,8 @@ solutionMaker::solutionMaker(){
 
   __loadCellCalibration = loadCellCalibration;
   tareAux=true;
+  dispenseDelay = millis();
+  dispenseAux=true;
 
   __En = en;
 
@@ -103,7 +105,7 @@ solutionMaker::solutionMaker(){
   __Calibration1[2] = 0.3440;
   __Calibration1[3] = 0.2870;
   __Calibration1[4] = 0.1440;
-  debugAux=millis();
+  //debugAux=millis();
 
   //Set Limit Switches state
   for(int i=0; i<LIMIT_SWITCHES;i++){
@@ -230,11 +232,11 @@ defaultFilter(); // Set by default exponential filter with alpha=0.2
 
 scale->begin(loadCellDT,loadCellSCK);
 scale->set_scale(__loadCellCalibration);
-delay(1000);
+//delay(1000);
 scale->tare();
 Serial.print(F("debug,Solution Maker: First scale medition for calibration purpose "));
 Serial.println(scale->get_units(5));
-delay(1000);
+//delay(1000);
 
 // Request phMeter and ecMeter readings
 EZOReadRequest(__Temp, false);
@@ -310,7 +312,7 @@ float solutionMaker::balanceEC(float EC_init, float EC_final, float liters, uint
     float slope = float(__Calibration1[salt]); // Get the slope in (mg/l)/(uS/cm)
     float mgPerLiter = deltaEC*slope; // Get mg/l needed
     mg = mgPerLiter*liters; // Get mg needed
-    if (millis()-debugAux > 1000){
+    /*if (millis()-debugAux > 1000){
       Serial.println(F("-----------------------"));
       Serial.print(F("EC target = "));
       Serial.println(EC_final);
@@ -322,7 +324,7 @@ float solutionMaker::balanceEC(float EC_init, float EC_final, float liters, uint
       Serial.println(mg/1000.00);
       Serial.println(F("-----------------------"));
       debugAux=millis();
-    }
+    }*/
   }else{
     Serial.println(F("EC is to high, water needed"));
   }
@@ -529,13 +531,13 @@ void solutionMaker::EZOReadRequest(float temp, bool sleep){ //sleep default = fa
 void solutionMaker::readRequest(){ // Take temperature readings every 5 seconds
   if(millis()-__ReadTime>1000){
     digitalWrite(13,HIGH);
-    __eC = ecMeter->getValue(); // Save last read from ecMeter
-    __scaleMedition=scale->get_units();
     if (millis()-__ReadTime>3000 && readAux==true){
+      __scaleMedition=scale->get_units();
+      __eC = ecMeter->getValue(); // Save last read from ecMeter
       __pH = phMeter->getValue(); // Save last read from phmeter
-      /*Serial.print(F("Scale med = "));
+      Serial.print(F("Scale med = "));
       Serial.println(__scaleMedition);
-      Serial.print(F("PH ="));
+      /*Serial.print(F("PH ="));
       Serial.println(__pH);
       Serial.print(F("EC = "));
       Serial.println(__eC);*/
@@ -584,10 +586,11 @@ void solutionMaker::dispense(float some_mg){
     Serial.println(some_mg);
     __limitS_salts +=1;
     scale->tare();
-    delay(1000);
+    //delay(1000);
     __dispensing = false;
     __moveCar = false;
     tareAux = true;
+    dispenseAux=true;
   } else {
     //Serial.println(stepperS[CarMotor]->distanceToGo());
     if (stepperS[CarMotor]->distanceToGo()==0) {
@@ -822,29 +825,33 @@ void solutionMaker::prepareSolution(float liters, float ph, float ec, uint8_t sa
       moveCar(1040);
       __moveCar = true;
       Serial.println("moving car to dispensers");
-  } else if(!__limitS_State[dispenserLS] && __moveCar && __dispensing) {
+  } else if(!__limitS_State[dispenserLS] && __moveCar && __dispensing && (StepsToRev(stepperS[CarMotor]->currentPosition())*8)>50) {
     //stepperS[CarMotor]->moveTo(stepperS[CarMotor]->currentPosition());
     //__limitS_salts = __limitS_salts+round((StepsToRev(stepperS[CarMotor]->currentPosition())*8)/100);
     stepperS[CarMotor]->setCurrentPosition(0);
     stepperS[CarMotor]->stop();
-    delay(1000);
-    if(tareAux==true){
-      Serial.println(F("-----------------------"));
-      Serial.print(F("EC calculated grams = "));
-      Serial.println(mgPowder);
-      Serial.println(F("-----------------------"));
-      scale->tare();
-      tareAux=false;
-      delay(1000);
+    if (dispenseAux==true){
+      dispenseDelay=millis();
+      dispenseAux=false;
     }
-
-    if(mgPowder>0){
-      //Serial.println("dispensing");
-      dispense(mgPowder);
-    } else {
-      __dispensing = false;
-      __moveCar = false;
-      Serial.println("Dispenser finished with 0 mg");
+    if(millis()-dispenseDelay>5000){
+      if(tareAux==true){
+        /*Serial.println(F("-----------------------"));
+        Serial.print(F("EC calculated grams = "));
+        Serial.println(mgPowder);
+        Serial.println(F("-----------------------"));*/
+        scale->tare();
+        tareAux=false;
+      }
+    }else if(millis()-dispenseDelay>6000 && tareAux==false){
+      if(mgPowder>0){
+        //Serial.println("dispensing");
+        dispense(mgPowder);
+      } else {
+        __dispensing = false;
+        __moveCar = false;
+        Serial.println("Dispenser finished with 0 mg");
+      }
     }
 
   } else if(__limitS_State[dispenserLS] && __moveCar && !__dispensing) {

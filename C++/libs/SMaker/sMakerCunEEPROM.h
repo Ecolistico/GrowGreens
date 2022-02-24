@@ -156,6 +156,8 @@ class solutionMaker
         // Temperature sensor
         float         __Temp; // Variable to hold the temperature
         long          debugAux;
+        long         dispenseDelay;
+        bool         dispenseAux;
 
 
         // Constants for the filters
