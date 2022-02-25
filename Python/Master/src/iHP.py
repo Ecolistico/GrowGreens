@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# Import directories
 import struct
 import socket
 from time import time

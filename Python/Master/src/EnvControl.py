@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# Import directories
 import numpy as np
 
 # Calculation of Vapor Pressure Deficit (VPD) with the equation of Penman-Montheith

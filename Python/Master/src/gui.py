@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# Import directories
 import os
 import PySimpleGUI as sg
 from datetime import datetime

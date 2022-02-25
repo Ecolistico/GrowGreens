@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# Import directories
 import numpy as np
 import skfuzzy as fuzz
 import math

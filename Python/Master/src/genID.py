@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+# Import directories
 import sys
 import json
 from collections import OrderedDict

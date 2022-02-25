@@ -1,4 +1,6 @@
-# Importar librerías
+#!/usr/bin/env python3
+
+# Import directories
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
