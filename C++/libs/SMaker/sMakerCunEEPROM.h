@@ -58,7 +58,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 //#define LCD_I2C_DIR 0x27 // Direction for screen not included in project
 //#define LCD_COLUMNS 20 // Screen columns number
 //#define LCD_ROWS 4 // Screen rows number
-#define RELAY_ACTION_TIME 0 // 0 seconds by default
+#define RELAY_ACTION_TIME 6000 // 0 seconds by default
 #define DHTTYPE DHT22 //Define DHT22 type sensor
 #define LIMIT_SWITCHES 10 //Define limit switch ammount
 #define EZO_PH_OFF 12 //Define ezo off pin
@@ -107,8 +107,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define limitS5 26
 #define loadCellDT 9
 #define loadCellSCK 8
-#define ezo1 12
-#define ezo2 13
+
 
 
 // Class to control the Solution Maker
@@ -128,7 +127,7 @@ class solutionMaker
         uint8_t        __En; // Pin to enable all the motors and pumps
         bool           __SteppersEnabled; //Holds true or false if steppers are enabled or disabled
         uint8_t        __Calibration[MAX_PUMPS_NUMBER]; // Calibration parameter for pumps, ml-time
-        unsigned long  __Calibration1[SOLUTIONS]; // Calibration parameter for ph/conductivity equations regarding salts and acids
+        float  __Calibration1[SOLUTIONS]; // Calibration parameter for ph/conductivity equations regarding salts and acids
         uint8_t        __StepPerRev; // Steps per rev
         uint8_t        __MicroSteps; // MicroSteps to be used 4/8/16
         unsigned long  __PumpTime[MAX_PUMPS_NUMBER]; // Time counter for pumps working
@@ -146,17 +145,19 @@ class solutionMaker
         bool           __RelayState[RELAY_NUMBER]; // Variable to hold the state of the relay
 
         uint8_t        __EEPROM[8+SOLUTIONS+2*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+3*RELAY_NUMBER+2*LIMIT_SWITCHES]; //QTY of eeprom Parameters
-        // Atlas Scientific Sensors variables
-        float          __pH, __eC; // Variables to hold the phMeter and ecMeter values
+
 
         // Variable to know if some Atlas Scientific Sensor is exporting its calibration parameters
         bool          __ExportEzo;
         bool          __ImportEzo; // Variable to know if we are importing some calibration parameter
         bool          __SleepEzo; // Variable to know if Atlas Scientific Sensors are in sleep mode
-
+        bool          readAux;
+        bool          tareAux;
         // Temperature sensor
         float         __Temp; // Variable to hold the temperature
-
+        long          debugAux;
+        long         dispenseDelay;
+        bool         dispenseAux;
 
 
         // Constants for the filters
@@ -183,7 +184,7 @@ class solutionMaker
         EZO *phMeter; // Pointer to phMeter (Atlas Scientific sensor)
         EZO *ecMeter; // Pointer to ecMeter (Atlas Scientific sensor)
         DHT *dhtSensor;
-        HX711 *scale;
+
 
         void enable(uint8_t motor); // Enable actuators
         void disable(); // Disable actuators
@@ -221,7 +222,7 @@ class solutionMaker
 
         void readTemp(); // Read temperature from DSB1820
         void EZOReadRequest(float temp, bool sleep = false); // Request a single read in Atlas Scientific Sensors
-        void readRequest(); // Request a single reading of the temperature, ph and ec
+
         void EZOexportFinished(); // When some export is finished set variable to ask for a new one
         void relayControl(int rel); // Control the actions of the relay
 
@@ -241,14 +242,18 @@ class solutionMaker
         float         __loadCellCalibration;
         float         __loadCellOffset;
 
+        // Atlas Scientific Sensors variables
+        float          __pH, __eC; // Variables to hold the phMeter and ecMeter values
+
         // Constructor. Dir, Step and Enable Pins for all the motors
         solutionMaker();
+        HX711 *scale;
 
         bool SolFinished; // Variable to know if the last Solution request finished
          // Init the object with default configuration
         void begin();
-
-        void dispense(long some_mg); // Move some stepper to dispense some_mg
+        void readRequest(); // Request a single reading of the temperature, ph and ec
+        void dispense(float some_mg); // Move some stepper to dispense some_mg
          /* Move some miliseconds any pump.
         It allows to measure the ml dispense to get the calibration parameter */
         void dispenseAcid(float some_ml, uint8_t pump); // Add some ml of acid with a pump
