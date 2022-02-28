@@ -18,15 +18,16 @@ while True:
     mqtt.client.loop()
     stream.streaming()
     
-    if (time.time() - timer > 3):
+    if (time.time() - timer > 3 and not stream.inCapture):
         timer = time.time()
         if counter == 0:
             counter += 1
             publish.single(mqtt.pub,
                         'begin',
                         hostname=mqtt.server_ip)
-        elif counter>0 and counter <11 and :
+        elif counter>0 and counter <11:
             counter += 1
+            stream.inCapture = True
             publish.single(mqtt.pub,
                         'takePicture',
                         hostname=mqtt.server_ip)
@@ -37,4 +38,4 @@ while True:
                         hostname=mqtt.server_ip)
         else:
             end()
-            brea
+            break

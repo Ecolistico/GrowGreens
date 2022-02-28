@@ -16,9 +16,10 @@ class streamServer:
         self.sock = socket.socket()
         self.sock.setblocking(False)
         
-        self.path = '/home/pi/Documents/GrowGreens/Python/Tucan/captures/'
+        self.path = '/home/pi/Documents/'
         self.captures = 0
         self.connection = None
+        self.inCapture = False
         
 ##############################################
     def serverListen(self):
@@ -68,6 +69,7 @@ class streamServer:
                     #np.save(path + 'test' + str(captures), img_arr)
                     print('Capture: ' + self.name + ' saved.')
                     self.captures = int(self.captures) + 1
+                    self.inCapture = False
                 """
                 data = s.recv(1024)
                 if data:

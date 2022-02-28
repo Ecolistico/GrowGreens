@@ -2,7 +2,7 @@
 
 # Import Directories
 from time import time
-from sysDataServer import getIPaddr
+from sysCloud import getIPaddr
 import paho.mqtt.publish as publish
 
 class mqttController:
@@ -58,7 +58,7 @@ class mqttController:
             # Prepare all devices
             msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OnOut1"},
                     {"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OnOut2"},
-                    {"topic": "{}/Phenotype".format(self.containerID), "payload": "streamIP,{}".format(getIPaddr())}]
+                    {"topic": "{}/Tucan".format(self.containerID), "payload": "streamIP,{}".format(getIPaddr())}]
             publish.multiple(msgs, hostname = self.brokerIP)
             self.streamer.openSocket()
 

@@ -11,8 +11,8 @@ class mqttClient():
         self.server_ip = '192.168.6.10'
         self.cloud_ip = '192.168.6.87'
         
-        self.Topic = "cloud/tucan"
-        self.pub = "tucan/cloud"
+        self.Topic = "23-009-006/cloud"
+        self.pub = "23-009-006/tucan"
         
         self.message = ''
 

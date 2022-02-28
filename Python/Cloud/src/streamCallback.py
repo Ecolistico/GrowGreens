@@ -19,7 +19,8 @@ class streamController:
         self.path = '/home/pi/Documents/GrowGreens/Python/Cloud/captures/'
         self.captures = 0
         self.connection = None
-
+        self.inCapture = False
+        
         # Start a socket listening for connections on 0.0.0.0:9999
         # (0.0.0.0 means all interfaces)
         self.sock.bind((self.host, self.port))
@@ -41,7 +42,7 @@ class streamController:
         if self.connection is not None:
             self.captures = 0
             self.connection.close()
-            self.socket.close()
+            self.sock.close()
             self.str2log("streamController - Ending socket", 2)
 
     def streaming(self):
@@ -52,9 +53,9 @@ class streamController:
                 self.read_list.append(client_socket)
                 # Accept a single connection and make a file-like object out of it
                 self.connection = client_socket.makefile('rb')
-                self.str2log("Connection from", address)
+                self.str2log("Connection from {}".format(address), 1)
             else:
-                if self.connection!= None:
+                if self.connection is not None:
                     # Read the length of the image as a 32-bit unsigned int.
                     self.image_len = struct.unpack('<L', self.connection.read(struct.calcsize('<L')))[0]
                     
@@ -63,6 +64,7 @@ class streamController:
                         self.captures = 0
                         self.connection.close()
                         self.read_list.remove(s)
+                        self.connection = None
                         self.str2log("streamController - Closing Connection", 1)
                     else:
                         # Construct a stream to hold the image data and read the 
@@ -80,8 +82,10 @@ class streamController:
                     
                         self.name = 'test' + str(self.captures) + '.png'
                         cv2.imwrite(self.path + self.name, self.img)
-                        self.str2log('Capture: ' + self.name + ' saved.')
+                        self.str2log("Capture: {} saved".format(self.name), 1)
                         self.captures = int(self.captures) + 1
+                        self.inCapture = False
+                        
                 """
                 data = s.recv(1024)
                 if data:
