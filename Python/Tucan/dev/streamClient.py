@@ -7,13 +7,11 @@ import struct
 import time
 import picamera
 
-
-
 class streamClient:
     def __init__(self):
         
         self.host = "192.168.6.87"
-        self.port = 8000     
+        self.port = 8000
         self.sock = socket.socket()
         
                 
