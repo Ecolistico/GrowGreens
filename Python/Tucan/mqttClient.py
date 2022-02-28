@@ -4,11 +4,8 @@
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 
-
 class mqttClient():
-    
     def __init__(self):
-        
         #MQTT
         self.client = mqtt.Client()
         self.server_ip = '192.168.6.10'
@@ -18,12 +15,10 @@ class mqttClient():
         self.pub = "tucan/cloud"
         
         self.message = ''
-        
-        ##################################
-# MQTT communication
+
+    # MQTT initialize
     def mqttInit(self):
         # Reconnect client
-        
         self.client.on_connect = self.on_connect # Specify on_connect callback
         self.client.on_message = self.on_message # Specify on_message callback
         self.client.on_publish = self.on_publish # Specify on_publish callback
@@ -56,8 +51,7 @@ class mqttClient():
             print(self.messag)
 
     # Callback fires when a published message is received.
-    def on_message(self, client, userdata, msg):
-        
+    def on_message(self, client, userdata, msg):    
         self.top = msg.topic # Input Topic
         self.device = self.top.split("/")[1] # Device where come
         
@@ -71,10 +65,8 @@ class mqttClient():
         elif self.message=="closing mqtt":
             print("closing mqtt connection.")
             
-        else:
-            print(self.message)
-        
-                
+        else: print(self.message)
+          
     def on_publish(self, client, userdata, mid):
         print("Message delivered")
 
@@ -82,7 +74,6 @@ class mqttClient():
         print("Client MQTT Disconnected")
 
 def main():
-    
     cloud = mqttClient()
     # Initialize MQTT connection
     cloud.mqttInit()
@@ -100,8 +91,6 @@ def main():
             break
         cloud.client.loop()
             
-
-
 if __name__ == '__main__':
     main()
     
