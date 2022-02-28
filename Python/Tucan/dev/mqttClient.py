@@ -56,16 +56,20 @@ class mqttClient:
                 self.stream.clientConnect()
                 publish.single("{}/cloud".format(self.id), "Ready to go!", hostname=self.ip)
             else: publish.single("{}/cloud".format(self.id), "Stream not configured", hostname=self.ip) 
+        
         elif messg == "takePicture":
             if self.stream != None:
                 self.stream.capture()
             else: print("Stream not configured")
+        
         elif messg == "activate cameras":
             pass
+        
         elif messg == "close":
             print('closing...')
             publish.single("{}/cloud".format(self.id), "closing mqtt", hostname=self.ip)
             self.running = False
+        
         else:
             publish.single("{}/cloud".format(self.id), "I dont understand you...", hostname=self.ip)
             

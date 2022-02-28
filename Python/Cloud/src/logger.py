@@ -11,7 +11,7 @@ class logger:
         logging.basicConfig(level = logging.DEBUG,
                             format = '%(asctime)s %(name)-40s %(levelname)-8s %(message)s',
                             datefmt = '%Y-%m-%d %H:%M:%S',
-                            filename = './temp/growDataServer.log',
+                            filename = './temp/growCloud.log',
                             filemode = 'a')
         
         # Define a Handler which writes WARNING messages or higher to the sys.stderr
@@ -40,11 +40,11 @@ class logger:
         logging.getLogger('').addHandler(console)
         
         # Define loggers for differents areas
-        self.logger = logging.getLogger('servRasp')
+        self.logger = logging.getLogger('Cloud')
         self.logger.setLevel(logging.INFO)
         
         # Create a file handler for each logger
-        handler = logging.handlers.RotatingFileHandler('./temp/DataServer.log', maxBytes = 5*1024*1024, backupCount = 3)
+        handler = logging.handlers.RotatingFileHandler('./temp/Cloud.log', maxBytes = 5*1024*1024, backupCount = 3)
         handler.setLevel(logging.DEBUG)
         
         # Create logging format and linking it to all the handlers

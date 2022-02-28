@@ -6,7 +6,7 @@ from sysDataServer import getIPaddr
 import paho.mqtt.publish as publish
 
 class mqttController:
-    def __init__(self, logger, data, streamer):
+    def __init__(self, data, logger = None):
         # Logging
         self.log = logger
         self.log.info("Setting up Data Server..." )
@@ -15,9 +15,6 @@ class mqttController:
         self.number = data["number"]
         self.brokerIP = data["IP"]
         self.actualTime = time()
-        # Stream object
-        self.streamer = streamer
-        self.clientConnected = False
         # Routine variables
         self.inRoutine = 0
         self.routineStarted = False
@@ -28,7 +25,7 @@ class mqttController:
         self.streamReady = False
 
     def sendLog(self, mssg, logType = 0):
-        logTopic = "{}/DataServer{}/log".format(self.containerID, self.number)
+        logTopic = "{}/Cloud{}/log".format(self.containerID, self.number)
         # Debug
         if(logType==0):
             self.log.info(mssg)
@@ -70,7 +67,7 @@ class mqttController:
 
     # On Connect Callback for MQTT
     def on_connect(self, client, userdata, flags, rc):
-        Topic = "{}/DataServer{}".format(self.containerID, self.number)
+        Topic = "{}/Cloud{}".format(self.containerID, self.number)
         message = "MQTT"
         if(rc == 0):
             message += " Connection succesful"
@@ -91,8 +88,9 @@ class mqttController:
 
     # On Message Callback for MQTT
     def on_message(self, client, userdata, msg):        
-        logTopic = "{}/DataServer{}/log".format(self.containerID, self.number) # Output Topic
+        logTopic = "{}/Cloud{}/log".format(self.containerID, self.number) # Output Topic
         top = msg.topic # Input Topic
+        device = top.split("/")[1] # Device name
         message = msg.payload.decode("utf-8") # Input message
         
         # Changes messages and communication
@@ -103,7 +101,7 @@ class mqttController:
                     # Ask to all devices if they are ready
                     msgs = [{"topic": "{}/Master".format(self.containerID), "payload": message},
                             {"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": message},
-                            {"topic": "{}/Phenotype".format(self.containerID), "payload": message}]
+                            {"topic": "{}/Tucan".format(self.containerID), "payload": message}]
                     publish.multiple(msgs, hostname = self.brokerIP)
                     self.sendLog("Checking status to start routine in floor {}".format(self.inRoutine), 1)
                 else:
@@ -120,13 +118,13 @@ class mqttController:
             self.masterReady = True
             self.isRoutineReady()
             
-        elif(message.startswith("AmbientalReady")):
+        elif(message.startswith("GrowerReady")):
             # Ambiental is ready when detects the Ambiental module and 
             # Ambiental module could talk with Phenotype module via Bluetooth
             self.ambientalReady = True
             self.isRoutineReady()
             
-        elif(message.startswith("PhenotypeReady")):
+        elif(message.startswith("TucanReady")):
             # Phenotype is ready when detects the Phenotype module and
             # Phenotype module could talk with Ambiental module via Bluetooth
             self.phenotypeReady = True

@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Grow Greens
-Comment=Grower System Control
-Icon=/home/pi/Documents/GrowGreens/Python/Phenotype/img/GrowGreens_Web.png
-Exec=lxterminal -t "Grow Greens (Data Server)" --working-directory=/home/pi/Documents/GrowGreens/Python/Phenotype/ --command="/bin/bash -c './growPhenotype.py'"
-Type=Application
-Encoding=UTF-8
-Terminal=false
-Categories=None;

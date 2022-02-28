@@ -8,11 +8,17 @@
 # Data folders
 Python/Master/data/
 Python/Grower/data/
+Python/Cloud/data/
+Python/Tucan/data/
+Python/Cloud/captures/
+Python/Tucan/captures/
 
 # Config Files
 Python/Master/*.json
 Python/Master/*.config
 Python/Master/src/*.csv
+Python/Cloud/*.json
+Python/Tucan/*.json
 GUI/*.csv
 
 # Security files

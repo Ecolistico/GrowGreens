@@ -33,7 +33,10 @@ log = logger()
 
 # Define config variables
 with open("config.json") as f: data = json.load(f)
-    
+
+# From streamCallback
+streamControl = streamController(log.logger)
+
 # From mqttCallback
 mqttControl = mqttController(log.logger, data)
 
@@ -44,6 +47,7 @@ def mainClose():
     # Close devices when finished
     if(client!=None):
         client.disconnect() # Disconnect MQTT
+    streamControl.closeSocket() # Close stream
     log.shutdown()
 
 try:
@@ -60,6 +64,11 @@ except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".f
 
 try:
     while run:
+        # Stream and Blue Server
+        streamControl.streaming()
+        if streamControl.isStreaming and not streamControl.savePicture and mqttControl.routineStarted:
+            publish.single("{}/Master".format(data["ID"]), "continueRoutine", hostname = data["IP"])
+        
         # If mqtt connected check for messages
         if mqttControl.clientConnected: client.loop(0.2)
         else:
