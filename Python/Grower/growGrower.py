@@ -31,7 +31,7 @@ print("\033[0;37;40m")
 if not os.path.exists('temp/'): os.makedirs('temp/')
 # Check if data dir exists, if not then create it
 if not os.path.exists('data/'): os.makedirs('data/')
-    
+
 # Charge logger parameters
 log = logger()
 
@@ -48,14 +48,41 @@ prevWiFiState = 0
 client = None
 run = True
 
+def mainInit():
+    log.logger.info("Testing Outputs")
+    sleep(3)
+    log.logger.info("Output 1: ON")
+    mqttControl.grower.turnOn(mqttControl.grower.OUT1)
+    sleep(3)
+    log.logger.info("Output 1: OFF")
+    mqttControl.grower.turnOff(mqttControl.grower.OUT1)
+    sleep(3)
+    log.logger.info("Output 2: ON")
+    mqttControl.grower.turnOn(mqttControl.grower.OUT2)
+    sleep(3)
+    log.logger.info("Output 2: OFF")
+    mqttControl.grower.turnOff(mqttControl.grower.OUT2)
+    sleep(3)
+    log.logger.info("Output IR: ON")
+    mqttControl.grower.turnOn(mqttControl.grower.SCL)
+    mqttControl.grower.turnOn(mqttControl.grower.SDA)
+    sleep(3)
+    log.logger.info("Output IR: OFF")
+    mqttControl.grower.turnOff(mqttControl.grower.SCL)
+    mqttControl.grower.turnOff(mqttControl.grower.SDA)
+    sleep(3)
+    log.logger.info("Test Finished")
+
+
 def mainClose():
     # Close devices when finished
     mqttControl.grower.close() # Clean GPIO
     if(client!=None):
         client.disconnect() # Disconnect MQTT
     log.shutdown()
-        
+
 try:
+    mainInit()
     while run:
         # Check WiFi Loop
         if(time()- WiFiTime > 20):
@@ -75,7 +102,7 @@ try:
                 WiFiState = 0 # Not accesPoint or Eth0
                 WiFiCount += 1
             WiFiTime = time()
-        
+
         # If not WiFi and not AP while 5*20 seconds
         if(WiFiCount>=5 or MQTTCount>=5):
             # Configure AP
@@ -88,7 +115,7 @@ try:
         # MQTT Loop
         if(WiFiState!=prevWiFiState):
             # If WiFi Available
-            if(WiFiState==1):                 
+            if(WiFiState==1):
                 # Update parameters
                 mqttControl.update()
                 try:
@@ -109,7 +136,7 @@ try:
                     log.logger.warning("Cannot connect with MQTT Broker")
                     MQTTCount += 1
             prevWiFiState = WiFiState
-        
+
         # If WiFi and client connected wait for messages
         if(WiFiState==1 and client!=None):
             # If client connected

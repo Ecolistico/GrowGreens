@@ -3,6 +3,8 @@
 # Import directories
 import sys
 import select
+from time import time
+from pynput import keyboard
 import paho.mqtt.publish as publish
 
 class inputHandler:
@@ -19,55 +21,88 @@ class inputHandler:
         self.gui = gui
         # Aux Variables
         self.exit = False
+        self.timer = time()
+        self.commands = []
+        self.commandIndex = -1
+        self.auxFlag = False
         
+        # Non-blocking keyboard listener:
+        listener = keyboard.Listener(on_press=self.on_press)
+        listener.start()
+    
+    def on_press(self, key):
+        try:
+            if key.char: pass
+        except AttributeError:
+            if(key.name == "up") and len(self.commands)>0:
+                self.timer = time()
+                self.auxFlag = True
+                self.commandIndex += 1
+                if self.commandIndex == len(self.commands): self.commandIndex = 0
+            elif(key.name == "down") and len(self.commands)>0:
+                self.timer = time()
+                self.auxFlag = True
+                self.commandIndex -= 1
+                if self.commandIndex <= -1: self.commandIndex = len(self.commands)-1
+            
     # Get an Input Line it consumes between 20-30% of the processor capacity
     def getLine(self, Block=False):
       if Block or select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
           return input()
     
+    def Msg2Log(self, mssg):
+        if(self.log!=None):
+            if(mssg.startswith("debug,")): self.log.debug(mssg.split(",", 1)[1])
+            elif(mssg.startswith("info,")): self.log.info(mssg.split(",", 1)[1])
+            elif(mssg.startswith("warning,")): self.log.warning(mssg.split(",", 1)[1])
+            elif(mssg.startswith("error,")): self.log.error(mssg.split(",", 1)[1])
+            elif(mssg.startswith("critical,")): self.log.critical(mssg.split(",", 1)[1])
+            else: self.log.debug(mssg)
+        else: print(mssg)
+            
     def writeGC(self, mssg): # Write in generalControl
         if self.serialControl.gcIsConnected: self.serialControl.write(self.serialControl.generalControl, mssg)
-        else: self.log.error("Cannot write to serial device [generalControl]. It is disconnected.")
+        else: self.Msg2Log("error,Cannot write to serial device [generalControl]. It is disconnected.")
             
-    def writeMG(self, mssg): # Write in motorsGrower
-        if self.serialControl.mgIsConnected: self.serialControl.write(self.serialControl.motorsGrower, mssg)
-        else: self.log.error("Cannot write to serial device [motorsGrower]. It is disconnected.")
+    def writeMG1(self, mssg): # Write in motorsGrower1
+        if self.serialControl.mg1IsConnected: self.serialControl.write(self.serialControl.motorsGrower1, mssg)
+        else: self.Msg2Log("error,Cannot write to serial device [motorsGrower1]. It is disconnected.")
             
-    def writeSM(self, mssg): # Write in solutionMaker
-        if self.serialControl.smIsConnected: self.serialControl.write(self.serialControl.solutionMaker, mssg)
-        else: self.log.error("Cannot write to serial device [solutionMaker]. It is disconnected.")
+    def writeMG2(self, mssg): # Write in motorsGrower1
+        if self.serialControl.mg2IsConnected: self.serialControl.write(self.serialControl.motorsGrower2, mssg)
+        else: self.Msg2Log("error,Cannot write to serial device [motorsGrower2]. It is disconnected.")
             
     def valInteger(self, integer):
         try:
             val = int(integer)
             return True
         except:
-            self.log.error("inputHandler- {} is not an integer".format(integer))
+            self.Msg2Log("error,inputHandler- {} is not an integer".format(integer))
             return False
     
     def valGreater0(self, number):
         if(number>0): return True
         else:
-            self.log.error("inputHandler- {} is not greater than 0".format(number))
+            self.Msg2Log("error,inputHandler- {} is not greater than 0".format(number))
             return False
     
     def valLenList(self, myList, reqLen):
         if(len(myList)==reqLen): return True
         else:
-            self.log.error("inputHandler- {} does not have the correct length".format(myList))
+            self.Msg2Log("error,inputHandler- {} does not have the correct length".format(myList))
             return False
     
     def valLenList1(self, myList, minLen):
         if(len(myList)>=minLen): return True
         else:
-            self.log.error("inputHandler- {} does not have the minimun length".format(myList))
+            self.Msg2Log("error,inputHandler- {} does not have the minimun length".format(myList))
             return False
         
     def valSplit(self, strLine):
         splitLine = strLine.split(",")
         if(len(splitLine)>1):
             return splitLine
-        else: self.log.error("inputHandler- {} needs more arguments".format(strLine))
+        else: self.Msg2Log("error,inputHandler- {} needs more arguments".format(strLine))
     
     def handleGUI(self, command, parameters):
         if self.gui.isOpen:
@@ -85,8 +120,8 @@ class inputHandler:
                             evMin, evMax = self.gui.getEVlimits(self.gui.cycleTime, int(self.gui.etapa))
                             self.gui.window['evTime'].Update(range=(evMin, evMax))
                             self.gui.window['TiempoCiclo'].Update(self.gui.data[-1][1]+' min')
-                    else: self.log.error("inputHandler Error: GUI not allow changes")
-                except Exception as e: self.log.error("inputHandler Error: Connecction with GUI failed [{}]".format(e))
+                    else: self.Msg2Log("error,inputHandler Error: GUI not allow changes")
+                except Exception as e: self.Msg2Log("error,inputHandler Error: Connecction with GUI failed [{}]".format(e))
                         
             elif(command.startswith("solenoid,setTimeOn,") and len(parameters)>=8):
                 try:
@@ -113,80 +148,53 @@ class inputHandler:
                         self.gui.window['cycleTime'].Update(range=(int(self.gui.total/30)+1, 20))
                         self.gui.rewriteCSV(self.gui.filename, self.gui.header_list, self.gui.data)
                         self.gui.updateCurrentTimeValues()
-                    else: self.log.error("inputHandler Error: GUI not allow changes")
-                except Exception as e: self.log.error("inputHandler Error: Connecction with GUI failed [{}]".format(e))
+                    else: self.Msg2Log("error,inputHandler Error: GUI not allow changes")
+                except Exception as e: self.Msg2Log("error,inputHandler Error: Connecction with GUI failed [{}]".format(e))
     
-    def handleInput(self, line):
+    def handleInput(self, line):      
         if(line.lower()=="exit"):
-            self.log.debug("Exit command activated")
+            self.Msg2Log("Exit command activated")
             self.exit = True
+            
         elif(line.startswith("raw")):
             param = self.valSplit(line)
             if(param!=None):
                 if(param[1]=="generalControl" and self.valLenList1(param, 3) and self.serialControl.gcIsConnected):
                     cmd = ",".join(param[2:])
                     self.writeGC(cmd)
-                    self.log.info("inputHandler-[generalControl] Raw Command={}".format(cmd))
+                    self.Msg2Log("info,inputHandler-[generalControl] Raw Command={}".format(cmd))
                     self.handleGUI(cmd, param)
-                elif(param[1]=="motorsGrower" and self.valLenList1(param, 3) and self.serialControl.mgIsConnected):
+                elif(param[1]=="motorsGrower1" and self.valLenList1(param, 3) and self.serialControl.mg1IsConnected):
                     cmd = ",".join(param[2:])
-                    self.writeMG(cmd)
-                    self.log.info("inputHandler-[motorsGrower] Raw Command={}".format(cmd)) 
-                elif(param[1]=="solutionMaker" and self.valLenList1(param, 3) and self.serialControl.smIsConnected):
+                    self.writeMG1(cmd)
+                    self.Msg2Log("info,inputHandler-[motorsGrower1] Raw Command={}".format(cmd)) 
+                elif(param[1]=="motorsGrower2" and self.valLenList1(param, 3) and self.serialControl.mg2IsConnected):
                     cmd = ",".join(param[2:])
-                    self.writeSM(cmd)
-                    self.log.info("inputHandler-[solutionMaker] Raw Command={}".format(cmd))
+                    self.writeMG2(cmd)
+                    self.Msg2Log("info,inputHandler-[motorsGrower2] Raw Command={}".format(cmd)) 
                 elif( (param[1]=="esp32" or param[1]=="Grower") and self.valLenList1(param, 4)):
                     cmd = ",".join(param[3:])
                     topic = "{}/{}{}".format(self.mqttControl.ID, param[1], param[2])
                     try:
                         publish.single(topic, "{}".format(cmd), hostname = self.mqttControl.brokerIP)
-                        self.log.info("inputHandler-[mqtt] Raw Command Topic={} Message={}".format(
+                        self.Msg2Log("info,inputHandler-[mqtt] Raw Command Topic={} Message={}".format(
                             topic,cmd))
                     except Exception as e:
-                        self.log.error("LAN/WLAN not found- Impossible use publish() [{}]".format(e))
-                else: self.log.info("inputHandler- {} Command Unknown".format(line))
-        elif(line.startswith("irr")):
-            param = self.valSplit(line)
-            if(param!=None):
-                if(param[1].startswith("en")):
-                    self.writeGC("solenoid,enableGroup,1")
-                    self.log.warning("Irrigation - Enable")
-                elif(param[1].startswith("dis")):
-                    self.writeGC("solenoid,enableGroup,0")
-                    self.log.warning("Irrigation - Disable")
-                elif(param[1].startswith("setCyc")):
-                    if(self.valLenList(param,3) and self.valInteger(param[2]) and
-                       self.valGreater0(int(param[2]))):
-                        cycleTime = int(param[2])
-                        self.writeGC("solenoid,setCycleTime,{}".format(cycleTime))
-                        self.log.warning("Irrigation- Change cycle time to {} min".format(cycleTime))
-                elif(param[1].startswith("setTim")):
-                    if(self.valLenList(param,6) and self.valInteger(param[2]) and
-                       self.valInteger(param[3]) and self.valInteger(param[4]) and
-                       self.valInteger(param[5])):
-                        fl = int(param[2])
-                        reg = int(param[3])
-                        sol = int(param[4])
-                        time_s = int(param[5])
-                        self.writeGC("solenoid,setTimeOn,{},{},{},{}".format(fl-1, reg-1, sol, time_s))
-                        self.log.warning("Irrigation- Solenoid of fl {}, reg {} change time to {}s with sol {}".format(
-                            fl, reg, time_s, sol))
-                else: self.log.error("inputHandler- {} Command Unknown".format(line))
+                        self.Msg2Log("error,LAN/WLAN not found- Impossible use publish() [{}]".format(e))
+                else: self.Msg2Log("info,inputHandler- {} Command Unknown".format(line))
         
-        elif(line.startswith("debug")):
-            param = self.valSplit(line)
-            if(param!=None):
-                if(param[1].startswith("whatSol")):
-                    self.writeGC("debug,irrigation,whatSolution")
-                    self.log.debug("Asking for next solution")
-                elif(param[1].startswith("getEC")):
-                    self.writeGC("debug,irrigation,getEC")
-                    self.log.debug("Asking for the actual EC parameter")
-                else: self.log.error("inputHandler- {} Command Unknown".format(line))
+        elif(line.startswith("importEeprom")):
+            self.Msg2Log("info,Importing eeprom to generalControl")
+            self.serialControl.importEeprom = 0
+            self.serialControl.writeEeprom()
+        
+        elif(line.startswith("\033[A")): pass # Key UP print("UP")
+        elif(line.startswith("\033[B")): pass # Key DOWN print("DOWN")
+        elif(line.startswith("\033[C")): pass # Key RIGHT print("RIGHT")
+        elif(line.startswith("\033[D")): pass # Key LEFT print("LEFT")
         
         elif(line.startswith("startRoutine")):
-            if self.serialControl.mgIsConnected:
+            if self.serialControl.mg1IsConnected:
                 param = self.valSplit(line)
                 if(param!=None and len(param)>=2):
                     fl = param[1]
@@ -218,23 +226,57 @@ class inputHandler:
                         mssg = self.serialControl.mGrower.Gr4.time2Move()
                     else:
                         mssg = ''
-                        self.log.error("Please provide a valid floor to start Grower sequence")
+                        self.Msg2Log("error,Please provide a valid floor to start Grower sequence")
                     if mssg != '':
                         try:
                             top = "{}/Grower{}".format(self.ID,fl)
+                            # Update MQTT command to start routine
                             msgs = [{"topic": top, "payload": "OnLED1"},
                                     {"topic": top, "payload": "OnLED2"},
                                     {"topic": top, "payload": "DisableStream"}]
                             publish.multiple(msgs, hostname = self.IP)
-                            self.log.info("Checking Grower{} status to start sequence".format(fl))
+                            self.Msg2Log("info,Checking Grower{} status to start sequence".format(fl))
                         except Exception as e:
-                            self.log.error("LAN/WLAN not found- Impossible use publish() [{}]".format(e))
-                    else: self.log.error("Please provide a valid floor to start Grower sequence")
-                else: self.log.error("Please provide valid arguments to start Grower sequence")
-            else: self.log.error("motorsGrower device is disconnected. It is impossible to start a routine or sequence.")
-        else: self.log.error("inputHandler- {} Command Unknown".format(line))
-            
+                            self.Msg2Log("error,LAN/WLAN not found- Impossible use publish() [{}]".format(e))
+                    else: self.Msg2Log("error,Please provide a valid floor to start Grower sequence")
+                else: self.Msg2Log("error,Please provide valid arguments to start Grower sequence")
+            else: self.Msg2Log("error,motorsGrower device is disconnected. It is impossible to start a routine or sequence.")
+        else: self.Msg2Log("error,inputHandler- {} Command Unknown".format(line))
+    
     def loop(self):
+        if time()-self.timer > 1 and self.commandIndex!=-1 and self.auxFlag:
+            self.auxFlag = False
+            self.Msg2Log("info,inputHandler- Click enter if you want to send [{}]".format(self.commands[self.commandIndex]))
+        elif(time()-self.timer > 5 and self.commandIndex!=-1):
+            self.commandIndex = -1
+            self.Msg2Log("warning,inputHandler- Timeout limit reached to send command with the arrows keys")
+        
         line = self.getLine()
         if line!=None:
+            if self.commandIndex!=-1:
+                line = self.commands[self.commandIndex]
+                self.commandIndex = -1
+            repeated = False
+            specialKey = False
+            for com in self.commands:
+                if line == com:
+                    repeated = True
+            if line.startswith("\033[A") or line.startswith("\033[B") or line.startswith("\033[C") or line.startswith("\033[D"): specialKey = True
+            if not repeated and not specialKey:
+                self.commands.append(line)
+                if len(self.commands)>10: self.commands.pop(0)
             self.handleInput(line)
+
+def main():
+    from gui import GUI
+    
+    myGui = GUI()
+    myGui.begin()
+    inputControl = inputHandler("99-999-999", "192.168.6.10", None, None, None, myGui)
+        
+    while True:
+        inputControl.loop()
+        if myGui.isOpen: myGui.run()
+        
+if __name__ == "__main__":
+    main()

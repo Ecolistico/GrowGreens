@@ -33,10 +33,10 @@ EZO::EZO(uint8_t type)
 
 void EZO::printAction(String act)
   { if(__Type == EZO_PH){
-      Serial.print(F("PH")); 
+      Serial.print(F("PH"));
     }
     else if(__Type == EZO_EC) {
-      Serial.print(F("EC")); 
+      Serial.print(F("EC"));
     }
     Serial.print(F(" EZO sensor: "));
     Serial.println(act);
@@ -94,6 +94,13 @@ void EZO::fillRecieveDataArray()
         break;
       }
     }
+    /*
+    Serial.print("TEST ");
+    for(int j = 0; j<i; j++){
+      Serial.print(__RecieveData[j]);
+    }
+    Serial.println();
+    */
   }
 
 void EZO::getParamResponse()
@@ -258,7 +265,7 @@ void EZO::decodeResults()
       if(__Type==EZO_PH){act+= "PH read = ";}
       else if(__Type==EZO_EC){act+= "EC read = ";}
       act += __ParamResponse[0];
-      //printAction(act); // Just for debbugging
+      printAction(act); // Just for debbugging
     }
 
     else if(__CalibrationCount!=0){

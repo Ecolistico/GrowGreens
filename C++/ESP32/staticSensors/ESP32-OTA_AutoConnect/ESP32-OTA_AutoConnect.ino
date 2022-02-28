@@ -48,17 +48,17 @@ byte mac[6];
 uint8_t mqttAttempt = 0;
 
 /***** Sensors Definitions *****/
-byte dht_1R_pin = 13;
-byte dht_1L_pin = 14; // D12 cannot be used. Flash error
+byte dht_1R_pin = 14;
+byte dht_1L_pin = 33; // D12 cannot be used. Flash error
 byte dht_2R_pin = 27;
 byte dht_2L_pin = 32;
 byte dht_3R_pin = 26;
-byte dht_3L_pin = 35;
+byte dht_3L_pin = 22; // SCL
 byte dht_4R_pin = 25;
-byte dht_4L_pin = 34;
+byte dht_4L_pin = 21; // SDA
 byte pinM1 = 16;
-byte pinM2 = 13;
-byte pinM3 = 20;
+byte pinM2 = 17;
+byte pinM3 = 13;
 byte pinM4 = 4;
 
 /***** Sensors objects *****/

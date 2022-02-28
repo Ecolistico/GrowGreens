@@ -14,12 +14,15 @@ from time import time, sleep, strftime, localtime
 sys.path.insert(0, './src/')
 import EnvControl
 from gui import GUI
+from iHP import IHP
 from smtp import Mail
 from logger import logger
-from sensor import BMP280, BME680
 from asciiART import asciiArt
-from Calendar import Calendar
+from artificialDay import Day
+from sensor import BMP280, BME680
+#from Calendar import Calendar
 from credentials import broker, sensor
+from EnvControl import EnvControl
 from growerData import multiGrower
 from inputHandler import inputHandler
 from mqttCallback import mqttController
@@ -38,26 +41,21 @@ print("\033[0;37;40m")
 if not os.path.exists('temp/'): os.makedirs('temp/')
 # Check if data dir exists, if not then create it
 if not os.path.exists('data/'): os.makedirs('data/')
+# Check if eeprom config file exists, if not then create it
+if not os.path.exists('eeprom.config'):
+    with open('eeprom.config', 'w') as f: f.write('')
 
 # Charge logger parameters
 log = logger()
 
 # Charge calendar parameters
-growCal = Calendar()
+#growCal = Calendar()
 
 # From communication
-mGrower = multiGrower(log.logger_grower1, log.logger_grower2, log.logger_grower3, log.logger_grower4)
+mGrower = multiGrower(log)
 
 # From Serial Callback
-serialControl = serialController(mGrower,
-                                 log.logger,
-                                 log.logger_generalControl,
-                                 log.logger_motorsGrower,
-                                 log.logger_solutionMaker,
-                                 "state.json")
-
-# Charge GUI parameters and connect logger and serialControl
-gui = GUI(log.logger, serialControl)
+serialControl = serialController(mGrower, log, "state.json")
 
 # Define functions
 def mainClose(): # When program is finishing
@@ -76,19 +74,20 @@ def mqttDisconnect(cliente, mqttObj):
     mqttObj.actualTime = time()
 
 def startRoutine(grower):
-    if serialControl.mgIsConnected:
+    if serialControl.mg1IsConnected:
         # Check if Grower is available
         if grower.failedConnection == 0:
             # It is time to move Grower
             grower.time2Move()
             top = "{}/Grower{}".format(ID, grower.floor)
+            # Check messages needed to start routine
             msgs = [{"topic": top, "payload": "OnLED1"},
                     {"topic": top, "payload": "OnLED2"},
                     {"topic": top, "payload": "DisableStream"}]
             publish.multiple(msgs, hostname = brokerIP)
             log.logger.info("Checking Grower{} status to start sequence".format(grower.floor))
     else: log.logger.error("Cannot start sequence. Serial device [motorsGrower] is disconnected.")
-    
+
 def checkSerialMsg(grower):
     # Resend serial messages without response for Growers
     if(grower.serialRequest!=""):
@@ -98,10 +97,10 @@ def checkSerialMsg(grower):
         elif(not grower.serialRequest.startswith('continueSequence')
              and time()-grower.actualTime>20): req = True
         if req:
-            serialControl.write(serialControl.motorsGrower, grower.serialRequest)
+            serialControl.write(serialControl.motorsGrower1, grower.serialRequest)
             grower.actualTime = time()
             log.logger.info("Resending Grower{} request: {}".format(grower.floor, grower.serialRequest))
-            
+
 def checkMqttMsg(grower):
     # Resend mqtt messages withouth response in 20s for Growers
     if(grower.mqttRequest!="" and time()-grower.actualTime>20):
@@ -123,7 +122,7 @@ def checkMqttMsg(grower):
                 log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower{} request [{}]".format(grower.floor, e))
                 mqttDisconnect(client, mqttControl)
         grower.actualTime = time()
-        
+
 # Aux Variables
 try: param = sys.argv[1]
 except: param = ""
@@ -151,7 +150,22 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
         brokerIP = data["staticIP"]
         city = data["city"]
         state = data["state"]
+        ihp_data = data["ihp"]      # Must include 'MAC', 'ip_range' and 'port'
+        artDay_data = data["day"]   # Include all the configuration to control the artifitial light
+        env_data = data["env"]      # Include all the configuration to control the environment
 
+    # Charge GUI parameters and connect logger and serialControl
+    gui = GUI(ID, log.logger, serialControl)
+
+    # Define day object
+    myDay = Day()
+    myDay.set_function(artDay_data) # Initialize functions
+            
+    # Define IHP object and connect logger
+    ihp = IHP(ihp_data, log.logger, log.logger_ihp)
+    # Set all floors OFF by default
+    for i in range(myDay.fl): ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': 0})
+    
     # Define Mail object
     #mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
     # Main logger, me and @IFTTT
@@ -163,14 +177,10 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
                                  brokerIP,
                                  conn,
                                  serialControl.mGrower,
-                                 log.logger,
-                                 log.logger_grower1,
-                                 log.logger_grower2,
-                                 log.logger_grower3,
-                                 log.logger_grower4,
-                                 log.logger_esp32front,
-                                 log.logger_esp32center,
-                                 log.logger_esp32back)
+                                 log)
+
+    # Define environment controller
+    env = EnvControl(env_data, mqttControl)
 
     # From inputHandler
     inputControl = inputHandler(ID, brokerIP, log.logger, serialControl, mqttControl, gui)
@@ -189,7 +199,9 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
 
     # Setting up
     if sensor['external'] == 'BMP280': bme = BMP280(log.logger) # Start bmp280 sensor
-    else: bme = BME680(log.logger) # Start bme680 sensor
+    elif sensor['external'] == 'BME680': bme = BME680(log.logger) # Start bme680 sensor
+    else: bme = None
+
     day = 0
     hour = 0
     minute = 0
@@ -252,83 +264,95 @@ try:
         if minute!=now.minute:
             # Update Minute
             minute = now.minute
+
+            # Update day info and send it to iHP
+            myDay.get_intensity(hour*60+minute)
+            for i in range(1,4,1):
+                ihp.request(ihp.READ_VIN, {'line': i})
+                ihp.request(ihp.READ_IIN, {'line': i})
+            for i in range(myDay.fl):
+                if myDay.update[i]: 
+                    ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': myDay.intensity[i]})
+                    myDay.update[i] = False
+
             # Save last ESP32 info and request an update
             if(boot):
                 # Upload sensor data
                 mqttControl.ESP32.upload2DB(conn)
                 mqttControl.mGrower.upload2DB(conn)
-                bme.upload2DB(conn)
+                if bme!=None: bme.upload2DB(conn)
                 # Send to generalControl new time info
                 serialControl.write(serialControl.generalControl, "updateHour,{0},{1}".format(
                     now.hour, now.minute))
             else: boot = True
+            
             # Check if ESP32's and Growers are connected
             mqttControl.mGrower.updateStatus()
             mqttControl.ESP32.updateStatus()
 
+            # Update air conditioner controller
+            resp = env.update()
+            env_msgs = []
+            for msg in resp: env_msgs.append({"topic": "{}/{}".format(ID, msg["device"]), "payload": msg["payload"]})
+            
             if(mqttControl.clientConnected):
                 try:
                     msgs = [{"topic": "{}/Grower1".format(ID), "payload": "cozirData"},
                             {"topic": "{}/Grower2".format(ID), "payload": "cozirData"},
                             {"topic": "{}/Grower3".format(ID), "payload": "cozirData"},
                             {"topic": "{}/Grower4".format(ID), "payload": "cozirData"},
-                            {"topic": "{}/esp32front".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32center".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32back".format(ID), "payload": "sendData"}]
-                    # Request ESP32's and Growers data
+                            {"topic": "{}/esp32front1".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32center1".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32back1".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32front2".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32center2".format(ID), "payload": "sendData"},
+                            {"topic": "{}/esp32back2".format(ID), "payload": "sendData"}]
+                    msgs += env_msgs
+                    # Request ESP32's and Growers data and update enviromental Controllers
                     publish.multiple(msgs, hostname = brokerIP)
                 except Exception as e:
                     log.logger.error("LAN/WLAN not found- Impossible use publish() to request ESP&Grower data [{}]".format(e))
                     mqttDisconnect(client, mqttControl)
 
             # Request bme data
-            if bme.read(): bme.logData()
+            if bme!=None and bme.read(): bme.logData()
             else: log.logger.warning("{} sensor cannot take reading".format(sensor['external']))
 
             # Coordinate Grower routines
             if(hour==6 and minute==0): # At 6am
-                #startRoutine(mGrower.Gr1)                
+                #startRoutine(mGrower.Gr1)
                 log.logger.info("Checking Grower1 status to start sequence")
             elif(hour==8 and minute==0):# At 8am
-                #startRoutine(mGrower.Gr2)                
+                #startRoutine(mGrower.Gr2)
                 log.logger.info("Checking Grower2 status to start sequence")
             elif(hour==10 and minute==0): # At 10am
-                #startRoutine(mGrower.Gr3)                
+                #startRoutine(mGrower.Gr3)
                 log.logger.info("Checking Grower3 status to start sequence")
             elif(hour==12 and minute==0): # At 12pm
-                #startRoutine(mGrower.Gr4)                
+                #startRoutine(mGrower.Gr4)
                 log.logger.info("Checking Grower4 status to start sequence")
-            elif(hour==23 and minute==59): # At 11:59pm
-                # Request mongoDB-Parse Server IP
-                publish.single("{}/Server".format(ID), 'whatIsMyIP', hostname = brokerIP)
-            elif(hour==0 and minute==0): # At 0am
-                # Update Plant database and restart GUI
-                if mqttControl.serverIP != '':
-                    try:
-                        gui.Seed2DB(mqttControl.serverIP)
-                        gui.ResetSeedValues()
-                        mqttControl.serverIP = ''
-                        log.logger.info("Plant Database Updated")
-                    except Exceptions as e: log.logger.error("Plant Database failed to update.\n{}".format(e))
-                else: log.logger.warning("Parse Server Disconnected")
-                
+            """
+            Feature not ready
             elif(hour==7 and minute==0): # At 7am
                 # Send Dayly tasks
                 sub, msg = growCal.getEmail()
                 if(msg!=''): mail.sendMail(sub, msg)
-        
+            """
         # Check Serial Pending
         checkSerialMsg(mGrower.Gr1)
         checkSerialMsg(mGrower.Gr2)
         checkSerialMsg(mGrower.Gr3)
         checkSerialMsg(mGrower.Gr4)
-        
+
         # Check MQTT Pending
         checkMqttMsg(mGrower.Gr1)
         checkMqttMsg(mGrower.Gr2)
         checkMqttMsg(mGrower.Gr3)
         checkMqttMsg(mGrower.Gr4)
 
+        # Check iHP pending requests
+        ihp.run()
+        
         if inputControl.exit:
             ex = input("Are you sure? y/n\n")
             if (ex.startswith("y") or start.startswith("Y")):
