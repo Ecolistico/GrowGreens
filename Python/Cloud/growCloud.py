@@ -38,7 +38,7 @@ with open("config.json") as f: data = json.load(f)
 streamControl = streamController(log.logger)
 
 # From mqttCallback
-mqttControl = mqttController(log.logger, data)
+mqttControl = mqttController(data, log.logger)
 
 client = None
 run = True
