@@ -5,21 +5,12 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 
 class mqttClient:
-    
-    def __init__(self):
-        
+    def __init__(self, data, stream = None):
         self.client = mqtt.Client()
-        self.server_ip = "192.168.6.10"
-        self.cloud_ip = "192.168.6.87"
-        
-        self.Topic = "tucan/cloud" # subscribed to...
-        self.pub = "cloud/tucan"
-        
-        self.messg = ''
-        
-############################################
-#### MQTT communication
-    def mqttInit(self):
+        self.ip = data["ip"]
+        self.id = data["id"] 
+        self.stream = stream
+        self.running = True
         
         # Reconnect client
         self.client.on_connect = self.on_connect # Specify on_connect callback
@@ -28,63 +19,56 @@ class mqttClient:
         self.client.on_disconnect = self.on_disconnect # Specify on_disconnect callback
         
         # Connect to MQTT Broker Parameters (IP, Port, Seconds Alive)
-        if(self.client.connect(self.server_ip, 1883, 60)==0):
-            pass
+        if(self.client.connect(self.ip, 1883, 60)==0): pass
         
     # Callback fires when conected to MQTT broker.
     def on_connect(self, client, userdata, flags, rc):
-
-        self.message = "MQTT"
+        message = "MQTT"
+        topic = "{}/tucan".format(self.id) # subscribed to...
         
         if(rc == 0):
-            self.message += " connection to: " + self.server_ip + " broker, succesful."
-            self.client.subscribe(self.Topic)
-            print(self.message)
-            print("Subscribed to topic = {}".format(self.Topic))
+            message += " connection to: " + self.ip + " broker, succesful."
+            self.client.subscribe(topic)
+            print(message)
+            print("Subscribed to topic = {}".format(topic))
             
         else:
-            self.message += "Connection to topic: {} is refused.".format(self.Topic)
-            if(rc == 1): self.message += " - incorrect protocol version"
-            elif(rc == 2): self.message += " - invalid client identifier"
-            elif(rc == 3): self.message += " - server unavailable"
-            elif(rc == 4): self.message += " - bad username or password"
-            elif(rc == 5): self.message += " - not authorised"
-            else: self.message += " - currently unused"
-        
-            print(self.message)
+            message += "Connection to topic: {} is refused.".format(topic)
+            if(rc == 1): message += " - incorrect protocol version"
+            elif(rc == 2): message += " - invalid client identifier"
+            elif(rc == 3): message += " - server unavailable"
+            elif(rc == 4): message += " - bad username or password"
+            elif(rc == 5): message += " - not authorised"
+            else: message += " - currently unused"
+            print(message)
             
-
     # Callback fires when a published message is received.
     def on_message(self, client, userdata, msg):
+        top = msg.topic # Input Topic
+        device = top.split("/")[1] # Device where come
         
-        self.top = msg.topic # Input Topic
-        self.device = self.top.split("/")[1] # Device where come
-        
-        self.messg = msg.payload.decode("utf-8") # Input message
-        print(self.device + ' has pubished to ' +
-              self.top + ': ' + self.messg)
-
-        self.gatillo = self.messg
-                
+        messg = msg.payload.decode("utf-8") # Input message
+        print(device + ' has pubished to ' + top + ': ' + messg)
             
-        if self.messg == "begin":
-            print('starting...')
-            publish.single(self.pub,
-                           "Ready to go!", hostname=self.server_ip)
-            
-        elif self.messg == "activate cameras":
+        if messg == "begin":
+            print('starting...')               
+            if self.stream != None:
+                self.stream.clientConnect()
+                publish.single("{}/cloud".format(self.id), "Ready to go!", hostname=self.ip)
+            else: publish.single("{}/cloud".format(self.id), "Stream not configured", hostname=self.ip) 
+        elif messg == "takePicture":
+            if self.stream != None:
+                self.stream.capture()
+            else: print("Stream not configured")
+        elif messg == "activate cameras":
             pass
-            
-        elif self.messg == "close":
-            pass
-            
+        elif messg == "close":
+            print('closing...')
+            publish.single("{}/cloud".format(self.id), "closing mqtt", hostname=self.ip)
+            self.running = False
         else:
-            publish.single(self.pub,
-                           "I dont understand you...", hostname=self.server_ip)
+            publish.single("{}/cloud".format(self.id), "I dont understand you...", hostname=self.ip)
             
-           
-
-
     def on_publish(self, client, userdata, mid):
         print("Message delivered")
         
@@ -92,20 +76,12 @@ class mqttClient:
         print("Client MQTT Disconnected")
 
 def main():
+    data = {"ip": "192.168.6.10", "id": "23-009-006"}
     
-    tucan = mqttClient()
-    tucan.mqttInit()
+    tucan = mqttClient(data)
     
-    while True:
-        if tucan.messg == 'close':
-            print('closing...')
-            publish.single(tucan.pub,
-                           "closing mqtt",
-                           hostname=tucan.server_ip)
-            break
-            
+    while tucan.running:
         tucan.client.loop()
         
-    
 if __name__ == '__main__':
     main()
