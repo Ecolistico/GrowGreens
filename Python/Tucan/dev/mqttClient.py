@@ -8,7 +8,9 @@ class mqttClient:
     def __init__(self, data, stream = None):
         self.client = mqtt.Client()
         self.ip = data["ip"]
-        self.id = data["id"] 
+        self.id = data["id"]
+        self.host = data["host"]
+        self.port = int(data["port"])
         self.stream = stream
         self.running = True
         
@@ -53,13 +55,13 @@ class mqttClient:
         if messg == "begin":
             print('starting...')               
             if self.stream != None:
-                self.stream.clientConnect()
+                self.stream.clientConnect(self.host, self.port)
                 publish.single("{}/cloud".format(self.id), "Ready to go!", hostname=self.ip)
             else: publish.single("{}/cloud".format(self.id), "Stream not configured", hostname=self.ip) 
         
         elif messg == "takePicture":
             if self.stream != None:
-                self.stream.capture()
+                self.stream.captureStreaming()
             else: print("Stream not configured")
         
         elif messg == "activate cameras":
@@ -80,7 +82,7 @@ class mqttClient:
         print("Client MQTT Disconnected")
 
 def main():
-    data = {"ip": "192.168.6.10", "id": "23-009-006"}
+    data = {"host": "192.168.6.87", "port": "8001", "ip": "192.168.6.10", "id": "23-009-006"}
     
     tucan = mqttClient(data)
     

@@ -8,7 +8,8 @@ import time
 import picamera
 
 class streamClient:
-    def __init__(self):
+    def __init__(self, logger = None):
+        self.log = logger
         self.sock = socket.socket()
 
         self.camera = picamera.PiCamera(stereo_mode='side-by-side', stereo_decimate=0)
@@ -18,11 +19,21 @@ class streamClient:
         self.stream = io.BytesIO()
         # Make a file-like object out of the connection
         self.connection = self.sock.makefile('wb')
+    
+    def str2log(self, mssg, level = 1):
+        if self.log is not None:
+            if(level==0 or level=="DEBUG"): self.log.debug(mssg)
+            elif(level==1 or level=="INFO"): self.log.info(mssg)
+            elif(level==2 or level=="WARNING"): self.log.warning(mssg)
+            elif(level==3 or level=="ERROR"): self.log.error(mssg)
+            elif(level==4 or level=="CRITICAL"): self.log.critical(mssg)
+        else: print(mssg)
         
     def clientConnect(self, host, port):
         # Connect a client socket to host:port
         self.sock.connect((host, port))
-        print('Connected to host: ' + str(host) + ', at port: ' + str(port))
+        mssg = 'Connected to host: ' + str(host) + ', at port: ' + str(port)
+        self.str2log(mssg, 1)
         
     def cameraSetup(self):
         self.camera.resolution = (self.xres*2, self.yres)
@@ -30,7 +41,7 @@ class streamClient:
         self.camera.hflip = False        
         # Let the camera warm up for 2 seconds
         time.sleep(2)
-        print('Camera ready!')
+        self.str2log('Camera ready!', 1)
         
     def captureStreaming(self):
         self.camera.capture(self.stream, 'png')
@@ -46,9 +57,10 @@ class streamClient:
         self.stream.seek(0)
         self.stream.truncate()
         
-    def endStreaming():
+    def endStreaming(self):
         # Write a length of zero to the stream to signal we're done
         self.connection.write(struct.pack('<L', 0))
+        self.connection.flush()
 
 def main():    
     tucan = streamClient()

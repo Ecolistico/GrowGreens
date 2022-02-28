@@ -83,18 +83,28 @@ class mqttController:
         
         # Change messages from the ones needed to be changed
 
-        if(message.startswith("begin")):
-            print('starting...')               
-            if self.stream != None:
-                self.stream.clientConnect()
-                publish.single("{}/cloud".format(self.id), "Ready to go!", hostname=self.ip)
-            else: 
-                publish.single("{}/cloud".format(self.id), "Stream not configured", hostname=self.ip) 
-        
+        if(message.startswith("startStreaming")):
+            self.sendLog('Opening socket to start streaming')
+            mssgSplit = message.split(",")
+            if len(mssgSplit) >= 3:
+                if self.stream != None:
+                    self.stream.clientConnect(mssgSplit[1], int(mssgSplit[2]))
+                    publish.single("{}/cloud".format(self.containerID), "Ready to go!", hostname=self.brokerIP)
+                else: 
+                    publish.single("{}/cloud".format(self.containerID), "Stream not configured", hostname=self.brokerIP) 
+            else: self.sendLog('startStreaming parameters are wrong', 3)
+                
         elif (message.startswith("takePicture")):
+            self.sendLog('Taking picture...') 
             if self.stream != None:
-                self.stream.capture()
-            else: print("Stream not configured")
+                self.stream.captureStreaming()
+            else: self.sendLog("Stream not configured")
+            
+        elif (message.startswith("endStreaming")):
+            self.sendLog('Closing socket') 
+            if self.stream != None:
+                self.stream.endStreaming()
+            else: self.sendLog("Stream not configured")
 
         """""
         if(message == "OnOut1"):
