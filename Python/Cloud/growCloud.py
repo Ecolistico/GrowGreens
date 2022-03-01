@@ -29,7 +29,7 @@ if not os.path.exists('temp/'): os.makedirs('temp/')
 # Check if data dir exists, if not then create it
 if not os.path.exists('data/'): os.makedirs('data/')
 # Check if capture dir exists, if not then create it
-if not os.path.exists('capture/'): os.makedirs('capture/')
+if not os.path.exists('captures/'): os.makedirs('captures/')
     
 # Charge logger parameters
 log = logger()
