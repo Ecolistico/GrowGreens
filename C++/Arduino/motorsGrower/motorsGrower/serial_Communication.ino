@@ -46,7 +46,29 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.home();
           break;
         default:
-          Serial.println(F("error,home(): Grower number do not exist"));
+          Serial.println(F("error,home(): Grower number does not exist"));
+          break;
+      }
+    }
+
+    // home2()
+    else if(parameter[0]==F("home2")){
+      int gr = parameter[1].toInt();
+      switch (gr){
+        case 1:
+          grower1.home2();
+          break;
+        case 2:
+          grower2.home2();
+          break;
+        case 3:
+          grower3.home2();
+          break;
+        case 4:
+          grower4.home2();
+          break;
+        default:
+          Serial.println(F("error,home2(): Grower number does not exist"));
           break;
       }
     }
@@ -68,7 +90,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.calibration();
           break;
         default:
-          Serial.println(F("error,calibration(): Grower number do not exist"));
+          Serial.println(F("error,calibration(): Grower number does not exist"));
           break;
       }
     }
@@ -91,7 +113,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.moveX(some_mm);
           break;
         default:
-          Serial.println(F("error,moveX(): Grower number do not exist"));
+          Serial.println(F("error,moveX(): Grower number does not exist"));
           break;
       }
     }
@@ -114,7 +136,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.moveY(some_mm);
           break;
         default:
-          Serial.println(F("error,moveY(): Grower number do not exist"));
+          Serial.println(F("error,moveY(): Grower number does not exist"));
           break;
       }
     }
@@ -137,7 +159,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.moveXTo(some_mm);
           break;
         default:
-          Serial.println(F("error,moveXTo(): Grower number do not exist"));
+          Serial.println(F("error,moveXTo(): Grower number does not exist"));
           break;
       }
     }
@@ -160,7 +182,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.moveYTo(some_mm);
           break;
         default:
-          Serial.println(F("error,moveYTo(): Grower number do not exist"));
+          Serial.println(F("error,moveYTo(): Grower number does not exist"));
           break;
       }
     }
@@ -186,7 +208,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.sequence(x_mm, y_mm, capture);
           break;
         default:
-          Serial.println(F("error,sequence(): Grower number do not exist"));
+          Serial.println(F("error,sequence(): Grower number does not exist"));
           break;
       }
     }
@@ -212,7 +234,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.sequence_n(nodes_x, nodes_y, capture);
           break;
         default:
-          Serial.println(F("error,sequence_n(): Grower number do not exist"));
+          Serial.println(F("error,sequence_n(): Grower number does not exist"));
           break;
       }
     }
@@ -234,7 +256,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.continueSequence();
           break;
         default:
-          Serial.println(F("error,continueSequence(): Grower number do not exist"));
+          Serial.println(F("error,continueSequence(): Grower number does not exist"));
           break;
       }
     }
@@ -256,7 +278,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.stopSequence();
           break;
         default:
-          Serial.println(F("error,stopSequence(): Grower number do not exist"));
+          Serial.println(F("error,stopSequence(): Grower number does not exist"));
           break;
       }
     }
@@ -278,7 +300,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.stop();
           break;
         default:
-          Serial.println(F("error,stop(): Grower number do not exist"));
+          Serial.println(F("error,stop(): Grower number does not exist"));
           break;
       }
     }
@@ -321,7 +343,7 @@ void serialEvent() {                                  //if the hardware serial p
           Serial.println(maxY);
           break;
         default:
-          Serial.println(F("error,maxDistance(): Grower number do not exist"));
+          Serial.println(F("error,maxDistance(): Grower number does not exist"));
           break;
       }
     }
@@ -364,7 +386,7 @@ void serialEvent() {                                  //if the hardware serial p
           Serial.println(posY);
           break;
         default:
-          Serial.println(F("error,position(): Grower number do not exist"));
+          Serial.println(F("error,position(): Grower number does not exist"));
           break;
       }
     }
@@ -386,7 +408,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.isAvailable();
           break;
         default:
-          Serial.println(F("error,available(): Grower number do not exist"));
+          Serial.println(F("error,available(): Grower number does not exist"));
           break;
       }
     }
@@ -408,7 +430,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.enable();
           break;
         default:
-          Serial.println(F("error,enable(): Grower number do not exist"));
+          Serial.println(F("error,enable(): Grower number does not exist"));
           break;
       }
     }
@@ -430,7 +452,7 @@ void serialEvent() {                                  //if the hardware serial p
           grower4.disable();
           break;
         default:
-          Serial.println(F("error,disable(): Grower number do not exist"));
+          Serial.println(F("error,disable(): Grower number does not exist"));
           break;
       }
     }

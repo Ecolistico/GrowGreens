@@ -51,6 +51,7 @@ growerStepper::growerStepper(
     __Available = true; // Available
     __Home = false; // Not going at home
     __IsAtHome = false; // Not at home
+    __IsAtHome2 = false; // Not at home
     __Calibration = 0; // Not running
 
     // Sequence default parameters
@@ -169,7 +170,7 @@ void growerStepper::resetTime()
   { __ActualTime = millis(); }
 
 bool growerStepper::isTimeToGoHome()
-  { if(millis()-__ActualTime>WAIT_TIME_FOR_GO_HOME && !__IsAtHome){
+  { if(millis()-__ActualTime>WAIT_TIME_FOR_GO_HOME && !__IsAtHome && !__IsAtHome2){
       printAction(F("Time without move exceed. It is time to go home"), 2);
       return true;
     }
@@ -303,6 +304,7 @@ bool growerStepper::moveX(long some_mm, bool seq /*= false*/)
     stepperX1->move(some_steps);
     stepperX2->move(some_steps);
     __IsAtHome = false;
+    __IsAtHome2 = false;
     __Available = false;
     __MoveX1 = true;
     __MoveX2 = true;
@@ -344,6 +346,7 @@ bool growerStepper::moveY(long some_mm, bool seq/* = false*/)
     long some_steps = MMToSteps_Y(some_mm);
     stepperY->move(some_steps);
     __IsAtHome = false;
+    __IsAtHome2 = false;
     __Available = false;
     __MoveY = true;
     __steppersRunning++;
@@ -387,6 +390,7 @@ bool growerStepper::moveXTo(long some_mm, bool seq /*= false*/)
     stepperX1->moveTo(some_steps);
     stepperX2->moveTo(some_steps);
     __IsAtHome = false;
+    __IsAtHome2 = false;
     __Available = false;
     __MoveX1 = true;
     __MoveX2 = true;
@@ -428,6 +432,7 @@ bool growerStepper::moveYTo(long some_mm, bool seq /*= false*/)
     long some_steps = MMToSteps_Y(some_mm);
     stepperY->moveTo(some_steps);
     __IsAtHome = false;
+    __IsAtHome2 = false;
     __Available = false;
     __MoveY = true;
     __steppersRunning++;
@@ -573,6 +578,44 @@ bool growerStepper::home()
           return true;
         }
         printAction(F("Already at Home"), 2);
+        return false;
+      }
+      printAction(F("Routine in progress"), 3);
+      return false;
+    }
+    printAction(F("Unavailable"), 3);
+    return false;
+  }
+
+bool growerStepper::home2()
+  { // Check if the steppers are available
+    if(__Available){
+      if(__Sequence<=1){
+        if(!__IsAtHome2){
+          // If pass all the conditions and is disabled then enabled the steppers
+          if(!__IsEnable){ enable(); }
+          // Move all the motors to home 2
+          long moveX = MMToSteps_X(1000); // Move X to 1m
+          long moveY = MMToSteps_Y(1000); // Move Y to 1m
+          moveXTo(moveX);
+          moveYTo(moveY);
+          
+          __Available = false;
+
+          // Problem. __IsAtHome2 is supposed to be true at arrive not at departure
+          // Nevertheless, it is easy to test it this way and since whe do not have
+          // limit switches or some sensor to detect arrival, it is ok this way
+          __IsAtHome2 = true;
+
+          __MoveX1 = true;
+          __MoveX2 = true;
+          __MoveY = true;
+          __steppersRunning += 3;
+          resetTime();
+          printAction(F("Moving to Home2"), 1);
+          return true;
+        }
+        printAction(F("Already at Home2"), 2);
         return false;
       }
       printAction(F("Routine in progress"), 3);
@@ -816,6 +859,7 @@ void growerStepper::run()
         if(!__SequenceStop){
           __Sequence = 0;
           printAction(F("Routine Finished"), 1);
+          home2();
         }
       }
 
@@ -844,6 +888,7 @@ void growerStepper::run()
             stepperY->move(moveY);
             __Available = false;
             __IsAtHome = false;
+            __IsAtHome2 = false;
             __MoveX1 = true;
             __MoveX2 = true;
             __MoveY = true;
@@ -879,6 +924,7 @@ void growerStepper::run()
             stepperY->move(moveY);
             __Available = false;
             __IsAtHome = false;
+            __IsAtHome2 = false;
             __MoveX1 = true;
             __MoveX2 = true;
             __MoveY = true;

@@ -66,6 +66,7 @@ class growerStepper
         bool           __IsEnable; // Let´s know if the motor are enable/disable
         bool           __Available; // Variables to know if the growerStepepr is working
         bool           __Home, __IsAtHome; // Variable to know if right now is in Home Position
+        bool           __IsAtHome2;  // Variable to know if we run home2()
         bool           __Stop;
         bool           __MagneticIsClosed; // Variable to detect if the both headers get coupled
         uint8_t        __Calibration; // Aux variable for calibration algorithm
@@ -173,6 +174,7 @@ class growerStepper
         bool sequence(long mm_X, long mm_Y, bool captureData = true);
         bool sequence_n(uint8_t nodes_X, uint8_t nodes_Y, bool captureData = true);
         bool home(); // Go to Home
+        bool home2(); // Go to predefined 2nd home position
         void stop(); // Stops all the motors
         void stop(uint8_t st); // Stops just 1 motor
         void run(); // Run all the steppers with conditions
