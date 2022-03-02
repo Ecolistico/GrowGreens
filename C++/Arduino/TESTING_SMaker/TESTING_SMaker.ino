@@ -1,5 +1,4 @@
-#include "sMakerCun.h"
-//#include <EEPROM.h>
+#include "sMakerCunEEPROM.h"
 
 solutionMaker sMaker;
 
@@ -7,24 +6,30 @@ solutionMaker sMaker;
 String inputstring = "";
 bool input_string_complete = false;
 
-// Aux Variables
-bool show = true;
-
-/*** Name Functions ***/
-// EEPROM
-/*void clean_EEPROM();  
-void print_EEPROM();
-void read_EEPROM(bool pr);
-void write_EEPROM(unsigned int pos, byte val);*/
 // Serial Communication
 void serialEvent();
 
+float mediciones=millis();
+int data=1;
+
 void setup() {
   Serial.begin(115200);
+  sMaker.read_EEPROM(HIGH); // Charge calibration parameters
   sMaker.begin();
-  //read_EEPROM(HIGH); // Charge calibration parameters
+  
+  sMaker.readRequest();
+  EEPROM.put(4000,sMaker.__pH);
+  EEPROM.put(3996,sMaker.__eC);
+  
 }
 
 void loop() {
-  sMaker.run();   
+  sMaker.run();
+  /*if (millis()-mediciones>1800000 && data<337){
+    sMaker.readRequest();
+    EEPROM.put(4000-8*data,sMaker.__pH);
+    EEPROM.put(3996-8*data,sMaker.__eC);
+    data++;
+  }else{data=0;}*/
+     
 }
