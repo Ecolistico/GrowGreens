@@ -381,6 +381,18 @@ void solutionMaker::moveCar(int dist){
 
 void solutionMaker::home(){
   checkLS();
+  if(__limitS_State[carHomeLS]  && __HOMEING[carHomeLS]){
+    Serial.println("Car at home");
+    homeTimer=millis();
+  }
+  if(__limitS_State[cargoLS] && __HOMEING[CargoMotor]){
+    Serial.println("Cargo bay at home");
+
+  }
+  if(__limitS_State[openLS] && __HOMEING[ReleaseMotor]){
+    Serial.println("Hatch at home");
+  }
+
   __HOMEING[CarMotor]=!__limitS_State[carHomeLS];
   __HOMEING[CargoMotor]=!__limitS_State[cargoLS];
   __HOMEING[ReleaseMotor]=!__limitS_State[openLS];
@@ -398,6 +410,9 @@ void solutionMaker::home(){
     }
   }
 
+
+
+
     if(!__HOMEING[CarMotor] && !__HOMEING[CargoMotor] && !__HOMEING[ReleaseMotor] && millis()-homeTimer>1500) {
       __HOMED=true;
       Serial.println("Homeing completed");
@@ -406,21 +421,6 @@ void solutionMaker::home(){
       __limitS_salts=0;
       __moveCar = false;
     }
-
-
-    if(__limitS_State[carHomeLS] && __HOMEING[CarMotor]){
-      Serial.println("Car at home");
-      homeTimer=millis();
-    }
-    if(__limitS_State[cargoLS] && __HOMEING[CargoMotor]){
-      Serial.println("Cargo bay at home");
-
-    }
-    if(__limitS_State[openLS] && __HOMEING[ReleaseMotor]){
-      Serial.println("Hatch at home");
-    }
-
-
 
   return;
 }
@@ -825,25 +825,31 @@ void solutionMaker::prepareSolution(float liters, float ph, float ec, uint8_t sa
       moveCar(1040);
       __moveCar = true;
       Serial.println("moving car to dispensers");
-  } else if(!__limitS_State[dispenserLS] && __moveCar && __dispensing && (StepsToRev(stepperS[CarMotor]->currentPosition())*8)>50) {
+  } else if(!__limitS_State[dispenserLS] && __moveCar && __dispensing) {
     //stepperS[CarMotor]->moveTo(stepperS[CarMotor]->currentPosition());
     //__limitS_salts = __limitS_salts+round((StepsToRev(stepperS[CarMotor]->currentPosition())*8)/100);
-    stepperS[CarMotor]->setCurrentPosition(0);
-    stepperS[CarMotor]->stop();
+    if((StepsToRev(stepperS[CarMotor]->currentPosition())*8)>50){
+      stepperS[CarMotor]->setCurrentPosition(0);
+      stepperS[CarMotor]->stop();
+    }
+
     if (dispenseAux==true){
       dispenseDelay=millis();
       dispenseAux=false;
+      Serial.println(F("---dispense time started---"));
     }
-    if(millis()-dispenseDelay>5000){
+    if(millis()-dispenseDelay>60000){
       if(tareAux==true){
         /*Serial.println(F("-----------------------"));
         Serial.print(F("EC calculated grams = "));
         Serial.println(mgPowder);
         Serial.println(F("-----------------------"));*/
+        Serial.println(F("---scale tared---"));
         scale->tare();
         tareAux=false;
       }
-    }else if(millis()-dispenseDelay>6000 && tareAux==false){
+    }
+    if(millis()-dispenseDelay>61000){
       if(mgPowder>0){
         //Serial.println("dispensing");
         dispense(mgPowder);

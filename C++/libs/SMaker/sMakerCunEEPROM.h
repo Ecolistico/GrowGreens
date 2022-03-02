@@ -58,7 +58,7 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 //#define LCD_I2C_DIR 0x27 // Direction for screen not included in project
 //#define LCD_COLUMNS 20 // Screen columns number
 //#define LCD_ROWS 4 // Screen rows number
-#define RELAY_ACTION_TIME 6000 // 0 seconds by default
+#define RELAY_ACTION_TIME 60000 // 0 seconds by default
 #define DHTTYPE DHT22 //Define DHT22 type sensor
 #define LIMIT_SWITCHES 10 //Define limit switch ammount
 #define EZO_PH_OFF 12 //Define ezo off pin
