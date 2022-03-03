@@ -81,7 +81,8 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define stepS3 A10
 #define dirS4 A7
 #define stepS4 A6
-#define dirS5 A3
+/*#define dirS5 A3*/
+#define dirS5 A15
 #define stepS5 A2
 #define en 45
 #define mS1A 46
