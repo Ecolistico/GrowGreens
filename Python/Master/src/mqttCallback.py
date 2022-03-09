@@ -121,7 +121,7 @@ class mqttController:
             else: self.logMain.error("Unknown mqtt error recieve - device={}, message={}".format(device, message))
             
         # Get data from ESP32 front, center and back
-        elif("esp32" in top and not "AirPrincipal" in top and not "AirReturn" in top):
+        elif("esp32" in top and not "AirPrincipal" in top and not "AirReturn" in top and message != "sendData"):
             level = int(device[-1]) - 1
             pos = device[5:-1]
             if pos == "front": 
@@ -170,7 +170,7 @@ class mqttController:
                 else: self.logMain.error("Cannot continue sequence. Parameters (floor or serialFloor are wrong).")
 
             else: self.logMain.warning("Master MQTT request unknown. Message={}".format(message))
-        else: self.logMain.warning("Unknown mqtt device={}, message={}".format(device, message))
+        #else: self.logMain.warning("Unknown mqtt device={}, message={}".format(device, message))
             
     def on_publish(self, client, userdata, mid):
         self.logMain.debug("Message delivered")

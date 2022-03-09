@@ -36,8 +36,9 @@ class serialController:
                 self.motorsGrower[i].close()
                 self.mgIsConnected.append(True)
             except Exception as e:
+                self.motorsGrower.append(False)
                 self.mgIsConnected.append(False)
-                raise Exception("Communication with motorsGrower{} device cannot be stablished. [{}]".format(i+1, e))
+                self.logMain.error("Communication with motorsGrower{} device cannot be stablished. [{}]".format(i+1, e))
         
         # Define multiGrower variables with mqtt module
         self.mGrower = multiGrower
@@ -118,7 +119,7 @@ class serialController:
         if serialFloor != "disconnected":
             serialDevice = int((serialFloor)/4)
             self.write(self.motorsGrower[serialDevice], "stop,{}".format(serialFloor))
-            self.logMain.info(("Grower{} is busy, sending request to stop".format(fl))
+            self.logMain.info(("Grower{} is busy, sending request to stop".format(fl)))
         else: self.logMain.warning("Grower{} is disconnected cannot stop sequence in that floor".format(fl))
         
     def decideStartOrStopGrower(self, resp, serialDevice):

@@ -52,8 +52,7 @@ class logger:
         self.logger.setLevel(logging.DEBUG)
 
         # ESP32 and motorsGrower needs a logger each 4 floors
-        espFloors = int((i+1)/4)
-        if ((i+1)%4 != 0): espFloors += 1
+        espFloors = int((floors)/4)
         self.logger_esp32 = []
         self.logger_motorsGrower = []
         for i in range(espFloors):

@@ -98,7 +98,7 @@ class multiGrower:
         t_aux = "INSERT INTO cozirData ( datetime,"
         v_aux = (datetime.now(),)
         for i in range(len(self.Gr)): 
-            t_aux += " T_{}, H_{}, CO2_{},".format(i+1)
+            t_aux += " T_{0}, H_{0}, CO2_{0},".format(i+1)
             v_aux += (self.Gr[i].Temp, self.Gr[i].Hum, self.Gr[i].CO2)
         t_aux = t_aux[:-1] + ") VALUES (?," + " ?,"*(len(self.Gr)*3)
         t_aux = t_aux[:-1] + ")"

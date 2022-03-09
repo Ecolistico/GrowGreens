@@ -123,10 +123,10 @@ class dataESP32:
 class multiESP:
     def __init__(self, loggerESP32):
         self.esp32 = []
-        for i in range(loggerESP32): 
-            self.esp32.append(dataESP32(i, loggerESP32[i][0]), 
+        for i in range(len(loggerESP32)): 
+            self.esp32.append([dataESP32(i, loggerESP32[i][0]), 
                               dataESP32(i, loggerESP32[i][1]), 
-                              dataESP32(i, loggerESP32[i][2]))
+                              dataESP32(i, loggerESP32[i][2])])
     
     def updateStatus(self):
         for espLine in self.esp32:
@@ -157,7 +157,7 @@ class multiESP:
     def averageHum(self):
         data = []
         for espLine in self.esp32:
-            for esp32 in espLine: data.append(espLine.averageHum())
+            for esp32 in espLine: data.append(esp32.averageHum())
         data = [ele for ele in data if ele not in {0}]
         if len(data)==0: return 0
         else: return sum(data)/len(data)

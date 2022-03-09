@@ -56,7 +56,7 @@ with open("config.json") as f:
     artDay_data = data["day"]           # Include all the configuration to control the artifitial light
     env_data = data["env"]              # Include all the configuration to control the environment
     floors = int(artDay_data['floors']) # Number of floors
-    growerData = data["grower"]
+    growerData = data["growers"]
 
 # Charge logger parameters
 log = logger(floors)
