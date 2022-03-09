@@ -10,8 +10,9 @@ class serialController:
         # Define loggers
         self.logMain = logger.logger
         self.logGC = logger.logger_generalControl
-        self.logMG1 = logger.logger_motorsGrower1
-        self.logMG2 = logger.logger_motorsGrower2
+        self.logMG = []
+        for i in range(len(logger.logger_motorsGrower)): self.logMG.append(logger.logger_motorsGrower[i])
+        self.logGrower = logger.logger_grower
 
         # Variable to export Eeprom from GC
         self.exportEeprom = False
@@ -25,23 +26,19 @@ class serialController:
         except Exception as e:
             self.gcIsConnected = False
             raise Exception("Communication with generalControl device cannot be stablished. [{}]".format(e))
-        try:
-            self.motorsGrower1 = Serial('/dev/motorsGrower1', 115200, timeout=0)
-            self.motorsGrower1.dtr = False # Reset
-            self.motorsGrower1.close()
-            self.mg1IsConnected = True
-        except Exception as e:
-            self.mg1IsConnected = False
-            self.logMain.error("Communication with motorsGrower1 device cannot be stablished. [{}]".format(e))
-        try:
-            self.motorsGrower2 = Serial('/dev/motorsGrower2', 115200, timeout=0)
-            self.motorsGrower2.dtr = False # Reset
-            self.motorsGrower2.close()
-            self.mg2IsConnected = True
-        except Exception as e:
-            self.mg2IsConnected = False
-            self.logMain.error("Communication with motorsGrower2 device cannot be stablished. [{}]".format(e))
-
+        
+        self.motorsGrower = []
+        self.mgIsConnected = []
+        for i in range(len(self.logMG)):
+            try:
+                self.motorsGrower.append(Serial('/dev/motorsGrower{}'.format(i+1), 115200, timeout=0))
+                self.motorsGrower[i].dtr = False # Reset
+                self.motorsGrower[i].close()
+                self.mgIsConnected.append(True)
+            except Exception as e:
+                self.mgIsConnected.append(False)
+                raise Exception("Communication with motorsGrower{} device cannot be stablished. [{}]".format(i+1, e))
+        
         # Define multiGrower variables with mqtt module
         self.mGrower = multiGrower
         # Define responses auxVariables
@@ -59,21 +56,17 @@ class serialController:
             sleep(0.33)
             self.generalControl.reset_input_buffer()
             self.generalControl.dtr = True
-        if self.mg1IsConnected and not self.motorsGrower1.is_open:
-            self.motorsGrower1.open()
-            sleep(0.33)
-            self.motorsGrower1.reset_input_buffer()
-            self.motorsGrower1.dtr = True
-        if self.mg2IsConnected and not self.motorsGrower2.is_open:
-            self.motorsGrower2.open()
-            sleep(0.33)
-            self.motorsGrower2.reset_input_buffer()
-            self.motorsGrower2.dtr = True
+        for i in range(len(self.motorsGrower)):
+            if self.mgIsConnected[i] and not self.motorsGrower[i].is_open:
+                self.motorsGrower[i].open()
+                sleep(0.33)
+                self.motorsGrower[i].reset_input_buffer()
+                self.motorsGrower[i].dtr = True
 
     def close(self):
         if self.gcIsConnected and self.generalControl.is_open: self.generalControl.close()
-        if self.mg1IsConnected and self.motorsGrower1.is_open: self.motorsGrower1.close()
-        if self.mg2IsConnected and self.motorsGrower2.is_open: self.motorsGrower2.close()
+        for i in range(len(self.motorsGrower)):
+            if self.mgIsConnected[i] and self.motorsGrower[i].is_open: self.motorsGrower[i].close()
 
     def Msg2Log(self, logger, mssg):
         if(mssg.startswith("debug,")): logger.debug(mssg.split(",")[1])
@@ -85,8 +78,8 @@ class serialController:
 
     def write(self, serialObject, mssg):
         if serialObject == self.generalControl and self.gcIsConnected: aux = True
-        elif serialObject == self.motorsGrower1 and self.mg1IsConnected: aux = True
-        elif serialObject == self.motorsGrower2 and self.mg2IsConnected: aux = True
+        for i in range(len(self.motorsGrower)):
+            if serialObject == self.motorsGrower[i] and self.mgIsConnected[i]: aux = True
         if aux:
             serialObject.write(bytes(mssg, "utf-8"))
             serialObject.flush()
@@ -98,11 +91,9 @@ class serialController:
         else: return resp[0]
 
     def detectGrower(self, line):
-        if(line.startswith("Grower1")): return 1
-        elif(line.startswith("Grower2")): return 2
-        elif(line.startswith("Grower3")): return 3
-        elif(line.startswith("Grower4")): return 4
-        else: return 0
+        for i in range(len(self.logGrower)):
+            if(line.startswith("Grower{}".format(i+1))): return i+1
+        return 0
 
     def cleanGrowerLine(self, line):
         resp = line.split(":")[1][1:]
@@ -114,36 +105,32 @@ class serialController:
         return resp, num
 
     def startGrowerSequence(self, fl):
-        if fl==1:
-            self.mGrower.Gr1.serialReq("")
-            x, y = self.mGrower.Gr1.getSequenceParameters()
-        elif fl==2:
-            self.mGrower.Gr2.serialReq("")
-            x, y = self.mGrower.Gr2.getSequenceParameters()
-        elif fl==3:
-            self.mGrower.Gr3.serialReq("")
-            x, y = self.mGrower.Gr3.getSequenceParameters()
-        elif fl==4:
-            self.mGrower.Gr4.serialReq("")
-            x, y = self.mGrower.Gr4.getSequenceParameters()
-        self.write(self.motorsGrower, "sequence,{},{},{}".format(fl,x,y))
-        self.logMain.info("Grower{} sending request to start sequence".format(fl))
+        serialFloor = self.mGrower.data[str(fl)]
+        if serialFloor != "disconnected":
+            serialDevice = int((serialFloor)/4)
+            self.mGrower.Gr[fl-1].serialRequest("")
+            self.write(self.motorsGrower[serialDevice], "sequence_n,{},41,10".format(serialFloor))
+            self.logMain.info("Grower{} sending request to start sequence".format(fl))
+        else: self.logMain.warning("Grower{} is disconnected cannot start sequence in that floor".format(fl))
 
     def stopGrower(self, fl):
-        self.write(self.motorsGrower1, "stop,{}".format(fl))
-        self.logMain.warning("Grower{} is busy, sending request to stop".format(fl))
-
-    def decideStartOrStopGrower(self, resp):
+        serialFloor = self.mGrower.data[str(fl)]
+        if serialFloor != "disconnected":
+            serialDevice = int((serialFloor)/4)
+            self.write(self.motorsGrower[serialDevice], "stop,{}".format(serialFloor))
+            self.logMain.info(("Grower{} is busy, sending request to stop".format(fl))
+        else: self.logMain.warning("Grower{} is disconnected cannot stop sequence in that floor".format(fl))
+        
+    def decideStartOrStopGrower(self, resp, serialDevice):
         auxBool = False
-        num = self.detectGrower(resp)
-        if(num==1): auxBool = self.mGrower.Gr1.startRoutine
-        elif(num==2): auxBool = self.mGrower.Gr2.startRoutine
-        elif(num==3): auxBool = self.mGrower.Gr3.startRoutine
-        elif(num==4): auxBool = self.mGrower.Gr4.startRoutine
+        num = self.detectGrower(resp) + serialDevice*4
+        if num > 0: auxBool = self.mGrower.Gr[num-1].startRoutine
+        if(num>0 and num<=len(self.logGrower)): resp = self.cleanGrowerLine(resp)
 
-        if(num>=1 and num<=4): resp = self.cleanGrowerLine(resp)
         if resp.startswith("Available") and auxBool:
-            self.startGrowerSequence(num)
+            # Send via MQTT Master Ready
+            self.mGrower.Gr[num-1].serialReq("")
+            self.mGrower.Gr[num-1].mqttReq("MasterReady")
             return True
         elif resp.startswith("Unavailable") and auxBool:
             self.stopGrower(num)
@@ -152,79 +139,34 @@ class serialController:
         return False
 
     def GrowerInRoutine(self, fl):
-        if(fl==1):
-            self.mGrower.Gr1.startRoutine = False
-            self.mGrower.Gr1.inRoutine = True
-            self.mGrower.Gr1.count = 0
-        elif(fl==2):
-            self.mGrower.Gr2.startRoutine = False
-            self.mGrower.Gr2.inRoutine = True
-            self.mGrower.Gr2.count = 0
-        elif(fl==3):
-            self.mGrower.Gr3.startRoutine = False
-            self.mGrower.Gr3.inRoutine = True
-            self.mGrower.Gr3.count = 0
-        elif(fl==4):
-            self.mGrower.Gr4.startRoutine = False
-            self.mGrower.Gr4.inRoutine = True
-            self.mGrower.Gr4.count = 0
-        self.logMain.info("Grower{} sequence started".format(fl))
+        # Start the routine
+        if(fl>0 and fl<=len(self.logGrower)):
+            self.mGrower.Gr[fl-1].startRoutine = False
+            self.mGrower.Gr[fl-1].inRoutine = True
+            self.mGrower.Gr[fl-1].count = 0
+            self.logMain.info("Grower{} sequence started".format(fl))
+        else: self.logMain.error("GrowerInRoutine(): Grower{} does not exist".format(fl))
 
     def GrowerInPosition(self, fl):
-        # request Grower to take pictures
-        if(fl==1):
-            photoName = self.mGrower.Gr1.count
-            self.mGrower.Gr1.count += 1
-            self.mGrower.Gr1.serialReq("")
-            self.mGrower.Gr1.mqttReq("photoSequence,{}".format(photoName))
-            self.mGrower.Gr1.actualTime = time()-20
-        elif(fl==2):
-            photoName = self.mGrower.Gr2.count
-            self.mGrower.Gr2.count += 1
-            self.mGrower.Gr2.serialReq("")
-            self.mGrower.Gr2.mqttReq("photoSequence,{}".format(photoName))
-            self.mGrower.Gr2.actualTime = time()-20
-        elif(fl==3):
-            photoName = self.mGrower.Gr3.count
-            self.mGrower.Gr3.count += 1
-            self.mGrower.Gr3.serialReq("")
-            self.mGrower.Gr3.mqttReq("photoSequence,{}".format(photoName))
-            self.mGrower.Gr3.actualTime = time()-20
-        elif(fl==4):
-            photoName = self.mGrower.Gr4.count
-            self.mGrower.Gr4.count += 1
-            self.mGrower.Gr4.serialReq("")
-            self.mGrower.Gr4.mqttReq("photoSequence,{}".format(photoName))
-            self.mGrower.Gr4.actualTime = time()-20
-
-        self.logMain.debug("Grower{} in position to take photo sequence".format(fl))
+        # Request Grower to take pictures
+        if(fl>0 and fl<=len(self.logGrower)):
+            self.mGrower.Gr[fl-1].count += 1
+            self.mGrower.Gr[fl-1].serialReq("")
+            self.mGrower.Gr[fl-1].mqttReq("takePicture")
+            self.mGrower.Gr[fl-1].actualTime = time()-20
+            self.logMain.debug("Grower{} in position to take photo".format(fl))
+        else: self.logMain.error("GrowerInPosition(): Grower{} does not exist".format(fl))
 
     def GrowerRoutineFinish(self, fl):
-        if(fl==1):
-            self.mGrower.Gr1.count = 1
-            self.mGrower.Gr1.mqttReq("routineFinish")
-            self.mGrower.Gr1.serialReq("")
-            self.mGrower.Gr1.inRoutine = False
-            self.mGrower.Gr1.actualTime = time()-20
-        elif(fl==2):
-            self.mGrower.Gr2.count = 1
-            self.mGrower.Gr2.mqttReq("routineFinish")
-            self.mGrower.Gr2.serialReq("")
-            self.mGrower.Gr2.inRoutine = False
-            self.mGrower.Gr2.actualTime = time()-20
-        elif(fl==3):
-            self.mGrower.Gr3.count = 1
-            self.mGrower.Gr3.mqttReq("routineFinish")
-            self.mGrower.Gr3.serialReq("")
-            self.mGrower.Gr3.inRoutine = False
-            self.mGrower.Gr3.actualTime = time()-20
-        elif(fl==4):
-            self.mGrower.Gr4.count = 1
-            self.mGrower.Gr4.mqttReq("routineFinish")
-            self.mGrower.Gr4.serialReq("")
-            self.mGrower.Gr4.inRoutine = False
-            self.mGrower.Gr4.actualTime = time()-20
-        self.logMain.info("Grower{} finished its routine".format(fl))
+        # Finish the routine
+        if(fl>0 and fl<=len(self.logGrower)):
+            self.mGrower.Gr[fl-1].count = 1
+            self.mGrower.Gr[fl-1].mqttReq("RoutineFinished")
+            self.mGrower.Gr[fl-1].serialReq("")
+            self.mGrower.Gr[fl-1].inRoutine = False
+            self.mGrower.Gr[fl-1].actualTime = time()-20
+            self.logMain.info("Grower{} routine finished".format(fl))
+        else: self.logMain.error("GrowerRoutineFinish(): Grower{} does not exist".format(fl))
 
     def sendBootParams(self):
         self.write(self.generalControl, "boot,{0},{1}".format(self.system.state["controlState"], self.system.state["consumptionH2O"] ))
@@ -263,11 +205,12 @@ class serialController:
     def response(self):
         if not self.gcIsConnected or self.generalControl.in_waiting==0: gControl = True
         else: gControl = False
-        if not self.mg1IsConnected or self.motorsGrower1.in_waiting==0: motorG = True
-        else: motorG = False
-        if not self.mg2IsConnected or self.motorsGrower2.in_waiting==0: sMaker = True
-        else: sMaker = False
-        if(time()-self.respTime>2 and gControl and motorG and sMaker and len(self.resp)>0):
+        motorG = []
+        for i in range(len(self.mgIsConnected)):
+            if not self.mgIsConnected[i] or self.motorsGrower[i].in_waiting==0: motorG.append(True)
+            else: motorG.append(False)
+
+        if(time()-self.respTime>2 and gControl and all(motorG) and len(self.resp)>0):
             for i, resp in enumerate(self.resp):
                 # generalControl is requesting the necessary booting parameters
                 if(resp == "boot"): self.sendBootParams()
@@ -312,123 +255,44 @@ class serialController:
             
             except UnicodeDecodeError as e: self.logGC.error(e)
 
-        if self.mg1IsConnected:
-            try:
-                # If bytes available in motorsGrower
-                while self.motorsGrower1.in_waiting>0:
-                    line2 = str(self.motorsGrower1.readline(), "utf-8")[0:-1]
-                    self.Msg2Log(self.logMG1, line2)
+        for i in range(len(self.mgIsConnected)):
+            if self.mgIsConnected[i]:
+                try:
+                    # If bytes available in motorsGrower
+                    while self.motorsGrower[i].in_waiting>0:
+                        line2 = str(self.motorsGrower[i].readline(), "utf-8")[0:-1]
+                        self.Msg2Log(self.logMG[i], line2)
 
-                    decition = False
-                    # If we are waiting for a particular response from Grower1
-                    if(self.mGrower.Gr1.serialRequest!="" and not decition):
-                        decition = self.decideStartOrStopGrower(self.cleanLine(line2))
+                        decition = False
+                        for j in range(len(self.mGrower.Gr)):
+                            # If we are waiting a particular response from GrowerN
+                            if(self.mGrower.Gr[j].serialRequest!="" and not decition):
+                                decition = self.decideStartOrStopGrower(self.cleanLine(line2), i)
 
-                    # If we are waiting for a particular response from Grower2
-                    if(self.mGrower.Gr2.serialRequest!="" and not decition):
-                        decition = self.decideStartOrStopGrower(self.cleanLine(line2))
+                            # If wer are waiting GrowerN to reach home and start the sequence
+                            if(self.mGrower.Gr[j].serialRequest=="" and self.mGrower.Gr[j].startRoutine and not decition):
+                                resp, num = self.getGrowerLine(line2)
+                                num += i*4 # Add 4 for each serialDevice to get the correct growerNumber
+                                if(num==int(self.mGrower.data[str(j+1)])):
+                                    resp = self.cleanGrowerLine(resp)
+                                    if resp.startswith("Starting Routine Stage 2"):
+                                        decition = True
+                                        self.GrowerInRoutine(j+1)
+                            
+                            # If we are waiting GrowerN to reach next sequence position
+                            if(self.mGrower.Gr[j].inRoutine and not decition):
+                                resp, num = self.getGrowerLine(line2)
+                                num += i*4 # Add 4 for each serialDevice to get the correct growerNumber
+                                if(num==int(self.mGrower.data[str(j+1)])):
+                                    resp = self.cleanGrowerLine(resp)
+                                    if resp.startswith("In Position"):
+                                        decition = True
+                                        self.GrowerInPosition(j+1)
+                                    elif resp.startswith("Routine Finished"):
+                                        decition = True
+                                        self.GrowerRoutineFinish(j+1)
 
-                    # If we are waiting for a particular response from Grower3
-                    if(self.mGrower.Gr3.serialRequest!="" and not decition):
-                        decition = self.decideStartOrStopGrower(self.cleanLine(line2))
-
-                    # If we are waiting for a particular response from Grower4
-                    if(self.mGrower.Gr4.serialRequest!="" and not decition):
-                        decition = self.decideStartOrStopGrower(self.cleanLine(line2))
-
-                    # If we are waiting Gr1 to reach home and start the sequence
-                    if(self.mGrower.Gr1.serialRequest=="" and self.mGrower.Gr1.startRoutine and not decition):
-                        resp, num = self.getGrowerLine(line2)
-                        if(num==1):
-                            resp = self.cleanGrowerLine(resp)
-                            if resp.startswith("Starting Routine Stage 2"):
-                                decition = True
-                                self.GrowerInRoutine(num)
-
-                    # If we are waiting Gr2 to reach home and start the sequence
-                    if(self.mGrower.Gr2.serialRequest=="" and self.mGrower.Gr2.startRoutine and not decition):
-                        resp, num = self.getGrowerLine(line2)
-                        if(num==2):
-                            resp = self.cleanGrowerLine(resp)
-                            if resp.startswith("Starting Routine Stage 2"):
-                                decition = True
-                                self.GrowerInRoutine(num)
-
-                    # If we are waiting Gr3 to reach home and start the sequence
-                    if(self.mGrower.Gr3.serialRequest=="" and self.mGrower.Gr3.startRoutine and not decition):
-                        resp, num = self.getGrowerLine(line2)
-                        if(num==3):
-                            resp = self.cleanGrowerLine(resp)
-                            if resp.startswith("Starting Routine Stage 2"):
-                                decition = True
-                                self.GrowerInRoutine(num)
-
-                    # If we are waiting Gr4 to reach home and start the sequence
-                    if(self.mGrower.Gr4.serialRequest=="" and self.mGrower.Gr4.startRoutine and not decition):
-                        resp, num = self.getGrowerLine(line2)
-                        if(num==4):
-                            resp = self.cleanGrowerLine(resp)
-                            if resp.startswith("Starting Routine Stage 2"):
-                                decition = True
-                                self.GrowerInRoutine(num)
-
-                    # If we are waiting Gr1 to reach next sequence position
-                    if(self.mGrower.Gr1.inRoutine and not decition):
-                        resp, num = self.getGrowerLine(line2)
-                        if(num==1):
-                            resp = self.cleanGrowerLine(resp)
-                            if resp.startswith("In Position"):
-                                decition = True
-                                self.GrowerInPosition(num)
-                            elif resp.startswith("Routine Finished"):
-                                decition = True
-                                self.GrowerRoutineFinish(num)
-
-                    # If we are waiting Gr2 to reach next sequence position
-                    if(self.mGrower.Gr2.inRoutine and not decition):
-                        resp, num = self.getGrowerLine(line2)
-                        if(num==2):
-                            resp = self.cleanGrowerLine(resp)
-                            if resp.startswith("In Position"):
-                                decition = True
-                                self.GrowerInPosition(num)
-                            elif resp.startswith("Routine Finished"):
-                                decition = True
-                                self.GrowerRoutineFinish(num)
-
-                    # If we are waiting Gr3 to reach next sequence position
-                    if(self.mGrower.Gr3.inRoutine  and not decition):
-                        resp, num = self.getGrowerLine(line2)
-                        if(num==3):
-                            resp = self.cleanGrowerLine(resp)
-                            if resp.startswith("In Position"):
-                                decition = True
-                                self.GrowerInPosition(num)
-                            elif resp.startswith("Routine Finished"):
-                                decition = True
-                                self.GrowerRoutineFinish(num)
-
-                    # If we are waiting Gr4 to reach next sequence position
-                    if(self.mGrower.Gr4.inRoutine and not decition):
-                        resp, num = self.getGrowerLine(line2)
-                        if(num==4):
-                            resp = self.cleanGrowerLine(resp)
-                            if resp.startswith("In Position"):
-                                decition = True
-                                self.GrowerInPosition(num)
-                            elif resp.startswith("Routine Finished"):
-                                decition = True
-                                self.GrowerRoutineFinish(num)
-                                
-            except UnicodeDecodeError as e: self.logMG1.error(e)
+                except UnicodeDecodeError as e: self.logMG[i].error(e)
                 
-        if self.mg2IsConnected:
-            try:
-                # If bytes available in motorsGrower
-                while self.motorsGrower2.in_waiting>0:
-                    line2 = str(self.motorsGrower2.readline(), "utf-8")[0:-1]
-                    self.Msg2Log(self.logMG2, line2)
-            except UnicodeDecodeError as e: self.logMG2.error(e)
-
         # Send all responses
         self.response()

@@ -45,14 +45,27 @@ if not os.path.exists('data/'): os.makedirs('data/')
 if not os.path.exists('eeprom.config'):
     with open('eeprom.config', 'w') as f: f.write('')
 
+# Define config variables
+with open("config.json") as f:
+    data = json.load(f)
+    ID = data["ID"]
+    brokerIP = data["staticIP"]
+    city = data["city"]
+    state = data["state"]
+    ihp_data = data["ihp"]              # Must include 'MAC', 'ip_range' and 'port'
+    artDay_data = data["day"]           # Include all the configuration to control the artifitial light
+    env_data = data["env"]              # Include all the configuration to control the environment
+    floors = int(artDay_data['floors']) # Number of floors
+    growerData = data["grower"]
+
 # Charge logger parameters
-log = logger()
+log = logger(floors)
 
 # Charge calendar parameters
 #growCal = Calendar()
 
 # From communication
-mGrower = multiGrower(log)
+mGrower = multiGrower(log, growerData)
 
 # From Serial Callback
 serialControl = serialController(mGrower, log, "state.json")
@@ -73,50 +86,51 @@ def mqttDisconnect(cliente, mqttObj):
     mqttObj.clientConnected = False
     mqttObj.actualTime = time()
 
+# Check where run this function to start sequence
 def startRoutine(grower):
-    if serialControl.mg1IsConnected:
-        # Check if Grower is available
-        if grower.failedConnection == 0:
-            # It is time to move Grower
-            grower.time2Move()
-            top = "{}/Grower{}".format(ID, grower.floor)
-            # Check messages needed to start routine
-            msgs = [{"topic": top, "payload": "OnLED1"},
-                    {"topic": top, "payload": "OnLED2"},
-                    {"topic": top, "payload": "DisableStream"}]
-            publish.multiple(msgs, hostname = brokerIP)
-            log.logger.info("Checking Grower{} status to start sequence".format(grower.floor))
-    else: log.logger.error("Cannot start sequence. Serial device [motorsGrower] is disconnected.")
+    serialFloor = mGrower.data[str(grower.floor)]
+    if serialFloor != "disconnected":
+        serialDevice = int((serialFloor)/4)
+        if serialControl.mgIsConnected[serialDevice]:
+            # Check if Grower is available
+            if grower.failedConnection == 0:
+                # It is time to move Grower
+                grower.time2Move(serialFloor)
+                top = "{}/Grower{}".format(ID, grower.floor) # This line seems useless
+                log.logger.info("Checking Grower{} status to start sequence".format(grower.floor))
+        else: log.logger.error("Cannot start sequence. Serial device [motorsGrower] is disconnected.")
 
 def checkSerialMsg(grower):
     # Resend serial messages without response for Growers
-    if(grower.serialRequest!=""):
-        req = False
-        if(grower.serialRequest.startswith('continueSequence')
-           and time()-grower.actualTime>120): req = True
-        elif(not grower.serialRequest.startswith('continueSequence')
-             and time()-grower.actualTime>20): req = True
-        if req:
-            serialControl.write(serialControl.motorsGrower1, grower.serialRequest)
-            grower.actualTime = time()
-            log.logger.info("Resending Grower{} request: {}".format(grower.floor, grower.serialRequest))
+    serialFloor = mGrower.data[str(grower.floor)]
+    if(serialFloor != "disconnected" and grower.serialRequest!="" and time()-grower.actualTime>120):
+        serialDevice = int((serialFloor)/4)
+        serialControl.write(serialControl.motorsGrower[serialDevice], grower.serialRequest)
+        grower.actualTime = time()
+        log.logger.info("Resending Grower{} request: {}".format(grower.floor, grower.serialRequest))
+    else: pass
 
 def checkMqttMsg(grower):
     # Resend mqtt messages withouth response in 20s for Growers
     if(grower.mqttRequest!="" and time()-grower.actualTime>20):
-        if grower.mqttRequest=="sendPhotos":
-            mssg = "{},{},{},{}".format(grower.mqttRequest, brokerIP,
-                broker['username'] , broker['password'])
-        elif grower.mqttRequest=="routineFinish":
-            mssg = [{"topic": "{}/Grower{}".format(ID, grower.floor), "payload": "OffLED1"},
-                    {"topic": "{}/Grower{}".format(ID, grower.floor), "payload": "OffLED2"},
-                    {"topic": "{}/Grower{}".format(ID, grower.floor), "payload": "EnableStream"}]
-            #grower.mqttReq("sendPhotos")
+        if grower.mqttRequest=="RoutineFinished":
+            mssg = "RoutineFinished"
+            device = "Cloud"
             grower.mqttReq("")
-        else: mssg = grower.mqttRequest
+        elif grower.mqttRequest=="MasterReady":
+            mssg = "MasterReady"
+            device = "Cloud"
+            grower.mqttReq("")
+        elif grower.mqttRequest=="takePicture":
+            mssg = [{"topic": "{}/Cloud".format(ID, grower.floor), "payload": "takePicture"},
+                    {"topic": "{}/Tucan".format(ID, grower.floor), "payload": "takePicture"}]
+            grower.mqttReq("")
+        else: 
+            mssg = grower.mqttRequest
+            device = "Grower{}".format(grower.floor)
         if(mqttControl.clientConnected):
             try:
-                if(type(mssg)==str): publish.single("{}/Grower{}".format(ID, grower.floor), mssg, hostname = brokerIP)
+                if(type(mssg)==str): publish.single("{}/{}".format(ID, device), mssg, hostname = brokerIP)
                 elif(type(mssg)==list): publish.multiple(mssg, hostname = brokerIP)
             except Exception as e:
                 log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower{} request [{}]".format(grower.floor, e))
@@ -143,17 +157,6 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     DataBase = './data/{}.db'.format(strftime("%Y-%m-%d", localtime()))
     conn = sqlite3.connect(DataBase)
 
-    # Define config variables
-    with open("config.json") as f:
-        data = json.load(f)
-        ID = data["ID"]
-        brokerIP = data["staticIP"]
-        city = data["city"]
-        state = data["state"]
-        ihp_data = data["ihp"]      # Must include 'MAC', 'ip_range' and 'port'
-        artDay_data = data["day"]   # Include all the configuration to control the artifitial light
-        env_data = data["env"]      # Include all the configuration to control the environment
-
     # Charge GUI parameters and connect logger and serialControl
     gui = GUI(ID, log.logger, serialControl)
 
@@ -162,7 +165,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     myDay.set_function(artDay_data) # Initialize functions
             
     # Define IHP object and connect logger
-    ihp = IHP(ihp_data, log.logger, log.logger_ihp)
+    ihp = IHP(ihp_data, log)
     # Set all floors OFF by default
     for i in range(myDay.fl): ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': 0})
     
@@ -297,16 +300,12 @@ try:
             
             if(mqttControl.clientConnected):
                 try:
-                    msgs = [{"topic": "{}/Grower1".format(ID), "payload": "cozirData"},
-                            {"topic": "{}/Grower2".format(ID), "payload": "cozirData"},
-                            {"topic": "{}/Grower3".format(ID), "payload": "cozirData"},
-                            {"topic": "{}/Grower4".format(ID), "payload": "cozirData"},
-                            {"topic": "{}/esp32front1".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32center1".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32back1".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32front2".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32center2".format(ID), "payload": "sendData"},
-                            {"topic": "{}/esp32back2".format(ID), "payload": "sendData"}]
+                    msgs = []
+                    for i in range(floors): msgs.append({"topic": "{}/Grower{}".format(ID, i+1), "payload": "cozirData"})
+                    for i in range(len(log.logger_esp32)):
+                        msgs.append({"topic": "{}/esp32front{}".format(ID, i+1), "payload": "sendData"})
+                        msgs.append({"topic": "{}/esp32center{}".format(ID, i+1), "payload": "sendData"})
+                        msgs.append({"topic": "{}/esp32back{}".format(ID, i+1), "payload": "sendData"})
                     msgs += env_msgs
                     # Request ESP32's and Growers data and update enviromental Controllers
                     publish.multiple(msgs, hostname = brokerIP)
@@ -318,19 +317,6 @@ try:
             if bme!=None and bme.read(): bme.logData()
             else: log.logger.warning("{} sensor cannot take reading".format(sensor['external']))
 
-            # Coordinate Grower routines
-            if(hour==6 and minute==0): # At 6am
-                #startRoutine(mGrower.Gr1)
-                log.logger.info("Checking Grower1 status to start sequence")
-            elif(hour==8 and minute==0):# At 8am
-                #startRoutine(mGrower.Gr2)
-                log.logger.info("Checking Grower2 status to start sequence")
-            elif(hour==10 and minute==0): # At 10am
-                #startRoutine(mGrower.Gr3)
-                log.logger.info("Checking Grower3 status to start sequence")
-            elif(hour==12 and minute==0): # At 12pm
-                #startRoutine(mGrower.Gr4)
-                log.logger.info("Checking Grower4 status to start sequence")
             """
             Feature not ready
             elif(hour==7 and minute==0): # At 7am
@@ -338,17 +324,12 @@ try:
                 sub, msg = growCal.getEmail()
                 if(msg!=''): mail.sendMail(sub, msg)
             """
+            
         # Check Serial Pending
-        checkSerialMsg(mGrower.Gr1)
-        checkSerialMsg(mGrower.Gr2)
-        checkSerialMsg(mGrower.Gr3)
-        checkSerialMsg(mGrower.Gr4)
+        for i in range(len(mGrower.Gr)): checkSerialMsg(mGrower.Gr[i])
 
         # Check MQTT Pending
-        checkMqttMsg(mGrower.Gr1)
-        checkMqttMsg(mGrower.Gr2)
-        checkMqttMsg(mGrower.Gr3)
-        checkMqttMsg(mGrower.Gr4)
+        for i in range(len(mGrower.Gr)): checkMqttMsg(mGrower.Gr[i])
 
         # Check iHP pending requests
         ihp.run()

@@ -14,15 +14,17 @@ class mqttController:
         self.containerID = data["ID"]
         self.number = data["number"]
         self.brokerIP = data["IP"]
+        self.port = data["port"]
         self.actualTime = time()
         # Routine variables
         self.inRoutine = 0
         self.routineStarted = False
         self.masterReady = False
-        self.ambientalReady = False
-        self.phenotypeReady = False
+        self.growerReady = False
+        self.tucanReady = False
         self.lightsReady = False
         self.streamReady = False
+        self.takePicture = False
 
     def sendLog(self, mssg, logType = 0):
         logTopic = "{}/Cloud{}/log".format(self.containerID, self.number)
@@ -52,18 +54,20 @@ class mqttController:
             mssg += ",debug"
 
         publish.single(logTopic, mssg, hostname = self.brokerIP)
-        
+
     def isRoutineReady(self):
-        if self.masterReady and self.ambientalReady and self.phenotypeReady:
+        if self.masterReady and self.growerReady and self.tucanReady:
             # Prepare all devices
+            ip = getIPaddr().split(" ")[0]
             msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OnOut1"},
                     {"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OnOut2"},
-                    {"topic": "{}/Tucan".format(self.containerID), "payload": "streamIP,{}".format(getIPaddr())}]
+                    {"topic": "{}/Tucan".format(self.containerID), "payload": "startStreaming,{},{}".format(ip, self.port)}]
             publish.multiple(msgs, hostname = self.brokerIP)
-            self.streamer.openSocket()
 
-    def askConfirmation(self):
-        if self.lightsReady and self.streamReady: self.log.info("All devices are ready to start routine. Please confirm if you want to start it.")
+    def startRoutine(self):
+        if self.masterReady and self.growerReady and self.tucanReady and self.lightsReady and self.streamReady: 
+            publish.single("{}/Master".format(self.containerID), "StartRoutineNow,{}".format(self.inRoutine), hostname = self.brokerIP)
+            self.routineStarted = True
 
     # On Connect Callback for MQTT
     def on_connect(self, client, userdata, flags, rc):
@@ -106,65 +110,54 @@ class mqttController:
                     self.sendLog("Checking status to start routine in floor {}".format(self.inRoutine), 1)
                 else:
                     self.inRoutine = 0
-                    publish.single("{}/Master".format(self.containerID), "unblockMotors", hostname = self.brokerIP)
                     self.sendLog("Invalid floor number to start the routine", 3)
-            elif self.inRoutine == int(message.split(",")[1]):
-                if self.masterReady and self.ambientalReady and self.phenotypeReady and self.lightsReady and self.streamReady: 
-                    publish.single("{}/Master".format(self.containerID), message, hostname = self.brokerIP)
-                    self.routineStarted = True
+            else: pass
 
         elif(message.startswith("MasterReady")):
-            # Master is ready when motors are ready and blocked
+            # Master is ready when motors are ready available
             self.masterReady = True
             self.isRoutineReady()
             
         elif(message.startswith("GrowerReady")):
-            # Ambiental is ready when detects the Ambiental module and 
-            # Ambiental module could talk with Phenotype module via Bluetooth
-            self.ambientalReady = True
+            # Grower is ready when detects Tucan Module by bluetooth
+            self.growerReady = True
             self.isRoutineReady()
             
         elif(message.startswith("TucanReady")):
-            # Phenotype is ready when detects the Phenotype module and
-            # Phenotype module could talk with Ambiental module via Bluetooth
-            self.phenotypeReady = True
+            # Tucan is ready when detects Grower module by bluetooth and recognize
+            # the routines runs in the same floor that the closest Grower
+            self.tucanReady = True
             self.isRoutineReady()
             
         elif(message.startswith("LightsReady")):
-            # Light are ready when Ambiental module turns on both of them
+            # Light are ready when Grower module turns on both of them
             self.lightsReady = True
-            self.askConfirmation()
+            self.startRoutine()
 
         elif(message.startswith("StreamReady")):
-            # Stream is ready when Phenotype module stablish communication with Data Server
+            # Stream is ready when Tucan module stablish communication with Cloud
             self.streamReady = True
-            self.askConfirmation()
+            self.startRoutine()
 
-        elif(message.startswith("TakePicture")):
-            if self.streamer.isStreaming:
-                self.streamer.savePicture = True
-                self.sendLog("Taking picture number {}".format(self.streamer.captures), 0)
-            else: self.sendLog("Cannot take a picture if Streaming is not working", 3)
+        elif(message.startswith("takePicture")):
+            # Set flag takePicture true
+            self.takePicture = True
 
         elif(message.startswith("RoutineFinished")):
+            # Send messages to turn off lights and streaming
+            ip = getIPaddr().split(" ")[0]
+            msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OffOut1"},
+                    {"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OffOut2"},
+                    {"topic": "{}/Tucan".format(self.containerID), "payload": "endStreaming"}]
+            publish.multiple(msgs, hostname = self.brokerIP)
             self.inRoutine = 0
             self.routineStarted = False
             self.masterReady = False
-            self.ambientalReady = False
-            self.phenotypeReady = False
+            self.growerReady = False
+            self.tucanReady = False
             self.lightsReady = False
             self.streamReady = False
-            # Send messages to turn off lights and streaming
             
-        # This is usefull for debugging without making a routine
-        elif(message.startswith("OpenStreaming")):
-            floor = int(message.split(",")[1])
-            topic = "{}/Grower{}".format(self.containerID, floor)
-            mssg = "OpenStreaming"
-            publish.single(topic, mssg, hostname = self.brokerIP)
-            self.streamer.openSocket()
-            self.sendLog("Starting streaming in floor {}".format(floor), 1)
-        
         """""
         elif(message == "whatIsMyIP"):
             mssg = "IP={}".format(self.grower.whatIsMyIP())

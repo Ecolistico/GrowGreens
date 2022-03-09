@@ -9,13 +9,17 @@ from sysMaster import scan_for_hosts, find_ip_address_for_mac_address, splitByte
 
 class IHP:
     # Initialize the class
-    def __init__(self, data, logger_main = None, logger_ihp = None):
+    def __init__(self, data, logger = None):
 
         self.MAC = data['MAC']
         self.ip_range = data['ip_range']
         self.port = int(data['port'])
-        self.log = logger_main
-        self.log_ihp = logger_ihp
+        if logger is not None:
+            self.log = logger.logger
+            self.log_ihp = logger.logger_ihp
+        else:
+            self.log = None
+            self.log_ihp = None
         
         # Create a UDP socket at client side
         self.TIMEOUT = 2 # timeout grater than 1s is required (from experimental test)

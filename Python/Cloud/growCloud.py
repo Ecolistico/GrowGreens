@@ -39,12 +39,14 @@ with open("config.json") as f: data = json.load(f)
 
 # From streamCallback
 streamControl = streamController(log.logger)
+data['port'] = streamControl.port
 
 # From mqttCallback
 mqttControl = mqttController(data, log.logger)
 
 client = None
 run = True
+waitNextMove = False
 # DEBUG variables
 timer = time()
 counter = 0
@@ -71,6 +73,7 @@ except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".f
 try:
     while run:
         # Testing routine
+        """
         if (time() - timer > 3 and not streamControl.inCapture):
             timer = time()
             if counter == 0:
@@ -90,9 +93,18 @@ try:
                 publish.single("{}/Tucan".format(data["ID"]),
                             'endStreaming',
                             hostname=data["IP"])
+        """
         #if streamControl.isStreaming and not streamControl.savePicture and mqttControl.routineStarted:
         #    publish.single("{}/Master".format(data["ID"]), "continueRoutine", hostname = data["IP"])
         
+        if mqttControl.takePicture:
+            mqttControl.takePicture = False
+            streamControl.inCapture = True
+            waitNextMove = True  
+        elif mqttControl.routineStarted and not streamControl.inCapture and waitNextMove:
+            waitNextMove = False
+            publish.single("{}/Master".format(data["ID"]), 'continueSequence,{}'.format(mqttControl.inRoutine), hostname=data["IP"])
+
         # Stream loop
         streamControl.streaming()
         

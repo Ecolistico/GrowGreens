@@ -18,20 +18,14 @@ class mqttController:
         self.conn = connector
         # Define loggers
         self.logMain = logger.logger
-        self.logGr1 = logger.logger_grower1
-        self.logGr2 = logger.logger_grower2
-        self.logGr3 = logger.logger_grower3
-        self.logGr4 = logger.logger_grower4
-        self.logFront1 = logger.logger_esp32front1
-        self.logCenter1 = logger.logger_esp32center1
-        self.logBack1 = logger.logger_esp32back1
-        self.logFront2 = logger.logger_esp32front2
-        self.logCenter2 = logger.logger_esp32center2
-        self.logBack2 = logger.logger_esp32back2
+        self.logGr = []
+        for i in range(len(logger.logger_grower)):  self.logGr.append(logger.logger_grower[i])
+        self.logger_esp32 = []
+        for i in range(len(logger.logger_esp32)): self.logger_esp32.append(logger.logger_esp32[i])
         self.logAirPrincipal = logger.logger_AirPrincipal
         self.logAirReturn = logger.logger_AirReturn
         # Define ESP32´s object
-        self.ESP32 = ESPdata.multiESP(self.logFront1, self.logCenter1, self.logBack1, self.logFront2, self.logCenter2, self.logBack2)
+        self.ESP32 = ESPdata.multiESP(self.logger_esp32)
         # Define multiGrower´s object
         self.mGrower = multiGrower
         # Define AirPrincipal and AirReturn connected variables
@@ -96,78 +90,87 @@ class mqttController:
         
         # Get MQTT logs from all the devices
         if(top.endswith("log")):
-            if(device == "Grower1"):
-                self.Msg2Log(self.logGr1, message)
-                self.requestGr1 = False
-                self.onGrowerMsg(self.mGrower.Gr1, message)
-            elif(device == "Grower2"):
-                self.Msg2Log(self.logGr2, message)
-                self.requestGr2 = False
-                self.onGrowerMsg(self.mGrower.Gr2, message)
-            elif(device == "Grower3"):
-                self.Msg2Log(self.logGr3, message)
-                self.requestGr3 = False
-                self.onGrowerMsg(self.mGrower.Gr3, message)
-            elif(device == "Grower4"):
-                self.Msg2Log(self.logGr4, message)
-                self.requestGr4 = False
-                self.onGrowerMsg(self.mGrower.Gr4, message)
-                    
-            elif(device == "esp32front1"): self.logFront1.debug(message)
-            elif(device == "esp32center1"): self.logCenter1.debug(message)
-            elif(device == "esp32back1"): self.logBack1.debug(message)
-            elif(device == "esp32front2"): self.logFront2.debug(message)
-            elif(device == "esp32center2"): self.logCenter2.debug(message)
-            elif(device == "esp32back2"): self.logBack2.debug(message)
+            if(device.startswith("Grower")):
+                level = int(device[-1]) - 1
+                self.Msg2Log(self.logGr[level], message)
+                self.onGrowerMsg(self.mGrower.Gr[level], message)
             elif(device == "esp32AirPrincipal"): 
                 self.logAirPrincipal.debug(message)
                 self.AirConnected['Principal']['status'] = True
             elif(device == "esp32AirReturn"): 
                 self.logAirReturn.debug(message)
                 self.AirConnected['Return']['status'] = True
+            elif(device.startswith("esp32")):
+                level = int(device[-1]) - 1
+                pos = device[5:-1]
+                if pos == "front": self.logger_esp32[level][0].debug(message)
+                elif pos == "center": self.logger_esp32[level][1].debug(message)
+                elif pos == "back": self.logger_esp32[level][2].debug(message)
             else: self.logMain.warning("Unknown mqtt log recieve - device={}, message={}".format(device, message))
         
         # Get MQTT errors from ESP32´s
         elif(top.endswith("error")):
-            if(device == "esp32front1"): self.logFront1.error(message)
-            elif(device == "esp32center1"): self.logCenter1.error(message)
-            elif(device == "esp32back1"): self.logBack1.error(message)
-            if(device == "esp32front2"): self.logFront2.error(message)
-            elif(device == "esp32center2"): self.logCenter2.error(message)
-            elif(device == "esp32back2"): self.logBack2.error(message)
-            elif(device == "esp32AirPrincipal"): self.logAirPrincipal.error(message)
+            if(device == "esp32AirPrincipal"): self.logAirPrincipal.error(message)
             elif(device == "esp32AirReturn"): self.logAirReturn.error(message)
-            else: self.logMain.error("Unknown mqtt log recieve - device={}, message={}".format(device, message))
+            elif(device.startswith("esp32")):
+                level = int(device[-1]) - 1
+                pos = device[5:-1]
+                if pos == "front": self.logger_esp32[level][0].error(message)
+                elif pos == "center": self.logger_esp32[level][1].error(message)
+                elif pos == "back": self.logger_esp32[level][2].error(message)
+            else: self.logMain.error("Unknown mqtt error recieve - device={}, message={}".format(device, message))
             
         # Get data from ESP32 front, center and back
-        elif(top.endswith("esp32front1") and message!="sendData"):
-            self.ESP32.front1.str2array(message)
-            self.ESP32.front1.connected = True
-            # Ask again for the data if not complete
-        elif(top.endswith("esp32center1") and message!="sendData"):
-            self.ESP32.center1.str2array(message)
-            self.ESP32.center1.connected = True
-            # Ask again for the data if not complete
-        elif(top.endswith("esp32back1") and message!="sendData"):
-            self.ESP32.back1.str2array(message)
-            self.ESP32.back1.connected = True
-            # Ask again for the data if not complete
-        elif(top.endswith("esp32front2") and message!="sendData"):
-            self.ESP32.front2.str2array(message)
-            self.ESP32.front2.connected = True
-            # Ask again for the data if not complete
-        elif(top.endswith("esp32center2") and message!="sendData"):
-            self.ESP32.center2.str2array(message)
-            self.ESP32.center2.connected = True
-            # Ask again for the data if not complete
-        elif(top.endswith("esp32back2") and message!="sendData"):
-            self.ESP32.back2.str2array(message)
-            self.ESP32.back2.connected = True
+        elif("esp32" in top and not "AirPrincipal" in top and not "AirReturn" in top):
+            level = int(device[-1]) - 1
+            pos = device[5:-1]
+            if pos == "front": 
+                self.ESP32.esp32[level][0].str2array(message)
+                self.ESP32.esp32[level][0].connected = True
+            elif pos == "center": 
+                self.ESP32.esp32[level][1].str2array(message)
+                self.ESP32.esp32[level][1].connected = True
+            elif pos == "back": 
+                self.ESP32.esp32[level][2].str2array(message)
+                self.ESP32.esp32[level][2].connected = True
             # Ask again for the data if not complete
         
         # Communication withb MongoDB-Parse Server
-        if(device == 'Server' and not message.startswith('whatIsMyIP')):
+        elif(device == 'Server' and not message.startswith('whatIsMyIP')):
             self.serverIP = message
+        
+        # Get messages directed to Master
+        elif(device.startswith('Master')):
+            # Check if we can start the routine or not
+            if(message.startswith('StartRoutine')):
+                fl = int(message.split(",")[1]) # Floor
+                serialFloor = self.mGrower.data[str(fl)]
+                if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
+                    serialFloor = int(serialFloor)
+                    serialDevice = int((serialFloor-1)/4)
+                    if(message.startswith("StartRoutineNow")):
+                        floor = fl - serialDevice*4
+                        self.mGrower.Gr[fl-1].serialReq("sequence_n,{},41,10".format(floor))
+                        self.mGrower.Gr[fl-1].mqttReq("")
+                        self.logMain.info("Starting Grower{} sequence".format(fl))
+                    else:                    
+                        self.mGrower.Gr[fl-1].time2Move(serialFloor)
+                        self.logMain.info("Checking Grower{} status to start sequence".format(fl))
+                else: self.logMain.error("Cannot start sequence. Parameters (floor or serialFloor are wrong).")
+            elif(message.startswith('continueSequence')):
+                fl = int(message.split(",")[1]) # Floor
+                serialFloor = self.mGrower.data[str(fl)]
+                if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
+                    serialFloor = int(serialFloor)
+                    serialDevice = int((serialFloor-1)/4)
+                    floor = fl - serialDevice*4
+                    self.mGrower.Gr[fl-1].serialReq("continueSequence,{}".format(floor))
+                    self.mGrower.Gr[fl-1].mqttReq("")
+                    self.logMain.info("Grower{} continue sequence".format(fl))
+                else: self.logMain.error("Cannot continue sequence. Parameters (floor or serialFloor are wrong).")
+
+            else: self.logMain.warning("Master MQTT request unknown. Message={}".format(message))
+        else: self.logMain.warning("Unknown mqtt device={}, message={}".format(device, message))
             
     def on_publish(self, client, userdata, mid):
         self.logMain.debug("Message delivered")

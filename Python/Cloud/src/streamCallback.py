@@ -8,7 +8,6 @@ import numpy as np
 class streamController:
     def __init__(self, logger = None):
         self.log = logger
-        self.captures = 0
 
         # Socket variables
         self.host = '0.0.0.0'
@@ -83,7 +82,7 @@ class streamController:
                         self.name = 'test' + str(self.captures) + '.png'
                         cv2.imwrite(self.path + self.name, self.img)
                         self.str2log("Capture: {} saved".format(self.name), 1)
-                        self.captures = int(self.captures) + 1
+                        self.captures += 1
                         self.inCapture = False
                         
                 """

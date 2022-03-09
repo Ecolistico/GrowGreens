@@ -60,55 +60,50 @@ class grower:
     def connectionSuccess(self):
         self.failedConnection = 0
     
-    def time2Move(self):
+    def time2Move(self, fl = None):
+        if fl is None: fl = self.floor
         self.startRoutine = True
-        msg = "available,{}".format(self.floor)
+        msg = "available,{}".format(fl)
         self.serialReq(msg)
-        return msg
     
     def getSequenceParameters(self):
         return self.xSeq, self.ySeq
     
 class multiGrower:
-    def __init__(self, logger):
-        self.Gr1 = grower(1, logger.logger_grower1)
-        self.Gr2 = grower(2, logger.logger_grower2)
-        self.Gr3 = grower(3, logger.logger_grower3)
-        self.Gr4 = grower(4, logger.logger_grower4)
+    def __init__(self, logger, data = None):
+        if data is not None: self.data = data
+        else:
+            self.data = {}
+            for i in range(len(logger.logger_grower)): self.data["{}".format(i+1)] = "{}".format(i+1)
+        
+        self.Gr =[]
+        for i in range(len(logger.logger_grower)): self.Gr.append(grower(i+1, logger.logger_grower[i]))
     
     def updateStatus(self):
-        if(self.Gr1.connected == False): self.Gr1.connectionFailed()
-        else: self.Gr1.connectionSuccess()
-        self.Gr1.connected = False
-        if(self.Gr2.connected == False): self.Gr2.connectionFailed()
-        else: self.Gr2.connectionSuccess()
-        self.Gr2.connected = False
-        if(self.Gr3.connected == False): self.Gr3.connectionFailed()
-        else: self.Gr3.connectionSuccess()
-        self.Gr3.connected = False
-        if(self.Gr4.connected == False): self.Gr4.connectionFailed()
-        else: self.Gr4.connectionSuccess()
-        self.Gr4.connected = False
+        for i in range(len(self.Gr)):
+            if(self.Gr[i].connected == False and self.data["{}".format(i+1)]!="disconnected"): self.Gr[i].connectionFailed()
+            else: self.Gr[i].connectionSuccess()
+            self.Gr[i].connected = False
     
     def upload2DB(self, dbConnector):
         # Create cursor
         c = dbConnector.cursor()
         # Create table if not exist
-        c.execute("CREATE TABLE IF NOT EXISTS cozirData(datetime TIMESTAMP," +
-                  " T_1 REAL, H_1 REAL, CO2_1 REAL," +
-                  " T_2 REAL, H_2 REAL, CO2_2 REAL," +
-                  " T_3 REAL, H_3 REAL, CO2_3 REAL," +
-                  " T_4 REAL, H_4 REAL, CO2_4 REAL)")
+        t_aux = "CREATE TABLE IF NOT EXISTS cozirData(datetime TIMESTAMP,"
+        for i in range(len(self.Gr)): t_aux += " T_{0} REAL, H_{0} REAL, CO2_{0} REAL,".format(i+1)
+        t_aux = t_aux[:-1] + ")"
+        c.execute(t_aux)
         
         # Insert values
-        c.execute("INSERT INTO cozirData ( datetime," +
-                  " T_1, H_1, CO2_1, T_2, H_2, CO2_2," +
-                  " T_3, H_3, CO2_3, T_4, H_4, CO2_4)" 
-                  " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                  (datetime.now(), self.Gr1.Temp, self.Gr1.Hum, self.Gr1.CO2,
-                   self.Gr2.Temp, self.Gr2.Hum, self.Gr2.CO2,
-                   self.Gr3.Temp, self.Gr3.Hum, self.Gr3.CO2,
-                   self.Gr4.Temp, self.Gr4.Hum, self.Gr4.CO2))
+        t_aux = "INSERT INTO cozirData ( datetime,"
+        v_aux = (datetime.now(),)
+        for i in range(len(self.Gr)): 
+            t_aux += " T_{}, H_{}, CO2_{},".format(i+1)
+            v_aux += (self.Gr[i].Temp, self.Gr[i].Hum, self.Gr[i].CO2)
+        t_aux = t_aux[:-1] + ") VALUES (?," + " ?,"*(len(self.Gr)*3)
+        t_aux = t_aux[:-1] + ")"
+        
+        c.execute(t_aux, v_aux)
         # Commit changes
         dbConnector.commit()
         # Erase cursor
