@@ -64,14 +64,11 @@ class inputHandler:
         if self.serialControl.gcIsConnected: self.serialControl.write(self.serialControl.generalControl, mssg)
         else: self.Msg2Log("error,Cannot write to serial device [generalControl]. It is disconnected.")
             
-    def writeMG1(self, mssg): # Write in motorsGrower1
-        if self.serialControl.mg1IsConnected: self.serialControl.write(self.serialControl.motorsGrower1, mssg)
-        else: self.Msg2Log("error,Cannot write to serial device [motorsGrower1]. It is disconnected.")
-            
-    def writeMG2(self, mssg): # Write in motorsGrower1
-        if self.serialControl.mg2IsConnected: self.serialControl.write(self.serialControl.motorsGrower2, mssg)
-        else: self.Msg2Log("error,Cannot write to serial device [motorsGrower2]. It is disconnected.")
-            
+    def writeMG(self, number, mssg): # Write in motorsGrower[n]
+        if number>0 and number<=len(self.serialControl.mgIsConnected): 
+            if self.serialControl.mgIsConnected[number-1]: self.serialControl.write(self.serialControl.motorsGrower[number-1], mssg)
+            else: self.Msg2Log("error,Cannot write to serial device [motorsGrower{}]. It is disconnected.".format(number))
+
     def valInteger(self, integer):
         try:
             val = int(integer)
@@ -164,14 +161,14 @@ class inputHandler:
                     self.writeGC(cmd)
                     self.Msg2Log("info,inputHandler-[generalControl] Raw Command={}".format(cmd))
                     self.handleGUI(cmd, param)
-                elif(param[1]=="motorsGrower1" and self.valLenList1(param, 3) and self.serialControl.mg1IsConnected):
-                    cmd = ",".join(param[2:])
-                    self.writeMG1(cmd)
-                    self.Msg2Log("info,inputHandler-[motorsGrower1] Raw Command={}".format(cmd)) 
-                elif(param[1]=="motorsGrower2" and self.valLenList1(param, 3) and self.serialControl.mg2IsConnected):
-                    cmd = ",".join(param[2:])
-                    self.writeMG2(cmd)
-                    self.Msg2Log("info,inputHandler-[motorsGrower2] Raw Command={}".format(cmd)) 
+                elif(param[1].startswith("motorsGrower") and self.valLenList1(param, 3)):
+                    try:
+                        number = int(param[1][-1])
+                        cmd = ",".join(param[2:])
+                        self.writeMG(number, cmd)
+                        self.Msg2Log("info,inputHandler-[{}] Raw Command={}".format(param[1], cmd)) 
+                    except Exception as e:
+                        self.Msg2Log("error,inputHandler Error: {}".format(e))
                 elif( (param[1]=="esp32" or param[1]=="Grower") and self.valLenList1(param, 4)):
                     cmd = ",".join(param[3:])
                     topic = "{}/{}{}".format(self.mqttControl.ID, param[1], param[2])
