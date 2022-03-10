@@ -89,9 +89,9 @@ class mqttController:
             if len(mssgSplit) >= 3:
                 if self.stream != None:
                     self.stream.clientConnect(mssgSplit[1], int(mssgSplit[2]))
-                    publish.single("{}/cloud".format(self.containerID), "Ready to go!", hostname=self.brokerIP)
+                    publish.single("{}/Cloud".format(self.containerID), "StreamReady", hostname=self.brokerIP)
                 else: 
-                    publish.single("{}/cloud".format(self.containerID), "Stream not configured", hostname=self.brokerIP) 
+                    publish.single("{}/Cloud".format(self.containerID), "StreamNotReady", hostname=self.brokerIP) 
             else: self.sendLog('startStreaming parameters are wrong', 3)
                 
         elif (message.startswith("takePicture")):
@@ -105,27 +105,10 @@ class mqttController:
             if self.stream != None:
                 self.stream.endStreaming()
             else: self.sendLog("Stream not configured")
-
-        """""
-        if(message == "OnOut1"):
-            self.grower.turnOn(self.grower.OUT1)
-            self.sendLog("Out1 On")
-
-        elif(message == "OnOut2"):
-            self.grower.turnOn(self.grower.OUT2)
-            self.sendLog("Out2 On")
         
-        elif(message == "whatIsMyIP"):
-            mssg = "IP={}".format(self.grower.whatIsMyIP())
-            self.sendLog(mssg, 1)
-            
-        elif(message == "cozirData"):
-            if(self.grower.coz != None):
-                hum, temp, co2 = self.grower.coz.getData()
-                mssg = "cozir,{},{},{}".format(hum, temp, co2)
-                self.sendLog(mssg)
-            else: self.sendLog("Cozir disconnected: ignore data request", 3)
-        """""
+        elif (message.startswith("StartRoutine")):
+            # Here goes the bluetooth validation with Grower for now just ignore it
+            publish.single("{}/Cloud".format(self.containerID), "TucanReady", hostname = self.brokerIP)
         
     def on_publish(self, client, userdata, mid):
         self.log.info("Message delivered")

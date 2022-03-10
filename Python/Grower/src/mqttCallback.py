@@ -15,6 +15,7 @@ class mqttController:
         self.log.info("Setting Up Streaming..." )
         self.clientConnected = False
         self.actualTime = time()
+        self.light = 0
 
     def update(self):
         self.containerID, self.floor, self.brokerIP = sysGrower.getData_JSON(sysGrower.MQTT_PATH)
@@ -80,18 +81,28 @@ class mqttController:
         if(message == "OnOut1"):
             self.grower.turnOn(self.grower.OUT1)
             self.sendLog("Out1 On")
+            if self.light == 0 or self.light ==2:
+                self.light += 1
+                if self.light == 3: publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
 
         elif(message == "OnOut2"):
             self.grower.turnOn(self.grower.OUT2)
             self.sendLog("Out2 On")
+            if self.light == 0 or self.light ==1:
+                self.light += 2
+                if self.light == 3: publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
         
         elif(message == "OffOut1"):
             self.grower.turnOff(self.grower.OUT1)
             self.sendLog("Out1 Off")
+            if self.light == 3 or self.light == 1:
+                self.light -= 1
          
         elif(message == "OffOut2"):
             self.grower.turnOff(self.grower.OUT2)
             self.sendLog("Out2 Off")
+            if self.light == 3 or self.light == 2:
+                self.light -= 2
         
         elif(message == "whatIsMyIP"):
             mssg = "IP={}".format(self.grower.whatIsMyIP())
@@ -104,6 +115,10 @@ class mqttController:
                 self.sendLog(mssg)
             else: self.sendLog("Cozir disconnected: ignore data request", 3)
         
+        elif(message.startswith("StartRoutine")):
+            # Here goes the bluetooth validation with Tucan for now just ignore it
+            publish.single("{}/Cloud".format(self.containerID), "GrowerReady", hostname = self.brokerIP)
+
         elif(message == "updateGrowerDate"):
             self.grower.getDateFormat()
             self.sendLog("Updating Date Format")

@@ -65,6 +65,7 @@ class grower:
         self.startRoutine = True
         msg = "available,{}".format(fl)
         self.serialReq(msg)
+        self.actualTime = time() - 120
     
     def getSequenceParameters(self):
         return self.xSeq, self.ySeq

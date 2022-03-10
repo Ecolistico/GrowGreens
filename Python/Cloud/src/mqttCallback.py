@@ -27,7 +27,7 @@ class mqttController:
         self.takePicture = False
 
     def sendLog(self, mssg, logType = 0):
-        logTopic = "{}/Cloud{}/log".format(self.containerID, self.number)
+        logTopic = "{}/Cloud/log".format(self.containerID)
         # Debug
         if(logType==0):
             self.log.info(mssg)
@@ -138,6 +138,11 @@ class mqttController:
             # Stream is ready when Tucan module stablish communication with Cloud
             self.streamReady = True
             self.startRoutine()
+        
+        elif(message.startswith("StreamNotReady")):
+            # Stream failed
+            self.streamReady = False
+            self.sendLog("Tucan streaming communication failed", 4)
 
         elif(message.startswith("takePicture")):
             # Set flag takePicture true
@@ -157,21 +162,7 @@ class mqttController:
             self.tucanReady = False
             self.lightsReady = False
             self.streamReady = False
-            
-        """""
-        elif(message == "whatIsMyIP"):
-            mssg = "IP={}".format(self.grower.whatIsMyIP())
-            self.sendLog(mssg, 1)
-            
-        elif(message == "cozirData"):
-            pass
-        
-            if(self.grower.coz != None):
-                hum, temp, co2 = self.grower.coz.getData()
-                mssg = "cozir,{},{},{}".format(hum, temp, co2)
-                self.sendLog(mssg)
-            else: self.sendLog("Cozir disconnected: ignore data request", 3)
-        """""
+
     def on_publish(self, client, userdata, mid):
         self.log.info("Message delivered")
         
