@@ -104,16 +104,7 @@ class serialController:
         resp = self.cleanLine(line)
         num = self.detectGrower(resp)
         return resp, num
-
-    def startGrowerSequence(self, fl):
-        serialFloor = self.mGrower.data[str(fl)]
-        if serialFloor != "disconnected":
-            serialDevice = int((serialFloor)/4)
-            self.mGrower.Gr[fl-1].serialRequest("")
-            self.write(self.motorsGrower[serialDevice], "sequence_n,{},41,10".format(serialFloor))
-            self.logMain.info("Grower{} sending request to start sequence".format(fl))
-        else: self.logMain.warning("Grower{} is disconnected cannot start sequence in that floor".format(fl))
-
+        
     def stopGrower(self, fl):
         serialFloor = self.mGrower.data[str(fl)]
         if serialFloor != "disconnected":

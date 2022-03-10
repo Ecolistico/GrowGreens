@@ -193,54 +193,6 @@ class inputHandler:
         elif(line.startswith("\033[C")): pass # Key RIGHT print("RIGHT")
         elif(line.startswith("\033[D")): pass # Key LEFT print("LEFT")
         
-        elif(line.startswith("startRoutine")):
-            if self.serialControl.mg1IsConnected:
-                param = self.valSplit(line)
-                if(param!=None and len(param)>=2):
-                    fl = param[1]
-                    if(len(param)==4):
-                        x = param[2]
-                        y = param[3]
-                    elif(len(param)==3): x = y = param[2]
-                    else: x = y = 0
-                    
-                    if(fl=='1'):
-                        if(x!=0 and y!=0):
-                            self.serialControl.mGrower.Gr1.xSeq = x
-                            self.serialControl.mGrower.Gr1.ySeq = y
-                        mssg = self.serialControl.mGrower.Gr1.time2Move()
-                    elif(fl=='2'):
-                        if(x!=0 and y!=0):
-                            self.serialControl.mGrower.Gr2.xSeq = x
-                            self.serialControl.mGrower.Gr2.ySeq = y
-                        mssg = self.serialControl.mGrower.Gr2.time2Move()
-                    elif(fl=='3'):
-                        if(x!=0 and y!=0):
-                            self.serialControl.mGrower.Gr3.xSeq = x
-                            self.serialControl.mGrower.Gr3.ySeq = y
-                        mssg = self.serialControl.mGrower.Gr3.time2Move()
-                    elif(fl=='4'):
-                        if(x!=0 and y!=0):
-                            self.serialControl.mGrower.Gr4.xSeq = x
-                            self.serialControl.mGrower.Gr4.ySeq = y
-                        mssg = self.serialControl.mGrower.Gr4.time2Move()
-                    else:
-                        mssg = ''
-                        self.Msg2Log("error,Please provide a valid floor to start Grower sequence")
-                    if mssg != '':
-                        try:
-                            top = "{}/Grower{}".format(self.ID,fl)
-                            # Update MQTT command to start routine
-                            msgs = [{"topic": top, "payload": "OnLED1"},
-                                    {"topic": top, "payload": "OnLED2"},
-                                    {"topic": top, "payload": "DisableStream"}]
-                            publish.multiple(msgs, hostname = self.IP)
-                            self.Msg2Log("info,Checking Grower{} status to start sequence".format(fl))
-                        except Exception as e:
-                            self.Msg2Log("error,LAN/WLAN not found- Impossible use publish() [{}]".format(e))
-                    else: self.Msg2Log("error,Please provide a valid floor to start Grower sequence")
-                else: self.Msg2Log("error,Please provide valid arguments to start Grower sequence")
-            else: self.Msg2Log("error,motorsGrower device is disconnected. It is impossible to start a routine or sequence.")
         else: self.Msg2Log("error,inputHandler- {} Command Unknown".format(line))
     
     def loop(self):

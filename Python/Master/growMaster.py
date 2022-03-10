@@ -86,20 +86,6 @@ def mqttDisconnect(cliente, mqttObj):
     mqttObj.clientConnected = False
     mqttObj.actualTime = time()
 
-# Check where run this function to start sequence
-def startRoutine(grower):
-    serialFloor = mGrower.data[str(grower.floor)]
-    if serialFloor != "disconnected":
-        serialDevice = int((serialFloor)/4)
-        if serialControl.mgIsConnected[serialDevice]:
-            # Check if Grower is available
-            if grower.failedConnection == 0:
-                # It is time to move Grower
-                grower.time2Move(serialFloor)
-                top = "{}/Grower{}".format(ID, grower.floor) # This line seems useless
-                log.logger.info("Checking Grower{} status to start sequence".format(grower.floor))
-        else: log.logger.error("Cannot start sequence. Serial device [motorsGrower] is disconnected.")
-
 def checkSerialMsg(grower):
     # Resend serial messages without response for Growers
     serialFloor = mGrower.data[str(grower.floor)]

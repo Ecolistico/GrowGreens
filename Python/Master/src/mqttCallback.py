@@ -33,8 +33,6 @@ class mqttController:
         # Define aux variables
         self.clientConnected = False
         self.actualTime = time()
-        # Communication with MongoDB-Parse Server
-        self.serverIP = ''
         
     def update(self, ID, brokerIP, connector):
         self.ID = ID
@@ -53,14 +51,6 @@ class mqttController:
         elif(mssg.split(",")[1]=="critical"): logger.critical(mssg.split(",")[0])
         elif(mssg.endswith(",critical")): logger.critical(mssg.replace(",critical", ""))
         else: logger.debug(mssg)
-    
-    def onGrowerMsg(self, grower, message):
-        grower.connected = True
-        if(message.startswith("Photo Sequence taken") and grower.inRoutine):
-            grower.mqttReq("")
-            grower.serialReq("continueSequence,{}".format(grower.floor))
-            grower.actualTime = time()-120   
-        elif(message.startswith("cozir")): grower.str2array(message)
         
     # Callback fires when conected to MQTT broker.
     def on_connect(self, client, userdata, flags, rc):
@@ -93,7 +83,8 @@ class mqttController:
             if(device.startswith("Grower")):
                 level = int(device[-1]) - 1
                 self.Msg2Log(self.logGr[level], message)
-                self.onGrowerMsg(self.mGrower.Gr[level], message)
+                self.mGrower.Gr[level].connected = True  
+                if(message.startswith("cozir")): self.mGrower.Gr[level].str2array(message)
             elif(device == "esp32AirPrincipal"): 
                 self.logAirPrincipal.debug(message)
                 self.AirConnected['Principal']['status'] = True
@@ -135,10 +126,6 @@ class mqttController:
                 self.ESP32.esp32[level][2].connected = True
             # Ask again for the data if not complete
         
-        # Communication withb MongoDB-Parse Server
-        elif(device == 'Server' and not message.startswith('whatIsMyIP')):
-            self.serverIP = message
-        
         # Get messages directed to Master
         elif(device.startswith('Master')):
             # Check if we can start the routine or not
@@ -152,6 +139,7 @@ class mqttController:
                         floor = fl - serialDevice*4
                         self.mGrower.Gr[fl-1].serialReq("sequence_n,{},41,10".format(floor))
                         self.mGrower.Gr[fl-1].mqttReq("")
+                        self.mGrower.Gr[fl-1].actualTime = time()-120 
                         self.logMain.info("Starting Grower{} sequence".format(fl))
                     else:                    
                         self.mGrower.Gr[fl-1].time2Move(serialFloor)
@@ -166,10 +154,12 @@ class mqttController:
                     floor = fl - serialDevice*4
                     self.mGrower.Gr[fl-1].serialReq("continueSequence,{}".format(floor))
                     self.mGrower.Gr[fl-1].mqttReq("")
+                    self.mGrower.Gr[fl-1].actualTime = time()-120 
                     self.logMain.info("Grower{} continue sequence".format(fl))
                 else: self.logMain.error("Cannot continue sequence. Parameters (floor or serialFloor are wrong).")
 
             else: self.logMain.warning("Master MQTT request unknown. Message={}".format(message))
+        # DEBUG mqtt messages
         #else: self.logMain.warning("Unknown mqtt device={}, message={}".format(device, message))
             
     def on_publish(self, client, userdata, mid):
