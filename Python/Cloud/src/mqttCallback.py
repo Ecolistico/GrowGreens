@@ -12,7 +12,6 @@ class mqttController:
         self.log.info("Setting up Data Server..." )
         # Data and MQTT variables
         self.containerID = data["ID"]
-        self.number = data["number"]
         self.brokerIP = data["IP"]
         self.port = data["port"]
         self.actualTime = time()
@@ -71,7 +70,7 @@ class mqttController:
 
     # On Connect Callback for MQTT
     def on_connect(self, client, userdata, flags, rc):
-        Topic = "{}/Cloud{}".format(self.containerID, self.number)
+        Topic = "{}/Cloud".format(self.containerID)
         message = "MQTT"
         if(rc == 0):
             message += " Connection succesful"
@@ -92,7 +91,7 @@ class mqttController:
 
     # On Message Callback for MQTT
     def on_message(self, client, userdata, msg):        
-        logTopic = "{}/Cloud{}/log".format(self.containerID, self.number) # Output Topic
+        logTopic = "{}/Cloud/log".format(self.containerID) # Output Topic
         top = msg.topic # Input Topic
         device = top.split("/")[1] # Device name
         message = msg.payload.decode("utf-8") # Input message
