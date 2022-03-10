@@ -90,7 +90,7 @@ def checkSerialMsg(grower):
     # Resend serial messages without response for Growers
     serialFloor = mGrower.data[str(grower.floor)]
     if(serialFloor != "disconnected" and grower.serialRequest!="" and time()-grower.actualTime>120):
-        serialDevice = int((serialFloor)/4)
+        serialDevice = int(int(serialFloor)/4)
         serialControl.write(serialControl.motorsGrower[serialDevice], grower.serialRequest)
         grower.actualTime = time()
         log.logger.info("Resending Grower{} request: {}".format(grower.floor, grower.serialRequest))
