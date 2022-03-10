@@ -123,6 +123,7 @@ class serialController:
             # Send via MQTT Master Ready
             self.mGrower.Gr[num-1].serialReq("")
             self.mGrower.Gr[num-1].mqttReq("MasterReady")
+            self.mGrower.Gr[num-1].actualTime = time() - 20
             return True
         elif resp.startswith("Unavailable") and auxBool:
             self.stopGrower(num)
