@@ -4,9 +4,10 @@ import socket
 import struct
 import select
 import numpy as np
+from time import strftime, localtime
 
 class streamController:
-    def __init__(self, logger = None):
+    def __init__(self, ID = "", logger = None):
         self.log = logger
 
         # Socket variables
@@ -16,10 +17,12 @@ class streamController:
         self.sock.setblocking(False)
         
         self.path = '/home/pi/Documents/GrowGreens/Python/Cloud/captures/'
-        self.captures = 0
+        self.captures = 1
+        self.floor = 0
         self.connection = None
         self.inCapture = False
-        
+        self.ID = ID
+
         # Start a socket listening for connections on 0.0.0.0:9999
         # (0.0.0.0 means all interfaces)
         self.sock.bind((self.host, self.port))
@@ -39,7 +42,8 @@ class streamController:
 
     def end(self):
         if self.connection is not None:
-            self.captures = 0
+            self.captures = 1
+            self.floor = 0
             self.connection.close()
             self.sock.close()
             self.str2log("streamController - Ending socket", 2)
@@ -60,7 +64,8 @@ class streamController:
                     
                     # If the length is zero, quit the loop
                     if not self.image_len: 
-                        self.captures = 0
+                        self.captures = 1
+                        self.floor = 0
                         self.connection.close()
                         self.read_list.remove(s)
                         self.connection = None
@@ -79,7 +84,12 @@ class streamController:
                         self.img_arr = np.frombuffer(self.img_bytes, np.uint8)
                         self.img = cv2.imdecode(self.img_arr, cv2.IMREAD_COLOR)
                     
-                        self.name = 'test' + str(self.captures) + '.png'
+                        self.name = "{}_floor{}_".format(self.ID, self.floor)
+                        if self.captures<10: self.name += "000{}".format(self.captures)
+                        elif self.captures<100: self.name += "00{}".format(self.captures)
+                        elif self.captures<1000: self.name += "0{}".format(self.captures)
+                        else: self.name += "{}".format(self.captures)
+                        self.name += strftime("_%Y-%m-%d", localtime()) + '.png'
                         cv2.imwrite(self.path + self.name, self.img)
                         self.str2log("Capture: {} saved".format(self.name), 1)
                         self.captures += 1

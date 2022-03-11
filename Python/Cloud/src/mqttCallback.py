@@ -161,6 +161,7 @@ class mqttController:
             self.tucanReady = False
             self.lightsReady = False
             self.streamReady = False
+            self.takePicture = False
 
     def on_publish(self, client, userdata, mid):
         self.log.info("Message delivered")

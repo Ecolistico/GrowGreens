@@ -83,14 +83,14 @@ class mqttController:
             self.sendLog("Out1 On")
             if self.light == 0 or self.light ==2:
                 self.light += 1
-                if self.light == 3: publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
+            if self.light == 3: publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
 
         elif(message == "OnOut2"):
             self.grower.turnOn(self.grower.OUT2)
             self.sendLog("Out2 On")
             if self.light == 0 or self.light ==1:
                 self.light += 2
-                if self.light == 3: publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
+            if self.light == 3: publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
         
         elif(message == "OffOut1"):
             self.grower.turnOff(self.grower.OUT1)

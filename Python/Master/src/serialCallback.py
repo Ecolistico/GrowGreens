@@ -157,6 +157,8 @@ class serialController:
             self.mGrower.Gr[fl-1].mqttReq("RoutineFinished")
             self.mGrower.Gr[fl-1].serialReq("")
             self.mGrower.Gr[fl-1].inRoutine = False
+            self.mGrower.Gr[fl-1].startRoutine = False
+            self.mGrower.Gr[fl-1].count = 1
             self.mGrower.Gr[fl-1].actualTime = time()-20
             self.logMain.info("Grower{} routine finished".format(fl))
         else: self.logMain.error("GrowerRoutineFinish(): Grower{} does not exist".format(fl))
@@ -287,6 +289,7 @@ class serialController:
                                     elif resp.startswith("Routine Finished"):
                                         decition = True
                                         self.GrowerRoutineFinish(j+1)
+
 
                 except UnicodeDecodeError as e: self.logMG[i].error(e)
                 

@@ -12,6 +12,7 @@ class mqttController:
         self.log.info("Setting up Tucan..." )
         self.clientConnected = False
         self.actualTime = time()
+        self.pictureCounter = 1
         self.stream = stream
 
     def sendLog(self, mssg, logType = 0):
@@ -94,14 +95,16 @@ class mqttController:
                     publish.single("{}/Cloud".format(self.containerID), "StreamNotReady", hostname=self.brokerIP) 
             else: self.sendLog('startStreaming parameters are wrong', 3)
                 
-        elif (message.startswith("takePicture")):
-            self.sendLog('Taking picture...') 
+        elif (message.startswith("takePicture")): 
             if self.stream != None:
+                self.sendLog('Taking picture {}'.format(self.pictureCounter))
+                self.pictureCounter += 1
                 self.stream.captureStreaming()
             else: self.sendLog("Stream not configured")
             
         elif (message.startswith("endStreaming")):
             self.sendLog('Closing socket') 
+            self.pictureCounter = 1
             if self.stream != None:
                 self.stream.endStreaming()
             else: self.sendLog("Stream not configured")

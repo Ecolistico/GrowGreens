@@ -93,7 +93,9 @@ def checkSerialMsg(grower):
         serialDevice = int(int(serialFloor)/4)
         serialControl.write(serialControl.motorsGrower[serialDevice], grower.serialRequest)
         grower.actualTime = time()
-        log.logger.info("Resending Grower{} request: {}".format(grower.floor, grower.serialRequest))
+        if grower.serialRequestCounter == 0: log.logger.debug("Sending Grower{} serialRequest: {}".format(grower.floor, grower.serialRequest))
+        else: log.logger.warning("Resending Grower{} serialRequest: {}".format(grower.floor, grower.serialRequest))
+        grower.serialRequestCounter += 1
     else: pass
 
 def checkMqttMsg(grower):
@@ -121,6 +123,9 @@ def checkMqttMsg(grower):
             except Exception as e:
                 log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower{} request [{}]".format(grower.floor, e))
                 mqttDisconnect(client, mqttControl)
+        if grower.mqttRequestCounter == 0: log.logger.debug("Sending Grower{} mqttRequest: {}".format(grower.floor, grower.mqttRequest))
+        else: log.logger.warning("Resending Grower{} mqttRequest: {}".format(grower.floor, grower.mqttRequest))
+        grower.mqttRequestCounter += 1
         grower.actualTime = time()
 
 # Aux Variables

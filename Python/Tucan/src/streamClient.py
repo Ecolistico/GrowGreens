@@ -34,7 +34,7 @@ class streamClient:
         self.sock.connect((host, port))
         mssg = 'Connected to host: ' + str(host) + ', at port: ' + str(port)
         self.str2log(mssg, 1)
-        
+
     def cameraSetup(self):
         self.camera.resolution = (self.xres*2, self.yres)
         self.camera.framerate = 20
@@ -61,6 +61,7 @@ class streamClient:
         # Write a length of zero to the stream to signal we're done
         self.connection.write(struct.pack('<L', 0))
         self.connection.flush()
+        self.sock.close()
 
 def main():    
     tucan = streamClient()

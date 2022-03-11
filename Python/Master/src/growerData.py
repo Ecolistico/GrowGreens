@@ -13,6 +13,8 @@ class grower:
         self.count = 1
         self.serialRequest = ""
         self.mqttRequest = ""
+        self.serialRequestCounter = 0
+        self.mqttRequestCounter = 0
         self.actualTime = time()
         
         self.Temp = 0
@@ -27,10 +29,12 @@ class grower:
         
     def serialReq(self, req):
         self.serialRequest = req
+        self.serialRequestCounter = 0
         self.actualTime = time()
         
     def mqttReq(self, req):
         self.mqttRequest = req
+        self.mqttRequestCounter = 0
         self.actualTime = time()
     
     def checkValue(self, val, variable):

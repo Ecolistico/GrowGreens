@@ -68,6 +68,8 @@ class logger:
         
         # Individual devices and loggers
         self.logger_generalControl = logging.getLogger('generalControl')
+        self.logger_Tucan = logging.getLogger('Tucan')
+        self.logger_Cloud = logging.getLogger('Cloud')
         self.logger_ihp = logging.getLogger('iHP')
         self.logger_AirPrincipal = logging.getLogger('AirPrincipal')
         self.logger_AirReturn = logging.getLogger('AirReturn')
@@ -97,6 +99,10 @@ class logger:
         
         handler_generalControl = logging.handlers.RotatingFileHandler('./temp/generalControl.log', maxBytes = 5*1024*1024, backupCount = 2)
         handler_generalControl.setLevel(logging.DEBUG)
+        handler_Tucan = logging.handlers.RotatingFileHandler('./temp/Tucan.log', maxBytes = 5*1024*1024, backupCount = 2)
+        handler_Tucan.setLevel(logging.DEBUG)
+        handler_Cloud = logging.handlers.RotatingFileHandler('./temp/Cloud.log', maxBytes = 5*1024*1024, backupCount = 2)
+        handler_Cloud.setLevel(logging.DEBUG)
         handler_ihp = logging.handlers.RotatingFileHandler('./temp/iHP.log', maxBytes = 4*1024*1024, backupCount = 2)
         handler_ihp.setLevel(logging.DEBUG)
         handler_AirPrincipal = logging.handlers.RotatingFileHandler('./temp/AirPrincipal.log', maxBytes = 1*1024*1024, backupCount = 2)
@@ -113,6 +119,8 @@ class logger:
             handler_motorsGrower[i].setFormatter(formatter)
         for i in range(floors): handler_grower[i].setFormatter(formatter)
         handler_generalControl.setFormatter(formatter)
+        handler_Tucan.setFormatter(formatter)
+        handler_Cloud.setFormatter(formatter)
         handler_ihp.setFormatter(formatter)
         handler_AirPrincipal.setFormatter(formatter)
         handler_AirReturn.setFormatter(formatter)
@@ -124,6 +132,8 @@ class logger:
             self.logger_motorsGrower[i].addHandler(handler_motorsGrower[i])
         for i in range(floors): self.logger_grower[i].addHandler(handler_grower[i])
         self.logger_generalControl.addHandler(handler_generalControl)
+        self.logger_Tucan.addHandler(handler_Tucan)
+        self.logger_Cloud.addHandler(handler_Cloud)
         self.logger_ihp.addHandler(handler_ihp)
         self.logger_AirPrincipal.addHandler(handler_AirPrincipal)
         self.logger_AirReturn.addHandler(handler_AirReturn)

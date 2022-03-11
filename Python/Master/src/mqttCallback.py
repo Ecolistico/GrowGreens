@@ -22,6 +22,8 @@ class mqttController:
         for i in range(len(logger.logger_grower)):  self.logGr.append(logger.logger_grower[i])
         self.logger_esp32 = []
         for i in range(len(logger.logger_esp32)): self.logger_esp32.append(logger.logger_esp32[i])
+        self.logTucan = logger.logger_Tucan
+        self.logCloud = logger.logger_Cloud
         self.logAirPrincipal = logger.logger_AirPrincipal
         self.logAirReturn = logger.logger_AirReturn
         # Define ESP32´s object
@@ -85,6 +87,8 @@ class mqttController:
                 self.Msg2Log(self.logGr[level], message)
                 self.mGrower.Gr[level].connected = True  
                 if(message.startswith("cozir")): self.mGrower.Gr[level].str2array(message)
+            elif(device == ("Tucan")): self.logTucan.debug(message)
+            elif(device == ("Cloud")): self.logCloud.debug(message)
             elif(device == "esp32AirPrincipal"): 
                 self.logAirPrincipal.debug(message)
                 self.AirConnected['Principal']['status'] = True
@@ -103,6 +107,8 @@ class mqttController:
         elif(top.endswith("error")):
             if(device == "esp32AirPrincipal"): self.logAirPrincipal.error(message)
             elif(device == "esp32AirReturn"): self.logAirReturn.error(message)
+            elif(device == ("Tucan")): self.logTucan.error(message)
+            elif(device == ("Cloud")): self.logCloud.error(message)
             elif(device.startswith("esp32")):
                 level = int(device[-1]) - 1
                 pos = device[5:-1]

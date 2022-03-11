@@ -38,7 +38,7 @@ log = logger()
 with open("config.json") as f: data = json.load(f)
 
 # From streamCallback
-streamControl = streamController(log.logger)
+streamControl = streamController(data["ID"], log.logger)
 data['port'] = streamControl.port
 
 # From mqttCallback
@@ -97,6 +97,7 @@ try:
         #if streamControl.isStreaming and not streamControl.savePicture and mqttControl.routineStarted:
         #    publish.single("{}/Master".format(data["ID"]), "continueRoutine", hostname = data["IP"])
         
+        # Update MQTT variables with stream variables
         if mqttControl.takePicture:
             mqttControl.takePicture = False
             streamControl.inCapture = True
@@ -105,6 +106,8 @@ try:
             waitNextMove = False
             publish.single("{}/Master".format(data["ID"]), 'continueSequence,{}'.format(mqttControl.inRoutine), hostname=data["IP"])
 
+        if streamControl.floor != mqttControl.inRoutine: streamControl.floor = mqttControl.inRoutine
+        
         # Stream loop
         streamControl.streaming()
         
