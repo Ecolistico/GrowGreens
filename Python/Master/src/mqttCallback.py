@@ -161,7 +161,7 @@ class mqttController:
                     self.mGrower.Gr[fl-1].serialReq("continueSequence,{}".format(floor))
                     self.mGrower.Gr[fl-1].mqttReq("")
                     self.mGrower.Gr[fl-1].actualTime = time()-120 
-                    self.logMain.info("Grower{} continue sequence".format(fl))
+                    self.logMain.debug("Grower{} continue sequence".format(fl))
                 else: self.logMain.error("Cannot continue sequence. Parameters (floor or serialFloor are wrong).")
 
             else: self.logMain.warning("Master MQTT request unknown. Message={}".format(message))
