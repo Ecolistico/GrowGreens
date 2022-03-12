@@ -1,5 +1,6 @@
 import io
 import cv2
+import zlib
 import socket
 import struct
 import select
@@ -73,25 +74,24 @@ class streamController:
                     else:
                         # Construct a stream to hold the image data and read the 
                         # image data from the connection
-                        self.image_stream = io.BytesIO()
+                        image_stream = io.BytesIO()
                         myImage = self.connection.read(self.image_len)
-                        
-                        self.image_stream.write(myImage)
+                        image_stream.write(myImage)
                         # Rewind the stream, save it as an image with opencv
-                        self.image_stream.seek(0)
-                        
-                        self.img_bytes = self.image_stream.getvalue()
-                        self.img_arr = np.frombuffer(self.img_bytes, np.uint8)
-                        self.img = cv2.imdecode(self.img_arr, cv2.IMREAD_COLOR)
+                        image_stream.seek(0)
+                        # Decompress the image data
+                        img_bytes = zlib.decompress(image_stream.getvalue())
+                        img_arr = np.frombuffer(img_bytes, np.uint8)
+                        img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
                     
-                        self.name = "{}_floor{}_".format(self.ID, self.floor)
-                        if self.captures<10: self.name += "000{}".format(self.captures)
-                        elif self.captures<100: self.name += "00{}".format(self.captures)
-                        elif self.captures<1000: self.name += "0{}".format(self.captures)
-                        else: self.name += "{}".format(self.captures)
-                        self.name += strftime("_%Y-%m-%d", localtime()) + '.png'
-                        cv2.imwrite(self.path + self.name, self.img)
-                        self.str2log("Capture: {} saved".format(self.name), 1)
+                        name = "{}_floor{}_".format(self.ID, self.floor)
+                        if self.captures<10: name += "000{}".format(self.captures)
+                        elif self.captures<100: name += "00{}".format(self.captures)
+                        elif self.captures<1000: name += "0{}".format(self.captures)
+                        else: name += "{}".format(self.captures)
+                        name += strftime("_%Y-%m-%d", localtime()) + '.png'
+                        cv2.imwrite(self.path + name, img)
+                        self.str2log("Capture: {} saved".format(name), 1)
                         self.captures += 1
                         self.inCapture = False
                         

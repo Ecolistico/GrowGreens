@@ -2,9 +2,10 @@
 
 # Import Directories
 import io
+import time
+import zlib
 import socket
 import struct
-import time
 import picamera
 
 class streamClient:
@@ -44,14 +45,18 @@ class streamClient:
         self.str2log('Camera ready!', 1)
         
     def captureStreaming(self):
+        # Capture the image
         self.camera.capture(self.stream, 'png')
+        # Compress the image to speed up the process
+        data = zlib.compress(self.stream.read())
+
         # Write the length of the capture to the stream and flush to ensure it actually gets sent
-        self.connection.write(struct.pack('<L', self.stream.tell()))
+        self.connection.write(struct.pack('<L', len(data)))
         self.connection.flush()
         
         # Rewind the stream and send the image data over the wire
         self.stream.seek(0)
-        self.connection.write(self.stream.read())
+        self.connection.write(data)
         
         # Reset the stream for the next capture
         self.stream.seek(0)
