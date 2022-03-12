@@ -5,7 +5,7 @@ import socket
 import struct
 import select
 import numpy as np
-from time import strftime, localtime
+from time import time, strftime, localtime
 
 class streamController:
     def __init__(self, ID = "", logger = None):
@@ -72,6 +72,8 @@ class streamController:
                         self.connection = None
                         self.str2log("streamController - Closing Connection", 1)
                     else:
+                        # See the timing
+                        timer = time()
                         # Construct a stream to hold the image data and read the 
                         # image data from the connection
                         image_stream = io.BytesIO()
@@ -94,6 +96,7 @@ class streamController:
                         self.str2log("Capture: {} saved".format(name), 1)
                         self.captures += 1
                         self.inCapture = False
+                        self.str2log("Time in streamReconstruction = {} s".format(time()-timer), 2)
                         
                 """
                 data = s.recv(1024)
