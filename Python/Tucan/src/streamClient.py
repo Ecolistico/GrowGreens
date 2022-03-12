@@ -39,7 +39,16 @@ class streamClient:
     def cameraSetup(self):
         self.camera.resolution = (self.xres*2, self.yres)
         self.camera.framerate = 20
-        self.camera.hflip = False        
+        self.camera.hflip = False
+        # Add camera settings
+        # Set ISO to the desired value
+        self.camera.iso = 150
+        # Now fix the values
+        self.camera.shutter_speed = self.camera.exposure_speed
+        self.camera.exposure_mode = 'off'
+        g = self.camera.awb_gains
+        self.camera.awb_mode = 'off'
+        self.camera.awb_gains = g
         # Let the camera warm up for 2 seconds
         time.sleep(2)
         self.str2log('Camera ready!', 1)
@@ -49,7 +58,7 @@ class streamClient:
         self.camera.capture(self.stream, 'png')
         # Compress the image to speed up the process
         data = zlib.compress(self.stream.read())
-
+        self.str2log("Byte of images = {}".format(len(data)), 1) # Debug differents sizes of data using png, raw, yuv or any other format
         # Write the length of the capture to the stream and flush to ensure it actually gets sent
         self.connection.write(struct.pack('<L', len(data)))
         self.connection.flush()
