@@ -82,7 +82,7 @@ def mainClose():
     log.shutdown()
 
 try:
-    mainInit()
+    # mainInit() # DEBUG only
     while run:
         # Check WiFi Loop
         if(time()- WiFiTime > 20):

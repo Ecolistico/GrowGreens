@@ -58,8 +58,7 @@ class mqttController:
         if self.masterReady and self.growerReady and self.tucanReady:
             # Prepare all devices
             ip = getIPaddr().split(" ")[0]
-            msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OnOut1"},
-                    {"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OnOut2"},
+            msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "IrOn"},
                     {"topic": "{}/Tucan".format(self.containerID), "payload": "startStreaming,{},{}".format(ip, self.port)}]
             publish.multiple(msgs, hostname = self.brokerIP)
 
@@ -150,8 +149,7 @@ class mqttController:
         elif(message.startswith("RoutineFinished")):
             # Send messages to turn off lights and streaming
             ip = getIPaddr().split(" ")[0]
-            msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OffOut1"},
-                    {"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OffOut2"},
+            msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "IrOff"},
                     {"topic": "{}/Tucan".format(self.containerID), "payload": "endStreaming"}]
             publish.multiple(msgs, hostname = self.brokerIP)
             self.inRoutine = 0

@@ -104,6 +104,17 @@ class mqttController:
             if self.light == 3 or self.light == 2:
                 self.light -= 2
         
+        elif(message == "IrOn"):
+            self.grower.turnOn(self.grower.SCL)
+            self.grower.turnOn(self.grower.SDA)
+            self.sendLog("Ir On")
+            publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
+
+        elif(message == "IrOff"):
+            self.grower.turnOff(self.grower.SCL)
+            self.grower.turnOff(self.grower.SDA)
+            self.sendLog("Ir Off")
+
         elif(message == "whatIsMyIP"):
             mssg = "IP={}".format(self.grower.whatIsMyIP())
             self.sendLog(mssg, 1)
