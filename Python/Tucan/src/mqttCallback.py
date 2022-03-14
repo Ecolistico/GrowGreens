@@ -6,14 +6,21 @@ import paho.mqtt.publish as publish
 
 class mqttController:
     def __init__(self, data, logger = None, stream = None):
+        # Log variables
         self.log = logger
         self.containerID = data["ID"]
         self.brokerIP = data["IP"]
         self.log.info("Setting up Tucan..." )
+
+        # MQTT Variables
         self.clientConnected = False
         self.actualTime = time()
+
+        # Streaming variables
         self.pictureCounter = 1
         self.stream = stream
+        self.inStream = False
+        self.streamTimer = time()
 
     def sendLog(self, mssg, logType = 0):
         logTopic = "{}/Tucan/log".format(self.containerID)
@@ -49,7 +56,16 @@ class mqttController:
             mssg += ",debug"
             
         publish.single(logTopic, mssg, hostname = self.brokerIP)
-        
+    
+    # Function to end streaming
+    def endStreaming(self):
+        self.sendLog('Closing socket') 
+        self.pictureCounter = 1
+        self.inStream = False
+        if self.stream != None:
+            self.stream.endStreaming()
+        else: self.sendLog("Stream not configured")
+
     # On Connect Callback for MQTT
     def on_connect(self, client, userdata, flags, rc):
         Topic = "{}/Tucan".format(self.containerID)
@@ -89,6 +105,8 @@ class mqttController:
                 if self.stream != None:
                     self.stream.clientConnect(mssgSplit[1], int(mssgSplit[2]))
                     publish.single("{}/Cloud".format(self.containerID), "StreamReady", hostname=self.brokerIP)
+                    self.inStream = True
+                    self.streamTimer = time()
                 else: 
                     publish.single("{}/Cloud".format(self.containerID), "StreamNotReady", hostname=self.brokerIP) 
             else: self.sendLog('startStreaming parameters are wrong', 3)
@@ -98,14 +116,10 @@ class mqttController:
                 self.sendLog('Taking picture {}'.format(self.pictureCounter))
                 self.pictureCounter += 1
                 self.stream.captureStreaming()
+                self.streamTimer = time()
             else: self.sendLog("Stream not configured")
             
-        elif (message.startswith("endStreaming")):
-            self.sendLog('Closing socket') 
-            self.pictureCounter = 1
-            if self.stream != None:
-                self.stream.endStreaming()
-            else: self.sendLog("Stream not configured")
+        elif (message.startswith("endStreaming")): self.endStreaming()
         
         elif (message.startswith("StartRoutine")):
             # Here goes the bluetooth validation with Grower for now just ignore it

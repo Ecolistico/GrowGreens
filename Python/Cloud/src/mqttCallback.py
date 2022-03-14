@@ -24,6 +24,7 @@ class mqttController:
         self.lightsReady = False
         self.streamReady = False
         self.takePicture = False
+        self.routineTimer = time()
 
     def sendLog(self, mssg, logType = 0):
         logTopic = "{}/Cloud/log".format(self.containerID)
@@ -67,6 +68,21 @@ class mqttController:
             publish.single("{}/Master".format(self.containerID), "StartRoutineNow,{}".format(self.inRoutine), hostname = self.brokerIP)
             self.routineStarted = True
 
+    def finishRoutine(self):
+        # Send messages to turn off lights and streaming
+            ip = getIPaddr().split(" ")[0]
+            msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "IrOff"},
+                    {"topic": "{}/Tucan".format(self.containerID), "payload": "endStreaming"}]
+            publish.multiple(msgs, hostname = self.brokerIP)
+            self.inRoutine = 0
+            self.routineStarted = False
+            self.masterReady = False
+            self.growerReady = False
+            self.tucanReady = False
+            self.lightsReady = False
+            self.streamReady = False
+            self.takePicture = False
+
     # On Connect Callback for MQTT
     def on_connect(self, client, userdata, flags, rc):
         Topic = "{}/Cloud".format(self.containerID)
@@ -99,6 +115,7 @@ class mqttController:
         if(message.startswith("StartRoutine")):
             if self.inRoutine == 0:
                 self.inRoutine = int(message.split(",")[1])
+                self.routineTimer = time()
                 if self.inRoutine>0 and self.inRoutine<=8:
                     # Ask to all devices if they are ready
                     msgs = [{"topic": "{}/Master".format(self.containerID), "payload": message},
@@ -114,52 +131,46 @@ class mqttController:
         elif(message.startswith("MasterReady")):
             # Master is ready when motors are ready available
             self.masterReady = True
+            self.routineTimer = time()
             self.isRoutineReady()
             
         elif(message.startswith("GrowerReady")):
             # Grower is ready when detects Tucan Module by bluetooth
             self.growerReady = True
+            self.routineTimer = time()
             self.isRoutineReady()
             
         elif(message.startswith("TucanReady")):
             # Tucan is ready when detects Grower module by bluetooth and recognize
             # the routines runs in the same floor that the closest Grower
             self.tucanReady = True
+            self.routineTimer = time()
             self.isRoutineReady()
             
         elif(message.startswith("LightsReady")):
             # Light are ready when Grower module turns on both of them
             self.lightsReady = True
+            self.routineTimer = time()
             self.startRoutine()
 
         elif(message.startswith("StreamReady")):
             # Stream is ready when Tucan module stablish communication with Cloud
             self.streamReady = True
+            self.routineTimer = time()
             self.startRoutine()
         
         elif(message.startswith("StreamNotReady")):
             # Stream failed
             self.streamReady = False
             self.sendLog("Tucan streaming communication failed", 4)
+            self.finishRoutine()
 
         elif(message.startswith("takePicture")):
             # Set flag takePicture true
+            self.routineTimer = time()
             self.takePicture = True
 
-        elif(message.startswith("RoutineFinished")):
-            # Send messages to turn off lights and streaming
-            ip = getIPaddr().split(" ")[0]
-            msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "IrOff"},
-                    {"topic": "{}/Tucan".format(self.containerID), "payload": "endStreaming"}]
-            publish.multiple(msgs, hostname = self.brokerIP)
-            self.inRoutine = 0
-            self.routineStarted = False
-            self.masterReady = False
-            self.growerReady = False
-            self.tucanReady = False
-            self.lightsReady = False
-            self.streamReady = False
-            self.takePicture = False
+        elif(message.startswith("RoutineFinished")): self.finishRoutine()            
 
     def on_publish(self, client, userdata, mid):
         self.log.info("Message delivered")

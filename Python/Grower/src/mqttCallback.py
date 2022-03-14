@@ -8,14 +8,22 @@ from Grower import Grower
 
 class mqttController:
     def __init__(self, logger):
+        # Log variables
         self.log = logger
         self.containerID, self.floor, self.brokerIP = sysGrower.getData_JSON(sysGrower.MQTT_PATH)
         self.log.info("Setting up Grower..." )
+
+        # Grower Variables
         self.grower = Grower(self.log)
-        self.log.info("Setting Up Streaming..." )
+        
+        # Mqtt Variables
         self.clientConnected = False
         self.actualTime = time()
+
+        # Aux variables
         self.light = 0
+        self.ir = False
+        self.lightTimer = time()
 
     def update(self):
         self.containerID, self.floor, self.brokerIP = sysGrower.getData_JSON(sysGrower.MQTT_PATH)
@@ -49,7 +57,17 @@ class mqttController:
             mssg += ",debug"
             
         publish.single(logTopic, mssg, hostname = self.brokerIP)
-        
+    
+    # Turn off all lights after 3 hours
+    def turnOff_TIMEOUT(self):
+        if((self.ir or self.light!=0) and time()-self.lightTimer > 180*60):
+            self.grower.turnOff(self.grower.OUT1)
+            self.grower.turnOff(self.grower.OUT2)
+            self.grower.turnOff(self.grower.SCL)
+            self.grower.turnOff(self.grower.SDA)
+            self.light = 0
+            self.ir = False
+
     # On Conenct Callback for MQTT
     def on_connect(self, client, userdata, flags, rc):
         Topic = "{}/Grower{}".format(self.containerID, self.floor)
@@ -84,6 +102,7 @@ class mqttController:
             if self.light == 0 or self.light ==2:
                 self.light += 1
             if self.light == 3: publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
+            self.lightTimer = time()
 
         elif(message == "OnOut2"):
             self.grower.turnOn(self.grower.OUT2)
@@ -91,6 +110,7 @@ class mqttController:
             if self.light == 0 or self.light ==1:
                 self.light += 2
             if self.light == 3: publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
+            self.lightTimer = time()
         
         elif(message == "OffOut1"):
             self.grower.turnOff(self.grower.OUT1)
@@ -109,6 +129,7 @@ class mqttController:
             self.grower.turnOn(self.grower.SDA)
             self.sendLog("Ir On")
             publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
+            self.lightTimer = time()
 
         elif(message == "IrOff"):
             self.grower.turnOff(self.grower.SCL)

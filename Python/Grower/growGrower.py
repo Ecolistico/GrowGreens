@@ -141,6 +141,7 @@ try:
         if(WiFiState==1 and client!=None):
             # If client connected
             if mqttControl.clientConnected:
+                mqttControl.turnOff_TIMEOUT()
                 client.loop()
             # Else try to reconnect every 30s
             elif(time()-mqttControl.actualTime>30):

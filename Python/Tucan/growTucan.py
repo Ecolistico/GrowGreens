@@ -62,7 +62,9 @@ except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".f
 try:
     while run:
         # If mqtt connected check for messages
-        if mqttControl.clientConnected: client.loop(0.2)
+        if mqttControl.clientConnected: 
+            if(mqttControl.inStream and time()-mqttControl.streamTimer > 15*60): mqttControl.endStreaming()
+            client.loop(0.2)
         else:
             sleep(0.2)
             # Else try to reconnect every 30s
