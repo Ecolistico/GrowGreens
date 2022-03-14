@@ -101,6 +101,7 @@ def checkSerialMsg(grower):
 def checkMqttMsg(grower):
     # Resend mqtt messages withouth response in 20s for Growers
     if(grower.mqttRequest!="" and time()-grower.actualTime>20):
+        req2log = grower.mqttRequest
         if grower.mqttRequest=="RoutineFinished":
             mssg = "RoutineFinished"
             device = "Cloud"
@@ -123,8 +124,8 @@ def checkMqttMsg(grower):
             except Exception as e:
                 log.logger.error("LAN/WLAN not found- Impossible use publish() to resend Grower{} request [{}]".format(grower.floor, e))
                 mqttDisconnect(client, mqttControl)
-        if grower.mqttRequestCounter == 0: log.logger.debug("Sending Grower{} mqttRequest: {}".format(grower.floor, grower.mqttRequest))
-        else: log.logger.warning("Resending Grower{} mqttRequest: {}".format(grower.floor, grower.mqttRequest))
+        if grower.mqttRequestCounter == 0: log.logger.debug("Sending Grower{} mqttRequest: {}".format(grower.floor, req2log))
+        else: log.logger.warning("Resending Grower{} mqttRequest: {}".format(grower.floor, req2log))
         grower.mqttRequestCounter += 1
         grower.actualTime = time()
 

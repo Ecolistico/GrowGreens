@@ -72,8 +72,6 @@ class streamController:
                         self.connection = None
                         self.str2log("streamController - Closing Connection", 1)
                     else:
-                        # See the timing
-                        timer = time()
                         # Construct a stream to hold the image data and read the 
                         # image data from the connection
                         image_stream = io.BytesIO()
@@ -81,11 +79,8 @@ class streamController:
                         image_stream.write(myImage)
                         # Rewind the stream, save it as an image with opencv
                         image_stream.seek(0)
-                        self.str2log("Time in streamRead = {} s".format(time()-timer), 2)
-                        timer = time()
-
-                        # Decompress the image data
-                        #img_bytes = zlib.decompress(image_stream.getvalue())
+                        
+                        # Get the image
                         img_bytes = image_stream.getvalue()
                         img_arr = np.frombuffer(img_bytes, np.uint8)
                         img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
@@ -100,7 +95,6 @@ class streamController:
                         self.str2log("Capture: {} saved".format(name), 1)
                         self.captures += 1
                         self.inCapture = False
-                        self.str2log("Time in decompression and save = {} s".format(time()-timer), 2)
                         
                 """
                 data = s.recv(1024)
