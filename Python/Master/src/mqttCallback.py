@@ -35,6 +35,9 @@ class mqttController:
         # Define aux variables
         self.clientConnected = False
         self.actualTime = time()
+        # Routine variables
+        self.inRoutine = 0
+        self.routineTimer = time()
         
     def update(self, ID, brokerIP, connector):
         self.ID = ID
@@ -53,7 +56,31 @@ class mqttController:
         elif(mssg.split(",")[1]=="critical"): logger.critical(mssg.split(",")[0])
         elif(mssg.endswith(",critical")): logger.critical(mssg.replace(",critical", ""))
         else: logger.debug(mssg)
+    
+    def finishRoutine(self):
+        fl = self.inRoutine
+        serialFloor = self.mGrower.data[str(fl)]
         
+        if(fl>0 and fl<=len(self.logGrower)):
+            self.mGrower.Gr[fl-1].count = 1
+            self.mGrower.Gr[fl-1].mqttReq("RoutineFinished")
+            
+            serialFloor = int(serialFloor)
+            serialDevice = int((serialFloor-1)/4)
+            floor = fl - serialDevice*4
+            self.mGrower.Gr[fl-1].serialReq("stopSequence,{}".format(floor))
+            
+            self.mGrower.Gr[fl-1].inRoutine = False
+            self.mGrower.Gr[fl-1].startRoutine = False
+            self.mGrower.Gr[fl-1].count = 1
+            self.mGrower.Gr[fl-1].actualTime = time()-20
+            self.logMain.error("TIMEOUT Grower{} routine finished".format(fl))
+        
+        else: self.logMain.error("GrowerRoutineFinish(): Grower{} does not exist".format(fl))
+        
+        self.inRoutine = 0
+        self.routineTimer = time()
+
     # Callback fires when conected to MQTT broker.
     def on_connect(self, client, userdata, flags, rc):
         Topic = "{}/#".format(self.ID)
@@ -141,6 +168,8 @@ class mqttController:
                 if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
                     serialFloor = int(serialFloor)
                     serialDevice = int((serialFloor-1)/4)
+                    self.inRoutine = fl
+                    self.routineTimer = time()
                     if(message.startswith("StartRoutineNow")):
                         floor = fl - serialDevice*4
                         self.mGrower.Gr[fl-1].serialReq("sequence_n,{},41,10".format(floor))
@@ -151,9 +180,11 @@ class mqttController:
                         self.mGrower.Gr[fl-1].time2Move(serialFloor)
                         self.logMain.info("Checking Grower{} status to start sequence".format(fl))
                 else: self.logMain.error("Cannot start sequence. Parameters (floor or serialFloor are wrong).")
+
             elif(message.startswith('continueSequence')):
                 fl = int(message.split(",")[1]) # Floor
                 serialFloor = self.mGrower.data[str(fl)]
+                self.routineTimer = time()
                 if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
                     serialFloor = int(serialFloor)
                     serialDevice = int((serialFloor-1)/4)

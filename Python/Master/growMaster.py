@@ -219,7 +219,9 @@ try:
         now = datetime.now()
 
         # If mqtt connected check for messages
-        if mqttControl.clientConnected: client.loop(0.2)
+        if mqttControl.clientConnected: 
+            if(mqttControl.inRoutine!=0 and time()-mqttControl.routineTimer>15*60): mqttControl.finishRoutine()
+            client.loop(0.2)
         else:
             sleep(0.2)
             # Else try to reconnect every 30s
