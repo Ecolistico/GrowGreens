@@ -82,7 +82,7 @@ class streamController:
                         # Rewind the stream, save it as an image with opencv
                         image_stream.seek(0)
                         self.str2log("Time in streamRead = {} s".format(time()-timer), 2)
-                        timer = millis()
+                        timer = time()
 
                         # Decompress the image data
                         #img_bytes = zlib.decompress(image_stream.getvalue())
