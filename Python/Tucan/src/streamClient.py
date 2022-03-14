@@ -58,18 +58,22 @@ class streamClient:
         self.camera.capture(self.stream, 'png')
         # Compress the image to speed up the process
         data = zlib.compress(self.stream.read())
-        self.str2log("Byte of images = {}".format(len(data)), 1) # Debug differents sizes of data using png, raw, yuv or any other format
+        originalLen = self.stream.tell()
+        self.str2log("Byte of images = {} vs {}".format(len(data), originalLen), 1) # Debug differents sizes of data using png, raw, yuv or any other format
         # Write the length of the capture to the stream and flush to ensure it actually gets sent
-        self.connection.write(struct.pack('<L', len(data)))
+        #self.connection.write(struct.pack('<L', len(data)))
+        self.connection.write(struct.pack('<L', originalLen))
         self.connection.flush()
         
         # Rewind the stream and send the image data over the wire
         self.stream.seek(0)
-        self.connection.write(data)
+        #self.connection.write(data)
+        self.connection.write(self.stream.read())
         
         # Reset the stream for the next capture
         self.stream.seek(0)
         self.stream.truncate()
+        self.str2log("captureStreaming() Finished", 1)
         
     def endStreaming(self):
         # Write a length of zero to the stream to signal we're done

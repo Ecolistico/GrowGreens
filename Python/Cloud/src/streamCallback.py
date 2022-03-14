@@ -85,7 +85,8 @@ class streamController:
                         timer = millis()
 
                         # Decompress the image data
-                        img_bytes = zlib.decompress(image_stream.getvalue())
+                        #img_bytes = zlib.decompress(image_stream.getvalue())
+                        img_bytes = image_stream.getvalue()
                         img_arr = np.frombuffer(img_bytes, np.uint8)
                         img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
                     
