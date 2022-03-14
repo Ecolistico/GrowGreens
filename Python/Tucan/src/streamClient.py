@@ -11,15 +11,12 @@ import picamera
 class streamClient:
     def __init__(self, logger = None):
         self.log = logger
-        self.sock = socket.socket()
 
         self.camera = picamera.PiCamera(stereo_mode='side-by-side', stereo_decimate=0)
         self.xres = 1280
         self.yres = 720 
         
         self.stream = io.BytesIO()
-        # Make a file-like object out of the connection
-        self.connection = self.sock.makefile('wb')
     
     def str2log(self, mssg, level = 1):
         if self.log is not None:
@@ -31,6 +28,9 @@ class streamClient:
         else: print(mssg)
         
     def clientConnect(self, host, port):
+        self.sock = socket.socket()
+        # Make a file-like object out of the connection
+        self.connection = self.sock.makefile('wb')
         # Connect a client socket to host:port
         self.sock.connect((host, port))
         mssg = 'Connected to host: ' + str(host) + ', at port: ' + str(port)
@@ -42,15 +42,17 @@ class streamClient:
         self.camera.hflip = False
         # Add camera settings
         # Set ISO to the desired value
-        #self.camera.iso = 150
-        # Now fix the values
-        #self.camera.shutter_speed = self.camera.exposure_speed
-        #self.camera.exposure_mode = 'off'
-        #g = self.camera.awb_gains
-        #self.camera.awb_mode = 'off'
-        #self.camera.awb_gains = g
-        # Let the camera warm up for 2 seconds
+        self.camera.iso = 150
+        # Wait for the automatic gain control to settle
         time.sleep(2)
+        # Now fix the values
+        self.camera.shutter_speed = self.camera.exposure_speed
+        self.camera.exposure_mode = 'off'
+        g = self.camera.awb_gains
+        self.camera.awb_mode = 'off'
+        self.camera.awb_gains = g
+        # Let the camera warm up for 2 seconds
+        #time.sleep(2)
         self.str2log('Camera ready!', 1)
         
     def captureStreaming(self):

@@ -82,8 +82,6 @@ class mqttController:
         top = msg.topic # Input Topic
         message = msg.payload.decode("utf-8") # Input message
         
-        # Change messages from the ones needed to be changed
-
         if(message.startswith("startStreaming")):
             self.sendLog('Opening socket to start streaming')
             mssgSplit = message.split(",")
