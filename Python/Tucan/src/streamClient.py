@@ -42,13 +42,13 @@ class streamClient:
         self.camera.hflip = False
         # Add camera settings
         # Set ISO to the desired value
-        self.camera.iso = 150
+        #self.camera.iso = 150
         # Now fix the values
-        self.camera.shutter_speed = self.camera.exposure_speed
-        self.camera.exposure_mode = 'off'
-        g = self.camera.awb_gains
-        self.camera.awb_mode = 'off'
-        self.camera.awb_gains = g
+        #self.camera.shutter_speed = self.camera.exposure_speed
+        #self.camera.exposure_mode = 'off'
+        #g = self.camera.awb_gains
+        #self.camera.awb_mode = 'off'
+        #self.camera.awb_gains = g
         # Let the camera warm up for 2 seconds
         time.sleep(2)
         self.str2log('Camera ready!', 1)
