@@ -268,12 +268,9 @@ class serialController:
                             if(self.mGrower.Gr[j].serialRequest.startswith("sequence") and self.mGrower.Gr[j].startRoutine and not decition):
                                 resp, num = self.getGrowerLine(line2)
                                 num += i*4 # Add 4 for each serialDevice to get the correct growerNumber
-                                self.logMain.critical("YEEEES")
                                 if(num==int(self.mGrower.data[str(j+1)])):
-                                    self.logMain.critical("YAAAS")
                                     resp = self.cleanGrowerLine(resp)
                                     if resp.startswith("Starting Routine Stage 2"):
-                                        self.logMain.critical("YIIIIS")
                                         decition = True
                                         self.GrowerInRoutine(j+1)
                             
