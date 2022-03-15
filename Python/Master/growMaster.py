@@ -264,6 +264,10 @@ try:
 
             # Update day info and send it to iHP
             myDay.get_intensity(hour*60+minute)
+            # If we are in routine blocked the lights at 25% for that specific floors
+            if mqttControl.inRoutine>0 and mqtt.inRoutine<=len(myDay.intensity):
+                myDay.intensity[mqttControl.inRoutine-1] = 25
+                myDay.update[mqttControl.inRoutine-1] = True
             for i in range(1,4,1):
                 ihp.request(ihp.READ_VIN, {'line': i})
                 ihp.request(ihp.READ_IIN, {'line': i})
