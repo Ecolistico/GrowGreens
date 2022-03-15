@@ -40,9 +40,8 @@ class streamClient:
         self.camera.resolution = (self.xres*2, self.yres)
         self.camera.framerate = 20
         self.camera.hflip = False
-        # Add camera settings
         # Set ISO to the desired value
-        self.camera.iso = 150
+        self.camera.iso = 250
         # Wait for the automatic gain control to settle
         time.sleep(2)
         # Now fix the values
@@ -51,8 +50,6 @@ class streamClient:
         g = self.camera.awb_gains
         self.camera.awb_mode = 'off'
         self.camera.awb_gains = g
-        # Let the camera warm up for 2 seconds
-        #time.sleep(2)
         self.str2log('Camera ready!', 1)
         
     def captureStreaming(self):
