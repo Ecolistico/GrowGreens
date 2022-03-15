@@ -142,7 +142,7 @@ try:
             # If client connected
             if mqttControl.clientConnected:
                 mqttControl.turnOff_TIMEOUT()
-                client.loop()
+                client.loop(0.2)
             # Else try to reconnect every 30s
             elif(time()-mqttControl.actualTime>30):
                 mqttControl.actualTime = time()
