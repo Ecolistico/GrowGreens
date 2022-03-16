@@ -37,6 +37,13 @@ log = logger()
 # Define config variables
 with open("config.json") as f: data = json.load(f)
 
+# Check if capture/ID dir exists, if not then create it
+if not os.path.exists('captures/{}/'.format(data["ID"])): os.makedirs('captures/{}/'.format(data["ID"]))
+# Do the same with all the floors in the system
+for i in range(int(data["floors"])):
+    # Check if capture/ID/floor dir exists, if not then create it
+    if not os.path.exists('captures/{}/floor{}/'.format(data["ID"], i+1)): os.makedirs('captures/{}/floor{}/'.format(data["ID"], i+1))
+
 # From streamCallback
 streamControl = streamController(data["ID"], log.logger)
 data['port'] = streamControl.port
