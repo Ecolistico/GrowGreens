@@ -95,11 +95,11 @@ try:
             elif(sysGrower.isAP()):
                 prevWiFiState = WiFiState
                 prevAPState = 1
-                WiFiState = 2 # Access Point created
+                WiFiState = 2 # AP created
                 WiFiCount = 0
             else:
                 prevWiFiState = WiFiState
-                WiFiState = 0 # Not accesPoint or Eth0
+                WiFiState = 0 # Not AP or Eth0
                 WiFiCount += 1
             WiFiTime = time()
 
@@ -132,17 +132,17 @@ try:
                     else:
                         log.logger.warning("Cannot connect with MQTT Broker")
                         MQTTCount += 1
-                except:
-                    log.logger.warning("Cannot connect with MQTT Broker")
+                except Exception as e:
+                    log.logger.error("Cannot connect with MQTT Broker. Exception raise: {}".format(e))
                     MQTTCount += 1
             prevWiFiState = WiFiState
 
         # If WiFi and client connected wait for messages
-        if(WiFiState==1 and client!=None):
+        if((WiFiState==3 or WiFiState==1) and client!=None):
             # If client connected
             if mqttControl.clientConnected:
                 mqttControl.turnOff_TIMEOUT()
-                client.loop(0.2)
+                client.loop(0.1)
             # Else try to reconnect every 30s
             elif(time()-mqttControl.actualTime>30):
                 mqttControl.actualTime = time()
@@ -160,15 +160,16 @@ try:
                     else:
                         log.logger.warning("Cannot connect with MQTT Broker")
                         MQTTCount += 1
-                except:
-                    log.logger.warning("Cannot connect with MQTT Broker")
+                except Exception as e:
+                    log.logger.error("Cannot connect with MQTT Broker. Exception raise: {}".format(e))
                     MQTTCount += 1
             else: sleep(0.1) # Avoid HIGH CPU usage
         else: sleep(0.1) # Avoid HIGH CPU usage
     mainClose()
 
-except:
+except Exception as e:
     log.logger.critical("Exception Raised", exc_info=True)
+    raise e
 
 finally:
     mainClose()

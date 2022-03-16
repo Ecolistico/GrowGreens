@@ -1,11 +1,10 @@
 import io
 import cv2
-import zlib
 import socket
 import struct
 import select
 import numpy as np
-from time import time, strftime, localtime
+from time import strftime, localtime
 
 class streamController:
     def __init__(self, ID = "", logger = None):
@@ -17,7 +16,7 @@ class streamController:
         self.sock = socket.socket()
         self.sock.setblocking(False)
         
-        self.path = '/home/pi/Documents/GrowGreens/Python/Cloud/captures/'
+        self.path = '/home/pi/Documents/GrowGreens/Python/Cloud/captures/{}/'.format(ID)
         self.captures = 1
         self.floor = 0
         self.connection = None
@@ -85,14 +84,20 @@ class streamController:
                         img_arr = np.frombuffer(img_bytes, np.uint8)
                         img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
                     
-                        name = "{}_floor{}_".format(self.ID, self.floor)
+                        name = ""
                         if self.captures<10: name += "000{}".format(self.captures)
                         elif self.captures<100: name += "00{}".format(self.captures)
                         elif self.captures<1000: name += "0{}".format(self.captures)
                         else: name += "{}".format(self.captures)
+<<<<<<< HEAD
                         #name += strftime("_%Y-%m-%d", localtime()) + '.png'
                         name += strftime("_%Y-%m-%d", localtime()) + '.data'
                         cv2.imwrite(self.path + name, img)
+=======
+                        name += '.png'
+                        completePath = self.path + "floor{}/{}/".format(self.floor, strftime("%Y-%m-%d", localtime())) + name
+                        cv2.imwrite(completePath, img)
+>>>>>>> a1d368c82b65a374a5d14f39973e8b0c04740bc3
                         self.str2log("Capture: {} saved".format(name), 1)
                         self.captures += 1
                         self.inCapture = False

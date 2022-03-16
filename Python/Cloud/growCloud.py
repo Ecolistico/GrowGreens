@@ -37,6 +37,13 @@ log = logger()
 # Define config variables
 with open("config.json") as f: data = json.load(f)
 
+# Check if capture/ID dir exists, if not then create it
+if not os.path.exists('captures/{}/'.format(data["ID"])): os.makedirs('captures/{}/'.format(data["ID"]))
+# Do the same with all the floors in the system
+for i in range(int(data["floors"])):
+    # Check if capture/ID/floor dir exists, if not then create it
+    if not os.path.exists('captures/{}/floor{}/'.format(data["ID"], i+1)): os.makedirs('captures/{}/floor{}/'.format(data["ID"], i+1))
+
 # From streamCallback
 streamControl = streamController(data["ID"], log.logger)
 data['port'] = streamControl.port
@@ -47,9 +54,6 @@ mqttControl = mqttController(data, log.logger)
 client = None
 run = True
 waitNextMove = False
-# DEBUG variables
-timer = time()
-counter = 0
 
 def mainClose():
     # Close devices when finished
@@ -72,31 +76,6 @@ except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".f
 
 try:
     while run:
-        # Testing routine
-        """
-        if (time() - timer > 3 and not streamControl.inCapture):
-            timer = time()
-            if counter == 0:
-                counter += 1
-                ip = getIPaddr().split(" ")[0]
-                publish.single("{}/Tucan".format(data["ID"]),
-                            'startStreaming,{},{}'.format(ip, streamControl.port),
-                            hostname=data["IP"])
-            elif counter>0 and counter <11:
-                counter += 1
-                streamControl.inCapture = True
-                publish.single("{}/Tucan".format(data["ID"]),
-                            'takePicture',
-                            hostname=data["IP"])
-            elif counter==11:
-                counter += 1
-                publish.single("{}/Tucan".format(data["ID"]),
-                            'endStreaming',
-                            hostname=data["IP"])
-        """
-        #if streamControl.isStreaming and not streamControl.savePicture and mqttControl.routineStarted:
-        #    publish.single("{}/Master".format(data["ID"]), "continueRoutine", hostname = data["IP"])
-        
         # Update MQTT variables with stream variables
         if mqttControl.takePicture:
             mqttControl.takePicture = False
@@ -113,7 +92,9 @@ try:
         
         # If mqtt connected check for messages
         if mqttControl.clientConnected: 
-            if(mqttControl.inRoutine!=0 and time()-mqttControl.routineTimer>=15*60): mqttControl.finishRoutine() # TimeOut for the routine
+            if(mqttControl.inRoutine!=0 and time()-mqttControl.routineTimer>=15*60): 
+                mqttControl.finishRoutine() # TimeOut for the routine
+                log.logger.error("Routine Error: Timeout reached")
             client.loop(0.2)
         else:
             sleep(0.2)

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 # Import Directories
+import os
 from time import time
 from sysCloud import getIPaddr
 import paho.mqtt.publish as publish
+from time import strftime, localtime
 
 class mqttController:
     def __init__(self, data, logger = None):
@@ -82,6 +84,7 @@ class mqttController:
             self.lightsReady = False
             self.streamReady = False
             self.takePicture = False
+            self.log.info("Routine finished")
 
     # On Connect Callback for MQTT
     def on_connect(self, client, userdata, flags, rc):
@@ -117,6 +120,9 @@ class mqttController:
                 self.inRoutine = int(message.split(",")[1])
                 self.routineTimer = time()
                 if self.inRoutine>0 and self.inRoutine<=8:
+                    # Create new folder to save the pictures if it doesn't exist
+                    if not os.path.exists('captures/{}/floor{}/{}/'.format(self.containerID, self.inRoutine, strftime("%Y-%m-%d", localtime()))):
+                        os.makedirs('captures/{}/floor{}/{}/'.format(self.containerID, self.inRoutine, strftime("%Y-%m-%d", localtime())))
                     # Ask to all devices if they are ready
                     msgs = [{"topic": "{}/Master".format(self.containerID), "payload": message},
                             {"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": message},
