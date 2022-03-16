@@ -82,6 +82,7 @@ class mqttController:
             self.lightsReady = False
             self.streamReady = False
             self.takePicture = False
+            self.log.info("Routine finished")
 
     # On Connect Callback for MQTT
     def on_connect(self, client, userdata, flags, rc):

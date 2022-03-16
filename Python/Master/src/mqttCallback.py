@@ -18,10 +18,8 @@ class mqttController:
         self.conn = connector
         # Define loggers
         self.logMain = logger.logger
-        self.logGr = []
-        for i in range(len(logger.logger_grower)):  self.logGr.append(logger.logger_grower[i])
-        self.logger_esp32 = []
-        for i in range(len(logger.logger_esp32)): self.logger_esp32.append(logger.logger_esp32[i])
+        self.logGrower = logger.logger_grower
+        self.logger_esp32 = logger.logger_esp32
         self.logTucan = logger.logger_Tucan
         self.logCloud = logger.logger_Cloud
         self.logAirPrincipal = logger.logger_AirPrincipal
@@ -111,7 +109,7 @@ class mqttController:
         if(top.endswith("log")):
             if(device.startswith("Grower")):
                 level = int(device[-1]) - 1
-                self.Msg2Log(self.logGr[level], message)
+                self.Msg2Log(self.logGrower[level], message)
                 self.mGrower.Gr[level].connected = True  
                 if(message.startswith("cozir")): self.mGrower.Gr[level].str2array(message)
             elif(device == ("Tucan")): self.logTucan.debug(message)

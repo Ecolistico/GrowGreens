@@ -5,7 +5,7 @@ import socket
 import struct
 import select
 import numpy as np
-from time import time, strftime, localtime
+from time import strftime, localtime
 
 class streamController:
     def __init__(self, ID = "", logger = None):
