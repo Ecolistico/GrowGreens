@@ -55,7 +55,8 @@ class streamClient:
     def captureStreaming(self):
         timer = time.time()
         # Capture the image
-        self.camera.capture(self.stream, 'png')
+        #self.camera.capture(self.stream, 'png')
+        self.camera.capture(self.stream, 'yuv')
         self.str2log('Capture time = {}'.format(time.time()-timer), 2)
         timer = time.time()
         # Write the length of the capture to the stream and flush to ensure it actually gets sent
