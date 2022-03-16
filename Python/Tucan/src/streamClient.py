@@ -55,7 +55,7 @@ class streamClient:
     def captureStreaming(self):
         # Capture the image
         timer = time.time()
-        self.camera.capture(self.stream, 'yuv')
+        self.camera.capture(self.stream, 'png')
         print("Time taken to capture: {}".format(time.time() - timer))
         timer = time.time()
         # Write the length of the capture to the stream and flush to ensure it actually gets sent
@@ -70,7 +70,7 @@ class streamClient:
         self.stream.seek(0)
         self.stream.truncate()
         print("Time taken to send: {}".format(time.time() - timer))
-        
+
     def endStreaming(self):
         # Write a length of zero to the stream to signal we're done
         self.connection.write(struct.pack('<L', 0))
