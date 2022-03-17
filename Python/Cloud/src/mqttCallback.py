@@ -60,6 +60,7 @@ class mqttController:
     def isRoutineReady(self):
         if self.masterReady and self.growerReady and self.tucanReady:
             # Prepare all devices
+            self.sendLog("All devices are ready. Sending configuration parameters", 1)
             ip = getIPaddr().split(" ")[0]
             msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "IrOn"},
                     {"topic": "{}/Tucan".format(self.containerID), "payload": "startStreaming,{},{}".format(ip, self.port)}]
@@ -67,6 +68,7 @@ class mqttController:
 
     def startRoutine(self):
         if self.masterReady and self.growerReady and self.tucanReady and self.lightsReady and self.streamReady: 
+            self.log.info("Starting routine")
             publish.single("{}/Master".format(self.containerID), "StartRoutineNow,{}".format(self.inRoutine), hostname = self.brokerIP)
             self.routineStarted = True
 
@@ -138,12 +140,14 @@ class mqttController:
             # Master is ready when motors are ready available
             self.masterReady = True
             self.routineTimer = time()
+            self.log.info("Master device confirm it is ready")
             self.isRoutineReady()
             
         elif(message.startswith("GrowerReady")):
             # Grower is ready when detects Tucan Module by bluetooth
             self.growerReady = True
             self.routineTimer = time()
+            self.log.info("Grower device confirm it is ready")
             self.isRoutineReady()
             
         elif(message.startswith("TucanReady")):
@@ -151,18 +155,21 @@ class mqttController:
             # the routines runs in the same floor that the closest Grower
             self.tucanReady = True
             self.routineTimer = time()
+            self.log.info("Tucan device confirm it is ready")
             self.isRoutineReady()
             
         elif(message.startswith("LightsReady")):
             # Light are ready when Grower module turns on both of them
             self.lightsReady = True
             self.routineTimer = time()
+            self.log.info("Grower device confirm lights are ready")
             self.startRoutine()
 
         elif(message.startswith("StreamReady")):
             # Stream is ready when Tucan module stablish communication with Cloud
             self.streamReady = True
             self.routineTimer = time()
+            self.log.info("Tucan device confirm stream connection is ready")
             self.startRoutine()
         
         elif(message.startswith("StreamNotReady")):
