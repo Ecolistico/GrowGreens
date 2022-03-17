@@ -595,10 +595,8 @@ bool growerStepper::home2()
           // If pass all the conditions and is disabled then enabled the steppers
           if(!__IsEnable){ enable(); }
           // Move all the motors to home 2
-          long moveX = MMToSteps_X(1000); // Move X to 1m
-          long moveY = MMToSteps_Y(1000); // Move Y to 1m
-          moveXTo(moveX);
-          moveYTo(moveY);
+          moveXTo(1000);  // Move X to 1m
+          moveYTo(1000); // Move Y to 1m
           
           __Available = false;
 
