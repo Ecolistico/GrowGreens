@@ -49,8 +49,8 @@ class grower:
         self.Hum = self.checkValue(float(strSplit[1]), self.Hum)
         self.Temp = self.checkValue(float(strSplit[2]), self.Temp)
         self.CO2 = self.checkValue(float(strSplit[3]), self.CO2)
-        
-        self.logValues()
+
+        #self.logValues() # Double log is not needed
         
     def logValues(self):
         self.log.debug("Temp={0}°C, Hum={1}%, CO2={2}ppm".format(self.Temp, self.Hum, self.CO2))
