@@ -116,14 +116,18 @@ class serialController:
     def decideStartOrStopGrower(self, resp, serialDevice):
         auxBool = False
         num = self.detectGrower(resp) + serialDevice*4
-        if num > 0: auxBool = self.mGrower.Gr[num-1].startRoutine
+        for i in range(len(self.mGrower.data)):
+            if(self.mGrower.data[str(i+1)] == str(num)):
+                num = i
+                break
+        if num > 0: auxBool = self.mGrower.Gr[num].startRoutine
         if(num>0 and num<=len(self.logGrower)): resp = self.cleanGrowerLine(resp)
 
         if resp.startswith("Available") and auxBool:
             # Send via MQTT Master Ready
-            self.mGrower.Gr[num-1].serialReq("")
-            self.mGrower.Gr[num-1].mqttReq("MasterReady")
-            self.mGrower.Gr[num-1].actualTime = time() - 20
+            self.mGrower.Gr[num].serialReq("")
+            self.mGrower.Gr[num].mqttReq("MasterReady")
+            self.mGrower.Gr[num].actualTime = time() - 20
             return True
         elif resp.startswith("Unavailable") and auxBool:
             self.stopGrower(num)
