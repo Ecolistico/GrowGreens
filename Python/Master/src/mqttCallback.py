@@ -170,7 +170,7 @@ class mqttController:
                     self.routineTimer = time()
                     if(message.startswith("StartRoutineNow")):
                         floor = fl - serialDevice*4
-                        self.mGrower.Gr[fl-1].serialReq("sequence_n,{},41,10".format(floor))
+                        self.mGrower.Gr[fl-1].serialReq("sequence_n,{},41,10".format(serialFloor))
                         self.mGrower.Gr[fl-1].mqttReq("")
                         self.mGrower.Gr[fl-1].actualTime = time()-120 
                         self.logMain.info("Starting Grower{} sequence".format(fl))
@@ -187,7 +187,7 @@ class mqttController:
                     serialFloor = int(serialFloor)
                     serialDevice = int((serialFloor-1)/4)
                     floor = fl - serialDevice*4
-                    self.mGrower.Gr[fl-1].serialReq("continueSequence,{}".format(floor))
+                    self.mGrower.Gr[fl-1].serialReq("continueSequence,{}".format(serialFloor))
                     self.mGrower.Gr[fl-1].mqttReq("")
                     self.mGrower.Gr[fl-1].actualTime = time()-120 
                     self.logMain.debug("Grower{} continue sequence".format(fl))
