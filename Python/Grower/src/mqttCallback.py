@@ -128,7 +128,7 @@ class mqttController:
             self.grower.turnOff(self.grower.SCL)
             self.grower.turnOff(self.grower.SDA)
             self.sendLog("Ir On")
-            publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
+            #publish.single("{}/Cloud".format(self.containerID), "LightsReady", hostname = self.brokerIP)
             self.lightTimer = time()
 
         elif(message == "IrOff"):
