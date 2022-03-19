@@ -97,8 +97,12 @@ class serialController:
         return 0
 
     def cleanGrowerLine(self, line):
-        resp = line.split(":")[1][1:]
-        return resp
+        try:
+            resp = line.split(":")[1][1:]
+            return resp
+        except Exception as e:
+            self.logMain.error("Error cleaning grower line {}. Line that failed is {}".format(e, line))
+            return ""
 
     def getGrowerLine(self, line):
         resp = self.cleanLine(line)
