@@ -316,6 +316,9 @@ try:
             if bme!=None and bme.read(): bme.logData()
             else: log.logger.warning("{} sensor cannot take reading".format(sensor['external']))
 
+            # Print in log missing values for the ESP32 system at 10:00a.m.
+            if(hour==10 and minute==0 and mqttControl.ESP32.isDataComplete()==False): mqttControl.ESP32.printMissingData()
+
             """
             Feature not ready
             elif(hour==7 and minute==0): # At 7am
