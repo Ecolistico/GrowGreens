@@ -34,7 +34,7 @@ class mqttController:
     
     # Callback fires when conected to MQTT broker.
     def on_connect(self, client, userdata, flags, rc):
-        Topic = "positioningSystem/#".format(self.ID)
+        Topic = "positioningSystem/#"
         message = "MQTT"
         if(rc == 0):
             message += " Connection succesful,info"
