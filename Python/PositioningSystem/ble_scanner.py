@@ -76,6 +76,9 @@ if err < 0:
 with open("config.json") as f:
     data = json.load(f)
     bluetoothMac = data["bluetoothDevices"]
+    ID = data["ID"]
+    brokerIP = data["brokerIP"]
+
 
 # Define logger
 log = logger()
@@ -85,7 +88,7 @@ myBeacons = []
 for dev in bluetoothMac: myBeacons.append(Beacon(bluetoothMac[dev], log.logger))
 
 # Define mqtt callbacks
-mqttControl = mqttController(data["ID"], log)
+mqttControl = mqttController(ID, log)
 
 # Define auxiliar variables
 reportTime = time()
@@ -98,7 +101,7 @@ try:
     #client.on_publish = mqttController.on_publish  # Specify on_publish callback
     client.on_disconnect = mqttControl.on_disconnect  # Specify on_disconnect callback
     # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
-    if(client.connect(data["brokerIP"], 1883, 60)==0): mqttControl.clientConnected = True
+    if(client.connect(brokerIP, 1883, 60)==0): mqttControl.clientConnected = True
     else: log.logger.error("Cannot connect with MQTT Broker")
 except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".format(e))
 
@@ -114,8 +117,8 @@ while True:
         for i in range(len(myBeacons)):
             dist = 0
             if myBeacons[i].distance != 0: dist = myBeacons[i].distance
-            mssg.append({"topic": "positioningSystem/{}/{}".format(data["ID"], myBeacons[i].mac), "payload": str(dist)})
-        publish.multiple(mssg, hostname=data["brokerIP"])
+            mssg.append({"topic": "positioningSystem/{}/{}".format(ID, myBeacons[i].mac), "payload": str(dist)})
+        publish.multiple(mssg, hostname=brokerIP)
 
     # If mqtt connected check for messages
     if mqttControl.clientConnected: client.loop(0.1)
