@@ -10,5 +10,6 @@ def runShellCommand(myCmD):
     try:
         os.system(myCmD)
         return 1
-    except:
+    except Exception as e:
+        print(e)
         return 0
