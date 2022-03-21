@@ -113,6 +113,7 @@ while True:
         for i in range(len(myBeacons)): myBeacons[i].decode(data)
 
     if time() - reportTime > 10: # Each 10 seconds reports devices position
+        reportTime = time()
         mssg = []
         for i in range(len(myBeacons)):
             dist = 0
