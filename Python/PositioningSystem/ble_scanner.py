@@ -114,7 +114,7 @@ while True:
         for i in range(len(myBeacons)):
             dist = 0
             if myBeacons[i].distance != 0: dist = myBeacons[i].distance
-            mssg.append({"topic": "positioningSystem/{}/{}".format(data["ID"], myBeacons[i].mac), "payload": dist})
+            mssg.append({"topic": "positioningSystem/{}/{}".format(data["ID"], myBeacons[i].mac), "payload": str(dist)})
         publish.multiple(mssg, hostname=data["brokerIP"])
 
     # If mqtt connected check for messages
