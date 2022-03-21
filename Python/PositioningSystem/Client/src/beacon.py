@@ -5,15 +5,15 @@ import struct
 from filter import Kalman
 
 class Beacon:
-    def __init__(self, data, logger = None):
+    def __init__(self, name, data, logger = None):
         self.frame = 0
         self.version = 0
         self.battery = 0
         self.accel_X = 0
         self.accel_Y = 0
         self.accel_Z = 0
+        self.name = name
         self.mac = data["mac"]
-        self.name = data["name"]
         self.rx_power = int(data["rx_power"]) # dBm at 1 meter
         self.devName = ""
         if data["rssi_always"] == "True": self.rssi_always = True

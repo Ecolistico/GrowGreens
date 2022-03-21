@@ -84,7 +84,7 @@ log = logger()
 
 # Define beacons to track
 myBeacons = []
-for dev in bluetoothMac: myBeacons.append(Beacon(bluetoothMac[dev], log.logger))
+for dev in bluetoothMac: myBeacons.append(Beacon(dev, bluetoothMac[dev], log.logger))
 
 # Define mqtt callbacks
 mqttControl = mqttController(ID, log)
