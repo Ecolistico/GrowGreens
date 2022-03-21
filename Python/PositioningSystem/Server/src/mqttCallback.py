@@ -58,14 +58,14 @@ class mqttController:
         device = top.split("/")[1] # Device where come
         
         topicList = top.split("/") # List
-        if topicList[1] is not in self.clients: 
+        if topicList[1] not in self.clients: 
             self.clients.append(topicList[1])
             self.Msg2Log("Client connected: {},info".format(topicList[1]))
         
         if topicList[2] is not in self.beacons:
             self.beacons.append(topicList[2])
             self.Msg2Log("Beacon connected: {},info".format(topicList[2]))
-            
+
         # Get MQTT logs from all the devices
         if(top.endswith("updateDevices")):
             pass
