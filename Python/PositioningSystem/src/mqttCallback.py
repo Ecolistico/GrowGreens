@@ -39,8 +39,8 @@ class mqttController:
             message += " Connection succesful"
             mssg = "Master connected"
             client.subscribe(Topic)
-            self.logMain.info(message)
-            self.logMain.debug("Subscribed topic= {}".format(Topic))
+            self.log.info(message)
+            self.log.debug("Subscribed topic= {}".format(Topic))
         else:
             message += " Connection refused"
             if(rc == 1): message += " - incorrect protocol version"
@@ -49,7 +49,7 @@ class mqttController:
             elif(rc == 4): message += " - bad username or password"
             elif(rc == 5): message += " - not authorised"
             else: message += " - currently unused"
-            self.logMain.warning(message)
+            self.log.warning(message)
 
     # Callback fires when a published message is received.
     def on_message(self, client, userdata, msg):
@@ -73,9 +73,9 @@ class mqttController:
                 
  
     def on_publish(self, client, userdata, mid):
-        self.logMain.debug("Message delivered")
+        self.log.debug("MQTT Message delivered")
 
     def on_disconnect(self, client, userdata, rc):
-        self.logMain.warning("Client MQTT Disconnected")
+        self.log.warning("Client MQTT Disconnected")
         self.clientConnected = False
         self.actualTime = time()
