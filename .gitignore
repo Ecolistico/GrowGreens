@@ -19,7 +19,8 @@ Python/Master/*.config
 Python/Master/src/*.csv
 Python/Cloud/*.json
 Python/Tucan/*.json
-Python/PositioningSystem/*.json
+Python/PositioningSystem/Client/*.json
+Python/PositioningSystem/Server/*.json
 GUI/*.csv
 
 # Security files

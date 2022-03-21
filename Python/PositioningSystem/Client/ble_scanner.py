@@ -79,7 +79,6 @@ with open("config.json") as f:
     ID = data["ID"]
     brokerIP = data["brokerIP"]
 
-
 # Define logger
 log = logger()
 
