@@ -62,7 +62,7 @@ class mqttController:
             self.clients.append(topicList[1])
             self.Msg2Log("Client connected: {},info".format(topicList[1]))
         
-        if topicList[2] is not in self.beacons:
+        if topicList[2] not in self.beacons:
             self.beacons.append(topicList[2])
             self.Msg2Log("Beacon connected: {},info".format(topicList[2]))
 
