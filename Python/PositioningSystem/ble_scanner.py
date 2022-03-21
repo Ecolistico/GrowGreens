@@ -19,8 +19,8 @@ import utils
 from beacon import Beacon
 from logger import logger
 
-print(utils.runShellCommand("sudo hciconfig hci0 down"))
-print(utils.runShellCommand("sudo hciconfig hci0 up"))
+utils.runShellCommand("sudo hciconfig hci0 down")
+utils.runShellCommand("sudo hciconfig hci0 up")
 
 # Check if temp dir exists, if not then create it
 if not os.path.exists('temp/'): os.makedirs('temp/')
