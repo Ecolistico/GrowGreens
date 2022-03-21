@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import sys
 import os
+import sys
+import json
 import struct
 from ctypes import (CDLL, get_errno)
 from ctypes.util import find_library
