@@ -42,7 +42,24 @@ class logger:
         console.setFormatter(colorFormatter)
         
         # Add the handler to the root logger
-        self.logger = logging.getLogger('positioningSystem').addHandler(console)
+        logging.getLogger('').addHandler(console)
         
         # Integrate the main logger with warning Module
         logging.captureWarnings(True)
+
+        # Define loggers for differents areas
+        self.logger = logging.getLogger('positioningSystem')
+        self.logger.setLevel(logging.DEBUG)
+
+        # Create a file handler for each logger
+        handler = logging.handlers.RotatingFileHandler('./temp/positioning.log', maxBytes = 10*1024*1024, backupCount = 2)
+        handler.setLevel(logging.DEBUG)
+
+        # Create logging format and linking it to all the handlers                                   
+        formatter = logging.Formatter(fmt = '%(asctime)s %(levelname)-8s %(message)s',
+                                      datefmt = '%Y-%m-%d %H:%M:%S')
+        
+        handler.setFormatter(formatter)
+
+        # Add the handler to the logger
+        self.logger.addHandler(handler)
