@@ -1,4 +1,4 @@
-
+import os
 
 def signed(n, bits=16):
     n &= (1 << bits) - 1
