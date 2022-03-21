@@ -77,12 +77,18 @@ with open("config.json") as f:
     data = json.load(f)
     bluetoothMac = data["bluetoothDevices"]
 
+# Define logger
 log = logger()
 
+# Define beacons to track
 myBeacons = []
 for dev in bluetoothMac: myBeacons.append(Beacon(bluetoothMac[dev], log.logger))
 
+# Define mqtt callbacks
 mqttControl = mqttController(data["ID"], log)
+
+# Define auxiliar variables
+reportTime = time()
 
 try:
     # Define MQTT communication
@@ -102,6 +108,14 @@ while True:
     filterMac = ':'.join("{0:02x}".format(x) for x in data[12:6:-1])
     if filterMac in [dev.mac for dev in myBeacons]:
         for i in range(len(myBeacons)): myBeacons[i].decode(data)
+
+    if time() - reportTime > 10: # Each 10 seconds reports devices position
+        mssg = []
+        for i in range(len(myBeacons)):
+            dist = 0
+            if myBeacons[i].distance != 0: dist = myBeacons[i].distance
+            mssg.append({"topic": "positioningSystem/{}/{}".format(data["ID"], myBeacons[i].mac), "payload": dist})
+        publish.multiple(mssg, hostname=data["brokerIP"])
 
     # If mqtt connected check for messages
     if mqttControl.clientConnected: client.loop(0.1)
