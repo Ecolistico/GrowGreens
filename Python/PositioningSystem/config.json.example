@@ -1,5 +1,7 @@
 { "bluetoothDevices": {"0":{"mac": "ac:23:3f:a9:bf:95", "name": "Pulsera1", "rssi_always": "False", "rx_power": "-59"},
                       "1":{"mac": "ac:23:3f:a9:bf:7c", "name": "Pulsera2", "rssi_always": "False", "rx_power": "-59"},
                       "2":{"mac": "b8:27:eb:ef:a5:87", "name": "rasp", "rssi_always": "True", "rx_power": "-59"}
-                      }
+                      },
+    "ID": "23-009-006",
+    "brokerIP": "192.168.6.10"
 }

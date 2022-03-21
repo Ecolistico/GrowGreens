@@ -40,7 +40,7 @@ class Beacon:
         return self.dbm
 
     # Log Distance Path Loss
-    def dbm_to_distance(self, dbm, rx_power = -59, n=2):
+    def dbm_to_distance(self, dbm, rx_power = -59, n=1.6):
         # dbm is what we measure
         # rx_power is dbm measure at 1 meter
         # n is a constant for the exponential loss. It is calculated from experiments and they are tables to use as reference

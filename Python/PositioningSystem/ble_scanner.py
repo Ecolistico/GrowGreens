@@ -4,6 +4,9 @@ import os
 import sys
 import json
 import struct
+from time import time, sleep
+import paho.mqtt.client as mqtt
+import paho.mqtt.publish as publish
 from ctypes import (CDLL, get_errno)
 from ctypes.util import find_library
 from socket import (
@@ -18,6 +21,7 @@ sys.path.insert(0, './src/')
 import utils
 from beacon import Beacon
 from logger import logger
+from mqttCallback import mqttController
 
 utils.runShellCommand("sudo hciconfig hci0 down")
 utils.runShellCommand("sudo hciconfig hci0 up")
@@ -78,9 +82,43 @@ log = logger()
 myBeacons = []
 for dev in bluetoothMac: myBeacons.append(Beacon(bluetoothMac[dev], log.logger))
 
+mqttControl = mqttController(data["ID"], log)
+
+try:
+    # Define MQTT communication
+    client = mqtt.Client()
+    client.on_connect = mqttControl.on_connect  # Specify on_connect callback
+    client.on_message = mqttControl.on_message  # Specify on_message callback
+    #client.on_publish = mqttController.on_publish  # Specify on_publish callback
+    client.on_disconnect = mqttControl.on_disconnect  # Specify on_disconnect callback
+    # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
+    if(client.connect(data["brokerIP"], 1883, 60)==0): mqttControl.clientConnected = True
+    else: log.logger.error("Cannot connect with MQTT Broker")
+except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".format(e))
+
 while True:
     data = sock.recv(1024)
 
     filterMac = ':'.join("{0:02x}".format(x) for x in data[12:6:-1])
     if filterMac in [dev.mac for dev in myBeacons]:
         for i in range(len(myBeacons)): myBeacons[i].decode(data)
+
+    # If mqtt connected check for messages
+    if mqttControl.clientConnected: client.loop(0.1)
+    else:
+        sleep(0.1)
+        # Else try to reconnect every 30s
+        if(time()-mqttControl.actualTime>30):
+            mqttControl.actualTime = time()
+            try:
+                # Reconnect client
+                client = mqtt.Client()
+                client.on_connect = mqttControl.on_connect  # Specify on_connect callback
+                client.on_message = mqttControl.on_message  # Specify on_message callback
+                #client.on_publish = mqttController.on_publish  # Specify on_publish callback
+                client.on_disconnect = mqttControl.on_disconnect  # Specify on_disconnect callback
+                # Connect to MQTT broker. Paremeters (IP direction, Port, Seconds Alive)
+                if(client.connect(data["brokerIP"], 1883, 60)==0): mqttControl.clientConnected = True
+                else: log.logger.error("Cannot connect with MQTT Broker")
+
+            except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".format(e))
