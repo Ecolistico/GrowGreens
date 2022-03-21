@@ -7,6 +7,7 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 sys.path.insert(0, './src/')
 from logger import logger
+from client import ClientManager
 from mqttCallback import mqttController
 
 # Check if temp dir exists, if not then create it
@@ -15,6 +16,8 @@ if not os.path.exists('temp/'): os.makedirs('temp/')
 # Define config variables
 with open("config.json") as f:
     data = json.load(f)
+    bluetoothDevices = data["bluetoothDevices"]
+    clients = data["clients"]
     brokerIP = data["brokerIP"]
 
 # Define logger
@@ -23,6 +26,8 @@ log = logger()
 # Define mqtt callbacks
 mqttControl = mqttController(log)
 
+# Define Clients
+myClients = ClientManager(clients)
 try:
     # Define MQTT communication
     client = mqtt.Client()
