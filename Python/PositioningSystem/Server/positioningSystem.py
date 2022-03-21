@@ -28,6 +28,9 @@ mqttControl = mqttController(log)
 
 # Define Clients
 myClients = ClientManager(clients)
+
+# Define Bluetooth devices
+
 try:
     # Define MQTT communication
     client = mqtt.Client()
