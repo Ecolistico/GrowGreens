@@ -52,6 +52,7 @@ class devicesManager:
         pos = self.returnClientPositions(self.clientData)
         for device in self.devices:
             dist = self.devices[device].getDistances(self.clientData)
+            print(pos, dist)
             self.positions[device] = triangulation(pos, dist)
             print(self.positions[device])
 
