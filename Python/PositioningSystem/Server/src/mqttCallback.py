@@ -64,7 +64,7 @@ class mqttController:
             #self.manager.clients[topicList[1]] = Client(x, y, z)
         
         macList = []
-        for dev in self.manager.devices: macList.append(dev.mac)
+        for dev in self.manager.devices: macList.append(self.manager.devices[dev].mac)
         if topicList[2] not in macList:
             self.Msg2Log("Beacon not recognized: {},info".format(topicList[2]))
             # Here we need to ask extra information to the clients to update the beacons list
