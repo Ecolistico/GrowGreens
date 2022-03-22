@@ -63,7 +63,7 @@ class mqttController:
             # Here we need to ask extra information to the client to update the client list
             #self.manager.clients[topicList[1]] = Client(x, y, z)
         
-        if topicList[2] not in self.manager.:
+        if topicList[2] not in self.manager.devices:
             self.Msg2Log("Beacon not recognized: {},info".format(topicList[2]))
             # Here we need to ask extra information to the clients to update the beacons list
             #self.manager.devices[topicList[2]] = bluetoothDevice(dataDevice, clientData)
