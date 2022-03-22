@@ -57,7 +57,8 @@ class mqttController:
         message = msg.payload.decode("utf-8") # Input message
         device = top.split("/")[1] # Device where come
         
-        topicList = top.split("/") # List
+        topicList = top.split("/") # List topic
+
         if topicList[1] not in self.manager.clients: 
             self.Msg2Log("Client not recognized: {},info".format(topicList[1]))
             # Here we need to ask extra information to the client to update the client list
@@ -70,6 +71,13 @@ class mqttController:
             # Here we need to ask extra information to the clients to update the beacons list
             #self.manager.devices[topicList[2]] = bluetoothDevice(dataDevice, clientData)
 
+        if topicList[1] in self.manager.clients and topicList[2] in macList:
+            for dev in self.manager.devices:
+                if self.manager.devices[dev].mac == topicList[2]:
+                    self.manager.devices[dev].updateDistance(topicList[1], float(message))
+                    self.Msg2Log("Beacon {} distance updated to {},info".format(topicList[2], message))
+                    break
+                
         # Get MQTT logs from all the devices
         if(top.endswith("updateDevices")):
             pass
