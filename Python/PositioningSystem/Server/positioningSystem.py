@@ -8,6 +8,7 @@ import paho.mqtt.publish as publish
 sys.path.insert(0, './src/')
 from logger import logger
 from client import ClientManager
+from bluetoothManager import devicesManager
 from mqttCallback import mqttController
 
 # Check if temp dir exists, if not then create it
@@ -23,13 +24,14 @@ with open("config.json") as f:
 # Define logger
 log = logger()
 
+# Define the Manager
+manager = devicesManager(bluetoothDevices, clients)
+
 # Define mqtt callbacks
-mqttControl = mqttController(log)
+mqttControl = mqttController(manager, log)
 
-# Define Clients
-myClients = ClientManager(clients)
-
-# Define Bluetooth devices
+# Aux variables
+positionTimer = time()
 
 try:
     # Define MQTT communication
@@ -44,6 +46,11 @@ try:
 except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".format(e))
 
 while True:
+    # Update positions once per minute
+    if(time()-positionTimer>=60):
+        positionTimer = time()
+        manager.getBeaconsPositions()
+
      # If mqtt connected check for messages
     if mqttControl.clientConnected: client.loop(0.1)
     else:

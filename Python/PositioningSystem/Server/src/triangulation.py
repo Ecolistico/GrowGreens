@@ -32,6 +32,9 @@ def err_dis(p0, pos, dist):
 
 def triangulation(pos, dist):
     p, d = clean_data(pos, dist)
+    if len(p) < 3: 
+        print("ERROR: not enough points")
+        return np.array([0,0,0])
     p0 = min_max(p, d)
     res = optimize.minimize(err_dis, p0, args=(p, d), method='Powell')
     #print(res)
@@ -39,6 +42,9 @@ def triangulation(pos, dist):
 
 def triangulation1(pos, dist):
     p, d = clean_data(pos, dist)
+    if len(p) < 3:
+        print("ERROR: not enough points") 
+        return np.array([0,0,0])
     p0 = min_max(p, d)
     res = optimize.least_squares(err_dis, p0, args=(p, d))
     #print(res)

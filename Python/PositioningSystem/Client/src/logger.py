@@ -48,7 +48,7 @@ class logger:
         logging.captureWarnings(True)
 
         # Define loggers for differents areas
-        self.logger = logging.getLogger('positioningSystem')
+        self.logger = logging.getLogger('Positioning Client')
         self.logger.setLevel(logging.DEBUG)
 
         # Create a file handler for each logger

@@ -2,16 +2,16 @@
 
 # Import directories
 from time import time
+from bluetoothManager import Client, bluetoothDevice
 import paho.mqtt.publish as publish
 
 class mqttController:
-    def __init__(self, logger = None):
+    def __init__(self, deviceManager, logger = None):
         # Define loggers
         self.log = logger.logger
 
-        # Define clients and beacons
-        self.clients = []
-        self.beacons = []
+        # Define deviceManager
+        self.manager = deviceManager
 
         # Define aux variables
         self.clientConnected = False
@@ -58,13 +58,15 @@ class mqttController:
         device = top.split("/")[1] # Device where come
         
         topicList = top.split("/") # List
-        if topicList[1] not in self.clients: 
-            self.clients.append(topicList[1])
-            self.Msg2Log("Client added: {},info".format(topicList[1]))
+        if topicList[1] not in self.manager.clients: 
+            self.Msg2Log("Client not recognized: {},info".format(topicList[1]))
+            # Here we need to ask extra information to the client to update the client list
+            #self.manager.clients[topicList[1]] = Client(x, y, z)
         
-        if topicList[2] not in self.beacons:
-            self.beacons.append(topicList[2])
-            self.Msg2Log("Beacon added: {},info".format(topicList[2]))
+        if topicList[2] not in self.manager.:
+            self.Msg2Log("Beacon not recognized: {},info".format(topicList[2]))
+            # Here we need to ask extra information to the clients to update the beacons list
+            #self.manager.devices[topicList[2]] = bluetoothDevice(dataDevice, clientData)
 
         # Get MQTT logs from all the devices
         if(top.endswith("updateDevices")):
