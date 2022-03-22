@@ -75,7 +75,7 @@ class mqttController:
             for dev in self.manager.devices:
                 if self.manager.devices[dev].mac == topicList[2]:
                     self.manager.devices[dev].updateDistance(topicList[1], float(message))
-                    self.Msg2Log("Beacon {} distance updated to {},info".format(topicList[2], message))
+                    self.Msg2Log("Beacon {} distance updated to {},debug".format(topicList[2], message))
                     break
                 
         # Get MQTT logs from all the devices
