@@ -7,7 +7,6 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 sys.path.insert(0, './src/')
 from logger import logger
-from client import ClientManager
 from bluetoothManager import devicesManager
 from mqttCallback import mqttController
 
