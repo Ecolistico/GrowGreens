@@ -31,8 +31,8 @@ def err_dis(p0, pos, dist):
     return sum([(abs(np.linalg.norm(pos[i]-p0)-dist[i])) for i in range(len(pos))]) # Things are strange if dist is < 1
 
 def triangulation(pos, dist):
-    pos = np.array(pos)
-    dist = np.array(dist)
+    pos = np.array(pos).reshape(len(dist), 3)
+    dist = np.array(dist).reshape(len(dist), 1)
     p, d = clean_data(pos, dist)
     if len(p) < 3: 
         print("ERROR: not enough points")
