@@ -2,6 +2,7 @@
 
 # Import Directories
 import struct
+from time import time
 from filter import Kalman
 
 class Beacon:
@@ -21,6 +22,7 @@ class Beacon:
         self.get_rssi = False
         self.dbm = 0
         self.distance = 0
+        self.updateTimer = time()
         self.kalman_rssi = Kalman(r=1.4, q=0.065)
         self.kalman_distance = Kalman(r=1.4, q=0.065)
         self.log = logger
@@ -55,6 +57,7 @@ class Beacon:
         """
         d = pow(10, ((rx_power - dbm) / (10 * n)))
         self.distance = d
+        self.updateTimer = time()
         return d
 
     # David Young´s Distance Algorithm
@@ -64,6 +67,7 @@ class Beacon:
         # tx is dbm send by BLE
         d = 1.21112*((dbm * rx/tx)**(7.560861)) + 0.251
         self.distance = d
+        self.updateTimer = time()
         return d
 
     def getDistance(self): return self.distance
