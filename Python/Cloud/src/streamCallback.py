@@ -81,17 +81,18 @@ class streamController:
                         
                         # Get the image
                         img_bytes = image_stream.getvalue()
-                        img_arr = np.frombuffer(img_bytes, np.uint8)
-                        img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
+                        #img_arr = np.frombuffer(img_bytes, np.uint8)
+                        #img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
                     
                         name = ""
                         if self.captures<10: name += "000{}".format(self.captures)
                         elif self.captures<100: name += "00{}".format(self.captures)
                         elif self.captures<1000: name += "0{}".format(self.captures)
                         else: name += "{}".format(self.captures)
-                        name += '.raw'
+                        #name += '.raw'
                         completePath = self.path + "floor{}/{}/".format(self.floor, strftime("%Y-%m-%d", localtime())) + name
-                        cv2.imwrite(completePath, img)
+                        np.save(completePath, img_bytes, allow_pickle=True, fix_imports=True)
+                        #cv2.imwrite(completePath, img)
                         self.str2log("Capture: {} saved".format(name), 1)
                         self.captures += 1
                         self.inCapture = False
