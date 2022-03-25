@@ -89,7 +89,7 @@ class streamController:
                         elif self.captures<100: name += "00{}".format(self.captures)
                         elif self.captures<1000: name += "0{}".format(self.captures)
                         else: name += "{}".format(self.captures)
-                        name += '.png'
+                        name += '.raw'
                         completePath = self.path + "floor{}/{}/".format(self.floor, strftime("%Y-%m-%d", localtime())) + name
                         cv2.imwrite(completePath, img)
                         self.str2log("Capture: {} saved".format(name), 1)

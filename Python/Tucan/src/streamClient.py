@@ -12,11 +12,11 @@ class streamClient:
     def __init__(self, logger = None):
         self.log = logger
 
-        self.camera = picamera.PiCamera(stereo_mode='side-by-side', stereo_decimate=0)
-        self.xres = 1280
-        self.yres = 720 
+        self.camera1 = picamera.PiCamera(camera_num = 0, sensor_mode = 2)
+        self.camera2 = picamera.PiCamera(camera_num = 1, sensor_mode = 2) 
         
-        self.stream = io.BytesIO()
+        self.stream1 = io.BytesIO()
+        self.stream2 = io.BytesIO()
     
     def str2log(self, mssg, level = 1):
         if self.log is not None:
@@ -37,38 +37,47 @@ class streamClient:
         self.str2log(mssg, 1)
 
     def cameraSetup(self):
-        self.camera.resolution = (self.xres*2, self.yres)
-        self.camera.framerate = 20
-        self.camera.hflip = False
         # Set ISO to the desired value
-        self.camera.iso = 250
+        #self.camera1.iso = 250
+        #self.camera2.iso = 250
         # Wait for the automatic gain control to settle
         time.sleep(2)
         # Now fix the values
-        self.camera.shutter_speed = self.camera.exposure_speed
-        self.camera.exposure_mode = 'off'
-        g = self.camera.awb_gains
-        self.camera.awb_mode = 'off'
-        self.camera.awb_gains = g
-        self.str2log('Camera ready!', 1)
+        #self.camera1.shutter_speed = self.camera1.exposure_speed
+        #self.camera1.exposure_mode = 'off'
+        #g = self.camera1.awb_gains
+        #self.camera1.awb_mode = 'off'
+        #self.camera1.awb_gains = g
+        
+        #self.camera2.shutter_speed = self.camera2.exposure_speed
+        #self.camera2.exposure_mode = 'off'
+        #g = self.camera2.awb_gains
+        #self.camera2.awb_mode = 'off'
+        #self.camera2.awb_gains = g
+        self.str2log('Cameras ready!', 1)
         
     def captureStreaming(self):
         # Capture the image
         #timer = time.time()
-        self.camera.capture(self.stream, 'png')
+        self.camera1.capture(self.stream1, 'jpeg', bayer = True)
+        self.camera2.capture(self.stream2, 'jpeg', bayer = True)
         #print("Time taken to capture: {}".format(time.time() - timer))
         #timer = time.time()
         # Write the length of the capture to the stream and flush to ensure it actually gets sent
-        self.connection.write(struct.pack('<L', self.stream.tell()))
+        self.connection.write(struct.pack('<L', self.stream1.tell() + self.stream2.tell()))
         self.connection.flush()
         
         # Rewind the stream and send the image data over the wire
-        self.stream.seek(0)
-        self.connection.write(self.stream.read())
+        self.stream1.seek(0)
+        self.stream2.seek(0)
+        self.connection.write(self.stream1.read())
+        self.connection.write(self.stream2.read())
         
         # Reset the stream for the next capture
-        self.stream.seek(0)
-        self.stream.truncate()
+        self.stream1.seek(0)
+        self.stream2.seek(0)
+        self.stream1.truncate()
+        self.stream2.truncate()
         #print("Time taken to send: {}".format(time.time() - timer))
 
     def endStreaming(self):
