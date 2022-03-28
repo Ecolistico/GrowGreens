@@ -60,24 +60,30 @@ class streamClient:
         # Capture the image
         #timer = time.time()
         self.camera1.capture(self.stream1, 'jpeg', bayer = True)
-        self.camera2.capture(self.stream2, 'jpeg', bayer = True)
         #print("Time taken to capture: {}".format(time.time() - timer))
         #timer = time.time()
         # Write the length of the capture to the stream and flush to ensure it actually gets sent
-        self.connection.write(struct.pack('<L', self.stream1.tell() + self.stream2.tell()))
+        self.connection.write(struct.pack('<L', self.stream1.tell()))
         self.connection.flush()
         
         # Rewind the stream and send the image data over the wire
         self.stream1.seek(0)
-        self.stream2.seek(0)
         self.connection.write(self.stream1.read())
-        self.connection.write(self.stream2.read())
-        
         # Reset the stream for the next capture
         self.stream1.seek(0)
-        self.stream2.seek(0)
         self.stream1.truncate()
+        
+        # Write the length of the capture to the stream and flush to ensure it actually gets sent
+        self.camera2.capture(self.stream2, 'jpeg', bayer = True)
+        self.connection.write(struct.pack('<L', self.stream2.tell()))
+        self.connection.flush()
+        
+        self.stream2.seek(0)
+        self.connection.write(self.stream2.read())
+        # Reset the stream for the next capture
+        self.stream2.seek(0)
         self.stream2.truncate()
+        
         #print("Time taken to send: {}".format(time.time() - timer))
 
     def endStreaming(self):

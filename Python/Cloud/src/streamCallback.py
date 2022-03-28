@@ -95,7 +95,7 @@ class streamController:
                         #cv2.imwrite(completePath, img)
                         self.str2log("Capture: {} saved".format(name), 1)
                         self.captures += 1
-                        self.inCapture = False
+                        if self.captures % 2 == 1: self.inCapture = False
                         
                 """
                 data = s.recv(1024)
