@@ -125,8 +125,8 @@ class mqttController:
                 self.routineTimer = time()
                 if self.inRoutine>0 and self.inRoutine<=8:
                     # Create new folder to save the pictures if it doesn't exist
-                    if not os.path.exists('captures/{}/floor{}/{}/'.format(self.containerID, self.inRoutine, strftime("%Y-%m-%d", localtime()))):
-                        os.makedirs('captures/{}/floor{}/{}/'.format(self.containerID, self.inRoutine, strftime("%Y-%m-%d", localtime())))
+                    if not os.path.exists('/media/pi/cloud6/captures/{}/floor{}/{}/'.format(self.containerID, self.inRoutine, strftime("%Y-%m-%d", localtime()))):
+                        os.makedirs('/media/pi/cloud6/captures/{}/floor{}/{}/'.format(self.containerID, self.inRoutine, strftime("%Y-%m-%d", localtime())))
                     # Ask to all devices if they are ready
                     msgs = [{"topic": "{}/Master".format(self.containerID), "payload": message},
                             {"topic": "{}/Tucan".format(self.containerID), "payload": message}]
