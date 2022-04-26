@@ -41,7 +41,16 @@ void emergencyConditions() {
 }
 
 void startIrrigation() {
+  // Store the initial value of the scale
   initialWeight = mySensors->_myScales[0]->getWeight();
+  // Get water waste and print it
+  h20waste = finalWeight - initialWeight; // Water waste
+  Serial.print(F("debug,Solenoid System: Water Waste - "));
+  Serial.print(h20waste);
+  Serial.println(F(" liters"));
+  // Include alarm if waste is too high > 5 liters
+  if(h20waste>5) Serial.println(F("critical,Solenoid System: Water leak while solenoids are closed"));
+  // Enable irrigation
   myIrrigation->keepConnected(true);
   if(!emergencyButtonFlag) myValves->enable(true);
   irrigationState.setState(1);
@@ -50,7 +59,8 @@ void startIrrigation() {
 void irrigation() {
   if(myValves->getActualNumber()>=bconfig.floors*bconfig.solenoids*bconfig.regions){
      myIrrigation->keepConnected(false);
-     h2oConsumption = initialWeight - mySensors->_myScales[0]->getWeight();
+     finalWeight = mySensors->_myScales[0]->getWeight();
+     h2oConsumption = initialWeight - finalWeight; // Water consumption
      if (h2oConsumption < 1) h2oConsumption = 1; // Avoid negatives number and zero water consumption. Min value is set as 1 liters as default
      
      // Pressure low in air tank
@@ -82,6 +92,7 @@ void irrigation() {
      }
      myValves->enable(false);
      irrigationState.setState(2);
+     
      updateSystemState();
   }
   else if(!emergencyFlag) emergencyConditions();

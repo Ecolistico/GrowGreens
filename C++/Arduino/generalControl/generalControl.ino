@@ -64,7 +64,9 @@ unsigned long bootTimer;          // Timer to request by serial for boot paramet
 bool bootEmergencyRelay = false;  // Update first time to activate multiplexors relay
 // Aux variables
 float h2oConsumption;             // Store water constumption per irrigation cycle
+float h20waste;                   // Water lost while in theory is not a single solenoid open
 float initialWeight;              // Get the difference in weight to know water consumption
+float finalWeight;                // Get the difference in weight to know water waste
 // Emergency Variables
 bool emergencyFlag = false;       // Flag to set an emergency
 bool emergencyPrint = false;      // Flag to know when emergency message is printed

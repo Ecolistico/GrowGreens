@@ -255,8 +255,7 @@ void floorValves::enable(bool en, uint8_t reg)
      else if(level==2){ Serial.print(F("warning,")); } // Warning
      else if(level==3){ Serial.print(F("error,")); } // Error
      else if(level==4){ Serial.print(F("critical,")); } // Error
-     Serial.print(F("Solenoid System"));
-     Serial.print(F(": "));
+     Serial.print(F("Solenoid System: "));
      Serial.print(act1);
      Serial.print(act2);
      Serial.println(act3);

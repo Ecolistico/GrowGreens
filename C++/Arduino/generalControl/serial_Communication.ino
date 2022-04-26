@@ -40,6 +40,8 @@ void serialEvent(){                                   //if the hardware serial p
           bootParameters = true; // Set bootParameters as true
           // Update consumption variables
           h2oConsumption = h2oCons;
+          h20waste = 0; // At start we do not know what is the waste of water
+          finalWeight = 0; // Initialize finalWeight variable at zero first time
           Serial.print(F("info,Serial Boot: Initial Water Consumption updated to "));
           Serial.print(h2oConsumption);
           Serial.println(F(" liters"));
