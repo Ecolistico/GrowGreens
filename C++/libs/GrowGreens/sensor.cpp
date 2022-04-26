@@ -248,7 +248,7 @@ void Flowmeter::begin()
     else if(_number==1) attachInterrupt(digitalPinToInterrupt(_pin), countPulses2, RISING);
     else if (_number>=MAX_FLOWMETER_SENSOR) succeed = false;
     if(succeed){
-      Serial.print(F("info,Sensor: Flometer number "));
+      Serial.print(F("info,Sensor: Flowmeter number "));
       Serial.print(_number);
       Serial.println(F(" started correctly"));
     }

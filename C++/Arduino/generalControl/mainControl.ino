@@ -50,6 +50,12 @@ void startIrrigation() {
   Serial.println(F(" liters"));
   // Include alarm if waste is too high > 5 liters
   if(h20waste>5) Serial.println(F("critical,Solenoid System: Water leak while solenoids are closed"));
+  // Get water input by flowmeter 0
+  if(0<sconfig.flowmeters) {
+    mySensors->_myFlowmeters[0]->read();
+    mySensors->_myFlowmeters[0]->printRead();
+    mySensors->_myFlowmeters[0]->restartWater();
+  }
   // Enable irrigation
   myIrrigation->keepConnected(true);
   if(!emergencyButtonFlag) myValves->enable(true);
