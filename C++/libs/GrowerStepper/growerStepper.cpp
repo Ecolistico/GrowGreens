@@ -172,7 +172,7 @@ void growerStepper::resetTime()
 bool growerStepper::isTimeToGoHome()
   { if(millis()-__ActualTime>WAIT_TIME_FOR_GO_HOME && !__IsAtHome && !__IsAtHome2){
       printAction(F("Time without move exceed. It is time to go home"), 2);
-      resetTime()
+      resetTime();
       return true;
     }
     else{return false;}
