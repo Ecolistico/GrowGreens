@@ -24,8 +24,8 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 
 // solutionMaker.h
 
-#ifndef solutionMaker_h
-#define solutionMaker_h
+#ifndef sMakerCunTFT_h
+#define sMakerCunTF_h
 
 #include <stdlib.h>
 #if ARDUINO >= 100
@@ -44,8 +44,12 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #include <math.h> // For ph/conductivity equations
 #include <DHT.h> // For DHT22 use
 #include <HX711.h> //For Loadcell use
-#include <EEPROM.h>
+#include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
+#include <Wire.h>
 
+#include <TouchscreenObjects.h>
+
+ 
 #define MAX_STEPPERS 20 // Max number of stepper motors
 #define MAX_PUMPS_NUMBER 4 // The max number of peristaltic pumps
 #define MOTOR_SPEED 2000 // Maximum Steps Per Second
@@ -53,12 +57,8 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define DEFAULT_MICROSTEP 4 // By default we use configuration of 1/4 microSteps, if any number beside 4, 8, 16 is chosen 4 will be used
 #define MOTOR_STEP_PER_REV 200 // By default we use motors of 200 steps/rev
 #define saltDist 100 //Separation between salt cartridges
-#define PUMP_VELOCITY 200 // Value pwm -> 255 = 100%, 155 = 60% of the maximun velocity.
-// Less than 155(60%) may not work
-//#define LCD_I2C_DIR 0x27 // Direction for screen not included in project
-//#define LCD_COLUMNS 20 // Screen columns number
-//#define LCD_ROWS 4 // Screen rows number
-#define RELAY_ACTION_TIME 60000 // 0 seconds by default
+#define PUMP_VELOCITY 255 // Value pwm -> 255 = 100%, 155 = 60% of the maximun velocity.
+#define RELAY_ACTION_TIME 600000 // 0 seconds by default
 #define DHTTYPE DHT22 //Define DHT22 type sensor
 #define LIMIT_SWITCHES 10 //Define limit switch ammount
 #define EZO_PH_OFF 12 //Define ezo off pin
@@ -68,8 +68,10 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
  //defines mixer relay number, since only 1 relay is planned
 // to be used, mixer can be set in any relay by changing the number between 0-3
 // or any other needed relays can be caonnected
-#define loadCellCalibration -2312
+#define loadCellCalibration -400
 #define LoadCellOffset 0
+
+#define PreTime 30000 //30 seconds for testing
 /* Pin definitions
     When using SMaker ECOLISTICO V1.0 Shield al pins are already defined
 */
@@ -79,11 +81,11 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define stepS2 53
 #define dirS3 A11
 #define stepS3 A10
-#define dirS4 A7
-#define stepS4 A6
+#define dirS4 34
+#define stepS4 35
 /*#define dirS5 A3*/
-#define dirS5 A15
-#define stepS5 A2
+#define dirS5 36
+#define stepS5 37
 #define en 45
 #define mS1A 46
 #define mS1B 47
@@ -91,61 +93,60 @@ along with Grow.  If not, see <https://www.gnu.org/licenses/>.
 #define mS2B 51
 #define mS3A A9
 #define mS3B A8
-#define mS4A A5
-#define mS4B A4
-#define pump1 10
-#define pump2 11
-#define pumpEn 43
-#define tempSens 17
-#define relay1 27
-#define relay2 28
-#define relay3 29
-#define relay4 30
-#define limitS1 22
-#define limitS2 23
-#define limitS3 24
-#define limitS4 25
-#define limitS5 26
-#define loadCellDT 9
-#define loadCellSCK 8
-
-
-
+#define pumpA1 39
+#define pumpA2 40
+#define pumpB1 42
+#define pumpB2 41
+#define pumpEnA 38
+#define pumpEnB 43
+#define tempSens 31
+#define DHTSens 30
+#define relay1 6
+#define relay2 5
+#define relay3 4
+#define relay4 3
+#define limitS1 11
+#define limitS2 10
+#define limitS3 9
+#define limitS4 8
+#define limitS5 7
+#define loadCellDT A5
+#define loadCellSCK A6
+#define Servo1 19
+#define Servo2 2
+#define BaseEEPROM 10
 // Class to control the Solution Maker
 
 class solutionMaker
   {
     private:
         uint8_t         __mS[MAX_STEPPERS*2]; // Pins required for all the motors, dir, step and microsteps
-        uint8_t        __enableMotor;
+        uint8_t        __enableMotorA, __enableMotorB;
         uint8_t        __limitS[LIMIT_SWITCHES]; //Pins for limit switches
         bool           __limitS_State[LIMIT_SWITCHES];
         uint8_t        __limitS_salts;//Counter for salt positions
         bool           __dispensing;
         bool           __moveCar;
         unsigned long  __saltCounter[SOLUTIONS-2]; //registers the amount of salt dispensed, obtained with loadcell
-        float          __scaleMedition;
         uint8_t        __En; // Pin to enable all the motors and pumps
         bool           __SteppersEnabled; //Holds true or false if steppers are enabled or disabled
-        uint8_t        __Calibration[MAX_PUMPS_NUMBER]; // Calibration parameter for pumps, ml-time
-        float  __Calibration1[SOLUTIONS]; // Calibration parameter for ph/conductivity equations regarding salts and acids
         uint8_t        __StepPerRev; // Steps per rev
         uint8_t        __MicroSteps; // MicroSteps to be used 4/8/16
         unsigned long  __PumpTime[MAX_PUMPS_NUMBER]; // Time counter for pumps working
         unsigned long  __PumpOnTime[MAX_PUMPS_NUMBER]; // The time that the pumps will be working
         bool           __PumpOn[MAX_PUMPS_NUMBER]; //pumps are active
         unsigned long  __ReadTime, __RelayTime[RELAY_NUMBER]; // Auxiliars counter for sensorReads and relays
-
-        bool           __HOMED;
+        unsigned long  __PreTimer;
         bool           __HOMEING[3];
         long           homeTimer;
         bool           carEndDetected;
-        long           endTimer;
+        unsigned long  endTimer;
         bool           prepareTimeState;
         long           prepareTimeAux;
-        bool           __RelayState[RELAY_NUMBER]; // Variable to hold the state of the relay
-
-        uint8_t        __EEPROM[8+SOLUTIONS+2*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+3*RELAY_NUMBER+2*LIMIT_SWITCHES]; //QTY of eeprom Parameters
+      
+        float          PH_Target;
+        int            EC_Target;
+        
 
 
         // Variable to know if some Atlas Scientific Sensor is exporting its calibration parameters
@@ -154,8 +155,7 @@ class solutionMaker
         bool          __SleepEzo; // Variable to know if Atlas Scientific Sensors are in sleep mode
         bool          readAux;
         bool          tareAux;
-        // Temperature sensor
-        float         __Temp; // Variable to hold the temperature
+        
         long          debugAux;
         long         dispenseDelay;
         bool         dispenseAux;
@@ -185,13 +185,12 @@ class solutionMaker
         EZO *phMeter; // Pointer to phMeter (Atlas Scientific sensor)
         EZO *ecMeter; // Pointer to ecMeter (Atlas Scientific sensor)
         DHT *dhtSensor;
+        
 
-
+        //----------Funciones-------------//
         void enable(uint8_t motor); // Enable actuators
         void disable(); // Disable actuators
-        void turnOnPump(unsigned long time1, uint8_t pump); // Turn on pump
-
-
+        
         /* Converts time [s] to volume [ml] for the pumps
             By default use calibration param of the first pump assuming that all are equals
         */
@@ -205,6 +204,7 @@ class solutionMaker
         float StepsToRev(long st); // Returns the number of rev that are some steps
         // Calculate how much mg of powder or liters of H2O do you need to balance conductivity
         float balanceEC(float EC_init, float EC_final, float liters, uint8_t st);
+        float balanceMicros(float EC_init, float EC_final, float liters);
         // Calculate how much ml of acid or liters of H2O do you need to balance ph
         float balancePH(float PH_init, float PH_final, float liters, uint8_t pump);
         void moveStepper(long steps, uint8_t st);
@@ -227,7 +227,12 @@ class solutionMaker
         void EZOexportFinished(); // When some export is finished set variable to ask for a new one
         void relayControl(int rel); // Control the actions of the relay
 
+
+
+
     public:
+        solutionMaker();
+        uint8_t        __EEPROM[BaseEEPROM+SOLUTIONS+4*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+2*RELAY_NUMBER+2*LIMIT_SWITCHES]; //QTY of eeprom Parameters
       //public variables
         uint8_t        __solutions;
         uint8_t        __max_pumps_number;
@@ -239,16 +244,26 @@ class solutionMaker
         uint8_t        __Motor[MAX_PUMPS_NUMBER]; // Pins to control all the peristaltic pumps
         uint8_t        __PumpVelocity[MAX_PUMPS_NUMBER]; // pwm value for pumps
         uint8_t        __Relay[RELAY_NUMBER]; // Pins to control relay
+        bool           __RelayState[RELAY_NUMBER]; // Variable to hold the state of the relay
         long           __relay_action_time[RELAY_NUMBER];
         float         __loadCellCalibration;
         float         __loadCellOffset;
-
+        byte          microsPump;
+        byte          acidPump;
+    
         // Atlas Scientific Sensors variables
-        float          __pH, __eC; // Variables to hold the phMeter and ecMeter values
+        float          __pH, __eC, __pHtarget,  __literTarget; // Variables to hold the phMeter and ecMeter values
+        int            __ECtarget;
+        float         __Temp, __Hum; // Variable to hold the temperature
+        uint8_t        __Calibration[MAX_PUMPS_NUMBER], __CalibrationDEF[MAX_PUMPS_NUMBER]; // Calibration parameter for pumps, ml-time
+        float          __Calibration1[SOLUTIONS], __Calibration1DEF[SOLUTIONS]; // Calibration parameter for ph/conductivity equations regarding salts and acids
+        float          __microsCalibration;
+        float          __mgPowder;
+        float          __scaleMedition;
+        bool           __HOMED;
 
-        // Constructor. Dir, Step and Enable Pins for all the motors
-        solutionMaker();
         HX711 *scale;
+        ExternalEEPROM *myMem;
 
         bool SolFinished; // Variable to know if the last Solution request finished
          // Init the object with default configuration
@@ -258,12 +273,14 @@ class solutionMaker
          /* Move some miliseconds any pump.
         It allows to measure the ml dispense to get the calibration parameter */
         void dispenseAcid(float some_ml, uint8_t pump); // Add some ml of acid with a pump
+        void dispenseMicros(float some_ml, uint8_t pump);
+        void turnOnPump(unsigned long time1, uint8_t pump); // Turn on pump
         /* Turn on a pump.
         It allows to measure the ml dispense to get the calibration parameter */
         void turnOffPump(uint8_t pump); // Turn off pump
         void pumpCalibration(float time1, uint8_t pump);
-        void setCalibrationParameter(uint8_t param, uint8_t actuator); // Set parameters for motors/pumps
-        void setCalibrationParameter1(uint8_t param, uint8_t actuator); // Set parameter for ph/ec equations
+        void setCalibrationParameter(float param, uint8_t actuator); // Set parameters for motors/pumps
+        void setCalibrationParameter1(float param, uint8_t actuator); // Set parameter for ph/ec equations
         //long getMG(uint8_t saltNumber); // Returns the mg that were dispense
         //void stop(uint8_t actuator); // Stops some motor/pump
         void notFilter();
@@ -287,7 +304,10 @@ class solutionMaker
         void print_EEPROM(int i);
         void read_EEPROM(bool pr);
         void write_EEPROM(unsigned int pos, byte val);
+        void default_EEPROM(bool pr);
+        void save_EEPROM();
         void motorOrderCfg(byte id, byte param);
+        void pumpOrderCfg(byte id, byte param);
         void limitOrderCfg(byte id, byte param);
   };
 
