@@ -2,6 +2,7 @@
 
 # Import modules
 import os
+import re
 import sys
 import json
 from datetime import datetime
@@ -9,6 +10,8 @@ sys.path.insert(0, './src/')
 sys.path.insert(0, './../src/')
 import utils
 import parseClient
+from iHP import logiHp
+from dataLogger import logDataLogger
 from credentials import parse 
 
 # Define config variables
@@ -26,13 +29,94 @@ checkLine = False
 # State variables
 compressor = False
 pump = False
+myiHP = logiHp()
+myDataLogger = logDataLogger()
 
-# Log
+# Log list
 logDict = list()
+# Env list
+envDict = list()
+# LED list
+ledDict = list()
+# Sensor list
+sensorDict = list()
+# Electrical list
+electricalDict = list()
+# dataLogger list
+datLoggerDict = list()
 
-def line2dict(line):
+def line2logDict(line):
     dt1, dev1, typo1, msg1 = utils.getInfo(line[:-1])
     return {"realDate": {"__type": "Date", "iso": dt1.isoformat()}, "device": dev1, "type": typo1, "message": msg1, "systemId": ID}
+
+def line2envDict(line):
+    dt1, dev1, typo1, msg1 = utils.getInfo(line[:-1])
+    obj = {}
+    obj["realDate"] = {"__type": "Date", "iso": dt1.isoformat()}
+    obj["infoFrom"] = dev1
+    obj["systemId"] = ID
+    if(dev1.startswith("grower")): 
+        values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg1)
+        if(len(values) == 3):
+            values = [float(values[i]) for i in range(len(values))]
+            obj["temp"] = values[0]
+            obj["hum"] = values[1]
+            obj["co2"] = values[2]
+            return obj
+    elif(dev1.startswith("master")): 
+        values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg1)
+        if(len(values) == 3):
+            values = [float(values[i]) for i in range(len(values))]
+            obj["temp"] = values[0]
+            obj["hum"] = values[1]
+            obj["pressure"] = values[2]
+            return obj
+
+def line2ledDict(line):
+    dt1, dev1, typo1, msg1 = utils.getInfo(line[:-1])
+    obj = {}
+    obj["realDate"] = {"__type": "Date", "iso": dt1.isoformat()}
+    obj["systemId"] = ID
+    values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg1)
+    if(len(values) == 2):
+        values = [float(values[i]) for i in range(len(values))]
+        obj["floor"] = int(values[0])
+        obj["intensity"] = values[1]
+        obj["intensityPercent"] = values[1]/37.5*100
+        return obj
+
+def line2sensorDict(line, sensorType):
+    dt1, dev1, typo1, msg1 = utils.getInfo(line[:-1])
+    obj = {}
+    obj["realDate"] = {"__type": "Date", "iso": dt1.isoformat()}
+    obj["systemId"] = ID
+    obj["type"] = sensorType
+
+    values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg1)
+    if(len(values) == 2):
+        values = [float(values[i]) for i in range(len(values))]
+        obj["number"] = int(values[0])
+        obj["value"] = values[1]
+        return obj
+
+def add2electricalDict():
+    obj = {}
+    obj["realDate"] = {"__type": "Date", "iso": myiHP.firstDateLine.isoformat()}
+    obj["systemId"] = ID
+    obj["infoFrom"] = "iHP"
+    obj["voltage"] = myiHP.getVoltage()
+    obj["current"] = myiHP.getCurrent()
+    myiHP.reset()
+    electricalDict.append(obj)
+
+def add2datLoggerDict():
+    obj = {}
+    obj["realDate"] = {"__type": "Date", "iso": myDataLogger.dTime.isoformat()}
+    obj["systemId"] = ID
+    obj["infoFrom"] = myDataLogger.dev
+    obj["value"] = myDataLogger.values
+    myDataLogger.reset()
+    datLoggerDict.append(obj)
 
 # Get lastLine and dateTime from conf file
 if (os.path.exists('log2DB.conf')):
@@ -83,15 +167,16 @@ def checkLog(filePath, number = 0):
                                 if(typo.startswith("DEBUG")):
                                     if(msg.startswith("Subscribed topic= {}/#".format(ID))):
                                         #print("INIT MASTER found") # Initialization line
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
                                     elif("C," in msg and "%RH," in msg and "m" in msg):
                                         #(msg) # External conditions line
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
+                                        envDict.append(line2envDict(line))
                                 # INFO lines
                                 elif(typo.startswith("INFO")):
                                     if(msg.startswith("inputHandler-")):
                                         #print("New Input") # manual inputs to the system
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
                                     
                             # Filter generalControl lines
                             # It needs extra clean to avoid incomplete lines
@@ -100,30 +185,32 @@ def checkLog(filePath, number = 0):
                                 if(typo.startswith("DEBUG")):
                                     if(msg.startswith("Solenoid Valve") and "Water Volume" in msg):
                                         #print(msg) # Gives the last water consumption per solenoid
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
                                     elif(compressor and msg.startswith("(Irrigation) Compressor Controller:") and "Turn Off" in msg):
                                         compressor = False
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
                                         #print("Compressor off") # Compressor off
                                 # INFO lines
                                 elif(typo.startswith("INFO")):
                                     if(not compressor and msg.startswith("(Irrigation) Compressor Controller:") and "Pressurize" in msg):
                                         compressor = True
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
                                         #print("Compressor on") # Compressor on
                                     elif(msg.startswith("Sensor: Analog number") and "value" in msg):
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
+                                        sensorDict.append(line2sensorDict(line, "analog"))
                                         # print("Nueva lectura sensor analógico") # Number: 0 air, 1 water
                                     elif(msg.startswith("Sensor: Scale number") and "weight" in msg):
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
+                                        sensorDict.append(line2sensorDict(line, "scale"))
                                         #print("Nueva lectura báscula") # Number: 0 nuestra báscula
                                     elif(not pump and msg.startswith("(Irrigation) Recirculation Controller: Pump was turn") and "on" in msg):
                                         pump = True
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
                                         #print("Pump on") # Pump on
                                     elif(pump and msg.startswith("(Irrigation) Recirculation Controller: Pump was turn") and "off" in msg):
                                         pump = False
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
                                         #print("Pump off") # Pump off
                             
                             # Filter iHP lines
@@ -131,13 +218,16 @@ def checkLog(filePath, number = 0):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
                                     if(msg.startswith("(iHP PS) Change current from module")):
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
+                                        ledDict.append(line2ledDict(line))
                                         #print("LED intensity change") # Led intensity change detect module and current
                                     elif(msg.startswith("(iHP PS) Current Line")):
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
+                                        if(myiHP.line2value(line)): add2electricalDict()
                                         #print(msg) # Current input from iHP get lines 1-3
                                     elif(msg.startswith("(iHP PS) Voltage Line")):
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
+                                        if(myiHP.line2value(line)): add2electricalDict()
                                         #print(msg) # Voltage input from iHP get lines 1-3
                             
                             # Filter Grower lines
@@ -146,16 +236,19 @@ def checkLog(filePath, number = 0):
                                 if(typo.startswith("DEBUG")):
                                     if("Temp=" in msg and "Hum=" in msg and "CO2=" in msg):
                                         print(msg) # Info grower # NOT TESTED
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
+                                        envDict.append(line2envDict(line))
                             # Filter ESP32 lines
                             elif(dev.startswith("esp32")):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
                                     if("R=" in msg and "L=" in msg):
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
+                                        if(myDataLogger.line2value(line)): add2datLoggerDict()
                                         #print(msg) # Static sensors environmental conditions
                                     elif("M1=" in msg):
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
+                                        if(myDataLogger.line2value(line)): add2datLoggerDict()
                                         #print(msg) # Door state from sensors
                             
                             # Filter AirConditioner Principal or Return lines
@@ -163,10 +256,10 @@ def checkLog(filePath, number = 0):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
                                     if("Turning on" in msg):
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
                                         #print(msg) # Turn on air conditioner
                                     elif("Turning off" in msg):
-                                        logDict.append(line2dict(line))
+                                        logDict.append(line2logDict(line))
                                         #print(msg) # Turn off air conditioner
                                         
                     elif(line[:-1]==lastLine): checkLine = True
@@ -178,10 +271,23 @@ checkLog('../temp/growMaster.log', 1)
 checkLog('../temp/growMaster.log', 0)
 if(not checkFile): print('No log file to check')
 
-print("We found {} updates for the database log".format(len(logDict)))
+print("We found {} updates for the database Log".format(len(logDict)))
+print("We found {} updates for the database Enviromental".format(len(envDict)))
+print("We found {} updates for the database LedIntensity".format(len(ledDict)))
+print("We found {} updates for the database SystemSensor".format(len(sensorDict)))
+print("We found {} updates for the database ElectricalStatus".format(len(electricalDict)))
+print("We found {} updates for the database DataLoggers".format(len(datLoggerDict)))
 
-for i in range(0, len(logDict), 100):
-    if(i+100>len(logDict)):
-        r = client.createObject("Log", logDict[i:])
-        print(r)
-    else: client.createObject("Log", logDict[i:i+100])
+def upload2DB(myList, myClass):
+    for i in range(0, len(myList), 100):
+        if(i+100>len(myList)):
+            r = client.createObject(myClass, myList[i:])
+            print(r)
+        else: client.createObject(myClass, myList[i:i+100])
+
+upload2DB(logDict, "Log")
+upload2DB(envDict, "Enviromental")
+upload2DB(ledDict, "LedIntensity")
+upload2DB(sensorDict, "SystemSensor")
+upload2DB(electricalDict, "ElectricalStatus")
+upload2DB(datLoggerDict, "DataLoggers")
