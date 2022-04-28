@@ -6,18 +6,22 @@ import sys
 import json
 from datetime import datetime
 sys.path.insert(0, './src/')
+sys.path.insert(0, './../src/')
 import utils
 import parseClient
-sys.path.insert(0, './../src/')
 from credentials import parse 
 
+# Define config variables
+with open("../config.json") as f:
+    data = json.load(f)
+    ID = data["ID"]
+    
 # Parse client
 client = parseClient.parseClient(parse['server'], parse['appId'], parse['restKey'], mountPath = parse['mountPath'])
 
 # Control variables
 checkFile = False
 checkLine = False
-counter = 0
 
 # State variables
 compressor = False
@@ -28,7 +32,7 @@ logDict = list()
 
 def line2dict(line):
     dt1, dev1, typo1, msg1 = utils.getInfo(line[:-1])
-    return {"realDate": {"__type": "Date", "iso": dt1.isoformat()}, "device": dev1, "type": typo1, "message": msg1}
+    return {"realDate": {"__type": "Date", "iso": dt1.isoformat()}, "device": dev1, "type": typo1, "message": msg1, "systemId": ID}
 
 # Get lastLine and dateTime from conf file
 if (os.path.exists('log2DB.conf')):
@@ -40,10 +44,7 @@ else:
     checkFile = True
     checkLine = True
 
-def checkLog(filePath, number = 0):
-    # Counter
-    global counter
-    
+def checkLog(filePath, number = 0):  
     # Control aux
     global checkFile
     global checkLine
@@ -80,7 +81,7 @@ def checkLog(filePath, number = 0):
                             if(dev.startswith("master")):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
-                                    if(msg.startswith("Subscribed topic= 23-009-006/#")):
+                                    if(msg.startswith("Subscribed topic= {}/#".format(ID))):
                                         #print("INIT MASTER found") # Initialization line
                                         logDict.append(line2dict(line))
                                     elif("C," in msg and "%RH," in msg and "m" in msg):
@@ -168,16 +169,16 @@ def checkLog(filePath, number = 0):
                                         logDict.append(line2dict(line))
                                         #print(msg) # Turn off air conditioner
                                         
-                    elif(line[:-1]==lastLine):
-                        checkLine = True
-                        counter += 1
+                    elif(line[:-1]==lastLine): checkLine = True
             with open('log2DB.conf', "w") as f: f.write(line[:-1])
         else: print('Our dateTime is not in log file {}'.format(number))
 
 checkLog('../temp/growMaster.log', 2)
 checkLog('../temp/growMaster.log', 1)
 checkLog('../temp/growMaster.log', 0)
-if(counter==0): print('No log file to check')
+if(not checkFile): print('No log file to check')
+
+print("We found {} updates for the database log".format(len(logDict)))
 
 for i in range(0, len(logDict), 100):
     if(i+100>len(logDict)):
