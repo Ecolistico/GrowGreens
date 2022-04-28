@@ -17,6 +17,7 @@ Python/Tucan/captures/
 Python/Master/*.json
 Python/Master/*.config
 Python/Master/src/*.csv
+Python/Master/log2DB/*.config
 Python/Cloud/*.json
 Python/Tucan/*.json
 GUI/*.csv
