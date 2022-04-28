@@ -20,7 +20,7 @@ class logiHP:
         # Set dateTime if it is the first value
         if(self.voltage==[0, 0, 0] and self.current==[0, 0, 0]): 
             self.dateTime = datetime.now()
-            self.firstDateLine = datetime.strptime(dTime, '%Y-%m-%d %H:%M:%S')
+            self.firstDateLine = dTime
         
         # Get voltage
         if("Voltage" in msg):

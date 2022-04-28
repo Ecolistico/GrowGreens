@@ -7,11 +7,11 @@ import sys
 import json
 from datetime import datetime
 sys.path.insert(0, './src/')
-sys.path.insert(0, './../src/')
 import utils
 import parseClient
-from iHP import logiHp
+from iHP import logiHP
 from dataLogger import logDataLogger
+sys.path.insert(0, './../src/')
 from credentials import parse 
 
 # Define config variables
@@ -29,7 +29,7 @@ checkLine = False
 # State variables
 compressor = False
 pump = False
-myiHP = logiHp()
+myiHP = logiHP()
 myDataLogger = logDataLogger()
 
 # Log list

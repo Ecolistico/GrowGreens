@@ -26,7 +26,7 @@ class logDataLogger:
 
         values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg)
 
-        if(dev.finishswith("1")):
+        if(dev.endswith("1")):
             if("M1" in msg):
                 values = re.findall(r"(OPEN)|(CLOSE)", msg)
                 if(len(values) == 4):
@@ -58,7 +58,7 @@ class logDataLogger:
                     self.values["T4L"] = float(values[2])
                     self.values["H4L"] = float(values[3])
             
-        elif(dev.finishswith("2")):
+        elif(dev.endswith("2")):
             if("M5" in msg):
                 values = re.findall(r"(OPEN)|(CLOSE)", msg)
                 if(len(values) == 4):
