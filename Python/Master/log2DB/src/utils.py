@@ -13,7 +13,7 @@ def getDateTime(line):
     return datetime.strptime(line[0:19], '%Y-%m-%d %H:%M:%S')
 
 def getDevice(line):
-    return line.split(" ")[2]
+    return line.split(" ")[2].strip()
 
 def getType(line):
     return line[36:44].strip()

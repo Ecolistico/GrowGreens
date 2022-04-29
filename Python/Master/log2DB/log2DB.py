@@ -115,6 +115,7 @@ def add2datLoggerDict():
     obj["systemId"] = ID
     obj["infoFrom"] = myDataLogger.dev
     obj["value"] = myDataLogger.values
+    print(obj)
     myDataLogger.reset()
     datLoggerDict.append(obj)
 
@@ -234,7 +235,7 @@ def checkLog(filePath, number = 0):
                             elif(dev.startswith("grower")):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
-                                    if("Temp=" in msg and "Hum=" in msg and "CO2=" in msg):
+                                    if("cozir" in msg):
                                         print(msg) # Info grower # NOT TESTED
                                         logDict.append(line2logDict(line))
                                         envDict.append(line2envDict(line))
@@ -272,7 +273,7 @@ checkLog('../temp/growMaster.log', 0)
 if(not checkFile): print('No log file to check')
 
 print("We found {} updates for the database Log".format(len(logDict)))
-print("We found {} updates for the database Enviromental".format(len(envDict)))
+print("We found {} updates for the database Environmental".format(len(envDict)))
 print("We found {} updates for the database LedIntensity".format(len(ledDict)))
 print("We found {} updates for the database SystemSensor".format(len(sensorDict)))
 print("We found {} updates for the database ElectricalStatus".format(len(electricalDict)))
@@ -286,7 +287,7 @@ def upload2DB(myList, myClass):
         else: client.createObject(myClass, myList[i:i+100])
 
 upload2DB(logDict, "Log")
-upload2DB(envDict, "Enviromental")
+upload2DB(envDict, "Environmental")
 upload2DB(ledDict, "LedIntensity")
 upload2DB(sensorDict, "SystemSensor")
 upload2DB(electricalDict, "ElectricalStatus")

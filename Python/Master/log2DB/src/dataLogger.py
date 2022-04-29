@@ -12,18 +12,17 @@ class logDataLogger:
 
     def line2value(self, line):
         # Get important data
-        self.dTime = datetime.strptime(line[0:19], '%Y-%m-%d %H:%M:%S')
-        dev = line.split(" ")[2]
+        dev = line.split(" ")[2].strip()
 
         # Check if the device is the same
-        if(self.dev==""): self.dev = dev
+        if(self.dev==""): 
+            self.dev = dev
         elif(self.dev!=dev): 
             self.reset()
-            self.dTime = datetime.strptime(line[0:19], '%Y-%m-%d %H:%M:%S')
             self.dev = dev
 
+        self.dTime = datetime.strptime(line[0:19], '%Y-%m-%d %H:%M:%S')
         msg = line[45:].strip()
-
         values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg)
 
         if(dev.endswith("1")):
@@ -63,10 +62,10 @@ class logDataLogger:
                 values = re.findall(r"(OPEN)|(CLOSE)", msg)
                 if(len(values) == 4):
                     values = [True if val[0]=="OPEN" else False for val in values]
-                    self.values["M1"] = values[0]
-                    self.values["M2"] = values[1]
-                    self.values["M3"] = values[2]
-                    self.values["M4"] = values[3]
+                    self.values["M5"] = values[0]
+                    self.values["M6"] = values[1]
+                    self.values["M7"] = values[2]
+                    self.values["M8"] = values[3]
                     return True
             elif(len(values)==4):
                 if("T5R" in msg):
