@@ -30,6 +30,7 @@ checkLine = False
 # State variables
 compressor = False
 pump = False
+mux1 = False
 myiHP = logiHP()
 myDataLogger = logDataLogger()
 myIrrigation = logIrrigationConsumption()
@@ -226,6 +227,14 @@ def checkLog(filePath, number = 0):
                                         pump = False
                                         logDict.append(line2logDict(line))
                                         #print("Pump off") # Pump off
+                                    elif(not mux1 and msg.startswith("Mux 1: Enabled")):
+                                        mux1 = True
+                                        logDict.append(line2logDict(line))
+                                        #print("Mux 1 enabled") # Mux1 enable
+                                    elif(mux1 and msg.startswith("Mux 1: Disabled")):
+                                        mux1 = False
+                                        logDict.append(line2logDict(line))
+                                        #print("Mux 1 disabled") # Mux1 disable
                             
                             # Filter iHP lines
                             elif(dev.startswith("iHP")):
