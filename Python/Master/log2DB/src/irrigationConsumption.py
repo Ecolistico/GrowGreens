@@ -18,11 +18,10 @@ class logIrrigationConsumption:
         if(msg.startswith("Solenoid Valve") and "Water Volume" in msg):
             ev = re.findall(r"([1-9][A|B][1-9])", msg)
             values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg)
-            if(len(ev)==1 and len(values)==3): self.values[ev[0]] = float(values[1])
-        
-        elif(msg.startswith("Solenoid Valve: Water Consumption")):
+            if(len(ev)==1 and len(values)==3): self.values[ev[0]] = float(values[2])
+        elif(msg.startswith("Solenoid System: Water Consumption")):
             values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg)
-            if(len(values)==1): self.totalWater = float(values[1])
+            if(len(values)==1): self.totalWater = float(values[0])
             return True
             
         return False

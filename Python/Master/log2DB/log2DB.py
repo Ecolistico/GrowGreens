@@ -11,8 +11,7 @@ import utils
 import parseClient
 from iHP import logiHP
 from dataLogger import logDataLogger
-from irrigationConsumption import logIrrigationConstrumption
-
+from irrigationConsumption import logIrrigationConsumption
 sys.path.insert(0, './../src/')
 from credentials import parse 
 
@@ -33,7 +32,7 @@ compressor = False
 pump = False
 myiHP = logiHP()
 myDataLogger = logDataLogger()
-myIrrigation = logIrrigationConstrumption()
+myIrrigation = logIrrigationConsumption()
 
 # Log list
 logDict = list()
@@ -125,11 +124,11 @@ def add2datLoggerDict():
 
 def add2irrigationDict():
     obj = {}
-    obj["realDate"] = {"__type": "Date", "iso": irrigationDict.dTime.isoformat()}
+    obj["realDate"] = {"__type": "Date", "iso": myIrrigation.dTime.isoformat()}
     obj["systemId"] = ID
-    obj["consumption"] = irrigationDict.values
-    obj["totalConsumption"] = irrigationDict.totalWater
-    irrigationDict.reset()
+    obj["consumption"] = myIrrigation.values
+    obj["totalConsumption"] = myIrrigation.totalWater
+    myIrrigation.reset()
     irrigationDict.append(obj)
 
 # Get lastLine and dateTime from conf file
@@ -197,10 +196,10 @@ def checkLog(filePath, number = 0):
                             elif(dev.startswith("generalControl")):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
-                                    if((msg.startswith("Solenoid Valve") and "Water Volume" in msg) or (msg.startswith("Solenoid Valve: Water Consumption"))):
+                                    if((msg.startswith("Solenoid Valve") and "Water Volume" in msg) or (msg.startswith("Solenoid System: Water Consumption"))):
                                         #print(msg) # Gives the last water consumption per solenoid
                                         logDict.append(line2logDict(line))
-                                        if(myIrrigation.line2value()): add2irrigationDict()
+                                        if(myIrrigation.line2value(line)): add2irrigationDict()
                                     elif(compressor and msg.startswith("(Irrigation) Compressor Controller:") and "Turn Off" in msg):
                                         compressor = False
                                         logDict.append(line2logDict(line))
