@@ -11,6 +11,8 @@ import utils
 import parseClient
 from iHP import logiHP
 from dataLogger import logDataLogger
+from irrigationConsumption import logIrrigationConstrumption
+
 sys.path.insert(0, './../src/')
 from credentials import parse 
 
@@ -31,6 +33,7 @@ compressor = False
 pump = False
 myiHP = logiHP()
 myDataLogger = logDataLogger()
+myIrrigation = logIrrigationConstrumption()
 
 # Log list
 logDict = list()
@@ -44,6 +47,8 @@ sensorDict = list()
 electricalDict = list()
 # dataLogger list
 datLoggerDict = list()
+# Irrigation list
+irrigationDict = list()
 
 def line2logDict(line):
     dt1, dev1, typo1, msg1 = utils.getInfo(line[:-1])
@@ -118,6 +123,15 @@ def add2datLoggerDict():
     myDataLogger.reset()
     datLoggerDict.append(obj)
 
+def add2irrigationDict():
+    obj = {}
+    obj["realDate"] = {"__type": "Date", "iso": irrigationDict.dTime.isoformat()}
+    obj["systemId"] = ID
+    obj["consumption"] = irrigationDict.values
+    obj["totalConsumption"] = irrigationDict.totalWater
+    irrigationDict.reset()
+    irrigationDict.append(obj)
+
 # Get lastLine and dateTime from conf file
 if (os.path.exists('log2DB.conf')):
     with open('log2DB.conf', "r") as f: lastLine = f.readline()
@@ -183,9 +197,10 @@ def checkLog(filePath, number = 0):
                             elif(dev.startswith("generalControl")):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
-                                    if(msg.startswith("Solenoid Valve") and "Water Volume" in msg):
+                                    if((msg.startswith("Solenoid Valve") and "Water Volume" in msg) or (msg.startswith("Solenoid Valve: Water Consumption"))):
                                         #print(msg) # Gives the last water consumption per solenoid
                                         logDict.append(line2logDict(line))
+                                        if(myIrrigation.line2value()): add2irrigationDict()
                                     elif(compressor and msg.startswith("(Irrigation) Compressor Controller:") and "Turn Off" in msg):
                                         compressor = False
                                         logDict.append(line2logDict(line))
@@ -271,12 +286,13 @@ checkLog('../temp/growMaster.log', 1)
 checkLog('../temp/growMaster.log', 0)
 if(not checkFile): print('No log file to check')
 
-print("We found {} updates for the database Log".format(len(logDict)))
-print("We found {} updates for the database Environmental".format(len(envDict)))
-print("We found {} updates for the database LedIntensity".format(len(ledDict)))
-print("We found {} updates for the database SystemSensor".format(len(sensorDict)))
-print("We found {} updates for the database ElectricalStatus".format(len(electricalDict)))
-print("We found {} updates for the database DataLoggers".format(len(datLoggerDict)))
+print("We found {}\tupdates for the database Log".format(len(logDict)))
+print("We found {}\tupdates for the database Environmental".format(len(envDict)))
+print("We found {}\tupdates for the database LedIntensity".format(len(ledDict)))
+print("We found {}\tupdates for the database SystemSensor".format(len(sensorDict)))
+print("We found {}\tupdates for the database ElectricalStatus".format(len(electricalDict)))
+print("We found {}\tupdates for the database DataLoggers".format(len(datLoggerDict)))
+print("We found {}\tupdates for the database IrrigationConsumption".format(len(irrigationDict)))
 
 def upload2DB(myList, myClass):
     for i in range(0, len(myList), 100):
@@ -291,3 +307,4 @@ upload2DB(ledDict, "LedIntensity")
 upload2DB(sensorDict, "SystemSensor")
 upload2DB(electricalDict, "ElectricalStatus")
 upload2DB(datLoggerDict, "DataLoggers")
+upload2DB(irrigationDict, "IrrigationConsumption")
