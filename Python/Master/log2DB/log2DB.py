@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import json
+from time import sleep
 from datetime import datetime
 sys.path.insert(0, './src/')
 import utils
@@ -132,10 +133,24 @@ def add2irrigationDict():
     myIrrigation.reset()
     irrigationDict.append(obj)
 
-# Get lastLine and dateTime from conf file
+# Process the program between seconds 15 and 30 to be sure log registered correctly the information requested each minute
+second = datetime.now().second
+while (second<15 or second>30):
+    second = datetime.now().second
+    sleep(1)
+    
+# Get lastLine, dateTime and important variables from conf file
 if (os.path.exists('log2DB.conf')):
-    with open('log2DB.conf', "r") as f: lastLine = f.readline()
-    lastDatetime = utils.getDateTime(lastLine)
+    with open('log2DB.conf', "r") as f:
+        data = json.load(f)
+        lastLine = data["lastLine"]
+        compressor = data["compressor"]
+        pump = data["pump"]
+        mux1 = data["mux1"]
+        myiHP.setData(data["iHP"])
+        myDataLogger.setData(data["dataLoggers"])
+        myIrrigation.setData(data["irrigationConsumption"])
+        lastDatetime = utils.getDateTime(lastLine)
 else:
     lastLine = None
     lastDatetime = datetime(1,1,1)
@@ -150,6 +165,7 @@ def checkLog(filePath, number = 0):
     # State variables
     global compressor
     global pump
+    global mux1
     
     if number != 0: filePath += ".{}".format(number)
     
@@ -286,7 +302,18 @@ def checkLog(filePath, number = 0):
                                         #print(msg) # Turn off air conditioner
                                         
                     elif(line[:-1]==lastLine): checkLine = True
-            with open('log2DB.conf', "w") as f: f.write(line[:-1])
+                    
+            # Save the last data variables before closing the file
+            data = {}
+            data["lastLine"] = line[:-1]
+            data["compressor"] = compressor
+            data["pump"] = pump
+            data["mux1"] = mux1
+            data["iHP"] = myiHP.getData()
+            data["dataLoggers"] = myDataLogger.getData()
+            data["irrigationConsumption"] = myIrrigation.getData()
+            with open('log2DB.conf', "w") as f: json.dump(data, f)
+        # Send error
         else: print('Our dateTime is not in log file {}'.format(number))
 
 checkLog('../temp/growMaster.log', 2)

@@ -6,9 +6,9 @@ from datetime import datetime
 
 class logDataLogger:
     def __init__(self):
-        self.values = {}
         self.dev = ""
         self.dTime = None
+        self.values = {}
 
     def line2value(self, line):
         # Get important data
@@ -94,3 +94,17 @@ class logDataLogger:
         self.values = {}
         self.type = ""
         self.dTime = None
+    
+    def setData(self, data):
+        self.dev = data["dev"]
+        if(data["dTime"] == None): self.dTime = data["dTime"]
+        else: self.dTime = datetime.strptime(data["dTime"], '%Y-%m-%d %H:%M:%S')
+        self.values = data["values"]
+    
+    def getData(self):
+        data = {}
+        data["dev"] = self.dev
+        if(self.dTime == None): data["dTime"] = self.dTime
+        else: data["dTime"] = self.dTime.strftime("'%Y-%m-%d %H:%M:%S'")
+        data["values"] = self.values
+        return data

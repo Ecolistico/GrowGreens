@@ -7,8 +7,8 @@ from datetime import datetime
 class logIrrigationConsumption:
     def __init__(self):
         self.values = {}
-        self.totalWater = 0
         self.dTime = None
+        self.totalWater = 0
 
     def line2value(self, line):
         # Get important data
@@ -30,3 +30,18 @@ class logIrrigationConsumption:
         self.values = {}
         self.totalWater = 0
         self.dTime = None
+    
+    def setData(self, data):
+        self.values = data["values"]
+        if(data["dTime"] == None): self.dTime = data["dTime"]
+        else: self.dTime = datetime.strptime(data["dTime"], '%Y-%m-%d %H:%M:%S')
+        self.totalWater = data["totalWater"]  
+    
+    def getData(self):
+        data = {}
+        data["values"] = self.values
+        if(self.dTime == None): data["dTime"] = self.dTime
+        else: data["dTime"] = self.dTime.strftime("'%Y-%m-%d %H:%M:%S'")
+        data["totalWater"] = self.totalWater
+        return data
+        

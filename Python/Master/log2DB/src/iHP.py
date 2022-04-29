@@ -68,4 +68,24 @@ class logiHP:
         self.update = [False, False, False, False, False, False]
         self.dateTime = None
         self.firstDateLine = None
+    
+    def setData(self, data):
+        self.voltage = data["voltage"]
+        self.current = data["current"]
+        self.update = data["update"]
+        if(data["dateTime"]==None): self.dateTime = data["dateTime"]
+        else: self.dateTime = datetime.strptime(data["dateTime"], '%Y-%m-%d %H:%M:%S')
+        if(data["firstDateLine"]==None): self.firstDateLine = data["firstDateLine"]
+        else: self.firstDateLine = datetime.strptime(data["firstDateLine"], '%Y-%m-%d %H:%M:%S')
+    
+    def getData(self):
+        data = {}
+        data["voltage"] = self.voltage
+        data["current"] = self.current
+        data["update"] = self.update
+        if(self.dateTime==None): data["dateTime"] = self.dateTime
+        else: data["dateTime"] = self.dateTime.strftime("'%Y-%m-%d %H:%M:%S'")
+        if(self.firstDateLine==None): data["firstDateLine"] = self.firstDateLine
+        else: data["firstDateLine"] = self.firstDateLine.strftime("'%Y-%m-%d %H:%M:%S'")
+        return data
 
