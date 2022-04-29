@@ -115,7 +115,6 @@ def add2datLoggerDict():
     obj["systemId"] = ID
     obj["infoFrom"] = myDataLogger.dev
     obj["value"] = myDataLogger.values
-    print(obj)
     myDataLogger.reset()
     datLoggerDict.append(obj)
 
@@ -236,7 +235,7 @@ def checkLog(filePath, number = 0):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
                                     if("cozir" in msg):
-                                        print(msg) # Info grower # NOT TESTED
+                                        #print(msg) # Info grower # NOT TESTED
                                         logDict.append(line2logDict(line))
                                         envDict.append(line2envDict(line))
                             # Filter ESP32 lines
@@ -247,7 +246,7 @@ def checkLog(filePath, number = 0):
                                         logDict.append(line2logDict(line))
                                         if(myDataLogger.line2value(line)): add2datLoggerDict()
                                         #print(msg) # Static sensors environmental conditions
-                                    elif("M1=" in msg):
+                                    elif(re.search(r"([M][1-9][=])", msg)):
                                         logDict.append(line2logDict(line))
                                         if(myDataLogger.line2value(line)): add2datLoggerDict()
                                         #print(msg) # Door state from sensors
