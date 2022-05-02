@@ -114,7 +114,7 @@ class parseClient:
         result = json.loads(connection.getresponse().read())
         return result
     
-    def addQuery(self, variable, value = None, lt = None, lte = None, gt = None, gte = None, ne = None, _in = None, nin = None, exists = None):        
+    def addQuery(self, variable, value = None, lt = None, lte = None, gt = None, gte = None, ne = None, _in = None, nin = None, exists = None, regex = None, startswith = None):        
         if(not variable in self.myQuery): self.myQuery[variable] = {}
         
         if value != None: self.myQuery[variable] = value
@@ -126,6 +126,8 @@ class parseClient:
         if _in != None: self.myQuery[variable]["$in"] = _in
         if nin != None: self.myQuery[variable]["$lt"] = nin
         if exists != None: self.myQuery[variable]["$exists"] = exists
+        if regex != None: self.myQuery[variable]["$regex"] = regex
+        if startswith != None: self.myQuery[variable]["$regex"] = "^{}".format(startswith)
     
     """ Query filters
     $lt ->Less Than
@@ -163,7 +165,9 @@ client.addQuery("realDate",
 # Query by variable exact value
 #client.addQuery("type", value = "INFO")
 # Query by variable exact value
-client.addQuery("device", value = "esp32front2")
+#client.addQuery("device", value = "esp32front2")
+# Startswith query
+#client.addQuery("message", startswith = "cozir")
 
 # Use Query
 r = client.query("Log", where = client.myQuery, limit = 10000)
