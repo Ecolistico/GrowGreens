@@ -177,7 +177,11 @@ void serialEvent(){                                   //if the hardware serial p
         }
         else if(parameter[2]==F("getRead")){
           uint8_t num = parameter[3].toInt()-1;
-          if(num>=0 && num<sconfig.flowmeters) mySensors->_myFlowmeters[num]->printRead();
+          if(num>=0 && num<sconfig.flowmeters) {
+            mySensors->_myFlowmeters[0]->read();
+            mySensors->_myFlowmeters[0]->printRead();
+            mySensors->_myFlowmeters[0]->restartWater();
+          }
           else Serial.println(F("error,Serial Sensor Flowmeter getRead: Parameter[3] incorrect"));
         }
         else Serial.println(F("error,Serial Sensor Flowmeter: Parameter[2] incorrect"));
