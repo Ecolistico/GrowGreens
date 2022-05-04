@@ -105,6 +105,6 @@ class logDataLogger:
         data = {}
         data["dev"] = self.dev
         if(self.dTime == None): data["dTime"] = self.dTime
-        else: data["dTime"] = self.dTime.strftime("'%Y-%m-%d %H:%M:%S'")
+        else: data["dTime"] = self.dTime.strftime('%Y-%m-%d %H:%M:%S')
         data["values"] = self.values
         return data

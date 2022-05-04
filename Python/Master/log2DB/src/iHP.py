@@ -84,8 +84,8 @@ class logiHP:
         data["current"] = self.current
         data["update"] = self.update
         if(self.dateTime==None): data["dateTime"] = self.dateTime
-        else: data["dateTime"] = self.dateTime.strftime("'%Y-%m-%d %H:%M:%S'")
+        else: data["dateTime"] = self.dateTime.strftime('%Y-%m-%d %H:%M:%S')
         if(self.firstDateLine==None): data["firstDateLine"] = self.firstDateLine
-        else: data["firstDateLine"] = self.firstDateLine.strftime("'%Y-%m-%d %H:%M:%S'")
+        else: data["firstDateLine"] = self.firstDateLine.strftime('%Y-%m-%d %H:%M:%S')
         return data
 
