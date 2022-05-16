@@ -248,7 +248,7 @@ def checkLog(filePath, number = 0):
                                     elif(msg.startswith("Sensor: Flowmeter number") and "water" in msg):
                                         dt_1, dev_1, typo_1, msg_1 = utils.getInfo(line[:-1])
                                         values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg_1)
-                                        if(len(values) == 2 and values[1]!=0):
+                                        if(len(values) == 2 and float(values[1])!=0):
                                             #print("New lecture flowmeter") # Number: 0 only flowmeter
                                             logDict.append(line2logDict(line))
                                             sensorDict.append(line2sensorDict(line, "flowmeter"))
@@ -332,7 +332,7 @@ def checkLog(filePath, number = 0):
                                         logDict.append(line2logDict(line))
                                         lineUpload = True
                             
-                            elif(not lineUpload and typo.startswith("WARNING")):
+                            if(not lineUpload and typo.startswith("WARNING")):
                                 #print(msg) # Warning
                                 logDict.append(line2logDict(line))
                                 lineUpload = True
