@@ -43,6 +43,17 @@ typedef struct {
   uint8_t hour_end;
 } led_config;
 
+typedef struct {
+  bool f1;
+  bool f2;
+  bool f3;
+  bool f4;
+  bool f5;
+  bool f6;
+  bool f7;
+  bool f8;  
+} led_status;
+
 union datetime
 { unsigned long epoch;
   byte longBytes[4];
@@ -64,19 +75,13 @@ led_config f6;
 led_config f7;
 led_config f8;
 
+// LED´s status
+led_status led_s;
+
 // Sensor
-floatNumber temp1;
-floatNumber hum1;
-floatNumber temp2;
-floatNumber hum2;
-floatNumber temp3;
-floatNumber hum3;
-floatNumber temp4;
-floatNumber hum4;
-floatNumber temp5;
-floatNumber hum5;
-floatNumber temp6;
-floatNumber hum6;
+floatNumber co2;
+floatNumber hum;
+floatNumber temp;
 
 // Time
 datetime myTime;
@@ -88,11 +93,11 @@ char x;
 // Touchscreen
 int xpos, ypos;             // to get touch position
 uint8_t screens = 0;        // Switch between screens
-bool first_update = false;  // Control when update info dispay in screen
-uint8_t minute = 0;         // Configuration start minute
-uint8_t hour = 0;           // Configuration start hour
-uint8_t minute1 = 0;        // Configuration end minute
-uint8_t hour1 = 0;          // Configuration end hour
+uint8_t conf_value = 0;     // Configuration value
+uint8_t conf_number = 0;    // Variable to select and switch between hour_begin, minute_begin, hour_end, minute_end
+uint8_t floor_selected = 0; // What floor are you configurating
+bool relay1_intervalo = true;
+bool relay2_intervalo = false;
 
 // Update parameters
 uint8_t updatePin = 50;
@@ -108,12 +113,10 @@ void i2c_debug();
 void beginTFT();
 bool Touch_getXY(void);
 void splashscreen();
-void home_screen();
+void home_screen(led_status led_st);
 void ConfigFloor();
-void hourDisplay1();
-void minuteDisplay1();
-void hourDisplay2();
-void minutoDisplay2();
+void keyBoard();
+void relayScreen(String relay, bool intervalo);
 void updateTFT();
 
 void setup() {
