@@ -189,6 +189,7 @@ def checkLog(filePath, number = 0):
                 for line in f:
                     if(checkLine):
                         if(line[0] >= '0' and line[0] <= '9'): # Line has to start as dateTime format
+                            lineUpload = False # Control line to know which line has already taken into account
                             dt, dev, typo, msg = utils.getInfo(line[:-1])
                             
                             # Filter master lines
@@ -198,16 +199,19 @@ def checkLog(filePath, number = 0):
                                     if(msg.startswith("Subscribed topic= {}/#".format(ID))):
                                         #print("INIT MASTER found") # Initialization line
                                         logDict.append(line2logDict(line))
+                                        lineUpload = True
                                     elif("C," in msg and "%RH," in msg and "m" in msg):
                                         #(msg) # External conditions line
                                         logDict.append(line2logDict(line))
                                         envDict.append(line2envDict(line))
+                                        lineUpload = True
                                 # INFO lines
                                 elif(typo.startswith("INFO")):
                                     if(msg.startswith("inputHandler-")):
                                         #print("New Input") # manual inputs to the system
                                         logDict.append(line2logDict(line))
-                                    
+                                        lineUpload = True
+
                             # Filter generalControl lines
                             # It needs extra clean to avoid incomplete lines
                             elif(dev.startswith("generalControl")):
@@ -216,58 +220,80 @@ def checkLog(filePath, number = 0):
                                     if((msg.startswith("Solenoid Valve") and "Water Volume" in msg) or (msg.startswith("Solenoid System: Water Consumption"))):
                                         #print(msg) # Gives the last water consumption per solenoid
                                         logDict.append(line2logDict(line))
+                                        lineUpload = True
                                         if(myIrrigation.line2value(line)): add2irrigationDict()
                                     elif(compressor and msg.startswith("(Irrigation) Compressor Controller:") and "Turn Off" in msg):
+                                        #print("Compressor off") # Compressor off
                                         compressor = False
                                         logDict.append(line2logDict(line))
-                                        #print("Compressor off") # Compressor off
+                                        lineUpload = True
+                                        
                                 # INFO lines
                                 elif(typo.startswith("INFO")):
                                     if(not compressor and msg.startswith("(Irrigation) Compressor Controller:") and "Pressurize" in msg):
+                                        #print("Compressor on") # Compressor on
                                         compressor = True
                                         logDict.append(line2logDict(line))
-                                        #print("Compressor on") # Compressor on
+                                        lineUpload = True
                                     elif(msg.startswith("Sensor: Analog number") and "value" in msg):
+                                        # print("New lecture analog sensor") # Number: 0 air, 1 water
                                         logDict.append(line2logDict(line))
                                         sensorDict.append(line2sensorDict(line, "analog"))
-                                        # print("Nueva lectura sensor analógico") # Number: 0 air, 1 water
+                                        lineUpload = True
                                     elif(msg.startswith("Sensor: Scale number") and "weight" in msg):
+                                        #print("New lecture scale") # Number: 0 only scale
                                         logDict.append(line2logDict(line))
                                         sensorDict.append(line2sensorDict(line, "scale"))
-                                        #print("Nueva lectura báscula") # Number: 0 nuestra báscula
+                                        lineUpload = True
+                                    elif(msg.startswith("Sensor: Flowmeter number") and "water" in msg):
+                                        dt_1, dev_1, typo_1, msg_1 = utils.getInfo(line[:-1])
+                                        values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg_1)
+                                        if(len(values) == 2 and values[1]!=0):
+                                            #print("New lecture flowmeter") # Number: 0 only flowmeter
+                                            logDict.append(line2logDict(line))
+                                            sensorDict.append(line2sensorDict(line, "flowmeter"))
+                                            lineUpload = True
+                                        #Sensor:  0 water= 0.00 liters
                                     elif(not pump and msg.startswith("(Irrigation) Recirculation Controller: Pump was turn") and "on" in msg):
+                                        #print("Pump on") # Pump on
                                         pump = True
                                         logDict.append(line2logDict(line))
-                                        #print("Pump on") # Pump on
+                                        lineUpload = True
                                     elif(pump and msg.startswith("(Irrigation) Recirculation Controller: Pump was turn") and "off" in msg):
+                                        #print("Pump off") # Pump off
                                         pump = False
                                         logDict.append(line2logDict(line))
-                                        #print("Pump off") # Pump off
+                                        lineUpload = True
                                     elif(not mux1 and msg.startswith("Mux 1: Enabled")):
+                                        #print("Mux 1 enabled") # Mux1 enable
                                         mux1 = True
                                         logDict.append(line2logDict(line))
-                                        #print("Mux 1 enabled") # Mux1 enable
+                                        lineUpload = True
                                     elif(mux1 and msg.startswith("Mux 1: Disabled")):
+                                        #print("Mux 1 disabled") # Mux1 disable
                                         mux1 = False
                                         logDict.append(line2logDict(line))
-                                        #print("Mux 1 disabled") # Mux1 disable
+                                        lineUpload = True
                             
                             # Filter iHP lines
                             elif(dev.startswith("iHP")):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
                                     if(msg.startswith("(iHP PS) Change current from module")):
+                                        #print("LED intensity change") # Led intensity change detect module and current
                                         logDict.append(line2logDict(line))
                                         ledDict.append(line2ledDict(line))
-                                        #print("LED intensity change") # Led intensity change detect module and current
+                                        lineUpload = True
                                     elif(msg.startswith("(iHP PS) Current Line")):
-                                        logDict.append(line2logDict(line))
-                                        if(myiHP.line2value(line)): add2electricalDict()
                                         #print(msg) # Current input from iHP get lines 1-3
-                                    elif(msg.startswith("(iHP PS) Voltage Line")):
                                         logDict.append(line2logDict(line))
                                         if(myiHP.line2value(line)): add2electricalDict()
+                                        lineUpload = True
+                                    elif(msg.startswith("(iHP PS) Voltage Line")):
                                         #print(msg) # Voltage input from iHP get lines 1-3
+                                        logDict.append(line2logDict(line))
+                                        if(myiHP.line2value(line)): add2electricalDict()
+                                        lineUpload = True
                             
                             # Filter Grower lines
                             elif(dev.startswith("grower")):
@@ -277,29 +303,49 @@ def checkLog(filePath, number = 0):
                                         #print(msg) # Info grower # NOT TESTED
                                         logDict.append(line2logDict(line))
                                         envDict.append(line2envDict(line))
+                                        lineUpload = True
                             # Filter ESP32 lines
                             elif(dev.startswith("esp32")):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
                                     if("R=" in msg and "L=" in msg):
-                                        logDict.append(line2logDict(line))
-                                        if(myDataLogger.line2value(line)): add2datLoggerDict()
                                         #print(msg) # Static sensors environmental conditions
-                                    elif(re.search(r"([M][1-9][=])", msg)):
                                         logDict.append(line2logDict(line))
                                         if(myDataLogger.line2value(line)): add2datLoggerDict()
+                                        lineUpload = True
+                                    elif(re.search(r"([M][1-9][=])", msg)):
                                         #print(msg) # Door state from sensors
+                                        logDict.append(line2logDict(line))
+                                        if(myDataLogger.line2value(line)): add2datLoggerDict()
+                                        lineUpload = True
                             
                             # Filter AirConditioner Principal or Return lines
                             elif(dev.startswith("AirPrincipal") or dev.startswith("AirReturn")):
                                 # DEBUG lines
                                 if(typo.startswith("DEBUG")):
                                     if("Turning on" in msg):
-                                        logDict.append(line2logDict(line))
                                         #print(msg) # Turn on air conditioner
-                                    elif("Turning off" in msg):
                                         logDict.append(line2logDict(line))
+                                        lineUpload = True
+                                    elif("Turning off" in msg):
                                         #print(msg) # Turn off air conditioner
+                                        logDict.append(line2logDict(line))
+                                        lineUpload = True
+                            
+                            elif(not lineUpload and typo.startswith("WARNING")):
+                                #print(msg) # Warning
+                                logDict.append(line2logDict(line))
+                                lineUpload = True
+                            
+                            elif(not lineUpload and typo.startswith("ERROR")):
+                                #print(msg) # Warning
+                                logDict.append(line2logDict(line))
+                                lineUpload = True
+                            
+                            elif(not lineUpload and typo.startswith("CRITICAL")):
+                                #print(msg) # Warning
+                                logDict.append(line2logDict(line))
+                                lineUpload = True
                                         
                     elif(line[:-1]==lastLine): checkLine = True
                     
