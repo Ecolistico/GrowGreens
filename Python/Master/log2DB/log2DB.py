@@ -65,8 +65,8 @@ def line2envDict(line):
         values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg1)
         if(len(values) == 3):
             values = [float(values[i]) for i in range(len(values))]
-            obj["temp"] = values[0]
-            obj["hum"] = values[1]
+            obj["hum"] = values[0]
+            obj["temp"] = values[1]
             obj["co2"] = values[2]
             return obj
     elif(dev1.startswith("master")): 
