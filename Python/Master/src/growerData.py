@@ -26,6 +26,10 @@ class grower:
         
         self.xSeq = 155
         self.ySeq = 200
+        self.maxX = 0
+        self.maxY = 0
+        self.posX = 0
+        self.posY = 0
         
     def serialReq(self, req):
         self.serialRequest = req

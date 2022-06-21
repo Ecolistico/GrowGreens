@@ -103,11 +103,25 @@ class serialController:
         except Exception as e:
             self.logMain.error("Error cleaning grower line {}. Line that failed is {}".format(e, line))
             return ""
-
+        
+    def cleanMaxDistanceLine(self, line):
+        try:
+            resp1 = line.split(" - ")[0][5:]
+            resp2 = line.split(" - ")[1][5:]
+            return resp1, resp2
+        except Exception as e:
+            self.logMain.error("Error cleaning MaxDistanceLine {}. Line that failed is {}".format(e, line))
+            return "", ""
+            
     def getGrowerLine(self, line):
         resp = self.cleanLine(line)
         num = self.detectGrower(resp)
         return resp, num
+    
+    def getConfigParameters(self, line):
+        resp = self.cleanLine(line)
+        respX, respY = self.cleanMaxDistanceLinePos(resp)
+        return respX, respY
         
     def stopGrower(self, fl):
         serialFloor = self.mGrower.data[str(fl)]
@@ -265,14 +279,14 @@ class serialController:
                     while self.motorsGrower[i].in_waiting>0:
                         line2 = str(self.motorsGrower[i].readline(), "utf-8")[0:-1]
                         self.Msg2Log(self.logMG[i], line2)
-
+    
                         decition = False
                         for j in range(len(self.mGrower.Gr)):
                             # If we are waiting a particular response from GrowerN
                             if(self.mGrower.Gr[j].serialRequest!="" and not decition):
                                 decition = self.decideStartOrStopGrower(self.cleanLine(line2), i)
 
-                            # If wer are waiting GrowerN to reach home and start the sequence
+                            # If we are waiting GrowerN to reach home and start the sequence
                             if(self.mGrower.Gr[j].serialRequest.startswith("sequence") and self.mGrower.Gr[j].startRoutine and not decition):
                                 resp, num = self.getGrowerLine(line2)
                                 num += i*4 # Add 4 for each serialDevice to get the correct growerNumber
@@ -294,8 +308,24 @@ class serialController:
                                     elif resp.startswith("Routine Finished"):
                                         decition = True
                                         self.GrowerRoutineFinish(j+1)
-
-
+                                        
+                            # If we are waiting GrowerN RespMax
+                            if(line2.startswith("warning")):
+                                resp, num = self.getGrowerLine(line2)
+                                num += i*4 # Add 4 for each serialDevice to get the correct growerNumber
+                                print(num)
+                                resp1 = self.cleanGrowerLine(resp)
+                                if resp1.startswith("max"):
+                                    respX, respY = self.cleanMaxDistanceLine(resp1)
+                                    print(respX,respY)
+                                    self.mGrower.Gr[num-1].maxX = respX
+                                    self.mGrower.Gr[num-1].maxY = respY
+                                elif resp1.startswith("pos"):
+                                    respX, respY = self.cleanMaxDistanceLine(resp1)
+                                    print(respX,respY)
+                                    self.mGrower.Gr[num-1].posX = respX
+                                    self.mGrower.Gr[num-1].posY = respY                                                                            
+                                        
                 except UnicodeDecodeError as e: self.logMG[i].error(e)
                 
         # Send all responses

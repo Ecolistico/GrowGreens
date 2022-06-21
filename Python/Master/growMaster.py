@@ -93,7 +93,9 @@ def checkSerialMsg(grower):
         serialDevice = int(int(serialFloor)/4)
         serialControl.write(serialControl.motorsGrower[serialDevice], grower.serialRequest)
         grower.actualTime = time()
-        if grower.serialRequestCounter == 0: log.logger.debug("Sending Grower{} serialRequest: {}".format(grower.floor, grower.serialRequest))
+        if grower.serialRequestCounter == 0:
+            log.logger.debug("Sending Grower{} serialRequest: {}".format(grower.floor, grower.serialRequest))
+            if(grower.serialRequest.startswith("home") or grower.serialRequest.startswith("movePosXY") or grower.serialRequest.startswith("maxDistance") or grower.serialRequest.startswith("position")): grower.serialRequest = ""
         else: log.logger.warning("Resending Grower{} serialRequest: {}".format(grower.floor, grower.serialRequest))
         grower.serialRequestCounter += 1
     else: pass
