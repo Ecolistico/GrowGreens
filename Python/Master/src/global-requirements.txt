@@ -41,7 +41,7 @@ mote==0.0.4
 motephat==0.0.2
 mypy==0.470
 networkx==2.3
-numpy==1.17.0
+numpy==1.22.0
 oauthlib==2.0.1
 paho-mqtt==1.4.0
 pantilthat==0.0.7
