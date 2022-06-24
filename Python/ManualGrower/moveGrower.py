@@ -69,17 +69,30 @@ def main():
                             hostname=mqttCloud.server_ip)
             mqttCloud.client.loop(0.2)
             if (1<= gui.gr <= 4):
-                calX = mqttCloud.X1
-                calY = mqttCloud.Y1
+                calX = mqttCloud.CalX1
+                calY = mqttCloud.CalY1
                 if (int(calX) != 0 and int(calY) != 0):
                     print("CalXY Ready: ",calX, calY)
-                    updatePos(gui.gr)
-
+                    ###UpdatePos
+                    publish.single(mqttCloud.pub,
+                                    'syncPosCloud,{}'.format(gui.gr),
+                                    hostname=mqttCloud.server_ip)
+                    mqttCloud.client.loop(0.2)
+                    publish.single(mqttCloud.pub,
+                                     'syncPosCloud,{}'.format(gui.gr),
+                                    hostname=mqttCloud.server_ip)
+                    mqttCloud.client.loop(0.2)
+                    posX = mqttCloud.X1
+                    posY = mqttCloud.Y1
+                    gui.updatePos(posX, posY)
+                    print("Pos: ",posX, posY)
+                 
+                    ##
+                    
                 else:
                     print("Error, SyncCalXY")
                     gui.updateStatus("ERROR: SyncCalXY")
                     break
-                    
             else:
                 gui.updateStatus("ERROR:Piso Incorrecto")
                 gui.window["data_sincronizar"].update(disabled=True)

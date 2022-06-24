@@ -8,8 +8,7 @@ class mqttClient():
     def __init__(self):
         #MQTT
         self.client = mqtt.Client()
-        self.server_ip = 'localhost'
-        
+        self.server_ip = '192.168.6.10'
         self.Topic = "23-009-003/Cloud"
         self.pub = "23-009-003/Master"
         
