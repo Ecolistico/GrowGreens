@@ -134,9 +134,9 @@ class GUI:
     def getFloor(self, values):
         self.gr = 0
         if values['pis'] == "Piso 1": self.gr = 1
-        elif values['pis'] == "Piso 3": self.gr = 2
-        elif values['pis'] == "Piso 6": self.gr = 3
-        elif values['pis'] == "Piso 8": self.gr = 4
+        elif values['pis'] == "Piso 3": self.gr = 3
+        elif values['pis'] == "Piso 6": self.gr = 6
+        elif values['pis'] == "Piso 8": self.gr = 8
         elif self.gr == 0:
             print("Seleccione un piso disponible")
             print("ERROR")
