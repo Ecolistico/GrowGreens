@@ -18,6 +18,10 @@ class GUI:
         self.home = False
         self.move = False
         self.sync = False
+        self.up = False
+        self.downB = False 
+        self.left = False
+        self.right = False
         self.XObj = 0
         self.YObj = 0
 
@@ -198,7 +202,19 @@ class GUI:
             elif event == "data_sincronizar":
                 print("Sync")
                 self.getFloor(values)
-                self.sync = True                
+                self.sync = True
+            elif event == "data_up":
+                print("moveUp")
+                self.up = True
+            elif event == "data_down":
+                print("moveDown")
+                self.downB = True
+            elif event == "data_left":
+                print("moveLeft")
+                self.left = True
+            elif event == "data_right":
+                print("moveRight")
+                self.right = True
                 
         except Exception as e:
             #self.str2log("GUI Closed: {}".format(e), 2)
