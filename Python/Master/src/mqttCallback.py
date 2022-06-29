@@ -209,16 +209,29 @@ class mqttController:
             elif(message.startswith('movePosXY')):
                 fl = int(message.split(",")[1]) # Floor
                 serialFloor = self.mGrower.data[str(fl)]
-                posX = int(message.split(",")[2])
-                posY = int(message.split(",")[3])
+                posX = float(message.split(",")[2])
+                posY = float(message.split(",")[3])
                 if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
                     serialFloor = int(serialFloor)
                     serialDevice = int((serialFloor-1)/4)
                     floor = fl - serialDevice*4
-                    self.mGrower.Gr[fl-1].serialReq("movePosXY,{},{},{}".format(serialFloor,posX,posY))
-                    self.mGrower.Gr[fl-1].mqttReq("")
-                    self.mGrower.Gr[fl-1].actualTime = time()-120 
-                    self.logMain.debug("Grower{} Going to Pos X:{},Y{}".format(fl,posX,posY))
+                    if (int(posY) == 0):
+                        self.mGrower.Gr[fl-1].serialReq("moveX,{},{}".format(serialFloor,posX))
+                        self.mGrower.Gr[fl-1].mqttReq("")
+                        self.mGrower.Gr[fl-1].actualTime = time()-120 
+                        self.logMain.debug("Grower{} Going to Pos X:{}".format(fl,posX))
+                        
+                    elif(int(posX) == 0):    
+                        self.mGrower.Gr[fl-1].serialReq("moveY,{},{}".format(serialFloor,posY))
+                        self.mGrower.Gr[fl-1].mqttReq("")
+                        self.mGrower.Gr[fl-1].actualTime = time()-120 
+                        self.logMain.debug("Grower{} Going to Pos Y:{}".format(fl,posY))                   
+
+                    else:
+                        self.mGrower.Gr[fl-1].serialReq("movePosXY,{},{},{}".format(serialFloor,posX,posY))
+                        self.mGrower.Gr[fl-1].mqttReq("")
+                        self.mGrower.Gr[fl-1].actualTime = time()-120 
+                        self.logMain.debug("Grower{} Going to Pos X:{},Y{}".format(fl,posX,posY))
                 else: self.logMain.error("Cannot go PosXY. Parameters (floor or serialFloor are wrong).")
             
             elif(message.startswith('syncCalCloud')):

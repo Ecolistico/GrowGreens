@@ -313,7 +313,6 @@ class serialController:
                             if(line2.startswith("warning")):
                                 resp, num = self.getGrowerLine(line2)
                                 num += i*4 # Add 4 for each serialDevice to get the correct growerNumber
-                                print(num)
                                 resp1 = self.cleanGrowerLine(resp)
                                 if resp1.startswith("max"):
                                     respX, respY = self.cleanMaxDistanceLine(resp1)
