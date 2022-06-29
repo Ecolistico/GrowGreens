@@ -22,6 +22,8 @@ class GUI:
         self.downB = False 
         self.left = False
         self.right = False
+        self.iron = False
+        self.iroff = False
         self.XObj = 0
         self.YObj = 0
 
@@ -98,8 +100,8 @@ class GUI:
                    [sg.Text(' '*5 +'X:  {}'.format(PosX), font='Any 12', key="posxA_status"), sg.Text(' '*35 +'X', font='Any 12'), sg.Input('PosXObj', size=(20,10), key="posxO_status")],
                    [sg.Text(' '*5 +'Y:  {}'.format(PosY), font='Any 12', key="posyA_status"), sg.Text(' '*36 +'Y', font='Any 12'), sg.Input('PosYObj', size=(20,10), key="posyO_status")],
                    [sg.Text(' '*39 + 'Nodo:  X', font='Any 12'), sg.Input('NoX', size=(5,10), key="nodo_x", disabled=True), sg.Text('Y', font='Any 12'), sg.Input('NoY', size=(5,10), key="nodo_y", disabled=True)], 
-                   [sg.Text('Control Direc'), sg.Button('Off', size=(4,1), button_color=('white', 'red'), key='_B_'), sg.Text(' '*3), sg.Button(SYMBOL_UP, key="data_up", disabled=True)],
-                   [sg.Text(' '*30), sg.Button(SYMBOL_LEFT, key="data_left", disabled=True), sg.Text(' '*5), sg.Button(SYMBOL_RIGHT, key="data_right", disabled=True)],
+                   [sg.Text('Control Direc'), sg.Button('Off', size=(4,1), button_color=('white', 'red'), key='_B_'), sg.Text(' '*3), sg.Button(SYMBOL_UP, key="data_up", disabled=True),sg.Text(' '*20), sg.Button('IR-ON', button_color=('white', 'green'), key="data_iron")],
+                   [sg.Text(' '*30), sg.Button(SYMBOL_LEFT, key="data_left", disabled=True), sg.Text(' '*5), sg.Button(SYMBOL_RIGHT, key="data_right", disabled=True), sg.Text(' '*10), sg.Button('IR-OFF', button_color=('white', 'red'), key="data_iroff", disabled=True)],
                    [sg.Text(' '*40), sg.Button(SYMBOL_DOWN, key="data_down", disabled=True)],
                    [sg.Text(' '*10), sg.Button('Home', key="data_home"), sg.Text(' '*40), sg.Button('Mover', key="data_move")]]
 
@@ -215,6 +217,10 @@ class GUI:
             elif event == "data_right":
                 print("moveRight")
                 self.right = True
+            elif event == "data_iron":
+                self.iron = True
+            elif event == "data_iroff":
+                self.iroff = True
                 
         except Exception as e:
             #self.str2log("GUI Closed: {}".format(e), 2)

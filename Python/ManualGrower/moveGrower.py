@@ -91,7 +91,7 @@ def main():
                             'syncCalCloud,{}'.format(gui.gr),
                             hostname=mqttCloud.server_ip)
             mqttCloud.client.loop(0.2)            
-            if (1<= gui.gr <= 4):
+            if (1<= gui.gr <= 8):
                 calX = mqttCloud.CalX1
                 calY = mqttCloud.CalY1
                 if (int(calX) != 0 and int(calY) != 0):
@@ -141,7 +141,7 @@ def main():
             gui.home = False
 
         if gui.move == True:
-            if (1<= gui.gr <= 4):
+            if (1<= gui.gr <= 8):
                 #print("Moving to Pos: X:{}, Y:{}")
                 XObj = gui.XObj
                 YObj = gui.YObj
@@ -153,54 +153,79 @@ def main():
                 gui.move = False
 
         if gui.up == True:
-            if (1<= gui.gr <= 4):
+            if (1<= gui.gr <= 8):
                 #print("Moving to Pos: X:{}, Y:{}")
                 #X,YObj tamaño de pasos
                 XPaso, YPaso = createNodos(mqttCloud.CalX1, mqttCloud.CalY1)
                 XObj = XPaso + int(mqttCloud.X1)
                 if XObj < float(mqttCloud.CalX1):                 
                     print("Move X: ",XPaso, 0)
-                    gui.updateStatus("Moving UP :{}".format(XPaso,0))
+                    gui.updateStatus("Moving UP:{},{}".format(XPaso,0))
                     publish.single(mqttCloud.pub,
                                     'movePosXY,{},{},{}'.format(gui.gr,XPaso,0),
                                     hostname=mqttCloud.server_ip)
                 gui.up = False
                 
         if gui.downB == True:
-            if (1<= gui.gr <= 4):
+            if (1<= gui.gr <= 8):
                 #print("Moving to Pos: X:{}, Y:{}")
                 #X,YObj tamaño de pasos
                 XPaso, YPaso = createNodos(mqttCloud.CalX1, mqttCloud.CalY1)
                 XObj = int(mqttCloud.X1) - XPaso                  
                 print("Move X: ",-(XPaso), 0)
+                gui.updateStatus("Moving Down:{},{}".format(-(XPaso),0))
                 publish.single(mqttCloud.pub,
                                 'movePosXY,{},{},{}'.format(gui.gr,-(XPaso),0),
                                 hostname=mqttCloud.server_ip)
                 gui.downB = False
 
         if gui.right == True:
-            if (1<= gui.gr <= 4):
+            if (1<= gui.gr <= 8):
                 #print("Moving to Pos: X:{}, Y:{}")
                 #X,YObj tamaño de pasos
                 XPaso, YPaso = createNodos(mqttCloud.CalX1, mqttCloud.CalY1)
                 YObj = YPaso + int(mqttCloud.Y1)                 
                 print("Move Y: ",0, YObj)
+                gui.updateStatus("Moving Right:{},{}".format(0,YPaso))
                 publish.single(mqttCloud.pub,
                                 'movePosXY,{},{},{}'.format(gui.gr,0,YPaso),
                                 hostname=mqttCloud.server_ip)
                 gui.right = False
 
         if gui.left == True:
-            if (1<= gui.gr <= 4):
+            if (1<= gui.gr <= 8):
                 #print("Moving to Pos: X:{}, Y:{}")
                 #X,YObj tamaño de pasos
                 XPaso, YPaso = createNodos(mqttCloud.CalX1, mqttCloud.CalY1)
                 YObj = int(mqttCloud.Y1) - YPaso                 
                 print("Move Y: ",0, YObj)
+                gui.updateStatus("Moving Left:{},{}".format(0,-(Ypaso)))
                 publish.single(mqttCloud.pub,
-                                'movePosXY,{},{},{}'.format(gui.gr,0,YPaso),
+                                'movePosXY,{},{},{}'.format(gui.gr,0,-(YPaso)),
                                 hostname=mqttCloud.server_ip)
                 gui.left = False
+
+        if gui.iron == True:
+            if (1<= gui.gr <= 8):
+                print("IR ON: ")
+                gui.updateStatus("IR ON")
+                publish.single('23-009-004/Grower{}/log'.format(gui.gr),
+                                'OnOut2',
+                                hostname=mqttCloud.server_ip)
+                gui.window["data_iron"].update(disabled=True)
+                gui.window["data_iroff"].update(disabled=False)
+                gui.iron = False
+
+        if gui.iroff == True:
+            if (1<= gui.gr <= 8):
+                print("IR OFF")
+                gui.updateStatus("IR OFF")
+                publish.single('23-009-004/Grower{}/log'.format(gui.gr),
+                                'OffOut2',
+                                hostname=mqttCloud.server_ip)
+                gui.window["data_iron"].update(disabled=False)
+                gui.window["data_iroff"].update(disabled=True)
+                gui.iroff = False
 
 if __name__ == '__main__':
     main()
