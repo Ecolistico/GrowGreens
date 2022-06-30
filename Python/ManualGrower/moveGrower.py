@@ -64,7 +64,7 @@ def main():
         gui.run()
         mqttCloud.client.loop(0.05)
         #########FUNCION actualiza la posicion cada 3 segundos. Con timer
-        if (time.time()-timer>5 and flag1==True):
+        if (time.time()-timer>1500 and flag1==True):
             timer = time.time()
             ###UpdatePos
             publish.single(mqttCloud.pub,
@@ -199,7 +199,7 @@ def main():
                 XPaso, YPaso = createNodos(mqttCloud.CalX1, mqttCloud.CalY1)
                 YObj = int(mqttCloud.Y1) - YPaso                 
                 print("Move Y: ",0, YObj)
-                gui.updateStatus("Moving Left:{},{}".format(0,-(Ypaso)))
+                gui.updateStatus("Moving Left:{},{}".format(0,-(YPaso)))
                 publish.single(mqttCloud.pub,
                                 'movePosXY,{},{},{}'.format(gui.gr,0,-(YPaso)),
                                 hostname=mqttCloud.server_ip)
@@ -209,7 +209,7 @@ def main():
             if (1<= gui.gr <= 8):
                 print("IR ON: ")
                 gui.updateStatus("IR ON")
-                publish.single('23-009-004/Grower{}/log'.format(gui.gr),
+                publish.single('23-009-004/Grower{}'.format(gui.gr),
                                 'OnOut2',
                                 hostname=mqttCloud.server_ip)
                 gui.window["data_iron"].update(disabled=True)
@@ -220,7 +220,7 @@ def main():
             if (1<= gui.gr <= 8):
                 print("IR OFF")
                 gui.updateStatus("IR OFF")
-                publish.single('23-009-004/Grower{}/log'.format(gui.gr),
+                publish.single('23-009-004/Grower{}'.format(gui.gr),
                                 'OffOut2',
                                 hostname=mqttCloud.server_ip)
                 gui.window["data_iron"].update(disabled=False)
