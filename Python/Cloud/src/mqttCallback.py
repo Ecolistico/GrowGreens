@@ -191,11 +191,11 @@ class mqttController:
 
         elif(message.startswith("RoutineFinished")): self.finishRoutine()
 
-        elif (message.startswitht("posxy")):
+        elif(message.startswith("posxy")):
             self.X1 = message.split(",")[1]
             self.Y1 = message.split(",")[2]
 
-        elif (message.startswitht("sync")):
+        elif(message.startswith("sync")):
             self.CalX1 = message.split(",")[1]
             self.CalY1 = message.split(",")[2]
 

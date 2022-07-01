@@ -59,8 +59,6 @@ waitNextMove = False
 
 gui = GUI()
 
-# From guiControl
-guiControl = guiController(data["ID"], data["IP"], mqttControl, gui)
 
 def mainClose():
     # Close devices when finished
@@ -82,9 +80,15 @@ try:
 except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".format(e))
 
 try:
+    gui.begin()
     gui.updateStatus("Sincroniza un piso(1,3,6,8)")
     gui.window["data_home"].update(disabled=True)
     gui.window["data_move"].update(disabled=True)
+    gui.window['_A_'].update(disabled=True)
+    gui.window['_B_'].update(disabled=True)
+    gui.window["data_iron"].update(disabled=True)
+    # From guiControl
+    guiControl = guiController(data["ID"], data["IP"], mqttControl, gui, client)
     while run:
         if gui.isOpen: gui.run()
         guiControl.loop()

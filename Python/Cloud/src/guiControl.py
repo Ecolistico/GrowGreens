@@ -2,11 +2,10 @@ import os
 import sys
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
-from time import time, sleep, strftime, localtime
-import time
+from time import time
 
 class guiController:
-    def __init__(self, systemID, brokerIP, mqttController, gui):
+    def __init__(self, systemID, brokerIP, mqttController, gui, cliente):
         # Publish require varaibles
         self.ID = systemID
         self.IP = brokerIP
@@ -15,8 +14,9 @@ class guiController:
         # Define connection with gui
         self.gui = gui
         # Aux Variables
+        self.flag1 = False
         self.timer = time()
-        self.flag1=False
+        self.client = cliente
 
     def createNodos(self, calX, calY):
         nodoX = int(calX)/41
@@ -25,7 +25,8 @@ class guiController:
 
     def loop(self):
         #########FUNCION actualiza la posicion cada 3 segundos. Con timer
-        if (time.time()-self.timer>1500 and self.flag1==True):
+        """
+        if (time()-self.timer>1500 and self.flag1==True):
             self.timer = time.time()
             ###UpdatePos
             publish.single("{}/Master".format(self.mqttControl.ID),
@@ -40,59 +41,54 @@ class guiController:
             posY = self.mqttControl.Y1
             self.gui.updatePos(posX, posY)
             print("Pos: ",posX, posY)
+        """
         ##########
         if self.gui.sync == True:
-            self.gui.updateStatus("Sincronizando...")
-            print("Sync....")
-            publish.single("{}/Master".format(self.mqttControl.ID),
-                            'syncCalCloud,{}'.format(self.gui.gr),
-                            hostname=self.mqttControl.brokerIP)
-            self.mqttControl.client.loop(0.2)
-            publish.single("{}/Master".format(self.mqttControl.ID),
-                            'syncCalCloud,{}'.format(self.gui.gr),
-                            hostname=self.mqttControl.brokerIP)
-            self.mqttControl.client.loop(0.2)
-            if (1<= self.gui.gr <= 8):
+            if self.gui.gr != 0:
+                self.gui.updateStatus("Sincronizando...")
+                publish.single("{}/Master".format(self.mqttControl.containerID),
+                                'syncCalCloud,{}'.format(self.gui.gr),
+                                hostname=self.mqttControl.brokerIP)
+                self.client.loop(0.2)
+                print("pub",self.gui.gr)
                 calX = self.mqttControl.CalX1
                 calY = self.mqttControl.CalY1
                 if (int(calX) != 0 and int(calY) != 0):
                     print("CalXY Ready: ",calX, calY)
                     self.flag1=True
                     ###UpdatePos
-                    publish.single("{}/Master".format(self.mqttControl.ID),
-                                    'syncPosCloud,{}'.format(gui.gr),
+                    publish.single("{}/Master".format(self.mqttControl.containerID),
+                                    'syncPosCloud,{}'.format(self.gui.gr),
                                     hostname=self.mqttControl.brokerIP)
-                    self.mqttControl.client.loop(0.2)
+                    self.client.loop(0.2)
                     posX = self.mqttControl.X1
                     posY = self.mqttControl.Y1
-                    self.gui.updatePos(posX, posY)
-                    print("Pos: ",posX, posY)
-
-                    ##
+                    self.gui.window["data_home"].update(disabled=False)
+                    self.gui.window["data_move"].update(disabled=False)
+                    self.gui.window['_A_'].update(disabled=False)
+                    self.gui.window['_B_'].update(disabled=False)
+                    self.gui.window["data_iron"].update(disabled=False)
+                    #gui.window["data_sincronizar"].update(disabled=True)
+                    self.gui.updateStatus("Ready to go!")
+                    print("Sync Ready")
 
                 else:
                     print("Error, SyncCalXY")
-                    self.gui.updateStatus("ERROR: SyncCalXY")
+                    self.gui.updateStatus("ERROR: Sync, Try Again!")
                     #break
             else:
                 self.gui.updateStatus("ERROR:Piso Incorrecto")
-                self.gui.window["data_sincronizar"].update(disabled=True)
+                self.gui.window['_A_'].update(disabled=True)
+                self.gui.window['_B_'].update(disabled=True)
                 self.gui.window["data_home"].update(disabled=True)
                 self.gui.window["data_move"].update(disabled=True)
-                self.gui.window["pis"].update(disabled=True)
                 #break
-
             self.gui.sync = False
-            self.gui.window["data_home"].update(disabled=False)
-            self.gui.window["data_move"].update(disabled=False)
-            #gui.window["data_sincronizar"].update(disabled=True)
-            self.gui.updateStatus("Ready to go!")
-            print("Sync Ready")
 
         if self.gui.home == True:
             print("Home")
             self.gui.updateStatus("Moving To Home..")
-            publish.single("{}/Master".format(self.mqttControl.ID),
+            publish.single("{}/Master".format(self.mqttControl.containerID),
                             'home,{}'.format(self.gui.gr),
                             hostname=self.mqttControl.brokerIP)
             self.gui.home = False
@@ -104,8 +100,8 @@ class guiController:
                 YObj = self.gui.YObj
                 print("Move TO: ",XObj, YObj)
                 self.gui.updateStatus("Moving X: {}, Y: {}...".format(XObj,YObj))
-                publish.single("{}/Master".format(self.mqttControl.ID),
-                                'movePosXY,{},{},{}'.format(gui.gr,XObj,YObj),
+                publish.single("{}/Master".format(self.mqttControl.containerID),
+                                'movePosXY,{},{},{}'.format(self.gui.gr,XObj,YObj),
                                 hostname=self.mqttControl.brokerIP)
                 self.gui.move = False
 
@@ -118,7 +114,7 @@ class guiController:
                 if XObj < float(self.mqttControl.CalX1):
                     print("Move X: ",XPaso, 0)
                     self.gui.updateStatus("Moving UP:{},{}".format(XPaso,0))
-                    publish.single("{}/Master".format(self.mqttControl.ID),
+                    publish.single("{}/Master".format(self.mqttControl.containerID),
                                     'movePosXY,{},{},{}'.format(self.gui.gr,XPaso,0),
                                     hostname=self.mqttControl.brokerIP)
                 self.gui.up = False
@@ -131,7 +127,7 @@ class guiController:
                 XObj = int(self.mqttControl.X1) - XPaso
                 print("Move X: ",-(XPaso), 0)
                 self.gui.updateStatus("Moving Down:{},{}".format(-(XPaso),0))
-                publish.single("{}/Master".format(self.mqttControl.ID),
+                publish.single("{}/Master".format(self.mqttControl.containerID),
                                 'movePosXY,{},{},{}'.format(self.gui.gr,-(XPaso),0),
                                 hostname=self.mqttControl.brokerIP)
                 self.gui.downB = False
@@ -144,7 +140,7 @@ class guiController:
                 YObj = YPaso + int(self.mqttControl.Y1)
                 print("Move Y: ",0, YObj)
                 self.gui.updateStatus("Moving Right:{},{}".format(0,YPaso))
-                publish.single("{}/Master".format(self.mqttControl.ID),
+                publish.single("{}/Master".format(self.mqttControl.containerID),
                                 'movePosXY,{},{},{}'.format(self.gui.gr,0,YPaso),
                                 hostname=self.mqttControl.brokerIP)
                 self.gui.right = False
@@ -156,8 +152,8 @@ class guiController:
                 XPaso, YPaso = self.createNodos(self.mqttControl.CalX1, self.mqttControl.CalY1)
                 YObj = int(self.mqttControl.Y1) - YPaso
                 print("Move Y: ",0, YObj)
-                self.gui.updateStatus("Moving Left:{},{}".format(0,-(Ypaso)))
-                publish.single("{}/Master".format(self.mqttControl.ID),
+                self.gui.updateStatus("Moving Left:{},{}".format(0,-(YPaso)))
+                publish.single("{}/Master".format(self.mqttControl.containerID),
                                 'movePosXY,{},{},{}'.format(self.gui.gr,0,-(YPaso)),
                                 hostname=self.mqttControl.brokerIP)
                 self.gui.left = False
