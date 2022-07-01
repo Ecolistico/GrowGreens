@@ -1,29 +1,33 @@
 #!/usr/bin/env python3
 
 # Import directories
+import re
 import os
+import sys
+import time
 import PySimpleGUI as sg
 from datetime import datetime
-import time
-import sys
-import re
+import paho.mqtt.publish as publish
+
 
 class GUI:
-    def __init__(self, ID = "99-999-999"):
+    def __init__(self, systemID, brokerIP, mqttController, client):
+         # Publish require varaibles
+        self.ID = systemID
+        self.IP = brokerIP
+        # Define communication controllers
+        self.mqttControl = mqttController
+        # Aux Variables
+        self.flag1 = False
+        self.timer = time()
+        self.timer2 = time()
+        self.client = client
+
         # Main Window
         self.window = None
         self.isOpen = True
 
         self.gr = ''
-        self.home = False
-        self.move = False
-        self.sync = False
-        self.up = False
-        self.downB = False
-        self.left = False
-        self.right = False
-        self.iron = False
-        self.iroff = False
         self.XObj = 0
         self.YObj = 0
 
@@ -32,9 +36,6 @@ class GUI:
         SYMBOL_DOWN =  '▼'
         SYMBOL_RIGHT = '►'
         SYMBOL_LEFT = '◄'
-
-        # Timer
-        self.timer = time.time()
 
         # Visuals
         # Colors
@@ -71,7 +72,6 @@ class GUI:
 
         # Variables to update in Window
         timestampStr = datetime.now().strftime("%d-%b-%Y %H:%M")
-        ID = ID
         PosX = float("NaN")
         PosY = float("NaN")
         status = ''
@@ -121,10 +121,15 @@ class GUI:
                               [sg.Column(top, size=(320,90),  pad=self.BPAD_LEFT_INSIDE)]], pad=self.BPAD_LEFT, background_color=self.BORDER_COLOR),
                    sg.Column(block_3, size=(420, 320), pad=self.BPAD_RIGHT)]]
 
-
     def begin(self):
         self.window = sg.Window('Dashboard', self.layout, background_color=self.BORDER_COLOR, return_keyboard_events=True, finalize=True)
         #self.str2log('GUI started correctly', level = 1)
+        self.updateStatus("Sincroniza un piso(1,3,6,8)")
+        self.window["data_home"].update(disabled=True)
+        self.window["data_move"].update(disabled=True)
+        self.window['_A_'].update(disabled=True)
+        self.window['_B_'].update(disabled=True)
+        self.window["data_iron"].update(disabled=True)
 
     # update to send serial messages to all devices
     def serialMsg(self, msg):
@@ -162,8 +167,32 @@ class GUI:
     def updateStatus(self, status):
         self.window["rut_status"].Update(value='Status:  {}'.format(status))
 
+    def createNodos(self, calX, calY):
+        nodoX = int(calX)/41
+        nodoY = int(calY)/10
+        return nodoX, nodoY
+    
     # Needs to be called in an Event Loop
     def run(self):
+        #########FUNCION actualiza la posicion cada 3 segundos. Con timer
+        """
+        if (time()-self.timer2>1500 and self.flag1==True):
+            self.timer2 = time.time()
+            ###UpdatePos
+            publish.single("{}/Master".format(self.mqttControl.ID),
+                            'syncPosCloud,{}'.format(self.gui.gr),
+                             hostname=self.mqttControl.brokerIP)
+            self.mqttControl.client.loop(0.2)
+            publish.single("{}/Master".format(self.mqttControl.ID),
+                             'syncPosCloud,{}'.format(self.gui.gr),
+                             hostname=self.mqttControl.brokerIP)
+            self.mqttControl.client.loop(0.2)
+            posX = self.mqttControl.X1
+            posY = self.mqttControl.Y1
+            self.gui.updatePos(posX, posY)
+            print("Pos: ",posX, posY)
+        """
+        ##########
         try:
             event, values = self.window.read(timeout=self.timeout, timeout_key='timeout')
             # Update connected devices every 15 seconds
@@ -194,32 +223,128 @@ class GUI:
             elif event == "data_home":
                 print("Home")
                 self.getFloor(values)
-                self.home = True
+                self.updateStatus("Moving To Home..")
+                publish.single("{}/Master".format(self.mqttControl.containerID),
+                                'home,{}'.format(self.gr),
+                                hostname=self.mqttControl.brokerIP)
             elif event == "data_move":
                 print("Move")
                 self.getFloor(values)
-                self.move = True
                 self.getInputXY(values)
+                if (1<= self.gr <= 8):
+                    self.updateStatus("Moving X: {}, Y: {}...".format(self.XObj, self.YObj))
+                    publish.single("{}/Master".format(self.mqttControl.containerID),
+                                'movePosXY,{},{},{}'.format(self.gr,self.XObj,self.YObj),
+                                hostname=self.mqttControl.brokerIP)
             elif event == "data_sincronizar":
                 print("Sync")
                 self.getFloor(values)
-                self.sync = True
+                if self.gr != 0:
+                    self.updateStatus("Sincronizando...")
+                    publish.single("{}/Master".format(self.mqttControl.containerID),
+                                    'syncCalCloud,{}'.format(self.gr),
+                                    hostname=self.mqttControl.brokerIP)
+                    self.client.loop(0.2)
+                    print("pub",self.gr)
+                    calX = self.mqttControl.CalX1
+                    calY = self.mqttControl.CalY1
+                    if (int(calX) != 0 and int(calY) != 0):
+                        print("CalXY Ready: ",calX, calY)
+                        self.flag1=True
+                        ###UpdatePos
+                        publish.single("{}/Master".format(self.mqttControl.containerID),
+                                        'syncPosCloud,{}'.format(self.gr),
+                                        hostname=self.mqttControl.brokerIP)
+                        self.client.loop(0.2)
+                        posX = self.mqttControl.X1
+                        posY = self.mqttControl.Y1
+                        self.window["data_home"].update(disabled=False)
+                        self.window["data_move"].update(disabled=False)
+                        self.window['_A_'].update(disabled=False)
+                        self.window['_B_'].update(disabled=False)
+                        self.window["data_iron"].update(disabled=False)
+                        #self.window["data_sincronizar"].update(disabled=True)
+                        self.updateStatus("Ready to go!")
+                        print("Sync Ready")
+
+                    else:
+                        print("Error, SyncCalXY")
+                        self.updateStatus("ERROR: Sync, Try Again!")
+                        #break
+                else:
+                    self.updateStatus("ERROR:Piso Incorrecto")
+                    self.window['_A_'].update(disabled=True)
+                    self.window['_B_'].update(disabled=True)
+                    self.window["data_home"].update(disabled=True)
+                    self.window["data_move"].update(disabled=True)
+                    #break
             elif event == "data_up":
                 print("moveUp")
-                self.up = True
+                if (1<= self.gr <= 8):
+                    #print("Moving to Pos: X:{}, Y:{}")
+                    #X,YObj tamaño de pasos
+                    XPaso, YPaso = self.createNodos(self.mqttControl.CalX1, self.mqttControl.CalY1)
+                    XObj = XPaso + int(self.mqttControl.X1)
+                    if XObj < float(self.mqttControl.CalX1):
+                        print("Move X: ",XPaso, 0)
+                        self.updateStatus("Moving UP:{},{}".format(XPaso,0))
+                        publish.single("{}/Master".format(self.mqttControl.containerID),
+                                        'movePosXY,{},{},{}'.format(self.gr,XPaso,0),
+                                        hostname=self.mqttControl.brokerIP)
             elif event == "data_down":
                 print("moveDown")
-                self.downB = True
+                if (1<= self.gr <= 8):
+                    #print("Moving to Pos: X:{}, Y:{}")
+                    #X,YObj tamaño de pasos
+                    XPaso, YPaso = self.createNodos(self.mqttControl.CalX1, self.mqttControl.CalY1)
+                    XObj = int(self.mqttControl.X1) - XPaso
+                    print("Move X: ",-(XPaso), 0)
+                    self.updateStatus("Moving Down:{},{}".format(-(XPaso),0))
+                    publish.single("{}/Master".format(self.mqttControl.containerID),
+                                    'movePosXY,{},{},{}'.format(self.gr,-(XPaso),0),
+                                    hostname=self.mqttControl.brokerIP)
             elif event == "data_left":
                 print("moveLeft")
-                self.left = True
+                if (1<= self.gr <= 8):
+                    #print("Moving to Pos: X:{}, Y:{}")
+                    #X,YObj tamaño de pasos
+                    XPaso, YPaso = self.createNodos(self.mqttControl.CalX1, self.mqttControl.CalY1)
+                    YObj = int(self.mqttControl.Y1) - YPaso
+                    print("Move Y: ",0, YObj)
+                    self.updateStatus("Moving Left:{},{}".format(0,-(YPaso)))
+                    publish.single("{}/Master".format(self.mqttControl.containerID),
+                                    'movePosXY,{},{},{}'.format(self.gr,0,-(YPaso)),
+                                    hostname=self.mqttControl.brokerIP)
             elif event == "data_right":
                 print("moveRight")
-                self.right = True
+                if (1<= self.gr <= 8):
+                    #print("Moving to Pos: X:{}, Y:{}")
+                    #X,YObj tamaño de pasos
+                    XPaso, YPaso = self.createNodos(self.mqttControl.CalX1, self.mqttControl.CalY1)
+                    YObj = YPaso + int(self.mqttControl.Y1)
+                    print("Move Y: ",0, YObj)
+                    self.updateStatus("Moving Right:{},{}".format(0,YPaso))
+                    publish.single("{}/Master".format(self.mqttControl.containerID),
+                                    'movePosXY,{},{},{}'.format(self.gr,0,YPaso),
+                                    hostname=self.mqttControl.brokerIP)
             elif event == "data_iron":
-                self.iron = True
+                if (1<= self.gr <= 8):
+                    print("IR ON: ")
+                    self.updateStatus("IR ON")
+                    publish.single('{}/Grower{}'.format(self.ID,self.gr),
+                                    'OnOut2',
+                                    hostname=self.mqttControl.brokerIP)
+                    self.window["data_iron"].update(disabled=True)
+                    self.window["data_iroff"].update(disabled=False)
             elif event == "data_iroff":
-                self.iroff = True
+                if (1<= self.gr <= 8):
+                    print("IR OFF")
+                    self.updateStatus("IR OFF")
+                    publish.single('{}/Grower{}'.format(self.ID,self.gr),
+                                    'OffOut2',
+                                    hostname=self.mqttControl.brokerIP)
+                    self.window["data_iron"].update(disabled=False)
+                    self.window["data_iroff"].update(disabled=True)
 
         except Exception as e:
             #self.str2log("GUI Closed: {}".format(e), 2)

@@ -10,7 +10,6 @@ import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 sys.path.insert(0, './src/')
 from gui import GUI
-from guiControl import guiController
 from logger import logger
 from asciiART import asciiArt
 from sysCloud import getIPaddr
@@ -57,9 +56,6 @@ client = None
 run = True
 waitNextMove = False
 
-gui = GUI()
-
-
 def mainClose():
     # Close devices when finished
     if(client!=None):
@@ -80,18 +76,11 @@ try:
 except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".format(e))
 
 try:
+    gui = GUI(data["ID"], data["IP"], mqttControl, client)
     gui.begin()
-    gui.updateStatus("Sincroniza un piso(1,3,6,8)")
-    gui.window["data_home"].update(disabled=True)
-    gui.window["data_move"].update(disabled=True)
-    gui.window['_A_'].update(disabled=True)
-    gui.window['_B_'].update(disabled=True)
-    gui.window["data_iron"].update(disabled=True)
-    # From guiControl
-    guiControl = guiController(data["ID"], data["IP"], mqttControl, gui, client)
+    
     while run:
         if gui.isOpen: gui.run()
-        guiControl.loop()
         # Update MQTT variables with stream variables
         if mqttControl.takePicture:
             mqttControl.takePicture = False
