@@ -46,7 +46,7 @@ numpy==1.12.1
 oauthlib==2.0.1
 paho-mqtt==1.4.0
 pantilthat==0.0.7
-paramiko==2.6.0
+paramiko==2.10.1
 pbr==5.4.4
 pgzero==1.2
 phatbeat==0.1.1
