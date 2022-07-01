@@ -19,8 +19,8 @@ class GUI:
         self.mqttControl = mqttController
         # Aux Variables
         self.flag1 = False
-        self.timer = time()
-        self.timer2 = time()
+        self.timer = time.time()
+        self.timer2 = time.time()
         self.client = client
 
         # Main Window
