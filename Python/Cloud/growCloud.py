@@ -9,6 +9,7 @@ from time import time, sleep
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 sys.path.insert(0, './src/')
+from gui import GUI
 from logger import logger
 from asciiART import asciiArt
 from sysCloud import getIPaddr
@@ -30,7 +31,7 @@ if not os.path.exists('temp/'): os.makedirs('temp/')
 if not os.path.exists('data/'): os.makedirs('data/')
 # Check if capture dir exists, if not then create it
 if not os.path.exists('captures/'): os.makedirs('captures/')
-    
+
 # Charge logger parameters
 log = logger()
 
@@ -75,24 +76,28 @@ try:
 except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".format(e))
 
 try:
+    gui = GUI(data["ID"], data["IP"], mqttControl, client)
+    gui.begin()
+    
     while run:
+        if gui.isOpen: gui.run()
         # Update MQTT variables with stream variables
         if mqttControl.takePicture:
             mqttControl.takePicture = False
             streamControl.inCapture = True
-            waitNextMove = True  
+            waitNextMove = True
         elif mqttControl.routineStarted and not streamControl.inCapture and waitNextMove:
             waitNextMove = False
             publish.single("{}/Master".format(data["ID"]), 'continueSequence,{}'.format(mqttControl.inRoutine), hostname=data["IP"])
 
         if streamControl.floor != mqttControl.inRoutine: streamControl.floor = mqttControl.inRoutine
-        
+
         # Stream loop
         streamControl.streaming()
-        
+
         # If mqtt connected check for messages
-        if mqttControl.clientConnected: 
-            if(mqttControl.inRoutine!=0 and time()-mqttControl.routineTimer>=15*60): 
+        if mqttControl.clientConnected:
+            if(mqttControl.inRoutine!=0 and time()-mqttControl.routineTimer>=15*60):
                 mqttControl.finishRoutine() # TimeOut for the routine
                 log.logger.error("Routine Error: Timeout reached")
             client.loop(0.2)
@@ -113,7 +118,7 @@ try:
                     else: log.logger.error("Cannot connect with MQTT Broker")
 
                 except Exception as e: log.logger.error("Cannot connect with MQTT Broker [{}]".format(e))
-                
+
 except:
     log.logger.critical("Exception Raised", exc_info=True)
 

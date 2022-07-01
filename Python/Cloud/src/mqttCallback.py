@@ -27,6 +27,10 @@ class mqttController:
         self.streamReady = False
         self.takePicture = False
         self.routineTimer = time()
+        self.X1 = ''
+        self.Y1 = ''
+        self.CalX1 = ''
+        self.CalY1 = ''
 
     def sendLog(self, mssg, logType = 0):
         logTopic = "{}/Cloud/log".format(self.containerID)
@@ -69,7 +73,7 @@ class mqttController:
 
     def startRoutine(self):
         #if self.masterReady and self.growerReady and self.tucanReady and self.lightsReady and self.streamReady:
-        if self.masterReady and self.tucanReady and self.streamReady: 
+        if self.masterReady and self.tucanReady and self.streamReady:
             self.log.info("Starting routine")
             publish.single("{}/Master".format(self.containerID), "StartRoutineNow,{}".format(self.inRoutine), hostname = self.brokerIP)
             self.routineStarted = True
@@ -112,12 +116,12 @@ class mqttController:
             self.log.error(message)
 
     # On Message Callback for MQTT
-    def on_message(self, client, userdata, msg):        
+    def on_message(self, client, userdata, msg):
         logTopic = "{}/Cloud/log".format(self.containerID) # Output Topic
         top = msg.topic # Input Topic
         device = top.split("/")[1] # Device name
         message = msg.payload.decode("utf-8") # Input message
-        
+
         # Changes messages and communication
         if(message.startswith("StartRoutine")):
             if self.inRoutine == 0:
@@ -144,14 +148,14 @@ class mqttController:
             self.routineTimer = time()
             self.log.info("Master device confirm it is ready")
             self.isRoutineReady()
-            
+
         elif(message.startswith("GrowerReady")):
             # Grower is ready when detects Tucan Module by bluetooth
             self.growerReady = True
             self.routineTimer = time()
             self.log.info("Grower device confirm it is ready")
             self.isRoutineReady()
-            
+
         elif(message.startswith("TucanReady")):
             # Tucan is ready when detects Grower module by bluetooth and recognize
             # the routines runs in the same floor that the closest Grower
@@ -159,7 +163,7 @@ class mqttController:
             self.routineTimer = time()
             self.log.info("Tucan device confirm it is ready")
             self.isRoutineReady()
-            
+
         elif(message.startswith("LightsReady")):
             # Light are ready when Grower module turns on both of them
             self.lightsReady = True
@@ -173,7 +177,7 @@ class mqttController:
             self.routineTimer = time()
             self.log.info("Tucan device confirm stream connection is ready")
             self.startRoutine()
-        
+
         elif(message.startswith("StreamNotReady")):
             # Stream failed
             self.streamReady = False
@@ -185,13 +189,20 @@ class mqttController:
             self.routineTimer = time()
             self.takePicture = True
 
-        elif(message.startswith("RoutineFinished")): self.finishRoutine()            
+        elif(message.startswith("RoutineFinished")): self.finishRoutine()
+
+        elif(message.startswith("posxy")):
+            self.X1 = message.split(",")[1]
+            self.Y1 = message.split(",")[2]
+
+        elif(message.startswith("sync")):
+            self.CalX1 = message.split(",")[1]
+            self.CalY1 = message.split(",")[2]
 
     def on_publish(self, client, userdata, mid):
         self.log.info("Message delivered")
-        
+
     def on_disconnect(self, client, userdata, msg):
         self.log.warning("Client MQTT Disconnected")
         self.clientConnected = False
         self.actualTime = time()
-        

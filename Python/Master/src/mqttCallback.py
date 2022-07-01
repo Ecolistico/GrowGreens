@@ -192,7 +192,75 @@ class mqttController:
                     self.mGrower.Gr[fl-1].actualTime = time()-120 
                     self.logMain.debug("Grower{} continue sequence".format(fl))
                 else: self.logMain.error("Cannot continue sequence. Parameters (floor or serialFloor are wrong).")
+                   
+            elif(message.startswith('home')):
+                fl = int(message.split(",")[1]) # Floor
+                serialFloor = self.mGrower.data[str(fl)]
+                if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
+                    serialFloor = int(serialFloor)
+                    serialDevice = int((serialFloor-1)/4)
+                    floor = fl - serialDevice*4
+                    self.mGrower.Gr[fl-1].serialReq("home,{}".format(serialFloor))
+                    self.mGrower.Gr[fl-1].mqttReq("")
+                    self.mGrower.Gr[fl-1].actualTime = time()-120 
+                    self.logMain.debug("Grower{} Going Home".format(fl))
+                else: self.logMain.error("Cannot go Home. Parameters (floor or serialFloor are wrong).")
+                
+            elif(message.startswith('movePosXY')):
+                fl = int(message.split(",")[1]) # Floor
+                serialFloor = self.mGrower.data[str(fl)]
+                posX = float(message.split(",")[2])
+                posY = float(message.split(",")[3])
+                if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
+                    serialFloor = int(serialFloor)
+                    serialDevice = int((serialFloor-1)/4)
+                    floor = fl - serialDevice*4
+                    if (int(posY) == 0):
+                        self.mGrower.Gr[fl-1].serialReq("moveX,{},{}".format(serialFloor,posX))
+                        self.mGrower.Gr[fl-1].mqttReq("")
+                        self.mGrower.Gr[fl-1].actualTime = time()-120 
+                        self.logMain.debug("Grower{} Going to Pos X:{}".format(fl,posX))
+                        
+                    elif(int(posX) == 0):    
+                        self.mGrower.Gr[fl-1].serialReq("moveY,{},{}".format(serialFloor,posY))
+                        self.mGrower.Gr[fl-1].mqttReq("")
+                        self.mGrower.Gr[fl-1].actualTime = time()-120 
+                        self.logMain.debug("Grower{} Going to Pos Y:{}".format(fl,posY))                   
 
+                    else:
+                        self.mGrower.Gr[fl-1].serialReq("movePosXY,{},{},{}".format(serialFloor,posX,posY))
+                        self.mGrower.Gr[fl-1].mqttReq("")
+                        self.mGrower.Gr[fl-1].actualTime = time()-120 
+                        self.logMain.debug("Grower{} Going to Pos X:{},Y{}".format(fl,posX,posY))
+                else: self.logMain.error("Cannot go PosXY. Parameters (floor or serialFloor are wrong).")
+            
+            elif(message.startswith('syncCalCloud')):
+                fl = int(message.split(",")[1]) # Floor
+                serialFloor = self.mGrower.data[str(fl)]
+                if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
+                    serialFloor = int(serialFloor)
+                    serialDevice = int((serialFloor-1)/4)
+                    floor = fl - serialDevice*4
+                    self.mGrower.Gr[fl-1].serialReq("maxDistance,{}".format(serialFloor))
+                    publish.single("{}/{}".format(self.ID, 'Cloud'), "sync,{},{}".format(self.mGrower.Gr[fl-1].maxX, self.mGrower.Gr[fl-1].maxY), hostname = self.brokerIP)
+                    self.mGrower.Gr[fl-1].actualTime = time()-120 
+                    self.logMain.debug("Grower{} SyncCalCloud".format(fl))
+                else: self.logMain.error("Cannot SyncCalCloud. Parameters (floor or serialFloor are wrong).")
+
+            elif(message.startswith('syncPosCloud')):
+                fl = int(message.split(",")[1]) # Floor
+                serialFloor = self.mGrower.data[str(fl)]
+                if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
+                    serialFloor = int(serialFloor)
+                    serialDevice = int((serialFloor-1)/4)
+                    floor = fl - serialDevice*4
+                    self.mGrower.Gr[fl-1].serialReq("position,{}".format(serialFloor))
+                    publish.single("{}/{}".format(self.ID, 'Cloud'), "posxy,{},{}".format(self.mGrower.Gr[fl-1].posX, self.mGrower.Gr[fl-1].posY), hostname = self.brokerIP)
+                    self.mGrower.Gr[fl-1].actualTime = time()-120 
+                    self.logMain.debug("Grower{} SyncPosCloud".format(fl))
+                else: self.logMain.error("Cannot SyncPosCloud. Parameters (floor or serialFloor are wrong).")
+                # publish() self.mGrower.Gr[num].maxX, self.mGrower.Gr[num].maxX,
+                
             else: self.logMain.warning("Master MQTT request unknown. Message={}".format(message))
         # DEBUG mqtt messages
         #else: self.logMain.warning("Unknown mqtt device={}, message={}".format(device, message))

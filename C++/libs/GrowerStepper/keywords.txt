@@ -26,6 +26,7 @@ moveX	KEYWORD2
 moveY	KEYWORD2
 moveXTo	KEYWORD2
 moveYTo	KEYWORD2
+movePosXY	KEYWORD2
 calibration	KEYWORD2
 disable	KEYWORD2
 isAvailable	KEYWORD2

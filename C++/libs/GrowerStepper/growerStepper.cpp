@@ -355,6 +355,71 @@ bool growerStepper::moveY(long some_mm, bool seq/* = false*/)
     printAction(F("Moving Y "), String(some_mm), F(" mm"), 0);
     return true;
   }
+  
+bool growerStepper::movePosXY(long mm_X, long mm_Y, bool seq /*= false*/)
+  { long actualPosition1 = StepsToMM_X(stepperX1->currentPosition());
+    long actualPosition2 = StepsToMM_X(stepperX2->currentPosition());
+    long actualPosition = StepsToMM_Y(stepperY->currentPosition());
+    int minDist = MIN_LIMIT_SECURITY_DISTANCE;
+
+    // If outHome Help is activated then check that the movement is allowed
+    if(__OutHomeX1 || __OutHomeX2){
+      if( (actualPosition1<getMaxDistanceX()/2 && actualPosition2<getMaxDistanceX()/2 && mm_X<0) ||
+      (actualPosition1>getMaxDistanceX()/2 && actualPosition2>getMaxDistanceX()/2 && mm_X>0) )
+      { printAction(F("Direction of movement not allowed"), 3);
+        return false;
+      }
+    }
+    
+    if(__OutHomeY){
+      if( (actualPosition<getMaxDistanceY()/2 && mm_Y<0) || (actualPosition>getMaxDistanceY()/2 && mm_Y>0) )
+      { printAction(F("Direction of movement not allowed"), 3);
+        return false;
+      }
+    }
+    // Check that movement not exceed the container phisical dimensions
+    if(mm_X<minDist || mm_X>getMaxDistanceX()-minDist){
+      printAction(F("Movement not allowed because will exceed physical dimensions"), 3);
+      return false;
+    }
+    
+    // Check that movement not exceed the container phisical dimensions
+    if(mm_Y<minDist || mm_Y>getMaxDistanceY()-minDist){
+      printAction(F("Movement not allowed because will exceed physical dimensions"), 3);
+      return false;
+    }   
+      
+    // Check available status
+    if(!__Available){
+      printAction(F("Unavailable"), 3);
+      return false;
+    }
+    // Check that is not a sequence running
+    if(__Sequence!=0 && !seq){
+      printAction(F("Routine in progress"), 3);
+      return false;
+    }
+
+    // If pass all the conditions and is disabled then enabled the stepper
+    if(!__IsEnable){ enable(); }
+    long some_steps = MMToSteps_X(mm_X);
+    long some_stepsY = MMToSteps_Y(mm_Y);
+    stepperX1->moveTo(some_steps);
+    stepperX2->moveTo(some_steps);
+    stepperY->moveTo(some_stepsY);
+    __IsAtHome = false;
+    __IsAtHome2 = false;
+    __Available = false;
+    __MoveX1 = true;
+    __MoveX2 = true;
+    __MoveY = true;
+    __steppersRunning += 3;
+    resetTime();
+    printAction(F("Moving X "), String(mm_X), F(" mm"), 0);
+    printAction(F("Moving Y "), String(mm_Y), F(" mm"), 0);
+    return true;
+  }
+
 
 bool growerStepper::moveXTo(long some_mm, bool seq /*= false*/)
   { long actualPosition1 = StepsToMM_X(stepperX1->currentPosition());

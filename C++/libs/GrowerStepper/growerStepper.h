@@ -160,6 +160,7 @@ class growerStepper
         unsigned long getMaxDistanceY(); // Get the max security distance in Y
         bool moveX(long some_mm, bool seq = false); // Move X some_mm relative to its actual position
         bool moveY(long some_mm, bool seq = false); // Move Y some_mm relative to its actual position
+        bool movePosXY(long mm_X, long mm_Y, bool seq = false);  // Move X and Y to absolut position some_mm
         bool moveXTo(long some_mm, bool seq = false); // Move X to absolut position some_mm
         bool moveYTo(long some_mm, bool seq = false); // Move Y to absolut position some_mm
         bool calibration(); // Runs the calibration mode to stablish the maximun security distance in X and Y

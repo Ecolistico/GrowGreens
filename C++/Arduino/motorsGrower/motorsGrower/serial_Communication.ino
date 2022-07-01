@@ -141,6 +141,30 @@ void serialEvent() {                                  //if the hardware serial p
       }
     }
 
+    // movePosXY()
+    else if(parameter[0]==F("movePosXY")){
+      int gr = parameter[1].toInt();
+      long x_mm = parameter[2].toInt();
+      long y_mm = parameter[3].toInt();
+      switch(gr){
+        case 1:
+          grower1.movePosXY(x_mm, y_mm);
+          break;
+        case 2:
+          grower2.movePosXY(x_mm, y_mm);
+          break;
+        case 3:
+          grower3.movePosXY(x_mm, y_mm);
+          break;
+        case 4:
+          grower4.movePosXY(x_mm, y_mm);
+          break;
+        default:
+          Serial.println(F("error,sequence(): Grower number does not exist"));
+          break;
+      }
+    }
+
     // moveXTo()
     else if(parameter[0]==F("moveXTo")){
       int gr = parameter[1].toInt();
@@ -308,86 +332,80 @@ void serialEvent() {                                  //if the hardware serial p
     // maxDistance()
     else if(parameter[0]==F("maxDistance")){
       int gr = parameter[1].toInt();
+      long maxX, maxY;
+      bool success = false;
       switch (gr){
-        long maxX, maxY;
         case 1:
           maxX = grower1.getMaxDistanceX();
           maxY = grower1.getMaxDistanceY();
-          Serial.print(F("warning,maxX="));
-          Serial.print(maxX);
-          Serial.print(F(" - maxY="));
-          Serial.println(maxY);
+          success = true;
           break;
         case 2:
           maxX = grower2.getMaxDistanceX();
           maxY = grower2.getMaxDistanceY();
-          Serial.print(F("warning,maxX="));
-          Serial.print(maxX);
-          Serial.print(F(" - maxY="));
-          Serial.println(maxY);
+          success = true;
           break;
         case 3:
           maxX = grower3.getMaxDistanceX();
           maxY = grower3.getMaxDistanceY();
-          Serial.print(F("warning,maxX="));
-          Serial.print(maxX);
-          Serial.print(F(" - maxY="));
-          Serial.println(maxY);
+          success = true;
           break;
         case 4:
           maxX = grower4.getMaxDistanceX();
           maxY = grower4.getMaxDistanceY();
-          Serial.print(F("warning,maxX="));
-          Serial.print(maxX);
-          Serial.print(F(" - maxY="));
-          Serial.println(maxY);
+          success = true;
           break;
         default:
           Serial.println(F("error,maxDistance(): Grower number does not exist"));
           break;
+      }
+      if(success){
+          Serial.print(F("warning,Grower"));
+          Serial.print(gr);
+          Serial.print(": maxX=");
+          Serial.print(maxX);
+          Serial.print(F(" - maxY="));
+          Serial.println(maxY);
       }
     }
 
     // position()
     else if(parameter[0]==F("position")){
       int gr = parameter[1].toInt();
+      bool success = false;
+      long posX, posY;
       switch(gr){
-        long posX, posY;
         case 1:
           posX = grower1.getXPosition();
           posY = grower1.getYPosition();
-          Serial.print(F("warning,posX="));
-          Serial.print(posX);
-          Serial.print(F(" - posY="));
-          Serial.println(posY);
+          success = true;
           break;
         case 2:
           posX = grower2.getXPosition();
           posY = grower2.getYPosition();
-          Serial.print(F("warning,posX="));
-          Serial.print(posX);
-          Serial.print(F(" - posY="));
-          Serial.println(posY);
+          success = true;
           break;
         case 3:
           posX = grower3.getXPosition();
           posY = grower3.getYPosition();
-          Serial.print(F("warning,posX="));
-          Serial.print(posX);
-          Serial.print(F(" - posY="));
-          Serial.println(posY);
+          success = true;
           break;
         case 4:
           posX = grower4.getXPosition();
           posY = grower4.getYPosition();
-          Serial.print(F("warning,posX="));
-          Serial.print(posX);
-          Serial.print(F(" - posY="));
-          Serial.println(posY);
+          success = true;
           break;
         default:
           Serial.println(F("error,position(): Grower number does not exist"));
           break;
+      }
+      if(success){
+          Serial.print(F("warning,Grower"));
+          Serial.print(gr);
+          Serial.print(": posX=");
+          Serial.print(posX);
+          Serial.print(F(" - posY="));
+          Serial.println(posY);
       }
     }
 
