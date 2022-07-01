@@ -1,6 +1,6 @@
 pysftp==0.2.9
 coloredlogs==10.0
-numpy==1.12.1
+numpy==1.22.0
 picamera==1.13
 colored_traceback==0.3.0
 Adafruit_AMG88xx==1.4.3
