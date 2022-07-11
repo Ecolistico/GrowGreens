@@ -26,7 +26,7 @@ class serialController:
         except Exception as e:
             self.gcIsConnected = False
             raise Exception("Communication with generalControl device cannot be stablished. [{}]".format(e))
-        
+
         self.motorsGrower = []
         self.mgIsConnected = []
         for i in range(len(self.logMG)):
@@ -39,7 +39,7 @@ class serialController:
                 self.motorsGrower.append(False)
                 self.mgIsConnected.append(False)
                 self.logMain.error("Communication with motorsGrower{} device cannot be stablished. [{}]".format(i+1, e))
-        
+
         # Define multiGrower variables with mqtt module
         self.mGrower = multiGrower
         # Define responses auxVariables
@@ -103,7 +103,7 @@ class serialController:
         except Exception as e:
             self.logMain.error("Error cleaning grower line {}. Line that failed is {}".format(e, line))
             return ""
-        
+
     def cleanMaxDistanceLine(self, line):
         try:
             resp1 = line.split(" - ")[0][5:]
@@ -112,17 +112,17 @@ class serialController:
         except Exception as e:
             self.logMain.error("Error cleaning MaxDistanceLine {}. Line that failed is {}".format(e, line))
             return "", ""
-            
+
     def getGrowerLine(self, line):
         resp = self.cleanLine(line)
         num = self.detectGrower(resp)
         return resp, num
-    
+
     def getConfigParameters(self, line):
         resp = self.cleanLine(line)
         respX, respY = self.cleanMaxDistanceLinePos(resp)
         return respX, respY
-        
+
     def stopGrower(self, fl):
         serialFloor = self.mGrower.data[str(fl)]
         if serialFloor != "disconnected":
@@ -130,7 +130,7 @@ class serialController:
             self.write(self.motorsGrower[serialDevice], "stop,{}".format(serialFloor))
             self.logMain.info(("Grower{} is busy, sending request to stop".format(fl)))
         else: self.logMain.warning("Grower{} is disconnected cannot stop sequence in that floor".format(fl))
-        
+
     def decideStartOrStopGrower(self, resp, serialDevice):
         auxBool = False
         num = self.detectGrower(resp) + serialDevice*4
@@ -269,7 +269,7 @@ class serialController:
                         self.exportEeprom = True
                     elif(line1.startswith("info,EXPORT EEPROM FINISHED")):
                         self.exportEeprom = False
-            
+
             except UnicodeDecodeError as e: self.logGC.error(e)
 
         for i in range(len(self.mgIsConnected)):
@@ -279,7 +279,7 @@ class serialController:
                     while self.motorsGrower[i].in_waiting>0:
                         line2 = str(self.motorsGrower[i].readline(), "utf-8")[0:-1]
                         self.Msg2Log(self.logMG[i], line2)
-    
+
                         decition = False
                         for j in range(len(self.mGrower.Gr)):
                             # If we are waiting a particular response from GrowerN
@@ -295,7 +295,7 @@ class serialController:
                                     if resp.startswith("Starting Routine Stage 2"):
                                         decition = True
                                         self.GrowerInRoutine(j+1)
-                            
+
                             # If we are waiting GrowerN to reach next sequence position
                             if(self.mGrower.Gr[j].inRoutine and not decition):
                                 resp, num = self.getGrowerLine(line2)
@@ -308,7 +308,7 @@ class serialController:
                                     elif resp.startswith("Routine Finished"):
                                         decition = True
                                         self.GrowerRoutineFinish(j+1)
-                                        
+
                             # If we are waiting GrowerN RespMax
                             if(line2.startswith("warning")):
                                 resp, num = self.getGrowerLine(line2)
@@ -316,16 +316,14 @@ class serialController:
                                 resp1 = self.cleanGrowerLine(resp)
                                 if resp1.startswith("max"):
                                     respX, respY = self.cleanMaxDistanceLine(resp1)
-                                    print(respX,respY)
                                     self.mGrower.Gr[num-1].maxX = respX
                                     self.mGrower.Gr[num-1].maxY = respY
                                 elif resp1.startswith("pos"):
                                     respX, respY = self.cleanMaxDistanceLine(resp1)
-                                    print(respX,respY)
                                     self.mGrower.Gr[num-1].posX = respX
-                                    self.mGrower.Gr[num-1].posY = respY                                                                            
-                                        
+                                    self.mGrower.Gr[num-1].posY = respY
+
                 except UnicodeDecodeError as e: self.logMG[i].error(e)
-                
+
         # Send all responses
         self.response()
