@@ -136,9 +136,9 @@ class serialController:
         num = self.detectGrower(resp) + serialDevice*4
         for i in range(len(self.mGrower.data)):
             if(self.mGrower.data[str(i+1)] == str(num)):
-                num = i
+                num1 = i
                 break
-        if num > 0: auxBool = self.mGrower.Gr[num].startRoutine
+        if num > 0: auxBool = self.mGrower.Gr[num1].startRoutine
         if(num>0 and num<=len(self.logGrower)): resp = self.cleanGrowerLine(resp)
 
         if resp.startswith("Available") and auxBool:
