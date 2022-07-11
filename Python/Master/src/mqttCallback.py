@@ -205,7 +205,23 @@ class mqttController:
                     self.mGrower.Gr[fl-1].actualTime = time()-120 
                     self.logMain.debug("Grower{} Going Home".format(fl))
                 else: self.logMain.error("Cannot go Home. Parameters (floor or serialFloor are wrong).")
-                
+
+            elif(message.startswith('stopRoutine')):
+                fl = int(message.split(",")[1]) # Floor
+                serialFloor = self.mGrower.data[str(fl)]
+                if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
+                    serialFloor = int(serialFloor)
+                    serialDevice = int((serialFloor-1)/4)
+                    floor = fl - serialDevice*4
+                    self.mGrower.Gr[fl-1].serialReq("stopSequence,{}".format(serialFloor))
+                    self.mGrower.Gr[fl-1].mqttReq("RoutineFinished")
+                    self.mGrower.Gr[fl-1].inRoutine = False
+                    self.mGrower.Gr[fl-1].startRoutine = False
+                    self.mGrower.Gr[fl-1].count = 1
+                    self.mGrower.Gr[fl-1].actualTime = time()-120 
+                    self.logMain.debug("Grower{} Stop Routine".format(fl))
+                else: self.logMain.error("Cannot Stop Routine. Parameters (floor or serialFloor are wrong).")
+
             elif(message.startswith('movePosXY')):
                 fl = int(message.split(",")[1]) # Floor
                 serialFloor = self.mGrower.data[str(fl)]
@@ -237,9 +253,11 @@ class mqttController:
             elif(message.startswith('syncCalCloud')):
                 fl = int(message.split(",")[1]) # Floor
                 serialFloor = self.mGrower.data[str(fl)]
+                print(serialFloor)
                 if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
                     serialFloor = int(serialFloor)
                     serialDevice = int((serialFloor-1)/4)
+                    
                     floor = fl - serialDevice*4
                     self.mGrower.Gr[fl-1].serialReq("maxDistance,{}".format(serialFloor))
                     publish.single("{}/{}".format(self.ID, 'Cloud'), "sync,{},{}".format(self.mGrower.Gr[fl-1].maxX, self.mGrower.Gr[fl-1].maxY), hostname = self.brokerIP)

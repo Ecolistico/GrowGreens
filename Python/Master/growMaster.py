@@ -90,12 +90,13 @@ def checkSerialMsg(grower):
     # Resend serial messages without response for Growers
     serialFloor = mGrower.data[str(grower.floor)]
     if(serialFloor != "disconnected" and grower.serialRequest!="" and time()-grower.actualTime>120):
-        serialDevice = int(int(serialFloor)/4)
+        serialDevice = int((int(serialFloor)-1)/4)
+        print("Serial device", serialDevice,serialFloor)        
         serialControl.write(serialControl.motorsGrower[serialDevice], grower.serialRequest)
         grower.actualTime = time()
         if grower.serialRequestCounter == 0:
             log.logger.debug("Sending Grower{} serialRequest: {}".format(grower.floor, grower.serialRequest))
-            if(grower.serialRequest.startswith("home") or grower.serialRequest.startswith("movePosXY") or grower.serialRequest.startswith("maxDistance") or grower.serialRequest.startswith("position") or grower.serialRequest.startswith("moveX") or grower.serialRequest.startswith("moveY")): grower.serialRequest = ""
+            if(grower.serialRequest.startswith("home") or grower.serialRequest.startswith("movePosXY") or grower.serialRequest.startswith("stopSequence") or grower.serialRequest.startswith("maxDistance") or grower.serialRequest.startswith("position") or grower.serialRequest.startswith("moveX") or grower.serialRequest.startswith("moveY")): grower.serialRequest = ""
         else: log.logger.warning("Resending Grower{} serialRequest: {}".format(grower.floor, grower.serialRequest))
         grower.serialRequestCounter += 1
     else: pass
