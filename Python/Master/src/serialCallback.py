@@ -134,10 +134,12 @@ class serialController:
     def decideStartOrStopGrower(self, resp, serialDevice):
         auxBool = False
         num = self.detectGrower(resp) + serialDevice*4
+
         for i in range(len(self.mGrower.data)):
             if(self.mGrower.data[str(i+1)] == str(num)):
                 num1 = i
                 break
+
         if num > 0: auxBool = self.mGrower.Gr[num1].startRoutine
         if(num>0 and num<=len(self.logGrower)): resp = self.cleanGrowerLine(resp)
 
@@ -312,16 +314,26 @@ class serialController:
                             # If we are waiting GrowerN RespMax
                             if(line2.startswith("warning")):
                                 resp, num = self.getGrowerLine(line2)
-                                num += i*4 # Add 4 for each serialDevice to get the correct growerNumber
                                 resp1 = self.cleanGrowerLine(resp)
                                 if resp1.startswith("max"):
+                                    num = self.detectGrower(resp) + i*4 # Serial / Piso
+                                    for r in range(len(self.mGrower.data)):
+                                        if(self.mGrower.data[str(r+1)] == str(num)):
+                                            num1 = r
+                                            break
                                     respX, respY = self.cleanMaxDistanceLine(resp1)
-                                    self.mGrower.Gr[num-1].maxX = respX
-                                    self.mGrower.Gr[num-1].maxY = respY
+                                    self.mGrower.Gr[num1].maxX = respX
+                                    self.mGrower.Gr[num1].maxY = respY
+
                                 elif resp1.startswith("pos"):
+                                    num = self.detectGrower(resp) + i*4 # Serial / Piso
+                                    for r in range(len(self.mGrower.data)):
+                                        if(self.mGrower.data[str(r+1)] == str(num)):
+                                            num1 = r
+                                            break
                                     respX, respY = self.cleanMaxDistanceLine(resp1)
-                                    self.mGrower.Gr[num-1].posX = respX
-                                    self.mGrower.Gr[num-1].posY = respY
+                                    self.mGrower.Gr[num1].posX = respX
+                                    self.mGrower.Gr[num1].posY = respY 
 
                 except UnicodeDecodeError as e: self.logMG[i].error(e)
 
