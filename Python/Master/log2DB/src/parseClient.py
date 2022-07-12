@@ -3,6 +3,7 @@
 # Import modules
 import json
 import http.client
+from urllib.parse import urlencode, quote_plus
 
 class parseClient:
     def __init__(self, server, appId, restKey, port = 443, mountPath = "/parse"):
@@ -39,10 +40,11 @@ class parseClient:
         results = json.loads(connection.getresponse().read())
         return results
     
-    def query(self, Class, where = ""):
+    def query(self, Class, where = {}):
         connection = http.client.HTTPSConnection(self.server, self.port)
+        params = urlencode({"where":json.dumps(where)})
         connection.connect()
-        connection.request('GET', '{}/classes/{}'.format(self.mountPath, Class), '', {
+        connection.request('GET', '{}/classes/{}?{}'.format(self.mountPath, Class, params), '', {
                "X-Parse-Application-Id": self.appId,
                "X-Parse-REST-API-Key": self.restKey
              })

@@ -24,6 +24,11 @@ with open("../config.json") as f:
 # Parse client
 client = parseClient.parseClient(parse['server'], parse['appId'], parse['restKey'], mountPath = parse['mountPath'])
 
+# Get ubication
+ubication = None
+try: ubication = client.query("ProductionSystems", {"systemId": ID})['results'][0]['ubication']
+except: print("Ubication cannot be found")
+
 # Control variables
 checkFile = False
 checkLine = False
@@ -53,7 +58,7 @@ irrigationDict = list()
 
 def line2logDict(line):
     dt1, dev1, typo1, msg1 = utils.getInfo(line[:-1])
-    return {"realDate": {"__type": "Date", "iso": dt1.isoformat()}, "device": dev1, "type": typo1, "message": msg1, "systemId": ID}
+    return {"realDate": {"__type": "Date", "iso": dt1.isoformat()}, "device": dev1, "type": typo1, "message": msg1, "systemId": ID, "ubication": ubication}
 
 def line2envDict(line):
     dt1, dev1, typo1, msg1 = utils.getInfo(line[:-1])
@@ -61,6 +66,7 @@ def line2envDict(line):
     obj["realDate"] = {"__type": "Date", "iso": dt1.isoformat()}
     obj["infoFrom"] = dev1
     obj["systemId"] = ID
+    obj["ubication"] = ubication
     if(dev1.startswith("grower")): 
         values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg1)
         if(len(values) == 3):
@@ -83,6 +89,7 @@ def line2ledDict(line):
     obj = {}
     obj["realDate"] = {"__type": "Date", "iso": dt1.isoformat()}
     obj["systemId"] = ID
+    obj["ubication"] = ubication
     values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg1)
     if(len(values) == 2):
         values = [float(values[i]) for i in range(len(values))]
@@ -96,8 +103,9 @@ def line2sensorDict(line, sensorType):
     obj = {}
     obj["realDate"] = {"__type": "Date", "iso": dt1.isoformat()}
     obj["systemId"] = ID
+    obj["ubication"] = ubication
     obj["type"] = sensorType
-
+    
     values = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", msg1)
     if(len(values) == 2):
         values = [float(values[i]) for i in range(len(values))]
@@ -109,6 +117,7 @@ def add2electricalDict():
     obj = {}
     obj["realDate"] = {"__type": "Date", "iso": myiHP.firstDateLine.isoformat()}
     obj["systemId"] = ID
+    obj["ubication"] = ubication
     obj["infoFrom"] = "iHP"
     obj["voltage"] = myiHP.getVoltage()
     obj["current"] = myiHP.getCurrent()
@@ -119,6 +128,7 @@ def add2datLoggerDict():
     obj = {}
     obj["realDate"] = {"__type": "Date", "iso": myDataLogger.dTime.isoformat()}
     obj["systemId"] = ID
+    obj["ubication"] = ubication
     obj["infoFrom"] = myDataLogger.dev
     obj["value"] = myDataLogger.values
     myDataLogger.reset()
@@ -128,6 +138,7 @@ def add2irrigationDict():
     obj = {}
     obj["realDate"] = {"__type": "Date", "iso": myIrrigation.dTime.isoformat()}
     obj["systemId"] = ID
+    obj["ubication"] = ubication
     obj["consumption"] = myIrrigation.values
     obj["totalConsumption"] = myIrrigation.totalWater
     myIrrigation.reset()
