@@ -62,18 +62,20 @@ class mqttController:
         publish.single(logTopic, mssg, hostname = self.brokerIP)
 
     def isRoutineReady(self):
-        #if self.masterReady and self.growerReady and self.tucanReady:
-        if self.masterReady and self.tucanReady:
+        if self.masterReady and self.growerReady and self.tucanReady:
+        #if self.masterReady and self.tucanReady:
             # Prepare all devices
             self.sendLog("All devices are ready. Sending configuration parameters", 1)
             ip = getIPaddr().split(" ")[0]
             #msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "IrOn"},
-            msgs = [{"topic": "{}/Tucan".format(self.containerID), "payload": "startStreaming,{},{}".format(ip, self.port)}]
+            msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OnOut2"},
+                    {"topic": "{}/Tucan".format(self.containerID), "payload": "startStreaming,{},{}".format(ip, self.port)}]
             publish.multiple(msgs, hostname = self.brokerIP)
 
     def startRoutine(self):
         #if self.masterReady and self.growerReady and self.tucanReady and self.lightsReady and self.streamReady:
-        if self.masterReady and self.tucanReady and self.streamReady:
+        if self.masterReady and self.growerReady and self.tucanReady and self.streamReady:    
+        #if self.masterReady and self.tucanReady and self.streamReady:
             self.log.info("Starting routine")
             publish.single("{}/Master".format(self.containerID), "StartRoutineNow,{}".format(self.inRoutine), hostname = self.brokerIP)
             self.routineStarted = True
@@ -81,7 +83,7 @@ class mqttController:
     def finishRoutine(self):
         # Send messages to turn off lights and streaming
             ip = getIPaddr().split(" ")[0]
-            msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "IrOff"},
+            msgs = [{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": "OffOut2"},
                     {"topic": "{}/Tucan".format(self.containerID), "payload": "endStreaming"}]
             publish.multiple(msgs, hostname = self.brokerIP)
             self.inRoutine = 0
@@ -129,12 +131,12 @@ class mqttController:
                 self.routineTimer = time()
                 if self.inRoutine>0 and self.inRoutine<=8:
                     # Create new folder to save the pictures if it doesn't exist
-                    if not os.path.exists('/media/pi/cloud6/captures/{}/floor{}/{}/'.format(self.containerID, self.inRoutine, strftime("%Y-%m-%d", localtime()))):
-                        os.makedirs('/media/pi/cloud6/captures/{}/floor{}/{}/'.format(self.containerID, self.inRoutine, strftime("%Y-%m-%d", localtime())))
+                    if not os.path.exists('/home/pi/Pictures/routine/captures/{}/floor{}/{}/'.format(self.containerID, self.inRoutine, strftime("%Y-%m-%d", localtime()))):
+                        os.makedirs('/home/pi/Pictures/routine/captures/{}/floor{}/{}/'.format(self.containerID, self.inRoutine, strftime("%Y-%m-%d", localtime())))
                     # Ask to all devices if they are ready
                     msgs = [{"topic": "{}/Master".format(self.containerID), "payload": message},
-                            {"topic": "{}/Tucan".format(self.containerID), "payload": message}]
-                            #{"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": message},
+                            {"topic": "{}/Tucan".format(self.containerID), "payload": message},
+                            {"topic": "{}/Grower{}".format(self.containerID, self.inRoutine), "payload": message}]
                     publish.multiple(msgs, hostname = self.brokerIP)
                     self.sendLog("Checking status to start routine in floor {}".format(self.inRoutine), 1)
                 else:

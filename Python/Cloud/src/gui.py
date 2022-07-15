@@ -187,7 +187,7 @@ class GUI:
         return nodoX, nodoY
 
     def whileMoving(self):
-        mmToTime = self.mmToCount*0.045
+        mmToTime = self.mmToCount*0.030
         if ((time.time()-self.timer2>mmToTime) and (self.flagmove == True)):
             self.timer2 = time.time()
             publish.single("{}/Master".format(self.mqttControl.containerID),

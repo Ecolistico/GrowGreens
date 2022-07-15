@@ -16,7 +16,7 @@ class streamController:
         self.sock = socket.socket()
         self.sock.setblocking(False)
         
-        self.path = '/media/pi/cloud6/captures/{}/'.format(ID)
+        self.path = '/home/pi/Pictures/routine/captures/{}/'.format(ID)
         self.captures = 1
         self.floor = 0
         self.connection = None
