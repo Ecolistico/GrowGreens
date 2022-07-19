@@ -79,6 +79,7 @@ class GUI:
         status = ''
         self.down = False
         self.down1 = False
+        self.down2 = False
 
         # List of devices
         self.devicesGrower = ['grower{}'.format(i+1) for i in range(4)]
@@ -102,10 +103,10 @@ class GUI:
                    [sg.Text(' '*5 +'X:  {}'.format(PosX), font='Any 12', key="posxA_status"), sg.Text(' '*35 +'X', font='Any 12'), sg.Input('PosXObj', size=(20,10), key="posxO_status")],
                    [sg.Text(' '*5 +'Y:  {}'.format(PosY), font='Any 12', key="posyA_status"), sg.Text(' '*36 +'Y', font='Any 12'), sg.Input('PosYObj', size=(20,10), key="posyO_status")],
                    [sg.Text(' '*39 + 'Nodo:  X', font='Any 12'), sg.Input('NoX', size=(5,10), key="nodo_x", disabled=True), sg.Text('Y', font='Any 12'), sg.Input('NoY', size=(5,10), key="nodo_y", disabled=True)],
-                   [sg.Text('Control Direc'), sg.Button('Off', size=(4,1), button_color=('white', 'red'), key='_B_'), sg.Text(' '*3), sg.Button(SYMBOL_UP, key="data_up", disabled=True),sg.Text(' '*20), sg.Button('IR-ON', button_color=('white', 'green'), key="data_iron")],
-                   [sg.Text(' '*30), sg.Button(SYMBOL_LEFT, key="data_left", disabled=True), sg.Text(' '*5), sg.Button(SYMBOL_RIGHT, key="data_right", disabled=True), sg.Text(' '*10), sg.Button('IR-OFF', button_color=('white', 'red'), key="data_iroff", disabled=True)],
-                   [sg.Text(' '*40), sg.Button(SYMBOL_DOWN, key="data_down", disabled=True)],
-                   [sg.Text(' '*10), sg.Button('Home', key="data_home"), sg.Text(' '*40), sg.Button('Mover', key="data_move")]]
+                   [sg.Text('Control Direc'), sg.Button('Off', size=(4,1), button_color=('white', 'red'), key='_B_'), sg.Text(' '*2), sg.Button(SYMBOL_UP, key="data_up", disabled=True),sg.Text(' '*20), sg.Button('IR-ON', button_color=('white', 'green'), key="data_iron")],
+                   [sg.Text('Streaming:'), sg.Text(' '*10), sg.Button(SYMBOL_LEFT, key="data_left", disabled=True), sg.Text(' '*5), sg.Button(SYMBOL_RIGHT, key="data_right", disabled=True), sg.Text(' '*10), sg.Button('IR-OFF', button_color=('white', 'red'), key="data_iroff", disabled=True)],
+                   [sg.Button('Off', size=(4,1), button_color=('white', 'red'), key='_C_'), sg.Text(' '*25), sg.Button(SYMBOL_DOWN, key="data_down", disabled=True)],
+                   [sg.Text(' '*1), sg.Button('Photo', button_color=('black','green'), key="data_photo",  disabled=True), sg.Text(' '*30), sg.Button('Home', key="data_home"), sg.Text(' '*5), sg.Button('Mover', key="data_move")]]
 
         top = [[sg.Text('Rutina Automatica', font='Any 18'), sg.Button('Off', size=(4,1), button_color=('white', 'red'), key='_A_')],
                     [sg.Text(' '*5), sg.Button('Start Routine', disabled=True, key="data_AutoRoutine"), sg.Text(' '*10), sg.Button('Stop Routine', button_color=('white','black'), disabled=True, key="data_stopRoutine")]]
@@ -131,6 +132,7 @@ class GUI:
         self.window["data_move"].update(disabled=True)
         self.window['_A_'].update(disabled=True)
         self.window['_B_'].update(disabled=True)
+        self.window['_C_'].update(disabled=True)
         self.window["data_iron"].update(disabled=True)
 
     # update to send serial messages to all devices
@@ -200,6 +202,7 @@ class GUI:
             print("Pos: ",posX, posY)
             self.window['_A_'].update(disabled=False)
             self.window['_B_'].update(disabled=False)
+            self.window['_C_'].update(disabled=False)
             self.window["data_home"].update(disabled=False)
             self.window["data_move"].update(disabled=False)
             self.window["data_iron"].update(disabled=False)
@@ -215,6 +218,7 @@ class GUI:
             self.updateStatus("Moving...")
             self.window['_A_'].update(disabled=True)
             self.window['_B_'].update(disabled=True)
+            self.window['_C_'].update(disabled=True)
             self.window["data_home"].update(disabled=True)
             self.window["data_move"].update(disabled=True)
             self.window["data_iron"].update(disabled=True)
@@ -224,7 +228,7 @@ class GUI:
             self.window["data_left"].update(disabled=True)
             self.window["data_right"].update(disabled=True)
             self.window["data_AutoRoutine"].update(disabled=True)
-
+            self.window["data_photo"].update(disabled=True)    
     # Needs to be called in an Event Loop
     def run(self):
         self.whileMoving()
@@ -273,15 +277,19 @@ class GUI:
                 self.window["data_AutoRoutine"].update(disabled=not(self.down1))
                 self.window["data_move"].update(disabled=self.down1)
                 self.window["data_home"].update(disabled=self.down1)
-                self.window["data_up"].update(disabled=(self.down1))
-                self.window["data_down"].update(disabled=(self.down1))
-                self.window["data_right"].update(disabled=(self.down1))
-                self.window["data_left"].update(disabled=(self.down1))
-                self.window["nodo_x"].update(disabled=(self.down1))
-                self.window["nodo_y"].update(disabled=(self.down1))
                 self.window["posxO_status"].update(disabled=(self.down1))
                 self.window["posyO_status"].update(disabled=(self.down1))
                 self.window['_B_'].update(disabled=(self.down1))
+                self.window['_C_'].update(disabled=(self.down1))
+            elif event == "_C_":
+                self.down2 = not self.down2
+                self.window['_C_'].Update(('Off','On')[self.down2], button_color=(('white', ('red', 'green')[self.down2])))
+                self.window["data_photo"].update(disabled=not(self.down2))
+                self.window["data_move"].update(disabled=self.down2)
+                self.window["data_home"].update(disabled=self.down2)
+                self.window['_B_'].update(disabled=(self.down2))
+                self.window['_A_'].update(disabled=(self.down2))
+
             elif event == "data_home":
                 print("Home")
                 self.getFloor(values)
@@ -338,6 +346,7 @@ class GUI:
                         self.window["data_move"].update(disabled=False)
                         self.window['_A_'].update(disabled=False)
                         self.window['_B_'].update(disabled=False)
+                        self.window['_C_'].update(disabled=False)
                         self.window["data_iron"].update(disabled=False)
                         #self.window["data_sincronizar"].update(disabled=True)
                         self.updateStatus("Ready to go!")
