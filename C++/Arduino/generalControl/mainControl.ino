@@ -2,7 +2,7 @@ void preconditions() {
   // Print sensor information before each irrigation cycle
   for(int i = 0; i<sconfig.analogs; i++) mySensors->_myAnalogs[i]->printRead();
   for(int i = 0; i<sconfig.scales; i++) mySensors->_myScales[i]->printRead();
-  
+
   // Do we have enough water?
   if(mySensors->_myScales[0]->getWeight()-mySensors->_myScales[0]->getMinWeight()>h2oConsumption){
     // Do we have enough pressure?
@@ -68,13 +68,7 @@ void irrigation() {
      finalWeight = mySensors->_myScales[0]->getWeight();
      h2oConsumption = initialWeight - finalWeight; // Water consumption
      if (h2oConsumption < 1) h2oConsumption = 1; // Avoid negatives number and zero water consumption. Min value is set as 1 liters as default
-     
-     // Pressure low in air tank
-     if(mySensors->_myAnalogs[0]->getValue()<=pconfig.min_pressure){
-      myIrrigation->pressurizeAir();
-      controlState.setState(1);
-      updateSystemState();
-     }
+
      // Do we have enough water
      if(mySensors->_myScales[0]->getWeight()-mySensors->_myScales[0]->getMinWeight()>h2oConsumption){
       // Do we have enough pressure?
@@ -85,35 +79,21 @@ void irrigation() {
       }
      }
      else {
-      if(controlState._state==1){
-        myIrrigation->pressurize_depressurize();
-        controlState.setState(40);
-        updateSystemState();
-      }
-      else{
         myIrrigation->depressurizeWater();
         controlState.setState(20);
         updateSystemState();
-      }
-     }
+
+        }
      myValves->enable(false);
      irrigationState.setState(2);
-     
+
      updateSystemState();
   }
   else if(!emergencyFlag) emergencyConditions();
 }
 
 void correctiveProcess(){
-  if(controlState._state==1){
-    if(mySensors->_myAnalogs[0]->getValue()>=pconfig.max_pressure){
-      myIrrigation->Off(false);
-      controlState.setState(0);
-      updateSystemState();
-    }
-  }
-
-  else if(controlState._state==10){
+  if(controlState._state==10){
     if(mySensors->_myAnalogs[1]->getValue()>=pconfig.max_pressure){
       myIrrigation->Off(false);
       controlState.setState(0);
@@ -131,35 +111,6 @@ void correctiveProcess(){
 
   else if(controlState._state==21){
     if(mySensors->_myScales[0]->getWeight()>=mySensors->_myScales[0]->getMaxWeight()){
-      myIrrigation->pressurizeAll();
-      myIrrigation->turnOffPump();
-      controlState.setState(10);
-      updateSystemState();
-    }
-  }
-
-  else if(controlState._state==40){
-    if(mySensors->_myAnalogs[0]->getValue()>=pconfig.max_pressure){
-      myIrrigation->Off(false);
-      myIrrigation->depressurizeWater();
-      controlState.setState(20);
-      updateSystemState();
-    }
-    else if(mySensors->_myAnalogs[1]->getValue()<pconfig.free_pressure){
-      myIrrigation->turnOnPump();
-      controlState.setState(41);
-      updateSystemState();
-    }
-  }
-
-  else if(controlState._state==41){
-    if(mySensors->_myAnalogs[0]->getValue()>=pconfig.max_pressure){
-      myIrrigation->Off(false);
-      myIrrigation->depressurizeWater();
-      controlState.setState(21);
-      updateSystemState();
-    }
-    else if(mySensors->_myScales[0]->getWeight()>=mySensors->_myScales[0]->getMaxWeight()){
       myIrrigation->pressurizeAll();
       myIrrigation->turnOffPump();
       controlState.setState(10);
@@ -203,21 +154,11 @@ void mainControl(){
 }
 
 void rememberState(){
-  if(controlState._state==1) myIrrigation->pressurizeAir();
-  else if(controlState._state==10) myIrrigation->pressurizeAll();
+  if(controlState._state==10) myIrrigation->pressurizeAll();
   else if(controlState._state==20) myIrrigation->depressurizeWater();
   else if(controlState._state==21){
     myIrrigation->depressurizeWater();
     controlState.setState(20);
-  }
-  else if(controlState._state==40){
-    myIrrigation->keepConnected(false);
-    myIrrigation->pressurize_depressurize();
-  }
-  else if(controlState._state==41){
-    myIrrigation->keepConnected(false);
-    myIrrigation->pressurize_depressurize();
-    controlState.setState(40);
   }
   else if(controlState._state==60){
     myIrrigation->pressurizeAll();
