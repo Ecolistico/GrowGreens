@@ -36,12 +36,12 @@ class mqttController:
         # Routine variables
         self.inRoutine = 0
         self.routineTimer = time()
-        
+
     def update(self, ID, brokerIP, connector):
         self.ID = ID
         self.brokerIP = brokerIP
         self.conn = connector
-    
+
     def Msg2Log(self, logger, mssg):
         if(mssg.split(",")[1]=="debug"): logger.debug(mssg.split(",")[0])
         elif(mssg.endswith(",debug")): logger.debug(mssg.replace(",debug", ""))
@@ -54,28 +54,28 @@ class mqttController:
         elif(mssg.split(",")[1]=="critical"): logger.critical(mssg.split(",")[0])
         elif(mssg.endswith(",critical")): logger.critical(mssg.replace(",critical", ""))
         else: logger.debug(mssg)
-    
+
     def finishRoutine(self):
         fl = self.inRoutine
         serialFloor = self.mGrower.data[str(fl)]
-        
+
         if(fl>0 and fl<=len(self.logGrower)):
             self.mGrower.Gr[fl-1].count = 1
             self.mGrower.Gr[fl-1].mqttReq("RoutineFinished")
-            
+
             serialFloor = int(serialFloor)
             serialDevice = int((serialFloor-1)/4)
             floor = fl - serialDevice*4
             self.mGrower.Gr[fl-1].serialReq("stopSequence,{}".format(floor))
-            
+
             self.mGrower.Gr[fl-1].inRoutine = False
             self.mGrower.Gr[fl-1].startRoutine = False
             self.mGrower.Gr[fl-1].count = 1
             self.mGrower.Gr[fl-1].actualTime = time()-20
             self.logMain.error("TIMEOUT Grower{} routine finished".format(fl))
-        
+
         else: self.logMain.error("GrowerRoutineFinish(): Grower{} does not exist".format(fl))
-        
+
         self.inRoutine = 0
         self.routineTimer = time()
 
@@ -104,20 +104,20 @@ class mqttController:
         top = msg.topic # Input Topic
         message = msg.payload.decode("utf-8") # Input message
         device = top.split("/")[1] # Device where come
-        
+
         # Get MQTT logs from all the devices
         if(top.endswith("log")):
             if(device.startswith("Grower")):
                 level = int(device[-1]) - 1
                 self.Msg2Log(self.logGrower[level], message)
-                self.mGrower.Gr[level].connected = True  
+                self.mGrower.Gr[level].connected = True
                 if(message.startswith("cozir")): self.mGrower.Gr[level].str2array(message)
             elif(device == ("Tucan")): self.logTucan.debug(message)
             elif(device == ("Cloud")): self.logCloud.debug(message)
-            elif(device == "esp32AirPrincipal"): 
+            elif(device == "esp32AirPrincipal"):
                 self.logAirPrincipal.debug(message)
                 self.AirConnected['Principal']['status'] = True
-            elif(device == "esp32AirReturn"): 
+            elif(device == "esp32AirReturn"):
                 self.logAirReturn.debug(message)
                 self.AirConnected['Return']['status'] = True
             elif(device.startswith("esp32")):
@@ -127,7 +127,7 @@ class mqttController:
                 elif pos == "center": self.logger_esp32[level][1].debug(message)
                 elif pos == "back": self.logger_esp32[level][2].debug(message)
             else: self.logMain.warning("Unknown mqtt log recieve - device={}, message={}".format(device, message))
-        
+
         # Get MQTT errors from ESP32´s
         elif(top.endswith("error")):
             if(device == "esp32AirPrincipal"): self.logAirPrincipal.error(message)
@@ -141,22 +141,22 @@ class mqttController:
                 elif pos == "center": self.logger_esp32[level][1].error(message)
                 elif pos == "back": self.logger_esp32[level][2].error(message)
             else: self.logMain.error("Unknown mqtt error recieve - device={}, message={}".format(device, message))
-            
+
         # Get data from ESP32 front, center and back
         elif("esp32" in top and not "AirPrincipal" in top and not "AirReturn" in top and message != "sendData"):
             level = int(device[-1]) - 1
             pos = device[5:-1]
-            if pos == "front": 
+            if pos == "front":
                 self.ESP32.esp32[level][0].str2array(message)
                 self.ESP32.esp32[level][0].connected = True
-            elif pos == "center": 
+            elif pos == "center":
                 self.ESP32.esp32[level][1].str2array(message)
                 self.ESP32.esp32[level][1].connected = True
-            elif pos == "back": 
+            elif pos == "back":
                 self.ESP32.esp32[level][2].str2array(message)
                 self.ESP32.esp32[level][2].connected = True
             # Ask again for the data if not complete
-        
+
         # Get messages directed to Master
         elif(device.startswith('Master')):
             # Check if we can start the routine or not
@@ -172,9 +172,9 @@ class mqttController:
                         floor = fl - serialDevice*4
                         self.mGrower.Gr[fl-1].serialReq("sequence_n,{},41,10".format(serialFloor))
                         self.mGrower.Gr[fl-1].mqttReq("")
-                        self.mGrower.Gr[fl-1].actualTime = time()-120 
+                        self.mGrower.Gr[fl-1].actualTime = time()-120
                         self.logMain.info("Starting Grower{} sequence".format(fl))
-                    else:                    
+                    else:
                         self.mGrower.Gr[fl-1].time2Move(serialFloor)
                         self.logMain.info("Checking Grower{} status to start sequence".format(fl))
                 else: self.logMain.error("Cannot start sequence. Parameters (floor or serialFloor are wrong).")
@@ -189,10 +189,10 @@ class mqttController:
                     floor = fl - serialDevice*4
                     self.mGrower.Gr[fl-1].serialReq("continueSequence,{}".format(serialFloor))
                     self.mGrower.Gr[fl-1].mqttReq("")
-                    self.mGrower.Gr[fl-1].actualTime = time()-120 
+                    self.mGrower.Gr[fl-1].actualTime = time()-120
                     self.logMain.debug("Grower{} continue sequence".format(fl))
                 else: self.logMain.error("Cannot continue sequence. Parameters (floor or serialFloor are wrong).")
-                   
+
             elif(message.startswith('home')):
                 fl = int(message.split(",")[1]) # Floor
                 serialFloor = self.mGrower.data[str(fl)]
@@ -202,7 +202,7 @@ class mqttController:
                     floor = fl - serialDevice*4
                     self.mGrower.Gr[fl-1].serialReq("home,{}".format(serialFloor))
                     self.mGrower.Gr[fl-1].mqttReq("")
-                    self.mGrower.Gr[fl-1].actualTime = time()-120 
+                    self.mGrower.Gr[fl-1].actualTime = time()-120
                     self.logMain.debug("Grower{} Going Home".format(fl))
                 else: self.logMain.error("Cannot go Home. Parameters (floor or serialFloor are wrong).")
 
@@ -218,7 +218,7 @@ class mqttController:
                     self.mGrower.Gr[fl-1].inRoutine = False
                     self.mGrower.Gr[fl-1].startRoutine = False
                     self.mGrower.Gr[fl-1].count = 1
-                    self.mGrower.Gr[fl-1].actualTime = time()-120 
+                    self.mGrower.Gr[fl-1].actualTime = time()-120
                     self.logMain.debug("Grower{} Stop Routine".format(fl))
                 else: self.logMain.error("Cannot Stop Routine. Parameters (floor or serialFloor are wrong).")
 
@@ -234,34 +234,33 @@ class mqttController:
                     if (int(posY) == 0):
                         self.mGrower.Gr[fl-1].serialReq("moveX,{},{}".format(serialFloor,posX))
                         self.mGrower.Gr[fl-1].mqttReq("")
-                        self.mGrower.Gr[fl-1].actualTime = time()-120 
+                        self.mGrower.Gr[fl-1].actualTime = time()-120
                         self.logMain.debug("Grower{} Going to Pos X:{}".format(fl,posX))
-                        
-                    elif(int(posX) == 0):    
+
+                    elif(int(posX) == 0):
                         self.mGrower.Gr[fl-1].serialReq("moveY,{},{}".format(serialFloor,posY))
                         self.mGrower.Gr[fl-1].mqttReq("")
-                        self.mGrower.Gr[fl-1].actualTime = time()-120 
-                        self.logMain.debug("Grower{} Going to Pos Y:{}".format(fl,posY))                   
+                        self.mGrower.Gr[fl-1].actualTime = time()-120
+                        self.logMain.debug("Grower{} Going to Pos Y:{}".format(fl,posY))
 
                     else:
                         self.mGrower.Gr[fl-1].serialReq("movePosXY,{},{},{}".format(serialFloor,posX,posY))
                         self.mGrower.Gr[fl-1].mqttReq("")
-                        self.mGrower.Gr[fl-1].actualTime = time()-120 
+                        self.mGrower.Gr[fl-1].actualTime = time()-120
                         self.logMain.debug("Grower{} Going to Pos X:{},Y{}".format(fl,posX,posY))
                 else: self.logMain.error("Cannot go PosXY. Parameters (floor or serialFloor are wrong).")
-            
+
             elif(message.startswith('syncCalCloud')):
                 fl = int(message.split(",")[1]) # Floor
                 serialFloor = self.mGrower.data[str(fl)]
-                print(serialFloor)
                 if fl>0 and fl<=len(self.mGrower.Gr) and serialFloor!="disconnected":
                     serialFloor = int(serialFloor)
                     serialDevice = int((serialFloor-1)/4)
-                    
+
                     floor = fl - serialDevice*4
                     self.mGrower.Gr[fl-1].serialReq("maxDistance,{}".format(serialFloor))
                     publish.single("{}/{}".format(self.ID, 'Cloud'), "sync,{},{}".format(self.mGrower.Gr[fl-1].maxX, self.mGrower.Gr[fl-1].maxY), hostname = self.brokerIP)
-                    self.mGrower.Gr[fl-1].actualTime = time()-120 
+                    self.mGrower.Gr[fl-1].actualTime = time()-120
                     self.logMain.debug("Grower{} SyncCalCloud".format(fl))
                 else: self.logMain.error("Cannot SyncCalCloud. Parameters (floor or serialFloor are wrong).")
 
@@ -274,15 +273,15 @@ class mqttController:
                     floor = fl - serialDevice*4
                     self.mGrower.Gr[fl-1].serialReq("position,{}".format(serialFloor))
                     publish.single("{}/{}".format(self.ID, 'Cloud'), "posxy,{},{}".format(self.mGrower.Gr[fl-1].posX, self.mGrower.Gr[fl-1].posY), hostname = self.brokerIP)
-                    self.mGrower.Gr[fl-1].actualTime = time()-120 
+                    self.mGrower.Gr[fl-1].actualTime = time()-120
                     self.logMain.debug("Grower{} SyncPosCloud".format(fl))
                 else: self.logMain.error("Cannot SyncPosCloud. Parameters (floor or serialFloor are wrong).")
                 # publish() self.mGrower.Gr[num].maxX, self.mGrower.Gr[num].maxX,
-                
+
             else: self.logMain.warning("Master MQTT request unknown. Message={}".format(message))
         # DEBUG mqtt messages
         #else: self.logMain.warning("Unknown mqtt device={}, message={}".format(device, message))
-            
+
     def on_publish(self, client, userdata, mid):
         self.logMain.debug("Message delivered")
 

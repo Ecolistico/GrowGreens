@@ -91,7 +91,6 @@ def checkSerialMsg(grower):
     serialFloor = mGrower.data[str(grower.floor)]
     if(serialFloor != "disconnected" and grower.serialRequest!="" and time()-grower.actualTime>120):
         serialDevice = int((int(serialFloor)-1)/4)
-        print("Serial device", serialDevice,serialFloor)        
         serialControl.write(serialControl.motorsGrower[serialDevice], grower.serialRequest)
         grower.actualTime = time()
         if grower.serialRequestCounter == 0:
@@ -118,7 +117,7 @@ def checkMqttMsg(grower):
             mssg = [{"topic": "{}/Cloud".format(ID, grower.floor), "payload": "takePicture"},
                     {"topic": "{}/Tucan".format(ID, grower.floor), "payload": "takePicture"}]
             grower.mqttReq("")
-        else: 
+        else:
             mssg = grower.mqttRequest
             device = "Grower{}".format(grower.floor)
         if(mqttControl.clientConnected):
@@ -159,12 +158,12 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     # Define day object
     myDay = Day()
     myDay.set_function(artDay_data) # Initialize functions
-            
+
     # Define IHP object and connect logger
     ihp = IHP(ihp_data, log)
     # Set all floors OFF by default
     for i in range(myDay.fl): ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': 0})
-    
+
     # Define Mail object
     #mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
     # Main logger, me and @IFTTT
@@ -223,7 +222,7 @@ try:
         now = datetime.now()
 
         # If mqtt connected check for messages
-        if mqttControl.clientConnected: 
+        if mqttControl.clientConnected:
             if(mqttControl.inRoutine!=0 and time()-mqttControl.routineTimer>15*60): mqttControl.finishRoutine()
             client.loop(0.2)
         else:
@@ -276,7 +275,7 @@ try:
                 ihp.request(ihp.READ_VIN, {'line': i})
                 ihp.request(ihp.READ_IIN, {'line': i})
             for i in range(myDay.fl):
-                if myDay.update[i]: 
+                if myDay.update[i]:
                     ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': myDay.intensity[i]})
                     myDay.update[i] = False
 
@@ -290,7 +289,7 @@ try:
                 serialControl.write(serialControl.generalControl, "updateHour,{0},{1}".format(
                     now.hour, now.minute))
             else: boot = True
-            
+
             # Check if ESP32's and Growers are connected
             mqttControl.mGrower.updateStatus()
             mqttControl.ESP32.updateStatus()
@@ -299,7 +298,7 @@ try:
             resp = env.update()
             env_msgs = []
             for msg in resp: env_msgs.append({"topic": "{}/{}".format(ID, msg["device"]), "payload": msg["payload"]})
-            
+
             if(mqttControl.clientConnected):
                 try:
                     msgs = []
@@ -329,7 +328,7 @@ try:
                 sub, msg = growCal.getEmail()
                 if(msg!=''): mail.sendMail(sub, msg)
             """
-            
+
         # Check Serial Pending
         for i in range(len(mGrower.Gr)): checkSerialMsg(mGrower.Gr[i])
 
@@ -338,7 +337,7 @@ try:
 
         # Check iHP pending requests
         ihp.run()
-        
+
         if inputControl.exit:
             ex = input("Are you sure? y/n\n")
             if (ex.startswith("y") or start.startswith("Y")):
