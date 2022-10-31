@@ -278,6 +278,18 @@ try:
                 if myDay.update[i]:
                     ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': myDay.intensity[i]})
                     myDay.update[i] = False
+                    
+            # If lightsGUI blocked the lights at 25% for that specific floors
+            if gui.flagOn == True:
+                myDay.intensity[gui.pis-1] = 25
+                myDay.update[gui.pis-1] = True
+            for i in range(1,4,1):
+                ihp.request(ihp.READ_VIN, {'line': i})
+                ihp.request(ihp.READ_IIN, {'line': i})
+            for i in range(myDay.fl):
+                if myDay.update[i]:
+                    ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': myDay.intensity[i]})
+                    myDay.update[i] = False
 
             # Save last ESP32 info and request an update
             if(boot):
