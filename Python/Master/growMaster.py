@@ -271,16 +271,10 @@ try:
             if mqttControl.inRoutine>0 and mqttControl.inRoutine<=len(myDay.intensity):
                 myDay.intensity[mqttControl.inRoutine-1] = 25
                 myDay.update[mqttControl.inRoutine-1] = True
-            for i in range(1,4,1):
-                ihp.request(ihp.READ_VIN, {'line': i})
-                ihp.request(ihp.READ_IIN, {'line': i})
-            for i in range(myDay.fl):
-                if myDay.update[i]:
-                    ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': myDay.intensity[i]})
-                    myDay.update[i] = False
                     
             # If lightsGUI blocked the lights at 25% for that specific floors
-            if gui.flagOn == True:
+            elif gui.flagOn == True:
+                print(myDay.intensity)
                 myDay.intensity[gui.pis-1] = 25
                 myDay.update[gui.pis-1] = True
             for i in range(1,4,1):
