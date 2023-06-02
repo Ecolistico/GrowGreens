@@ -485,8 +485,25 @@ void dynamicMem::save_irrigationParameters(uint8_t floor, uint8_t region, uint8_
 
     int minPos = DYNAMIC_START;
     int maxPos = MaxIrrigationPos();
-    int currentPos = minPos + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
+    int currentPos = minPos + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
     if(currentPos>=minPos && currentPos<maxPos) myMem->write(currentPos, time);
+    else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) dynamic memory is poorly distributed"));
+  } else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) wrong values provided"));
+}
+
+void dynamicMem::save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number, uint8_t cycles){
+  if(floor<MAX_FLOOR_NUMBER && number<MAX_VALVES_PER_REGION){
+    basicConfig bconfig;
+
+    bconfig.floors = read_byte(0);
+    bconfig.solenoids = read_byte(1);
+    bconfig.regions = read_byte(2);
+    bconfig.cycleTime = read_byte(3);
+
+    int minPos = DYNAMIC_START;
+    int maxPos = MaxIrrigationPos();
+    int currentPos = minPos + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
+    if(currentPos>=minPos && currentPos<maxPos) myMem->write(currentPos+1, cycles);
     else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) dynamic memory is poorly distributed"));
   } else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) wrong values provided"));
 }
@@ -826,11 +843,27 @@ uint8_t dynamicMem::read_irrigationParameters(uint8_t floor, uint8_t region, uin
   bconfig.regions = read_byte(2);
   bconfig.cycleTime = read_byte(3);
 
-  int pos = DYNAMIC_START + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
+  int pos = DYNAMIC_START + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
   uint8_t resp = read_byte(pos);
 
   return resp;
 }
+
+uint8_t dynamicMem::read_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number){
+  basicConfig bconfig;
+
+  bconfig.floors = read_byte(0);
+  bconfig.solenoids = read_byte(1);
+  bconfig.regions = read_byte(2);
+  bconfig.cycleTime = read_byte(3);
+
+  int pos = DYNAMIC_START + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
+  uint8_t resp = read_byte(pos+1);
+
+  return resp;
+}
+
+
 
 fan_memory dynamicMem::read_fan(uint8_t floor) {
   fan_memory fan;
@@ -961,7 +994,7 @@ int dynamicMem::MaxIrrigationPos(){
   uint8_t solenoids = read_byte(1);
   uint8_t regions = read_byte(2);
 
-  int pos = DYNAMIC_START + (floors*solenoids*regions);
+  int pos = DYNAMIC_START + (floors*solenoids*regions*2);
 
   return pos;
 }

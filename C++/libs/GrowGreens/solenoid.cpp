@@ -8,7 +8,7 @@
 // Statics variables definitions
 uint8_t solenoid::_numberSolenoid = 0;
 
-solenoid::solenoid(uint8_t num, uint8_t printNum, uint8_t floor, bool reg, unsigned long timeOn) // Constructor
+solenoid::solenoid(uint8_t num, uint8_t printNum, uint8_t floor, bool reg, unsigned long timeOn, uint8_t cycles) // Constructor
    { _State = LOW;
      _Enable = true;
      _Floor = floor;
@@ -16,6 +16,7 @@ solenoid::solenoid(uint8_t num, uint8_t printNum, uint8_t floor, bool reg, unsig
      _Number = num;
      _PrintNumber = printNum;
      _TimeOn = timeOn*1000UL;
+     _Cycles = cycles;
      setTime();
      _H2OVolume = 0;
      _numberSolenoid++;
@@ -79,8 +80,17 @@ void solenoid::setTimeOn(unsigned long t_on)
     }
   }
 
+void solenoid::setCyclesNumber(uint8_t c_num)
+  { 
+    _Cycles = c_num; 
+    solenoidPrint(F("Cycle On changed to "), String(c_num), F(" cycles"), 0);
+  }
+
 unsigned long solenoid::getTimeOn()
   { return _TimeOn; }
+
+uint8_t solenoid::getCyclesNumber()
+  {  return _Cycles; }
 
 bool solenoid::getState()
   {  return _State; }
@@ -135,8 +145,8 @@ floorValves::floorValves(uint8_t floor, uint8_t valvesPerRegion) // Constructor
        _H2O_regB = 0;
 
        for (int i = 0; i<valvesPerRegion; i++){
-         _regA[i] = new solenoid(solenoid::_numberSolenoid, i, floor, 0, DEFAULT_TIME_ON);
-         _regB[i] = new solenoid(solenoid::_numberSolenoid, i, floor, 1, DEFAULT_TIME_ON);
+         _regA[i] = new solenoid(solenoid::_numberSolenoid, i, floor, 0, DEFAULT_TIME_ON, DEFAULT_CYCLES);
+         _regB[i] = new solenoid(solenoid::_numberSolenoid, i, floor, 1, DEFAULT_TIME_ON, DEFAULT_CYCLES);
        }
        _floorNumber++;
      }
@@ -236,13 +246,18 @@ void floorValves::enable(bool en, uint8_t reg)
          resetTime();
          for (int i = 0; i<_floorNumber; i++) {
            unsigned long valveTime = 0;
+           uint8_t cyclesNumber = 0;
            _floor[i] = new floorValves(i, _valvesPerRegion);
 
            for(int j=0; j<_valvesPerRegion; j++){
              valveTime = myMem.read_irrigationParameters(i, 0, j)*1000UL;
              _floor[i]->_regA[j]->setTimeOn(valveTime);
+             cyclesNumber = myMem.read_solenoidParameters(i, 0, j);
+             _floor[i]->_regA[j]->setCyclesNumber(cyclesNumber);
              valveTime = myMem.read_irrigationParameters(i, 1, j)*1000UL;
              _floor[i]->_regB[j]->setTimeOn(valveTime);
+             cyclesNumber = myMem.read_solenoidParameters(i, 1, j);
+             _floor[i]->_regB[j]->setCyclesNumber(cyclesNumber);
            }
          }
        }

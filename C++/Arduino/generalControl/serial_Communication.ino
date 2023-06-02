@@ -410,6 +410,18 @@ void serialEvent(){                                   //if the hardware serial p
         }
         else Serial.println(F("error,Serial Solenoid setTimeOn: Parameter[2,3,4] incorrect"));
       }
+      else if(parameter[1]==F("setCyclesNumber")){
+        uint8_t fl = parameter[2].toInt()-1;
+        uint8_t reg = parameter[3].toInt()-1;
+        uint8_t valveNumber = parameter[4].toInt()-1;
+        uint8_t cyclesOn = parameter[5].toInt();
+        if(fl>=0 && fl<bconfig.floors && (reg==0 || reg==1) && valveNumber>=0 && valveNumber<bconfig.solenoids){
+          if(reg==0) myValves->_floor[fl]->_regA[valveNumber]->setCyclesNumber(cyclesOn);
+          else myValves->_floor[fl]->_regB[valveNumber]->setCyclesNumber(cyclesOn);          
+          myMem.save_solenoidParameters(fl, reg, valveNumber, cyclesOn);
+        }
+        else Serial.println(F("error,Serial Solenoid setTimeOn: Parameter[2,3,4] incorrect"));
+      }
       else if(parameter[1]==F("setCycleTime")){
         uint8_t cycleTime = abs(parameter[2].toInt());
         myValves->setCycleTime(cycleTime*1000UL);
