@@ -373,6 +373,13 @@ void systemValves::invertOrder(bool invert){
   }
 }
 
+void systemValves::incrementCycle() {
+    _currentCycle++; // Incrementar el ciclo actual en 1 unidad
+  }
+
+uint8_t systemValves::getCurrentCycle()
+ { return _currentCycle; }  
+
 void systemValves::run(ScaleSens *scale)
   { if(_Enable==true){ // If system is enable
       // Look for solenoid that is next
@@ -403,7 +410,7 @@ void systemValves::run(ScaleSens *scale)
       // Check conditions
       if(finished){
         if(reg==0){
-          if(_floor[fl]->_regA[num]->isEnable()) { // Solenoid Enable
+          if(_floor[fl]->_regA[num]->isEnable() && _floor[fl]->_regA[num]->getCyclesNumber() == getCurrentCycle()) { // Solenoid Enable
             if(_floor[fl]->_regA[num]->getState()==LOW){ // Solenoid Off
               printAtFirst();
               _auxH2O = scale->getWeight();
@@ -425,7 +432,7 @@ void systemValves::run(ScaleSens *scale)
           }
         }
         else{
-          if(_floor[fl]->_regB[num]->isEnable()) { // Solenoid Enable
+          if(_floor[fl]->_regB[num]->isEnable()&& _floor[fl]->_regB[num]->getCyclesNumber() == getCurrentCycle()) { // Solenoid Enable
             if(_floor[fl]->_regB[num]->getState()==LOW){ // Solenoid Off
               printAtFirst();
               _auxH2O = scale->getWeight();
@@ -460,5 +467,6 @@ void systemValves::run(ScaleSens *scale)
         _actualNumber = 0;
         resetTime();
         systemPrint(F("Restarting cycle"), F(""), F(""), 0);
+        incrementCycle();
       }
   }

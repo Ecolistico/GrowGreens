@@ -109,6 +109,7 @@ class systemValves
       uint8_t _floorNumber, _valvesPerRegion, _actualNumber; // How many floors conforms the system
       float _H2O_Consumption; // Consumption of water
       float _auxH2O; // Auxiliar variable to calculate the consumption of water
+      uint8_t _currentCycle;
 
       void systemPrint(String act1, String act2, String act3, uint8_t level = 0); // Print an action for entire system
       void printAtFirst(); // Function that runs when _actualNumber == 0, print and reset water info
@@ -132,7 +133,8 @@ class systemValves
       uint8_t getActualNumber(); // Returns the actual actuator number active into the array
       void enable(bool en); // Enable the system
       bool isEnable(); // Returns true if the solenoid System is enable
-
+      void incrementCycle();
+      uint8_t getCurrentCycle();
       // To Finish
       /* To do:
         1- Add FlowMeter sensor to this class (CANCELLED)
