@@ -81,9 +81,16 @@ void solenoid::setTimeOn(unsigned long t_on)
   }
 
 void solenoid::setCyclesNumber(uint8_t c_num)
+  { if(c_num==0) enable(false);
+    else {
+      _Cycles = c_num;
+      solenoidPrint(F("Cycle On changed to "), String(c_num), F(" cycles"), 0);
+    }
+  }
+
+void solenoid::setCurrentCycle(uint8_t curc_num)
   { 
-    _Cycles = c_num; 
-    solenoidPrint(F("Cycle On changed to "), String(c_num), F(" cycles"), 0);
+      _CurrentCycle = curc_num;
   }
 
 unsigned long solenoid::getTimeOn()
@@ -91,6 +98,9 @@ unsigned long solenoid::getTimeOn()
 
 uint8_t solenoid::getCyclesNumber()
   {  return _Cycles; }
+
+uint8_t solenoid::getCurrentCycle()
+  {  return _CurrentCycle; }
 
 bool solenoid::getState()
   {  return _State; }
@@ -246,18 +256,15 @@ void floorValves::enable(bool en, uint8_t reg)
          resetTime();
          for (int i = 0; i<_floorNumber; i++) {
            unsigned long valveTime = 0;
-           uint8_t cyclesNumber = 0;
            _floor[i] = new floorValves(i, _valvesPerRegion);
 
            for(int j=0; j<_valvesPerRegion; j++){
-             valveTime = myMem.read_irrigationParameters(i, 0, j)*1000UL;
-             _floor[i]->_regA[j]->setTimeOn(valveTime);
-             cyclesNumber = myMem.read_solenoidParameters(i, 0, j);
-             _floor[i]->_regA[j]->setCyclesNumber(cyclesNumber);
-             valveTime = myMem.read_irrigationParameters(i, 1, j)*1000UL;
-             _floor[i]->_regB[j]->setTimeOn(valveTime);
-             cyclesNumber = myMem.read_solenoidParameters(i, 1, j);
-             _floor[i]->_regB[j]->setCyclesNumber(cyclesNumber);
+             solenoid_memory solenoidParam = myMem.read_solenoidParameters(i, 0, j);
+             _floor[i]->_regA[j]->setTimeOn(solenoidParam.timeOnS*1000UL);
+             _floor[i]->_regA[j]->setCyclesNumber(solenoidParam.cycles);
+             solenoidParam = myMem.read_solenoidParameters(i, 1, j);
+             _floor[i]->_regB[j]->setTimeOn(solenoidParam.timeOnS*1000UL);
+             _floor[i]->_regB[j]->setCyclesNumber(solenoidParam.cycles);
            }
          }
        }
@@ -373,13 +380,6 @@ void systemValves::invertOrder(bool invert){
   }
 }
 
-void systemValves::incrementCycle() {
-    _currentCycle++; // Incrementar el ciclo actual en 1 unidad
-  }
-
-uint8_t systemValves::getCurrentCycle()
- { return _currentCycle; }  
-
 void systemValves::run(ScaleSens *scale)
   { if(_Enable==true){ // If system is enable
       // Look for solenoid that is next
@@ -410,18 +410,27 @@ void systemValves::run(ScaleSens *scale)
       // Check conditions
       if(finished){
         if(reg==0){
-          if(_floor[fl]->_regA[num]->isEnable() && _floor[fl]->_regA[num]->getCyclesNumber() == getCurrentCycle()) { // Solenoid Enable
-            if(_floor[fl]->_regA[num]->getState()==LOW){ // Solenoid Off
-              printAtFirst();
-              _auxH2O = scale->getWeight();
-              _floor[fl]->_regA[num]->turnOn(true);
+          if(_floor[fl]->_regA[num]->isEnable()) { // Solenoid Enable
+            if(_floor[fl]->_regA[num]->getCyclesNumber() == _floor[fl]->_regA[num]->getCurrentCycle()){
+              if(_floor[fl]->_regA[num]->getState()==LOW){ // Solenoid Off
+                printAtFirst();
+                _auxH2O = scale->getWeight();
+                _floor[fl]->_regA[num]->turnOn(true);
+              }
+              else if(_floor[fl]->_regA[num]->getState()==HIGH && _floor[fl]->_regA[num]->getTime()>=_floor[fl]->_regA[num]->getTimeOn()) {
+                _floor[fl]->_regA[num]->turnOff(false);
+                float volume = _auxH2O - scale->getWeight();
+                if(volume<0) volume = 0;
+                _floor[fl]->_regA[num]->addConsumptionH2O(volume);
+                _actualNumber++;
+                _floor[fl]->_regA[num]->setCurrentCycle(1);
+              }  
             }
-            else if(_floor[fl]->_regA[num]->getState()==HIGH && _floor[fl]->_regA[num]->getTime()>=_floor[fl]->_regA[num]->getTimeOn()) {
-              _floor[fl]->_regA[num]->turnOff(false);
-              float volume = _auxH2O - scale->getWeight();
-              if(volume<0) volume = 0;
-              _floor[fl]->_regA[num]->addConsumptionH2O(volume);
-              _actualNumber++;
+            else{
+              printAtFirst();
+              _floor[fl]->_regA[num]->addConsumptionH2O(0);
+              _floor[fl]->_regA[num]->setCurrentCycle(_floor[fl]->_regA[num]->getCurrentCycle()+1);
+               _actualNumber++;
             }
           }
           else{ /* Check what happen when solenoid is disable */
@@ -432,19 +441,23 @@ void systemValves::run(ScaleSens *scale)
           }
         }
         else{
-          if(_floor[fl]->_regB[num]->isEnable()&& _floor[fl]->_regB[num]->getCyclesNumber() == getCurrentCycle()) { // Solenoid Enable
-            if(_floor[fl]->_regB[num]->getState()==LOW){ // Solenoid Off
-              printAtFirst();
-              _auxH2O = scale->getWeight();
-              _floor[fl]->_regB[num]->turnOn(true);
+          if(_floor[fl]->_regB[num]->isEnable()) { // Solenoid Enable
+            if(_floor[fl]->_regB[num]->getCyclesNumber() == _floor[fl]->_regB[num]->getCurrentCycle()){
+              if(_floor[fl]->_regB[num]->getState()==LOW){ // Solenoid Off
+                printAtFirst();
+                _auxH2O = scale->getWeight();
+                _floor[fl]->_regB[num]->turnOn(true);
+              }
+              else if(_floor[fl]->_regB[num]->getState()==HIGH && _floor[fl]->_regB[num]->getTime()>=_floor[fl]->_regB[num]->getTimeOn()) {
+                _floor[fl]->_regB[num]->turnOff(false);
+                float volume = _auxH2O - scale->getWeight();
+                if(volume<0) volume = 0;
+                _floor[fl]->_regB[num]->addConsumptionH2O(volume);
+                _actualNumber++;
+                _floor[fl]->_regB[num]->setCurrentCycle(1);
+              }
             }
-            else if(_floor[fl]->_regB[num]->getState()==HIGH && _floor[fl]->_regB[num]->getTime()>=_floor[fl]->_regB[num]->getTimeOn()) {
-              _floor[fl]->_regB[num]->turnOff(false);
-              float volume = _auxH2O - scale->getWeight();
-              if(volume<0) volume = 0;
-              _floor[fl]->_regB[num]->addConsumptionH2O(volume);
-              _actualNumber++;
-            }
+            else{ _floor[fl]->_regB[num]->setCurrentCycle(_floor[fl]->_regB[num]->getCurrentCycle()+1);}
           }
           else{ /* Check what happen when solenoid is disable */
             if(_floor[fl]->_regB[num]->getState()) _floor[fl]->_regB[num]->turnOff(false); // If solenoid in action turnOff
@@ -467,6 +480,6 @@ void systemValves::run(ScaleSens *scale)
         _actualNumber = 0;
         resetTime();
         systemPrint(F("Restarting cycle"), F(""), F(""), 0);
-        incrementCycle();
+        //incrementCycle();
       }
   }

@@ -118,10 +118,10 @@ void checkPump() {
   }
 
   if (!printedState && currentState) {
-    Serial.println(F("info,recirculation pump ON"));
+    Serial.println(F("info,recirculation pump OFF"));
     printedState = true; 
   } else if (!printedState && !currentState) {
-    Serial.println(F("info,recirculation pump OFF"));
+    Serial.println(F("info,recirculation pump ON"));
     printedState = true;  
   }
 

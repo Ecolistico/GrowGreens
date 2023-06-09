@@ -84,7 +84,8 @@ class dynamicMem
 
       /* Dynamic Region Saving Functions*/
       void save_irrigationParameters(uint8_t floor, uint8_t region, uint8_t number, uint8_t time);
-      void save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number, uint8_t cycles);
+      //void save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number, uint8_t cycles);
+      void save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number, solenoid_memory solenoidM);
       void save_fanParameters(uint8_t floor, fan_memory fanM);
       void save_analog(uint8_t num, analogSensor analog);
       void save_flowmeter(uint8_t num, flowmeter fm);
@@ -96,7 +97,8 @@ class dynamicMem
 
       /* Dynamic Region Returning Functions */
       uint8_t read_irrigationParameters(uint8_t floor, uint8_t region, uint8_t number);
-      uint8_t read_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number);
+      //uint8_t read_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number);
+      solenoid_memory read_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number);
       fan_memory read_fan(uint8_t floor);
       analogSensor read_analog(uint8_t num);
       flowmeter read_flowmeter(uint8_t num);

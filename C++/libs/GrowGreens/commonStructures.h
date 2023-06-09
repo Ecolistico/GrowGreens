@@ -139,7 +139,7 @@ typedef struct {
 } MuxOut;
 
 typedef struct {
-  uint8_t timeOns;
+  uint8_t timeOnS;
   uint8_t cycles;
 } solenoid_memory;
 

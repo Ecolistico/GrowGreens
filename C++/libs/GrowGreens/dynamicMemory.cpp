@@ -491,9 +491,10 @@ void dynamicMem::save_irrigationParameters(uint8_t floor, uint8_t region, uint8_
   } else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) wrong values provided"));
 }
 
-void dynamicMem::save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number, uint8_t cycles){
+void dynamicMem::save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number, solenoid_memory solenoidM){
   if(floor<MAX_FLOOR_NUMBER && number<MAX_VALVES_PER_REGION){
     basicConfig bconfig;
+    bool error = false;
 
     bconfig.floors = read_byte(0);
     bconfig.solenoids = read_byte(1);
@@ -501,12 +502,30 @@ void dynamicMem::save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t 
     bconfig.cycleTime = read_byte(3);
 
     int minPos = DYNAMIC_START;
-    int maxPos = MaxIrrigationPos();
-    int currentPos = minPos + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
-    if(currentPos>=minPos && currentPos<maxPos) myMem->write(currentPos+1, cycles);
-    else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) dynamic memory is poorly distributed"));
-  } else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) wrong values provided"));
+    int maxPos =  MaxIrrigationPos();
+    int currentPos = minPos + (number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions)*sizeof(solenoid_memory);
+
+    if (currentPos>=minPos && currentPos<maxPos && !error){
+      write(currentPos, solenoidM.timeOnS);
+      currentPos += sizeof(solenoidM.timeOnS);
+    } else if(!error){
+      Serial.println(F("error,EEPROM: save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number, solenoid_memory solenoidM) wrong values provided"));
+      error = true;
+    }
+
+    if (currentPos>=minPos && currentPos<maxPos && !error){
+      write(currentPos, solenoidM.cycles);
+      currentPos += sizeof(solenoidM.cycles);
+    } else if(!error){
+      Serial.println(F("error,EEPROM: save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number, solenoid_memory solenoidM) wrong values provided"));
+      error = true;
+    }
+
+    if (!error) Serial.println(F("info,EEPROM: Solenoid info saved correctly"));
+
+  } else Serial.println(F("error,EEPROM: save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number, solenoid_memory solenoidM) wrong values provided"));
 }
+
 
 void dynamicMem::save_fanParameters(uint8_t floor, fan_memory fanM){
   if(floor<MAX_FLOOR_NUMBER && floor<read_byte(0)){
@@ -849,7 +868,9 @@ uint8_t dynamicMem::read_irrigationParameters(uint8_t floor, uint8_t region, uin
   return resp;
 }
 
-uint8_t dynamicMem::read_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number){
+
+solenoid_memory dynamicMem::read_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number) {
+  solenoid_memory solenoid;
   basicConfig bconfig;
 
   bconfig.floors = read_byte(0);
@@ -857,12 +878,14 @@ uint8_t dynamicMem::read_solenoidParameters(uint8_t floor, uint8_t region, uint8
   bconfig.regions = read_byte(2);
   bconfig.cycleTime = read_byte(3);
 
-  int pos = DYNAMIC_START + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
-  uint8_t resp = read_byte(pos+1);
+  int pos = DYNAMIC_START + (number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions)*sizeof(solenoid_memory);
 
-  return resp;
+  solenoid.timeOnS = read_byte(pos);
+  pos += sizeof(uint8_t);
+  solenoid.cycles = read_byte(pos);
+
+  return solenoid;
 }
-
 
 
 fan_memory dynamicMem::read_fan(uint8_t floor) {
@@ -994,7 +1017,7 @@ int dynamicMem::MaxIrrigationPos(){
   uint8_t solenoids = read_byte(1);
   uint8_t regions = read_byte(2);
 
-  int pos = DYNAMIC_START + (floors*solenoids*regions*2);
+  int pos = DYNAMIC_START + (floors*solenoids*regions*sizeof(solenoid_memory));
 
   return pos;
 }
