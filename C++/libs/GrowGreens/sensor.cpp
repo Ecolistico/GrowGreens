@@ -304,17 +304,22 @@ void ScaleSens::begin(long offset, float scale, float min_weight, float max_weig
     _minWeight = min_weight; // Set minimun weight to control purposes
     _maxWeight = max_weight; // Set maximun weight to control purposes
     _printTimer = millis();
+    uint8_t counter = 0;
 
-    if (_sc->is_ready()) {
-      Serial.print(F("info,Sensor: Scale number "));
-      Serial.print(_number);
-      Serial.println(F(" started correctly"));
-      _en = true;
-    }
-    else {
-      Serial.print(F("error,Sensor: Scale number "));
-      Serial.print(_number);
-      Serial.println(F(" not found"));
+    while(!_en && counter<3){
+      if (_sc->is_ready()) {
+        Serial.print(F("info,Sensor: Scale number "));
+        Serial.print(_number);
+        Serial.println(F(" started correctly"));
+        _en = true;
+      }
+      else {
+        counter++;
+        Serial.print(F("error,Sensor: Scale number "));
+        Serial.print(_number);
+        Serial.println(F(" not found"));
+        delay(500);
+      }
     }
   }
 

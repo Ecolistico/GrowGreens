@@ -47,6 +47,7 @@ dateTime dTime;         // Time info
 bool memoryReady = false;
 bool lastState = false; 
 bool printedState = false; 
+bool currentState;
 
 // Serial comunication
 String inputstring = "";
@@ -111,8 +112,8 @@ void emergencyButtonPressed() {
 
 
 void checkPump() {
-  bool currentState = mySensors->_mySwitches[1]->getState();  // Obtener el estado actual del pin EMERG2
-
+  currentState = mySensors->_mySwitches[1]->getState();  // Obtener el estado actual del pin EMERG2
+  
   if (currentState != lastState) {  
     printedState = false;  
   }

@@ -704,6 +704,7 @@ void dynamicMem::save_switch(uint8_t num, switchSensor sw){
   int minPos = MaxScalePos();
   int maxPos = MaxSwitchPos();
   int currentPos = minPos + num*sizeof(switchSensor);
+  uint8_t nextValue = read_byte(maxPos);
 
   if (currentPos>=minPos && currentPos<maxPos && !error){
     write(currentPos, sw.pin);
@@ -719,6 +720,12 @@ void dynamicMem::save_switch(uint8_t num, switchSensor sw){
   } else if(!error){
     Serial.println(F("error,EEPROM: save_switch(uint8_t num, switchSensor sw) wrong values provided"));
     error = true;
+  }
+
+  if (nextValue != read_byte(maxPos)){
+    Serial.println(F("NextValue has changed, fixing.."));
+    write(maxPos, nextValue);
+    Serial.println(nextValue);//Debug
   }
 
   if (!error) Serial.println(F("info,EEPROM: Switch Sensor saved correctly"));
