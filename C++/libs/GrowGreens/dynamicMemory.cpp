@@ -474,23 +474,6 @@ unsigned long dynamicMem::read_ulong(int pos){
   return auxVal;
 }
 
-void dynamicMem::save_irrigationParameters(uint8_t floor, uint8_t region, uint8_t number, uint8_t time){
-  if(floor<MAX_FLOOR_NUMBER && number<MAX_VALVES_PER_REGION){
-    basicConfig bconfig;
-
-    bconfig.floors = read_byte(0);
-    bconfig.solenoids = read_byte(1);
-    bconfig.regions = read_byte(2);
-    bconfig.cycleTime = read_byte(3);
-
-    int minPos = DYNAMIC_START;
-    int maxPos = MaxIrrigationPos();
-    int currentPos = minPos + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
-    if(currentPos>=minPos && currentPos<maxPos) myMem->write(currentPos, time);
-    else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) dynamic memory is poorly distributed"));
-  } else Serial.println(F("error,EEPROM: save_irrigationparemters(uint8_t floor, bool region, uint8_t number, uint8_t time) wrong values provided"));
-}
-
 void dynamicMem::save_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number, solenoid_memory solenoidM){
   if(floor<MAX_FLOOR_NUMBER && number<MAX_VALVES_PER_REGION){
     basicConfig bconfig;
@@ -860,21 +843,6 @@ void dynamicMem::save_stateOrder(uint8_t mx, uint8_t num, uint8_t order){
   }
   else Serial.println(F("error,EEPROM: save_state(uint8_t mx, uint8_t num, uint8_t order) wrong values provided"));
 }
-
-uint8_t dynamicMem::read_irrigationParameters(uint8_t floor, uint8_t region, uint8_t number){
-  basicConfig bconfig;
-
-  bconfig.floors = read_byte(0);
-  bconfig.solenoids = read_byte(1);
-  bconfig.regions = read_byte(2);
-  bconfig.cycleTime = read_byte(3);
-
-  int pos = DYNAMIC_START + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions + number + region*bconfig.solenoids + floor*bconfig.solenoids*bconfig.regions;
-  uint8_t resp = read_byte(pos);
-
-  return resp;
-}
-
 
 solenoid_memory dynamicMem::read_solenoidParameters(uint8_t floor, uint8_t region, uint8_t number) {
   solenoid_memory solenoid;

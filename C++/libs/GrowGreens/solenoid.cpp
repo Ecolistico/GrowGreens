@@ -90,7 +90,8 @@ void solenoid::setCyclesNumber(uint8_t c_num)
 
 void solenoid::setCurrentCycle(uint8_t curc_num)
   { 
-      _CurrentCycle = curc_num;
+    if(curc_num < _Cycles) _CurrentCycle = curc_num;
+    else solenoidPrint(F("Current Cycle cannot be bigger than Cycles"), 3);
   }
 
 unsigned long solenoid::getTimeOn()
@@ -457,7 +458,12 @@ void systemValves::run(ScaleSens *scale)
                 _floor[fl]->_regB[num]->setCurrentCycle(1);
               }
             }
-            else{ _floor[fl]->_regB[num]->setCurrentCycle(_floor[fl]->_regB[num]->getCurrentCycle()+1);}
+            else{ 
+              printAtFirst();
+              _floor[fl]->_regB[num]->addConsumptionH2O(0);
+              _floor[fl]->_regB[num]->setCurrentCycle(_floor[fl]->_regB[num]->getCurrentCycle()+1);
+              _actualNumber++;
+              }
           }
           else{ /* Check what happen when solenoid is disable */
             if(_floor[fl]->_regB[num]->getState()) _floor[fl]->_regB[num]->turnOff(false); // If solenoid in action turnOff
@@ -480,6 +486,5 @@ void systemValves::run(ScaleSens *scale)
         _actualNumber = 0;
         resetTime();
         systemPrint(F("Restarting cycle"), F(""), F(""), 0);
-        //incrementCycle();
       }
   }
