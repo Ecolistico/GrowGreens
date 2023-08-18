@@ -90,7 +90,8 @@ void solenoid::setCyclesNumber(uint8_t c_num)
 
 void solenoid::setCurrentCycle(uint8_t curc_num)
   { 
-      _CurrentCycle = curc_num;
+    if(curc_num < _Cycles) _CurrentCycle = curc_num;
+    else solenoidPrint(F("Current Cycle cannot be bigger than Cycles"), 3);
   }
 
 unsigned long solenoid::getTimeOn()

@@ -46,7 +46,6 @@ dateTime dTime;         // Time info
 // auxVariables
 bool memoryReady = false;
 bool lastState = false; 
-bool printedState = false; 
 
 // Serial comunication
 String inputstring = "";
@@ -114,18 +113,10 @@ void checkPump() {
   bool currentState = mySensors->_mySwitches[1]->getState();  // Obtener el estado actual del pin EMERG2
 
   if (currentState != lastState) {  
-    printedState = false;  
+    if (currentState) Serial.println(F("info,recirculation pump OFF"));
+    else Serial.println(F("info,recirculation pump ON"));
+    lastState = currentState; 
   }
-
-  if (!printedState && currentState) {
-    Serial.println(F("info,recirculation pump OFF"));
-    printedState = true; 
-  } else if (!printedState && !currentState) {
-    Serial.println(F("info,recirculation pump ON"));
-    printedState = true;  
-  }
-
-  lastState = currentState;  
 }
 
 
