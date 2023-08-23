@@ -111,7 +111,7 @@ void emergencyButtonPressed() {
 
 
 void checkPump() {
-  currentState = mySensors->_mySwitches[1]->getState();  // Obtener el estado actual del pin EMERG2
+  bool currentState = mySensors->_mySwitches[1]->getState();  // Obtener el estado actual del pin EMERG2
   
   if (currentState != lastState) {  
     if (currentState) Serial.println(F("info,recirculation pump OFF"));
