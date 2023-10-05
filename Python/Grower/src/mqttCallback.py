@@ -14,7 +14,7 @@ class mqttController:
         self.log.info("Setting up Grower..." )
 
         # Grower Variables
-        self.grower = Grower(self.log)
+        self.grower = Grower(self.log)        
         
         # Mqtt Variables
         self.clientConnected = False
@@ -135,6 +135,40 @@ class mqttController:
             self.grower.turnOn(self.grower.SCL)
             self.grower.turnOn(self.grower.SDA)
             self.sendLog("Ir Off")
+            
+        elif(message == "moveCameraX+"):
+            self.grower.motorXCamera(True)
+            self.sendLog("MovingCameraX+")
+            
+        elif(message == "moveCameraX-"):
+            self.grower.motorXCamera(False)          
+            self.sendLog("MovingCameraX-")
+            
+        elif(message == "moveCameraY+"):
+            self.grower.motorYCamera(True)
+            self.sendLog("MovingCameraY+")
+            
+        elif(message == "moveCameraY-"):
+            self.grower.motorYCamera(False)          
+            self.sendLog("MovingCameraY-")
+                           
+        elif(message == "moveHome"):
+            self.grower.moveHome()
+
+        elif(message.startswith("motorMove")):
+            if message.split(",")[1] == "1":
+                direction = True
+            elif message.split(",")[1] == "0":
+                direction = False
+            steps = int(message.split(",")[3])
+            self.grower.motorMove(direction, message.split(",")[2], steps)          
+            self.sendLog("Moving {} Camera to {}, {} steps".format(message.split(",")[2], direction, steps))
+              
+        elif(message == "IrOff"):
+            self.grower.turnOn(self.grower.SCL)
+            self.grower.turnOn(self.grower.SDA)
+            self.sendLog("Ir Off")            
+            
 
         elif(message == "whatIsMyIP"):
             mssg = "IP={}".format(self.grower.whatIsMyIP())
