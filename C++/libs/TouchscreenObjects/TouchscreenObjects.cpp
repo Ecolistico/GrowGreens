@@ -11,69 +11,78 @@ template <typename T> T PROGMEM_getAnything (const T * sce){
   return temp;
   }
 
-variables variableObjects[32] = {
-        {SMAKER,      80,   190,  2,  WHITE,  ""},
-        {SMAKER,      230,  190,  2,  WHITE,  ""},
-        {SMAKER,      80,   215,  2,  WHITE,  ""},
-        {SMAKER,      230,  215,  2,  WHITE,  ""},
-        {SETTINGS,    150,  80,   2,  WHITE,  ""},
-        {SETTINGS,    150,  110,  2,  WHITE,  ""},
-        {SETTINGS,    15,   180,  1,  WHITE,  ""},
-        {SETTINGS,    75,   180,  1,  WHITE,  ""},
-        {SETTINGS,    135,  180,  1,  WHITE,  ""},
-        {SETTINGS,    195,  180,  1,  WHITE,  ""},
-        {SETTINGS,    255,  180,  1,  WHITE,  ""},
-        {SETTINGS,    15,   190,  1,  WHITE,  ""},
-        {SETTINGS,    75,   190,  1,  WHITE,  ""},
-        {SETTINGS,    135,  190,  1,  WHITE,  ""},
-        {SETTINGS,    195,  190,  1,  WHITE,  ""},
-        {SETTINGS,    255,  190,  1,  WHITE,  ""},
-        {SALT1,       200,  135,  3,  WHITE,  ""},
-        {SALT2,       200,  135,  3,  WHITE,  ""},
-        {SALT3,       200,  135,  3,  WHITE,  ""},
-        {SALT4,       200,  135,  3,  WHITE,  ""},
-        {SALT5,       200,  135,  3,  WHITE,  ""},
-        {SALT1,       238,  175,  1,  WHITE,  ""},
-        {SALT2,       238,  175,  1,  WHITE,  ""},
-        {SALT3,       238,  175,  1,  WHITE,  ""},
-        {SALT4,       238,  175,  1,  WHITE,  ""},
-        {SALT5,       238,  175,  1,  WHITE,  ""},
-        {SMAKER,      220,  140,  2,  WHITE,  ""},
-        {SMAKER,      40,   140,  2,  WHITE,  ""},
-        {ACID,        180,  90,   2,  WHITE,  ""},
-        {ACID,        170,  170,  2,  WHITE,  ""},
-        {MICROS,      180,  90,   2,  WHITE,  ""},
-        {MICROS,      170,  170,  2,  WHITE,  ""},
+variablesSTR variableObjectsSTR[14] = {
+        {SETTINGS,    10,    160,  1,  WHITE,  "EMPTY"}, //0
+        {SETTINGS,    89,    160,  1,  WHITE,  "EMPTY"}, //1
+        {SETTINGS,    168,   160,  1,  WHITE,  "EMPTY"}, //2
+        {SETTINGS,    247,   160,  1,  WHITE,  "EMPTY"}, //3
+        {SETTINGS,    10,    210,  1,  WHITE,  "EMPTY"}, //4
+        {SETTINGS,    89,    210,  1,  WHITE,  "EMPTY"}, //5
+        {SETTINGS,    168,   210,  1,  WHITE,  "EMPTY"}, //6
+        {SETTINGS,    247,   210,  1,  WHITE,  "EMPTY"}, //7
+        {MIXscr,      70,    140,  3,  WHITE,  "ON"},    //8
+        {MIXscr,      230,   140,  3,  WHITE,  "ON"},    //9
+        {pHCALIB,     20,    80,   2,  WHITE,  ""},      //10
+        {ECCALIB,     20,    80,   2,  WHITE,  ""},      //11
+        {SMAKER,      120,   110,  2,  GREEN,  "START"}, //12
+        {MIXscr,      130,   200,  2,  RED,    "SHOW"},  //13
     };
 
-variables variableObjects2[7] = {
-        {SCALEscr,    100,   90,  3,  WHITE,  ""},
-        {SCALEscr,    240,   145, 1,  WHITE,  ""},
-        {SCALEscr,    55,    170, 2,  WHITE,  ""},
-        {MIXscr,      70,    140, 3,  WHITE,  "ON"},
-        {MIXscr,      230,   140, 3,  WHITE,  "ON"},
-        {MIXscr,      70,    65,  2,  WHITE,  ""},
-        {MIXscr,      230,   65,  2,  WHITE,  ""},
+variablesFL variableObjectsFL[22]={
+        {SMAKER,      80,   190,  2,  WHITE,  0.00},    //0
+        {SMAKER,      230,  190,  2,  WHITE,  0.00},    //1
+        {SMAKER,      80,   215,  2,  WHITE,  0.00},    //2
+        {SETTINGS,    150,  70,   2,  WHITE,  0.00},    //3
+        {SETTINGS,    10,   170,  1,  WHITE,  0.00},    //4
+        {SETTINGS,    89,   170,  1,  WHITE,  0.00},    //5
+        {SETTINGS,    168,  170,  1,  WHITE,  0.00},    //6
+        {SETTINGS,    247,  170,  1,  WHITE,  0.00},    //7
+        {SETTINGS,    10,   220,  1,  WHITE,  0.00},    //8
+        {SETTINGS,    89,   220,  1,  WHITE,  0.00},    //9
+        {SETTINGS,    168,  220,  1,  WHITE,  0.00},    //10
+        {SETTINGS,    247,  220,  1,  WHITE,  0.00},    //11
+        {SALTSALL,    180,  135,  3,  WHITE,  0.00},    //12
+        {SALTSALL,    238,  175,  1,  WHITE,  0.00},    //13
+        {SMAKER,      220,  140,  2,  WHITE,  0.00},    //14
+        {SMAKER,      40,   140,  2,  WHITE,  0.00},    //15
+        {LIQUIDALL,   170,  90,   2,  WHITE,  0.00},    //16
+        {LIQUIDALL,   170,  170,  2,  WHITE,  0.00},    //17
+        {SCALEscr,    100,   90,  3,  WHITE,  0.00},    //18
+        {SCALEscr,    240,   145, 1,  WHITE,  0.00},    //19
+        {SCALEscr,    55,    170, 2,  WHITE,  0.00},    //20
+        {SALTSALL,    120,   200, 2,  WHITE,  0.00},    //21
     };
 
-variables moveableObjects[7] = {
-    {SALT1,       153,  81+0*25,   2,  WHITE,  "X"},
-    {SALT2,       153,  81+1*25,   2,  WHITE,  "X"},
-    {SALT3,       153,  81+2*25,   2,  WHITE,  "X"},
-    {SALT4,       153,  81+3*25,   2,  WHITE,  "X"},
-    {SALT5,       153,  81+4*25,   2,  WHITE,  "X"},
-    {MICROS,      93,   41+0*20,   2,  WHITE,  "X"},
-    {ACID,        93,   41+1*20,   2,  WHITE,  "X"},
+variablesINT variableObjectsINT[5]{
+        {SMAKER,      230,  215,  2,  WHITE,  0},   //0
+        {SETTINGS,    150,  95,   2,  WHITE,  0},   //1
+        {MIXscr,      70,   65,   2,  WHITE,  0},   //2
+        {MIXscr,      230,  65,   2,  WHITE,  0},   //3
+        {SETTINGS,    150,  120,  2,  WHITE,  0},   //4
     };
 
-String salts[5]={
-        "KH2PO4",
+variablesUINT variableObjectsUINT[2] = {
+        {SALTSALL,    280,  40,   3,  GREEN,  0},   //0
+        {LIQUIDALL,   280,  40,   3,  GREEN,  0},   //1
+    };
+
+variablesSTR moveableObjects[1] = {
+    {SALTSALL,    122,  6+0*16,    1,  WHITE,  "X"},    
+    };
+
+String salts[11]={
+        "EMPTY",
         "NH4NO3",
+        "KNO3+MgO",
+        "KNO3+K2SO4",
+        "5Ca(NO3)2",
         "Ca(NO3)2",
-        "KNO3",
-        "MgSO4"
+        "Mg(NO3)2",
+        "NH4H2PO4",
+        "KH2PO4",
+        "MgSO4-7H2O",
+        "Micros",
     };
-uint8_t  saltsOrder[5]={0,1,2,3,4};
 
 SMakerTouchScreen::SMakerTouchScreen(){
     screens=ECOLISTICO;
@@ -85,18 +94,10 @@ SMakerTouchScreen::SMakerTouchScreen(){
     _EC = 1259;
     __pHtarget = 5.72;
     __ECtarget = 1400;
+    __ECmax = 1800;
     _calib=true;
-    _S1mgl = 400.0;
-    _S2mgl = 400.0;
-    _S3mgl = 400.0;
-    _S4mgl = 400.0;
-    _S5mgl = 400.0;
-    _increment = 1.38;
+    _increment = 1.00;
     _incrementW = 0.1;
-    _acidPH = 5.0;
-    _acidQTY = 6.16;//10 seg
-    _microsQTY = 6.16;
-    _microsML = 10;
     _targetGrams = 215.13;
     _scale = 0.01;
     _standbyTime=5000;
@@ -109,16 +110,9 @@ SMakerTouchScreen::SMakerTouchScreen(){
     calibSCALE = false;
     calibPUMP = false;
     _CalibWeight = 200;
-    _pumpsOrder[0]=0;
-    _pumpsOrder[1]=1;
 
     BOOT = true;
     scrLoaded = false;  
-
-    String variablePrev[32];
-    String variablePrev2[7];
-    int moveablePrevX[7];
-    int moveablePrevY[7];
 
     __pumpSTATEtxt = "ON";
     __mixerSTATEtxt = "ON";
@@ -128,9 +122,27 @@ SMakerTouchScreen::SMakerTouchScreen(){
     __mixerStop = false;
     _pumpMinutes = 1;
     _mixerMinutes = 1;
-}
+    _pHSteps = "";
+    _ECSteps = "";
+    _pHCalibTimer = 0;
+    _ECCalibTimer = 0;
+    systemRunning = false;
+    systemRunningText = "START";
+    show=false;
 
-
+    __solidSaltCurrentIndex=0;
+    for (int i = 0; i<SOLIDSALTS; i++){
+        __SaltmgL[i]=1700.00;
+        __Sflow[i] = 0.5;
+        saltsOrder[i] = 0;
+    }
+    __liquidConst[0]=100.00;
+    __liquidCal[0]=30.00;
+    __liquidConst[1]=80.00;
+    __liquidCal[1]=30.00;
+    
+    
+    }
 
 bool SMakerTouchScreen::Touch_getXY(){ //Function to get XY Touch
     TSPoint tp = ts->getPoint();
@@ -162,7 +174,25 @@ bool SMakerTouchScreen::Touch_getXY(){ //Function to get XY Touch
     return pressed;
     }
 
-void SMakerTouchScreen::TFTwrite(int x, int y, uint8_t sizeTxt, int color, String txt){
+void SMakerTouchScreen::TFTwriteSTR(int x, int y, uint8_t sizeTxt, int color, String txt){
+    tft->setTextSize(sizeTxt);
+    tft->setTextColor(color);
+    tft->setCursor(x,y);
+    tft->print(txt);
+    }
+void SMakerTouchScreen::TFTwriteFL(int x, int y, uint8_t sizeTxt, int color, float txt){
+    tft->setTextSize(sizeTxt);
+    tft->setTextColor(color);
+    tft->setCursor(x,y);
+    tft->print(txt);
+    }
+void SMakerTouchScreen::TFTwriteINT(int x, int y, uint8_t sizeTxt, int color, int txt){
+    tft->setTextSize(sizeTxt);
+    tft->setTextColor(color);
+    tft->setCursor(x,y);
+    tft->print(txt);
+    }
+void SMakerTouchScreen::TFTwriteUINT(int x, int y, uint8_t sizeTxt, int color, uint8_t txt){
     tft->setTextSize(sizeTxt);
     tft->setTextColor(color);
     tft->setCursor(x,y);
@@ -180,124 +210,163 @@ void SMakerTouchScreen::fillScreens(uint8_t screen){//Erases screen and fills wi
         objects thisItem;
         PROGMEM_readAnything (&fixedObjects[i], thisItem);
         if (thisItem.screen == screen){
-        if (thisItem.type == TEXT){
-            TFTwrite(thisItem.x, thisItem.y, thisItem.dim, thisItem.color, thisItem.txt); 
-        }
-        if (thisItem.type == CIRCLE){
-            TFTfullCircle(thisItem.x, thisItem.y, thisItem.dim, thisItem.color); 
-        }
-        if (thisItem.type == IMAGE){
-            if (thisItem.img==GROWGREENS){
-            tft->drawBitmap(thisItem.x,thisItem.y, growGreens, thisItem.Width, thisItem.Height, BLACK, thisItem.color); 
+            if (thisItem.type == TEXT){
+                TFTwriteSTR(thisItem.x, thisItem.y, thisItem.dim, thisItem.color, thisItem.txt); 
             }
-        }
-        if (thisItem.type == LINE){
-            tft->drawLine(thisItem.x, thisItem.y, thisItem.Width, thisItem.Height, thisItem.color); 
-        }
-        if (thisItem.type == RECTANGLE){
-            tft->drawRect(thisItem.x, thisItem.y, thisItem.Width, thisItem.Height, thisItem.color); 
-        }
+            if (thisItem.type == CIRCLE){
+                TFTfullCircle(thisItem.x, thisItem.y, thisItem.dim, thisItem.color); 
+            }
+            if (thisItem.type == IMAGE){
+                if (thisItem.img==GROWGREENS){
+                tft->drawBitmap(thisItem.x,thisItem.y, growGreens, thisItem.Width, thisItem.Height, BLACK, thisItem.color); 
+                }
+            }
+            if (thisItem.type == LINE){
+                tft->drawLine(thisItem.x, thisItem.y, thisItem.Width, thisItem.Height, thisItem.color); 
+            }
+            if (thisItem.type == RECTANGLE){
+                tft->drawRect(thisItem.x, thisItem.y, thisItem.Width, thisItem.Height, thisItem.color); 
+            }
+            if (thisItem.type == TRIANGLE){
+                tft->fillTriangle(thisItem.x, thisItem.y, thisItem.x+thisItem.Width, thisItem.y, thisItem.x+thisItem.Width/2, thisItem.y+thisItem.Height, thisItem.color); 
+            }
         }   
     }
     scrLoaded = true;
     }
 
 void SMakerTouchScreen::fillVariables(uint8_t screen){//Fills screen with txt variables
-    for (int i=0; i<sizeof(variableObjects)/sizeof(variableObjects[0]);i++){
-        if (variableObjects[i].screen == screen){
-            if (variablePrev[i]!=variableObjects[i].txt)TFTwrite(variableObjects[i].x, variableObjects[i].y, variableObjects[i].dim, BLACK, variablePrev[i]);       
-            TFTwrite(variableObjects[i].x, variableObjects[i].y, variableObjects[i].dim, variableObjects[i].color, variableObjects[i].txt); 
+    for (int i=0; i<sizeof(variableObjectsSTR)/sizeof(variableObjectsSTR[0]);i++){
+        if (variableObjectsSTR[i].screen == screen){
+            if (variablePrevSTR[i]!=variableObjectsSTR[i].txt)TFTwriteSTR(variableObjectsSTR[i].x, variableObjectsSTR[i].y, variableObjectsSTR[i].dim, BLACK, variablePrevSTR[i]);       
+            TFTwriteSTR(variableObjectsSTR[i].x, variableObjectsSTR[i].y, variableObjectsSTR[i].dim, variableObjectsSTR[i].color, variableObjectsSTR[i].txt); 
         } 
     }
-    for (int i=0; i<sizeof(variableObjects2)/sizeof(variableObjects2[0]);i++){
-        if (variableObjects2[i].screen == screen){
-            if (variablePrev2[i]!=variableObjects2[i].txt)TFTwrite(variableObjects2[i].x, variableObjects2[i].y, variableObjects2[i].dim, BLACK, variablePrev2[i]);       
-            TFTwrite(variableObjects2[i].x, variableObjects2[i].y, variableObjects2[i].dim, variableObjects2[i].color, variableObjects2[i].txt); 
+    for (int i=0; i<sizeof(variableObjectsFL)/sizeof(variableObjectsFL[0]);i++){
+        if (variableObjectsFL[i].screen == screen){
+            if (variablePrevFL[i]!=variableObjectsFL[i].txt)TFTwriteFL(variableObjectsFL[i].x, variableObjectsFL[i].y, variableObjectsFL[i].dim, BLACK, variablePrevFL[i]);       
+            TFTwriteFL(variableObjectsFL[i].x, variableObjectsFL[i].y, variableObjectsFL[i].dim, variableObjectsFL[i].color, variableObjectsFL[i].txt); 
+        } 
+    }
+    for (int i=0; i<sizeof(variableObjectsINT)/sizeof(variableObjectsINT[0]);i++){
+        if (variableObjectsINT[i].screen == screen){
+            if (variablePrevINT[i]!=variableObjectsINT[i].txt)TFTwriteINT(variableObjectsINT[i].x, variableObjectsINT[i].y, variableObjectsINT[i].dim, BLACK, variablePrevINT[i]);       
+            TFTwriteINT(variableObjectsINT[i].x, variableObjectsINT[i].y, variableObjectsINT[i].dim, variableObjectsINT[i].color, variableObjectsINT[i].txt); 
+        } 
+    }
+    for (int i=0; i<sizeof(variableObjectsUINT)/sizeof(variableObjectsUINT[0]);i++){
+        if (variableObjectsUINT[i].screen == screen){
+            if (variablePrevUINT[i]!=variableObjectsUINT[i].txt)TFTwriteUINT(variableObjectsUINT[i].x, variableObjectsUINT[i].y, variableObjectsUINT[i].dim, BLACK, variablePrevUINT[i]);       
+            TFTwriteUINT(variableObjectsUINT[i].x, variableObjectsUINT[i].y, variableObjectsUINT[i].dim, variableObjectsUINT[i].color, variableObjectsUINT[i].txt); 
         } 
     }
     for (int i=0; i<sizeof(moveableObjects)/sizeof(moveableObjects[0]);i++){
         if (moveableObjects[i].screen == screen){
-            if (moveablePrevX[i]!=moveableObjects[i].x || moveablePrevY[i]!=moveableObjects[i].y)TFTwrite(moveablePrevX[i], moveablePrevY[i], moveableObjects[i].dim, BLACK, moveableObjects[i].txt);       
-            TFTwrite(moveableObjects[i].x, moveableObjects[i].y, moveableObjects[i].dim, moveableObjects[i].color, moveableObjects[i].txt); 
+            if (moveablePrevX[i]!=moveableObjects[i].x || moveablePrevY[i]!=moveableObjects[i].y)TFTwriteSTR(moveablePrevX[i], moveablePrevY[i], moveableObjects[i].dim, BLACK, moveableObjects[i].txt);       
+            if(moveableObjects[i].y>0 && moveableObjects[i].y<240 && moveableObjects[i].y>0 && moveableObjects[i].x<320)TFTwriteSTR(moveableObjects[i].x, moveableObjects[i].y, moveableObjects[i].dim, moveableObjects[i].color, moveableObjects[i].txt); 
         } 
     }
     }
 
 void SMakerTouchScreen::updateVariables()
     {    
-        for (int i= 0; i<sizeof(variablePrev)/sizeof(variablePrev[0]);i++){
-            variablePrev[i] = variableObjects[i].txt;
+        for (int i= 0; i<sizeof(variablePrevSTR)/sizeof(variablePrevSTR[0]);i++){
+            variablePrevSTR[i] = variableObjectsSTR[i].txt;
         }
-        for (int i= 0; i<sizeof(variablePrev2)/sizeof(variablePrev2[0]);i++){
-            variablePrev2[i] = variableObjects2[i].txt;
+
+        for (int i= 0; i<sizeof(variablePrevFL)/sizeof(variablePrevFL[0]);i++){
+            variablePrevFL[i] = variableObjectsFL[i].txt;
         }
+
+        for (int i= 0; i<sizeof(variablePrevINT)/sizeof(variablePrevINT[0]);i++){
+            variablePrevINT[i] = variableObjectsINT[i].txt;
+        }
+
+        for (int i= 0; i<sizeof(variablePrevUINT)/sizeof(variablePrevUINT[0]);i++){
+            variablePrevUINT[i] = variableObjectsUINT[i].txt;
+        }
+
         for (int i= 0; i<sizeof(moveablePrevX)/sizeof(moveablePrevX[0]);i++){
             moveablePrevX[i] = moveableObjects[i].x;
             moveablePrevY[i] = moveableObjects[i].y;
         }
-        variableObjects[0].txt = String(_temp);
-        variableObjects[1].txt = String(_hum);
-        variableObjects[2].txt = String(_pH);
-        variableObjects[3].txt = String(_EC);
-        variableObjects[4].txt = String(__pHtarget);
-        variableObjects[5].txt = String(__ECtarget);
-        variableObjects[6].txt =salts[saltsOrder[0]];
-        variableObjects[7].txt =salts[saltsOrder[1]];
-        variableObjects[8].txt =salts[saltsOrder[2]];
-        variableObjects[9].txt =salts[saltsOrder[3]];
-        variableObjects[10].txt =salts[saltsOrder[4]];
-        variableObjects[11].txt = String(_S1mgl);
-        variableObjects[12].txt = String(_S2mgl);
-        variableObjects[13].txt = String(_S3mgl);
-        variableObjects[14].txt = String(_S4mgl);
-        variableObjects[15].txt = String(_S5mgl);
-        variableObjects[16].txt = String(_S1mgl);
-        variableObjects[17].txt = String(_S2mgl);
-        variableObjects[18].txt = String(_S3mgl);
-        variableObjects[19].txt = String(_S4mgl);
-        variableObjects[20].txt = String(_S5mgl);
-        variableObjects[21].txt = String(_increment);
-        variableObjects[22].txt = String(_increment);
-        variableObjects[23].txt = String(_increment);
-        variableObjects[24].txt = String(_increment);
-        variableObjects[25].txt = String(_increment);
-        variableObjects[26].txt = String(_targetGrams);
-        variableObjects[27].txt = String(_scale);
-        variableObjects[28].txt = String(_acidPH);
-        variableObjects[29].txt = String(_acidQTY);
-        variableObjects[30].txt = String(_microsML);
-        variableObjects[31].txt = String(_microsQTY);
-        
-        variableObjects2[0].txt = String(_scale);
-        variableObjects2[1].txt = String(_incrementW);
-        variableObjects2[2].txt = String(_CalibWeight);
-        variableObjects2[3].txt = String(__pumpSTATEtxt);
-        variableObjects2[4].txt = String(__mixerSTATEtxt);
-        variableObjects2[5].txt = String(_pumpMinutes);
-        variableObjects2[6].txt = String(_mixerMinutes);
 
-        moveableObjects[0].y = 81+saltsOrder[0]*25;
-        moveableObjects[1].y = 81+saltsOrder[1]*25;
-        moveableObjects[2].y = 81+saltsOrder[2]*25;
-        moveableObjects[3].y = 81+saltsOrder[3]*25;
-        moveableObjects[4].y = 81+saltsOrder[4]*25;
-        moveableObjects[5].y = 41+_pumpsOrder[0]*20;
-        moveableObjects[6].y = 41+_pumpsOrder[1]*20;
+        variableObjectsFL[0].txt = _temp;                   //fl
+        variableObjectsFL[1].txt = _hum;                    //fl
+        variableObjectsFL[2].txt = _pH;                     //fl
+        variableObjectsFL[3].txt = __pHtarget;              //fl
+        variableObjectsFL[4].txt = __SaltmgL[0];            //fl
+        variableObjectsFL[5].txt = __SaltmgL[1];            //fl
+        variableObjectsFL[6].txt = __SaltmgL[2];            //fl
+        variableObjectsFL[7].txt = __SaltmgL[3];            //fl
+        variableObjectsFL[8].txt = __SaltmgL[4];            //fl
+        variableObjectsFL[9].txt = __SaltmgL[5];            //fl
+        variableObjectsFL[10].txt = __SaltmgL[6];           //fl
+        variableObjectsFL[11].txt = __SaltmgL[7];           //fl
+        variableObjectsFL[12].txt = __SaltmgL[__solidSaltCurrentIndex];         //fl
+        variableObjectsFL[13].txt = _increment;             //fl
+        variableObjectsFL[14].txt = _targetGrams;           //fl
+        variableObjectsFL[15].txt = _scale;                 //fl
+        variableObjectsFL[16].txt = __liquidConst[__liquidSaltCurrentIndex];    //fl
+        variableObjectsFL[17].txt = __liquidCal[__liquidSaltCurrentIndex];      //fl
+        variableObjectsFL[18].txt = _scale;                 //fl
+        variableObjectsFL[19].txt = _incrementW;            //fl
+        variableObjectsFL[20].txt = _CalibWeight;           //fl
+        variableObjectsFL[21].txt = __Sflow[__solidSaltCurrentIndex];           //fl
+
+        variableObjectsSTR[0].txt =salts[saltsOrder[0]];    //str
+        variableObjectsSTR[1].txt =salts[saltsOrder[1]];    //str
+        variableObjectsSTR[2].txt =salts[saltsOrder[2]];    //str
+        variableObjectsSTR[3].txt =salts[saltsOrder[3]];    //str
+        variableObjectsSTR[4].txt =salts[saltsOrder[4]];    //str
+        variableObjectsSTR[5].txt =salts[saltsOrder[5]];    //str
+        variableObjectsSTR[6].txt =salts[saltsOrder[6]];    //str
+        variableObjectsSTR[7].txt =salts[saltsOrder[7]];    //str
+        variableObjectsSTR[8].txt = __pumpSTATEtxt;         //str
+        variableObjectsSTR[9].txt = __mixerSTATEtxt;        //str
+        variableObjectsSTR[10].txt = _pHSteps;              //str
+        variableObjectsSTR[11].txt = _ECSteps;              //str
+        variableObjectsSTR[12].txt = systemRunningText;     //str
+
+
+        variableObjectsINT[0].txt = _EC;                    //int
+        variableObjectsINT[1].txt = __ECtarget;             //int
+        variableObjectsINT[2].txt = _pumpMinutes;           //int
+        variableObjectsINT[3].txt = _mixerMinutes;          //int
+        variableObjectsINT[4].txt = __ECmax;                //int
+        
+        variableObjectsUINT[0].txt =__solidSaltCurrentIndex+1;  //uint
+        variableObjectsUINT[1].txt =__liquidSaltCurrentIndex+1; //uint
+        
+
+        if (systemRunning){
+            variableObjectsSTR[12].color = RED;
+        }else{
+            variableObjectsSTR[12].color = GREEN;
+        }
+
+        if (show){
+            variableObjectsSTR[13].color = GREEN;
+        }else{
+            variableObjectsSTR[13].color = RED;
+        }
+
+        moveableObjects[0].y =6+saltsOrder[__solidSaltCurrentIndex]*16;
     }
 
 void SMakerTouchScreen::printEEPROM(uint8_t eepr, int i){
         if (screens == EEPROMscr && scrLoaded == true){
-            TFTwrite(125,10,2,WHITE,String(EEPROMpage));
+            TFTwriteUINT(125,10,2,WHITE,EEPROMpage);
             i = i-(EEPROMpage-1)*90;
-            if(i>=0  && i<10)TFTwrite(40,i*18+60,1,WHITE,String(eepr));
-            if(i>=10 && i<20)TFTwrite(70,(i-10)*18+60,1,WHITE,String(eepr));
-            if(i>=20 && i<30)TFTwrite(100,(i-20)*18+60,1,WHITE,String(eepr));
-            if(i>=30 && i<40)TFTwrite(130,(i-30)*18+60,1,WHITE,String(eepr));
-            if(i>=40 && i<50)TFTwrite(160,(i-40)*18+60,1,WHITE,String(eepr));
-            if(i>=50 && i<60)TFTwrite(190,(i-50)*18+60,1,WHITE,String(eepr));
-            if(i>=60 && i<70)TFTwrite(220,(i-60)*18+60,1,WHITE,String(eepr));
-            if(i>=70 && i<80)TFTwrite(250,(i-70)*18+60,1,WHITE,String(eepr));
-            if(i>=80 && i<90)TFTwrite(280,(i-80)*18+60,1,WHITE,String(eepr));
+            if(i>=0  && i<10)TFTwriteUINT(40,i*18+60,1,WHITE,eepr);
+            if(i>=10 && i<20)TFTwriteUINT(70,(i-10)*18+60,1,WHITE,eepr);
+            if(i>=20 && i<30)TFTwriteUINT(100,(i-20)*18+60,1,WHITE,eepr);
+            if(i>=30 && i<40)TFTwriteUINT(130,(i-30)*18+60,1,WHITE,eepr);
+            if(i>=40 && i<50)TFTwriteUINT(160,(i-40)*18+60,1,WHITE,eepr);
+            if(i>=50 && i<60)TFTwriteUINT(190,(i-50)*18+60,1,WHITE,eepr);
+            if(i>=60 && i<70)TFTwriteUINT(220,(i-60)*18+60,1,WHITE,eepr);
+            if(i>=70 && i<80)TFTwriteUINT(250,(i-70)*18+60,1,WHITE,eepr);
+            if(i>=80 && i<90)TFTwriteUINT(280,(i-80)*18+60,1,WHITE,eepr);
         }
     }
 
@@ -340,31 +409,20 @@ void SMakerTouchScreen::importData(
 void SMakerTouchScreen::importParameters(
     float pHtarget,
     int ECtarget,
-    float S1mgl,
-    float S2mgl,
-    float S3mgl,
-    float S4mgl,
-    float S5mgl,
-    float acidPH,
-    float acidQTY,
-    float microsML,
-    float microsQTY,
-    uint8_t microsPump,
-    uint8_t acidPump)
+    int ECmax,
+    float Smgl[SOLIDSALTS],
+    float Sflow[SOLIDSALTS],
+    uint8_t SOrder[SOLIDSALTS])
     {
         __pHtarget = pHtarget;
         __ECtarget = ECtarget;
-        _S1mgl = S1mgl;
-        _S2mgl = S2mgl;
-        _S3mgl = S3mgl;
-        _S4mgl = S4mgl;
-        _S5mgl = S5mgl;
-        _acidPH = acidPH;
-        _acidQTY = acidQTY; //10 seg
-        _microsML = microsML;
-        _microsQTY = microsQTY;
-        _pumpsOrder[0] = microsPump;
-        _pumpsOrder[1] = acidPump;
+        __ECmax  = ECmax;
+        for (int i = 0; i< SOLIDSALTS; i++){
+            __SaltmgL[i] = Smgl[i];
+            __Sflow[i] = Sflow[i];
+            saltsOrder[i] = SOrder[i];
+        }
+        
     }
 
 void SMakerTouchScreen::screensCheck(bool down = 0){  
@@ -387,6 +445,19 @@ void SMakerTouchScreen::screensCheck(bool down = 0){
                 changeScreen(MIXscr);
                 buttonTimer=millis();
             }  
+            else if (down == 1 && xpos<120 && xpos>60 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
+                changeScreen(CALIBsensors);
+                buttonTimer=millis();
+            }  
+            else if (down == 1 && xpos<200 && xpos>120 && ypos<130 && ypos>110 && millis()-buttonTimer>1000) {
+                systemRunning=!systemRunning;
+                if (systemRunning==false){
+                    systemRunningText = "START";
+                } else {
+                    systemRunningText = "STOP";
+                }
+                buttonTimer=millis();
+            }  
             break;
         case SETTINGS:
             if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
@@ -402,328 +473,178 @@ void SMakerTouchScreen::screensCheck(bool down = 0){
                 SaveEEPROM = true;
                 buttonTimer=millis();
             } 
-            else if (down == 1 && xpos<270 && xpos>250 && ypos<96 && ypos>76 && millis()-buttonTimer>50) { //pH target+
+            else if (down == 1 && xpos<270 && xpos>250 && ypos<86 && ypos>66 && millis()-buttonTimer>50) { //pH target+
                 if(__pHtarget<6.50)__pHtarget=__pHtarget + 0.03;
                 buttonTimer=millis();
             }  
-            else if (down == 1 && xpos<270 && xpos>250 && ypos<126 && ypos>106 && millis()-buttonTimer>50) { //EC target+
-            if(__ECtarget<1800) __ECtarget=__ECtarget + 10;
+            else if (down == 1 && xpos<270 && xpos>250 && ypos<111 && ypos>91 && millis()-buttonTimer>50) { //EC target+
+                if(__ECtarget<1800) __ECtarget=__ECtarget + 10;
                 buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<300 && xpos>280 && ypos<96 && ypos>76 && millis()-buttonTimer>50) { //pH target-
+            }
+            else if (down == 1 && xpos<270 && xpos>250 && ypos<136 && ypos>116 && millis()-buttonTimer>50) { //EC target+
+                if(__ECtarget<1800) __ECmax=__ECmax + 10;
+                buttonTimer=millis();
+            }    
+            else if (down == 1 && xpos<300 && xpos>280 && ypos<86 && ypos>66 && millis()-buttonTimer>50) { //pH target-
                 if(__pHtarget>5.00)__pHtarget=__pHtarget - 0.03;
                 buttonTimer=millis();
             }  
-            else if (down == 1 && xpos<300 && xpos>280 && ypos<126 && ypos>106 && millis()-buttonTimer>50) { //EC target-
+            else if (down == 1 && xpos<300 && xpos>280 && ypos<111 && ypos>91 && millis()-buttonTimer>50) { //EC target-
                 if(__ECtarget>1200)__ECtarget=__ECtarget - 10;
                 buttonTimer=millis();
             }  
-            else if (down == 1 && xpos<65 && xpos>10 && ypos<202 && ypos>156 && millis()-buttonTimer>50) { //Select salt1
-                changeScreen(SALT1);
-            }
-            else if (down == 1 && xpos<125 && xpos>70 && ypos<202 && ypos>156 && millis()-buttonTimer>50) { //Select salt2
-                changeScreen(SALT2);
-            }  
-            else if (down == 1 && xpos<185 && xpos>130 && ypos<202 && ypos>156 && millis()-buttonTimer>50) { //Select salt3
-                changeScreen(SALT3);
-            }  
-            else if (down == 1 && xpos<245 && xpos>190 && ypos<202 && ypos>156 && millis()-buttonTimer>50) { //Select salt4
-                changeScreen(SALT4);
-            }  
-            else if (down == 1 && xpos<305 && xpos>250 && ypos<202 && ypos>156 && millis()-buttonTimer>50) { //Select salt5
-                changeScreen(SALT5);
+            else if (down == 1 && xpos<300 && xpos>280 && ypos<136 && ypos>116 && millis()-buttonTimer>50) { //EC target+
+                if(__ECtarget<1800) __ECmax=__ECmax - 10;
+                buttonTimer=millis();
             }    
-            else if (down == 1 && xpos<122 && xpos>44 && ypos<230 && ypos>207 && millis()-buttonTimer>50) { //Select micros
-                changeScreen(MICROS);
-            }     
-            else if (down == 1 && xpos<278 && xpos>200 && ypos<230 && ypos>207 && millis()-buttonTimer>50) { //Select micros
-                changeScreen(ACID);
-            }     
+            else if (down == 1 && xpos<75 && xpos>5 && ypos<181 && ypos>136 && millis()-buttonTimer>50) { //Select salt1
+                __solidSaltCurrentIndex=0;
+                changeScreen(SALTSALL);
+            }
+            else if (down == 1 && xpos<154 && xpos>84 && ypos<181 && ypos>136 && millis()-buttonTimer>50) { //Select salt2
+                __solidSaltCurrentIndex=1;
+                changeScreen(SALTSALL);
+            }  
+            else if (down == 1 && xpos<233 && xpos>163 && ypos<181 && ypos>136 && millis()-buttonTimer>50) { //Select salt3
+                __solidSaltCurrentIndex=2;
+                changeScreen(SALTSALL);
+            }  
+            else if (down == 1 && xpos<312 && xpos>242 && ypos<181 && ypos>136 && millis()-buttonTimer>50) { //Select salt4
+                __solidSaltCurrentIndex=3;
+                changeScreen(SALTSALL);
+            }  
+            else if (down == 1 && xpos<75 && xpos>5 && ypos<232 && ypos>186 && millis()-buttonTimer>50) { //Select salt5
+                __solidSaltCurrentIndex=4;
+                changeScreen(SALTSALL);
+            }  
+            else if (down == 1 && xpos<154 && xpos>84 && ypos<232 && ypos>186 && millis()-buttonTimer>50) { //Select salt4
+                __solidSaltCurrentIndex=5;
+                changeScreen(SALTSALL);
+            }  
+            else if (down == 1 && xpos<233 && xpos>163 && ypos<232 && ypos>186 && millis()-buttonTimer>50) { //Select salt5
+                __solidSaltCurrentIndex=6;
+                changeScreen(SALTSALL);
+            }  
+            else if (down == 1 && xpos<312 && xpos>242 && ypos<232 && ypos>186 && millis()-buttonTimer>50) { //Select salt5
+                __solidSaltCurrentIndex=7;
+                changeScreen(SALTSALL);
+            }      
+            /*else if (down == 1 && xpos<45 && xpos>5 && ypos<240 && ypos>156 && millis()-buttonTimer>50) { //Select salt1
+                __liquidSaltCurrentIndex=0;
+                changeScreen(LIQUIDALL);
+            }
+            else if (down == 1 && xpos<90 && xpos>50 && ypos<240 && ypos>156 && millis()-buttonTimer>50) { //Select salt2
+                __liquidSaltCurrentIndex=1;
+                changeScreen(LIQUIDALL);
+            }*/      
             break;
 
-        case SALT1:
+        case SALTSALL:
             if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
                 changeScreen(SETTINGS);
             }
             else if (down == 1 && xpos<230 && xpos>210 && ypos<185 && ypos>165 && millis()-buttonTimer>50) { //Salt 1 +
-                if(_S1mgl+_increment<1000)_S1mgl = _S1mgl+_increment;
+                if(__SaltmgL[__solidSaltCurrentIndex]+_increment<3000)__SaltmgL[__solidSaltCurrentIndex] = __SaltmgL[__solidSaltCurrentIndex]+_increment;
                 buttonTimer=millis();
             }  
             else if (down == 1 && xpos<298 && xpos>278 && ypos<185 && ypos>165 && millis()-buttonTimer>50) { //Salt 1 -
-                if(_S1mgl-_increment>=0)_S1mgl = _S1mgl-_increment;
+                if(__SaltmgL[__solidSaltCurrentIndex]-_increment>=0)__SaltmgL[__solidSaltCurrentIndex] = __SaltmgL[__solidSaltCurrentIndex]-_increment;
                 buttonTimer=millis();
             }
             else if (down == 1 && xpos<245 && xpos>235 && ypos<200 && ypos>190 && millis()-buttonTimer>500) { //Salt 1 increment +
-                if(_increment<138)_increment=_increment*10;
+                if(_increment<100)_increment=_increment*10;
                 buttonTimer=millis();
             }  
             else if (down == 1 && xpos<265 && xpos>255 && ypos<200 && ypos>190 && millis()-buttonTimer>500) { //Salt 1 increment -
-                if(_increment>1.38)_increment=_increment/10;
+                if(_increment>0.01)_increment=_increment/10;
                 buttonTimer=millis();
             }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<96 && ypos>80 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[0]=0;
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<15 && ypos>5 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=0;
                 buttonTimer=millis();
             }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<121 && ypos>105 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[0]=1;
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<31 && ypos>21 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=1;
                 buttonTimer=millis();
             } 
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<146 && ypos>130 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[0]=2;
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<47 && ypos>37 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=2;
                 buttonTimer=millis();
             }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<171 && ypos>155 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[0]=3;
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<63 && ypos>53 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=3;
                 buttonTimer=millis();
             } 
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<196 && ypos>180 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[0]=4;
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<79 && ypos>69 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=4;
                 buttonTimer=millis();
-            }     
+            }
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<95 && ypos>85 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=5;
+                buttonTimer=millis();
+            } 
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<111 && ypos>101 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=6;
+                buttonTimer=millis();
+            }
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<127 && ypos>117 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=7;
+                buttonTimer=millis();
+            } 
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<143 && ypos>133 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=8;
+                buttonTimer=millis();
+            } 
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<159 && ypos>149 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=9;
+                buttonTimer=millis();
+            }
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<175 && ypos>165 && millis()-buttonTimer>500) { //Salt 1 increment -
+                saltsOrder[__solidSaltCurrentIndex]=10;
+                buttonTimer=millis();
+            }
+            else if (down == 1 && xpos<130 && xpos>120 && ypos<230 && ypos>220 && millis()-buttonTimer>50) { //Salt 1 increment +
+                if(__Sflow[__solidSaltCurrentIndex]<1.5)__Sflow[__solidSaltCurrentIndex]+=0.01;
+                buttonTimer=millis();
+            }  
+            else if (down == 1 && xpos<150 && xpos>140 && ypos<230 && ypos>220 && millis()-buttonTimer>50) { //Salt 1 increment -
+                if(__Sflow[__solidSaltCurrentIndex]>0)__Sflow[__solidSaltCurrentIndex]-=0.01;
+                buttonTimer=millis();
+            }
+            else if (down == 1 && xpos<261 && xpos>205 && ypos<240 && ypos>215 && millis()-buttonTimer>3000) { //Salt 1 increment -
+                calibPUMP=true;
+                pumpToCalib=__solidSaltCurrentIndex;
+                buttonTimer=millis();
+            }
             break;
 
-        case SALT2:
-            if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
-                changeScreen(SETTINGS);
-            }   
-            else if (down == 1 && xpos<230 && xpos>210 && ypos<185 && ypos>165 && millis()-buttonTimer>50) { //Salt 1 +
-                if(_S2mgl+_increment<1000)_S2mgl = _S2mgl+_increment;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<298 && xpos>278 && ypos<185 && ypos>165 && millis()-buttonTimer>50) { //Salt 1 -
-                if(_S2mgl-_increment>=0)_S2mgl = _S2mgl-_increment;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<245 && xpos>235 && ypos<200 && ypos>190 && millis()-buttonTimer>500) { //Salt 1 increment +
-                if(_increment<138)_increment=_increment*10;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<265 && xpos>255 && ypos<200 && ypos>190 && millis()-buttonTimer>500) { //Salt 1 increment -
-                if(_increment>1.38)_increment=_increment/10;
-                buttonTimer=millis();
-            }         
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<96 && ypos>80 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[1]=0;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<121 && ypos>105 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[1]=1;
-                buttonTimer=millis();
-            } 
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<146 && ypos>130 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[1]=2;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<171 && ypos>155 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[1]=3;
-                buttonTimer=millis();
-            } 
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<196 && ypos>180 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[1]=4;
-                buttonTimer=millis();
-            }     
-            break;
-
-        case SALT3:
-            if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
-                changeScreen(SETTINGS);
-            }   
-            else if (down == 1 && xpos<230 && xpos>210 && ypos<185 && ypos>165 && millis()-buttonTimer>50) { //Salt 1 +
-                if(_S3mgl+_increment<1000)_S3mgl = _S3mgl+_increment;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<298 && xpos>278 && ypos<185 && ypos>165 && millis()-buttonTimer>50) { //Salt 1 -
-                if(_S3mgl-_increment>=0)_S3mgl = _S3mgl-_increment;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<245 && xpos>235 && ypos<200 && ypos>190 && millis()-buttonTimer>500) { //Salt 1 increment +
-                if(_increment<138)_increment=_increment*10;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<265 && xpos>255 && ypos<200 && ypos>190 && millis()-buttonTimer>500) { //Salt 1 increment -
-                if(_increment>1.38)_increment=_increment/10;
-                buttonTimer=millis();
-            }         
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<96 && ypos>80 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[2]=0;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<121 && ypos>105 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[2]=1;
-                buttonTimer=millis();
-            } 
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<146 && ypos>130 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[2]=2;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<171 && ypos>155 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[2]=3;
-                buttonTimer=millis();
-            } 
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<196 && ypos>180 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[2]=4;
-                buttonTimer=millis();
-            }     
-            break;
-
-        case SALT4:
-            if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
-                changeScreen(SETTINGS);
-            }   
-            else if (down == 1 && xpos<230 && xpos>210 && ypos<185 && ypos>165 && millis()-buttonTimer>50) { //Salt 1 +
-                if(_S4mgl+_increment<1000)_S4mgl = _S4mgl+_increment;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<298 && xpos>278 && ypos<185 && ypos>165 && millis()-buttonTimer>50) { //Salt 1 -
-                if(_S4mgl-_increment>=0)_S4mgl = _S4mgl-_increment;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<245 && xpos>235 && ypos<200 && ypos>190 && millis()-buttonTimer>500) { //Salt 1 increment +
-                if(_increment<138)_increment=_increment*10;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<265 && xpos>255 && ypos<200 && ypos>190 && millis()-buttonTimer>500) { //Salt 1 increment -
-                if(_increment>1.38)_increment=_increment/10;
-                buttonTimer=millis();
-            }         
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<96 && ypos>80 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[3]=0;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<121 && ypos>105 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[3]=1;
-                buttonTimer=millis();
-            } 
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<146 && ypos>130 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[3]=2;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<171 && ypos>155 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[3]=3;
-                buttonTimer=millis();
-            } 
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<196 && ypos>180 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[3]=4;
-                buttonTimer=millis();
-            }     
-            break;
-
-        case SALT5:
-            if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
-                changeScreen(SETTINGS);
-            }   
-            else if (down == 1 && xpos<230 && xpos>210 && ypos<185 && ypos>165 && millis()-buttonTimer>50) { //Salt 1 +
-                if(_S5mgl+_increment<1000)_S5mgl = _S5mgl+_increment;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<298 && xpos>278 && ypos<185 && ypos>165 && millis()-buttonTimer>50) { //Salt 1 -
-                if(_S5mgl-_increment>=0)_S5mgl = _S5mgl-_increment;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<245 && xpos>235 && ypos<200 && ypos>190 && millis()-buttonTimer>500) { //Salt 1 increment +
-                if(_increment<138)_increment=_increment*10;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<265 && xpos>255 && ypos<200 && ypos>190 && millis()-buttonTimer>500) { //Salt 1 increment -
-                if(_increment>1.38)_increment=_increment/10;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<96 && ypos>80 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[4]=0;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<121 && ypos>105 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[4]=1;
-                buttonTimer=millis();
-            } 
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<146 && ypos>130 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[4]=2;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<171 && ypos>155 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[4]=3;
-                buttonTimer=millis();
-            } 
-            else if (down == 1 && xpos<166 && xpos>150 && ypos<196 && ypos>180 && millis()-buttonTimer>100) { //Salt 1 increment -
-                saltsOrder[4]=4;
-                buttonTimer=millis();
-            }              
-            break;
-
-        case MICROS:
+        case LIQUIDALL:
             if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
                 changeScreen(SETTINGS);
             }   
             else if (down == 1 && xpos<270 && xpos>250 && ypos<110 && ypos>90 && millis()-buttonTimer>50) { //pH acid +
-                if(_microsML+1<=100)_microsML=_microsML + 1;
+                if(__liquidConst[__liquidSaltCurrentIndex]+1<=300)__liquidConst[__liquidSaltCurrentIndex]=__liquidConst[__liquidSaltCurrentIndex] + 1;
                 buttonTimer=millis();
             }  
             else if (down == 1 && xpos<270 && xpos>250 && ypos<190 && ypos>170 && millis()-buttonTimer>50) { //acid cal+
-                _microsQTY=_microsQTY + 0.01;
+                __liquidCal[__liquidSaltCurrentIndex]=__liquidCal[__liquidSaltCurrentIndex] + 1;
                 buttonTimer=millis();
             }  
             else if (down == 1 && xpos<300 && xpos>280 && ypos<110 && ypos>90 && millis()-buttonTimer>50) { //pH acid -
-                if(_microsML-1>=0)_microsML=_microsML - 0.01;
+                if(__liquidConst[__liquidSaltCurrentIndex]-1>=0)__liquidConst[__liquidSaltCurrentIndex]=__liquidConst[__liquidSaltCurrentIndex] - 1;
                 buttonTimer=millis();
             }  
             else if (down == 1 && xpos<300 && xpos>280 && ypos<190 && ypos>170 && millis()-buttonTimer>50) { //acid cal-
-                if(_microsQTY-0.01>=0)_microsQTY=_microsQTY - 0.01;
+                if(__liquidCal[__liquidSaltCurrentIndex]-1>=0)__liquidCal[__liquidSaltCurrentIndex]=__liquidCal[__liquidSaltCurrentIndex] - 1;
                 buttonTimer=millis();
             }
             else if (down == 1 && xpos<200 && xpos>120 && ypos<230 && ypos>207 && millis()-buttonTimer>50) { //Select micros
                 calibPUMP=true;
-                pumpToCalib=_pumpsOrder[0];
+                pumpToCalib=__liquidSaltCurrentIndex;
                 buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<106 && xpos>90 && ypos<56 && ypos>40 && millis()-buttonTimer>100) { //Salt 1 increment -
-                _pumpsOrder[0]=0;
-                _pumpsOrder[1]=1;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<106 && xpos>90 && ypos<66 && ypos>60 && millis()-buttonTimer>100) { //Salt 1 increment -
-                _pumpsOrder[0]=1;
-                _pumpsOrder[1]=0;
-                buttonTimer=millis();
-            }       
+            }   
             break;
-        case ACID:
-            if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
-                changeScreen(SETTINGS);
-            }
-            else if (down == 1 && xpos<270 && xpos>250 && ypos<110 && ypos>90 && millis()-buttonTimer>50) { //pH acid +
-                if(_acidPH+0.01<=7)_acidPH=_acidPH + 0.01;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<270 && xpos>250 && ypos<190 && ypos>170 && millis()-buttonTimer>50) { //acid cal+
-                _acidQTY=_acidQTY + 0.01;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<300 && xpos>280 && ypos<110 && ypos>90 && millis()-buttonTimer>50) { //pH acid -
-                if(_acidPH-0.01>=0)_acidPH=_acidPH - 0.01;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<300 && xpos>280 && ypos<190 && ypos>170 && millis()-buttonTimer>50) { //acid cal-
-                if(_acidQTY-0.01>=0)_acidQTY=_acidQTY - 0.01;
-                buttonTimer=millis();
-            }  
-            else if (down == 1 && xpos<200 && xpos>120 && ypos<230 && ypos>207 && millis()-buttonTimer>50) { //Select micros
-                calibPUMP=true;
-                pumpToCalib=_pumpsOrder[1];
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<106 && xpos>90 && ypos<56 && ypos>40 && millis()-buttonTimer>100) { //Salt 1 increment -
-                _pumpsOrder[1]=0;
-                _pumpsOrder[0]=1;
-                buttonTimer=millis();
-            }
-            else if (down == 1 && xpos<106 && xpos>90 && ypos<66 && ypos>60 && millis()-buttonTimer>100) { //Salt 1 increment -
-                _pumpsOrder[1]=1;
-                _pumpsOrder[0]=0;
-                buttonTimer=millis();
-            }  
-            break;
-
+        
         case EEPROMscr:
             if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
                 changeScreen(SETTINGS);
@@ -800,18 +721,15 @@ void SMakerTouchScreen::screensCheck(bool down = 0){
                 __pumpState = !__pumpState;
                 if(__pumpState){
                     __pumpSTATEtxt = "OFF";
-                    Serial.println("Pump turned on");
                 }
                 if(!__pumpState){
                     __pumpSTATEtxt = "ON";
-                    Serial.println("Pump turned off");
                     __pumpStop = true;
                 }
             }
             else if (down == 1 && xpos<300 && xpos>190 && ypos<170 && ypos>90 && millis()-buttonTimer>1000) {
                 buttonTimer=millis();
                 __mixerState = !__mixerState;
-                Serial.println(__mixerState);
                 if(__mixerState){
                     __mixerSTATEtxt = "OFF";
                 }
@@ -820,22 +738,174 @@ void SMakerTouchScreen::screensCheck(bool down = 0){
                     __mixerStop = true;
                 }
             }
-            else if (down == 1 && xpos<60 && xpos>40 && ypos<80 && ypos>60 && millis()-buttonTimer>1000) { //Salt 1 +
-                if(_pumpMinutes+1<30)_pumpMinutes = _pumpMinutes+1;
+            else if (down == 1 && xpos<60 && xpos>40 && ypos<80 && ypos>60 && millis()-buttonTimer>50) { //Salt 1 +
+                if(_pumpMinutes+1<31)_pumpMinutes = _pumpMinutes+1;
                 buttonTimer=millis();
             }  
-            else if (down == 1 && xpos<128 && xpos>108 && ypos<80 && ypos>60 && millis()-buttonTimer>1000) { //Salt 1 -
+            else if (down == 1 && xpos<128 && xpos>108 && ypos<80 && ypos>60 && millis()-buttonTimer>50) { //Salt 1 -
                 if(_pumpMinutes-1>0)_pumpMinutes = _pumpMinutes-1;
                 buttonTimer=millis();
             } 
-            else if (down == 1 && xpos<220 && xpos>200 && ypos<80 && ypos>60 && millis()-buttonTimer>1000) { //Salt 1 +
-                if(_mixerMinutes+1<30)_mixerMinutes = _mixerMinutes+1;
+            else if (down == 1 && xpos<220 && xpos>200 && ypos<80 && ypos>60 && millis()-buttonTimer>50) { //Salt 1 +
+                if(_mixerMinutes+1<31)_mixerMinutes = _mixerMinutes+1;
                 buttonTimer=millis();
             }  
-            else if (down == 1 && xpos<288 && xpos>268 && ypos<80 && ypos>60 && millis()-buttonTimer>1000) { //Salt 1 -
+            else if (down == 1 && xpos<288 && xpos>268 && ypos<80 && ypos>60 && millis()-buttonTimer>50) { //Salt 1 -
                 if(_mixerMinutes-1>0)_mixerMinutes = _mixerMinutes-1;
                 buttonTimer=millis();
             } 
+            else if (down == 1 && xpos<170 && xpos>130 && ypos<210 && ypos>200 && millis()-buttonTimer>500) { //Salt 1 -
+                show = !show;
+                buttonTimer=millis();
+            } 
+            break;
+        case CALIBsensors:
+            if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
+                changeScreen(SMAKER);
+                buttonTimer=millis();
+            }     
+            else if (down == 1 && xpos<140 && xpos>30 && ypos<170 && ypos>90 && millis()-buttonTimer>1000) {
+                changeScreen(pHCALIB);
+                buttonTimer=millis();
+                _pHStepsN = 0;
+                _pHSlopeSteps = 0;
+                _pHCalibTimer = millis();
+            }
+            else if (down == 1 && xpos<300 && xpos>190 && ypos<170 && ypos>90 && millis()-buttonTimer>1000) {
+                changeScreen(ECCALIB);
+                buttonTimer=millis();
+                _ECStepsN = 0;
+                _ECEZOsteps = 0;
+                _ECCalibTimer = millis();
+            }  
+            break;
+        case pHCALIB:
+            if (millis()-_pHCalibTimer > 5000 && _pHStepsN == 0){
+                _pHStepsN = 1;
+                _pHCalibTimer = millis();
+            }
+            else if (millis()-_pHCalibTimer > 5000 && _pHStepsN == 1){
+                _pHStepsN = 2;
+            }
+            else if (millis()-_pHCalibTimer > 60000 && _pHStepsN == 3){
+                _pHSlopeSteps = 1;
+                _pHStepsN = 4;
+                _pHCalibTimer = millis();
+            }
+            else if (millis()-_pHCalibTimer > 5000 && _pHStepsN == 4){
+                _pHStepsN = 5;
+                _pHCalibTimer = millis();
+            }
+            else if (millis()-_pHCalibTimer > 5000 && _pHStepsN == 5){
+                _pHStepsN = 6;
+            }
+            else if (millis()-_pHCalibTimer > 60000 && _pHStepsN == 7){
+                _pHSlopeSteps = 2;
+                _pHStepsN = 8;
+                _pHCalibTimer = millis();
+            }
+            switch (_pHStepsN){
+                case 0:
+                    _pHSteps = "1 Enjuagar";
+                    break;
+                case 1:
+                    _pHSteps = "2 Colocar en sol pH 4.0";
+                    break;
+                case 2:
+                    _pHSteps = "3 Presionar Calib 4.0";
+                    break;
+                case 3:
+                    _pHSteps = "4 Esperar";
+                    break;
+                case 4:
+                    _pHSteps = "5 Enjuagar";
+                    break;
+                case 5:
+                    _pHSteps = "6 Colocar en sol pH 7.0";
+                    break;
+                case 6:
+                    _pHSteps = "7 Presionar Calib 7.0";
+                    break;
+                case 7:
+                    _pHSteps = "8 Esperar";
+                    break;
+                case 8:
+                    _pHSteps = "9 Terminar y guardar";
+                    break;
+            }
+            if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
+                changeScreen(CALIBsensors);
+                buttonTimer=millis();
+            }     
+            else if (down == 1 && xpos<140 && xpos>30 && ypos<190 && ypos>110 && millis()-buttonTimer>1000 && _pHStepsN == 2) {
+                buttonTimer=millis();
+                _pHStepsN = 3;
+                _pHCalibTimer = millis();
+            }
+            else if (down == 1 && xpos<300 && xpos>190 && ypos<190 && ypos>110 && millis()-buttonTimer>1000 && _pHStepsN == 6) {
+                if (_pHStepsN == 6){
+                    buttonTimer=millis();
+                    _pHStepsN = 7;
+                    _pHCalibTimer = millis();
+                }
+            }
+            break;
+        case ECCALIB:
+            if (millis()-_ECCalibTimer > 5000 && _ECStepsN == 0){
+                _ECStepsN = 1;
+            }
+            else if (millis()-_ECCalibTimer > 60000 && _ECStepsN == 2){
+                _ECEZOsteps = 1;
+                _ECStepsN = 3;
+                _ECCalibTimer = millis();
+            }
+            else if (millis()-_ECCalibTimer > 5000 && _ECStepsN == 3){
+                _ECStepsN = 4;
+            }
+            else if (millis()-_ECCalibTimer > 60000 && _ECStepsN == 5){
+                _ECEZOsteps = 2;
+                _ECStepsN = 6;
+                _ECCalibTimer = millis();
+            }
+            switch (_ECStepsN){
+                case 0:
+                    _ECSteps = "1 Enjuagar y secar";
+                    break;
+                case 1:
+                    _ECSteps = "2 Presionar Calib Seco";
+                    break;
+                case 2:
+                    _ECSteps = "3 Esperar";
+                    break;
+                case 3:
+                    _ECSteps = "4 Colocar en sol 12880";
+                    break;
+                case 4:
+                    _ECSteps = "5 Presionar Calib 12880";
+                    break;
+                case 5:
+                    _ECSteps = "6 Esperar";
+                    break;
+                case 6:
+                    _ECSteps = "7 Terminar para guardar";
+                    break;
+            }
+            if (down == 1 && xpos<300 && xpos>240 && ypos<20 && ypos>5 && millis()-buttonTimer>1000) {
+                changeScreen(CALIBsensors);
+                buttonTimer=millis();
+            }     
+            else if (down == 1 && xpos<140 && xpos>30 && ypos<190 && ypos>110 && millis()-buttonTimer>1000) {
+                buttonTimer=millis();
+                _ECStepsN = 2;
+                _ECCalibTimer = millis();
+            }
+            else if (down == 1 && xpos<300 && xpos>190 && ypos<190 && ypos>110 && millis()-buttonTimer>1000) {
+                if (_ECStepsN == 4){
+                    buttonTimer=millis();
+                    _ECStepsN = 5;
+                    _ECCalibTimer = millis();
+                }
+            }
             break;
     }
 }

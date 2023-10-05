@@ -47,7 +47,8 @@ class solenoid
          uint8_t _Number, _Floor, _PrintNumber; // Solenoid place into array and Floor
          unsigned long _TimeOn, _ActualTime;
          float _H2OVolume; // Water consumption for each Solenoid
-
+         uint8_t _Cycles;
+         uint8_t _CurrentCycle = 1;
 
          void resetTime();
          void solenoidPrint(String act, uint8_t level = 0); // Print an action for the Solenoid
@@ -55,16 +56,20 @@ class solenoid
      public:
           bool _State;    // Solenoid State,
 
-          static uint8_t _numberSolenoid;
+          static uint8_t _numberSolenoid; 
 
-          solenoid (uint8_t num, uint8_t printNum, uint8_t floor, bool reg, unsigned long timeOn); // Constructor
+          solenoid (uint8_t num, uint8_t printNum, uint8_t floor, bool reg, unsigned long timeOn, uint8_t cycles); // Constructor
 
           void setTime();
           void changeOrder(uint8_t new_number); // Change the order number
           void addConsumptionH2O(float newVolume); // Add Water Consumption for each Solenoid
           unsigned long getTime(); // Get the time for the Solenoid
           void setTimeOn(unsigned long t_on); // In miliseconds
+          void setCyclesNumber(uint8_t c_num);
+          void setCurrentCycle(uint8_t curc_num); 
           unsigned long getTimeOn(); // Get the time On for the Solenoid
+          uint8_t getCyclesNumber();
+          uint8_t getCurrentCycle(); 
           bool getState(); // Returns actuator state
           uint8_t getNumber(); // Returns the order number assign to the Solenoid
           void turnOn(bool rst_time); // Turn Off State & RST Time
@@ -130,7 +135,6 @@ class systemValves
       uint8_t getActualNumber(); // Returns the actual actuator number active into the array
       void enable(bool en); // Enable the system
       bool isEnable(); // Returns true if the solenoid System is enable
-
       // To Finish
       /* To do:
         1- Add FlowMeter sensor to this class (CANCELLED)

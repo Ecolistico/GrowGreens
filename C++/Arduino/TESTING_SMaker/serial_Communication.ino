@@ -48,7 +48,7 @@ void serialEvent() {                                  //if the hardware serial p
               Serial.print(F("and ec="));
               Serial.println(ec);
               
-              sMaker.prepareSolution(liters, sol, ph, ec);
+              sMaker.prepareSolution(liters, ph, ec);
               //sMaker.eventLCD();  
             }
             else {Serial.println(F("error,prepare(): ec has to be positive"));}
@@ -95,6 +95,26 @@ void serialEvent() {                                  //if the hardware serial p
         else{ Serial.println(F("error,dispenseAcid(): Mililiters has to be positive"));}
       }
       else{ Serial.println(F("error,dispenseAcid(): Pump out of range [0-1]"));}
+    }
+
+    // Peristaltic pumps test()
+    // -> Form "pump,int[pump],float[mililiters]"
+    else if(parameter[0]==F("pump")){
+      int act = parameter[1].toInt();
+      float mililiters = parameter[2].toFloat();
+      if(act<SOLUTIONS){
+        if(mililiters!=0){
+          for (uint8_t i = act; i < SOLUTIONS; i++){
+            sMaker.dispensePeristaltic(mililiters, i);
+          }
+          testAct = act;
+          testingPump = true;
+          Serial.println(F("Test dispensing"));
+          //sMaker.eventLCD(); 
+        }
+        else{ Serial.println(F("error,dispensePeristaltic(): Mililiters has to be positive"));}
+      }
+      else{ Serial.println(F("error,dispensePeristaltic(): Pump out of range"));}
     }
     
     // stop()
@@ -210,84 +230,6 @@ void serialEvent() {                                  //if the hardware serial p
         }
         else{Serial.println(F("error,calibration(): Pump out of range"));}
       }
-      // -> Form "calibration,steppersOrder,int[id],int[param]"
-      else if(parameter[1]==F("steppersOrder")){
-        int id= parameter[2].toInt();
-        int param = parameter[3].toInt();
-        if(id>=0 && id<MAX_STEPPERS){
-          if(param>=0 && param<MAX_STEPPERS){
-            sMaker.motorOrderCfg(id,param);
-            sMaker.write_EEPROM(8+SOLUTIONS+3*MAX_PUMPS_NUMBER+id, param);
-          }
-          else{Serial.println(F("error,calibration(): Parameter must be whithin max stepper amount"));}
-        }
-        else{Serial.println(F("error,calibration(): Stepper out of range"));}
-      }
-      // -> Form "calibration,steppersSpeed,int[id],int[param]"
-      else if(parameter[1]==F("steppersSpeed")){
-        int id= parameter[2].toInt();
-        int param = parameter[3].toInt();
-        if(id>=0 && id<MAX_STEPPERS){
-          if(param>=0 && param<=2550){
-            sMaker.__MOTOR_SPEED[id]=param;
-            sMaker.write_EEPROM(8+SOLUTIONS+3*MAX_PUMPS_NUMBER+MAX_STEPPERS+id, param/10);
-          }
-          else{Serial.println(F("error,calibration(): Parameter must be within [0-2550]"));}
-        }
-        else{Serial.println(F("error,calibration(): Stepper out of range"));}
-      }
-      // -> Form "calibration,steppersAccel,int[id],int[param]"
-      else if(parameter[1]==F("steppersAccel")){
-        int id= parameter[2].toInt();
-        int param = parameter[3].toInt();
-        if(id>=0 && id<MAX_STEPPERS){
-          if(param>=0 && param<=2550){
-            sMaker.__MOTOR_ACCEL[id]=param;
-            sMaker.write_EEPROM(8+SOLUTIONS+3*MAX_PUMPS_NUMBER+2*MAX_STEPPERS+id, param/10);
-          }
-          else{Serial.println(F("error,calibration(): Parameter must be within [0-2550]"));}
-        }
-        else{Serial.println(F("error,calibration(): Stepper out of range"));}
-      }
-      // -> Form "calibration,steppersStpPin,int[id],int[param]"
-      else if(parameter[1]==F("steppersStpPin")){
-        int id= parameter[2].toInt();
-        int param = parameter[3].toInt();
-        if(id>=0 && id<MAX_STEPPERS){
-          if(param>=0 && param<=255){
-            sMaker.__StepS[id]=param;
-            sMaker.write_EEPROM(8+SOLUTIONS+3*MAX_PUMPS_NUMBER+3*MAX_STEPPERS+id, param);
-          }
-          else{Serial.println(F("error,calibration(): Parameter must be within [0-255]"));}
-        }
-        else{Serial.println(F("error,calibration(): Stepper out of range"));}
-      }
-      // -> Form "calibration,steppersDirPin,int[id],int[param]"
-      else if(parameter[1]==F("steppersDirPin")){
-        int id= parameter[2].toInt();
-        int param = parameter[3].toInt();
-        if(id>=0 && id<MAX_STEPPERS){
-          if(param>=0 && param<=255){
-            sMaker.__DirS[id]=param;
-            sMaker.write_EEPROM(8+SOLUTIONS+3*MAX_PUMPS_NUMBER+4*MAX_STEPPERS+id, param);
-          }
-          else{Serial.println(F("error,calibration(): Parameter must be within [0-255]"));}
-        }
-        else{Serial.println(F("error,calibration(): Stepper out of range"));}
-      }
-      // -> Form "calibration,relayPin,int[id],int[param]"
-      else if(parameter[1]==F("relayPin")){
-        int id= parameter[2].toInt();
-        int param = parameter[3].toInt();
-        if(id>=0 && id<RELAY_NUMBER){
-          if(param>=0 && param<=255){
-            sMaker.__Relay[id]=param;
-            sMaker.write_EEPROM(8+SOLUTIONS+3*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+id, param);
-          }
-          else{Serial.println(F("error,calibration(): Parameter must be within [0-255]"));}
-        }
-        else{Serial.println(F("error,calibration(): Relay out of range"));}
-      }
       // -> Form "calibration,relayTime,int[id],int[param]" param in seconds
       else if(parameter[1]==F("relayTime")){
         int id= parameter[2].toInt();
@@ -300,32 +242,6 @@ void serialEvent() {                                  //if the hardware serial p
           else{Serial.println(F("error,calibration(): Parameter must be within [0-600] seconds"));}
         }
         else{Serial.println(F("error,calibration(): Relay out of range"));}
-      }
-      // -> Form "calibration,limitSOrder,int[id],int[param]" param in seconds
-      else if(parameter[1]==F("limitSOrder")){
-        int id= parameter[2].toInt();
-        int param = parameter[3].toInt();
-        if(id>=0 && id<LIMIT_SWITCHES){
-          if(param>=0 && param<LIMIT_SWITCHES){
-            sMaker.limitOrderCfg(id, param);
-            sMaker.write_EEPROM(8+SOLUTIONS+3*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+2*RELAY_NUMBER+id, param);
-          }
-          else{Serial.println(F("error,calibration(): Parameter must be within max amount of limit switches"));}
-        }
-        else{Serial.println(F("error,calibration(): Limit switch out of range"));}
-      }
-      // -> Form "calibration,limitSPin,int[id],int[param]" param in seconds
-      else if(parameter[1]==F("limitSPin")){
-        int id= parameter[2].toInt();
-        int param = parameter[3].toInt();
-        if(id>=0 && id<LIMIT_SWITCHES){
-          if(param>=0 && param<=255){
-            sMaker.limitOrderCfg(id, param);
-            sMaker.write_EEPROM(8+SOLUTIONS+3*MAX_PUMPS_NUMBER+5*MAX_STEPPERS+2*RELAY_NUMBER+LIMIT_SWITCHES+id, param);
-          }
-          else{Serial.println(F("error,calibration(): Parameter must be within [0-255]"));}
-        }
-        else{Serial.println(F("error,calibration(): Limit switch out of range"));}
       }
   
     }
@@ -408,17 +324,6 @@ void serialEvent() {                                  //if the hardware serial p
           Serial.println(F("error, Must not exceed max relay amount"));
         }
       }
-      // -> Form "set,limitS,param"
-      else if(parameter[1]==F("limitS")){
-        int param = parameter[2].toInt();
-        if(param>0 && param<=LIMIT_SWITCHES){
-          sMaker.__limit_switches=param;
-          sMaker.write_EEPROM(7, param);
-        }
-        else{
-          Serial.println(F("error, Must not exceed max limit switch amount"));
-        }
-      }
     }
 
     // ezo()
@@ -434,7 +339,7 @@ void serialEvent() {                                  //if the hardware serial p
           int param = parameter[3].toInt();
           float ph=0;
           for (int i=0;i<param;i++){
-            EEPROM.get(4000-i*8,ph);
+            //EEPROM.get(4000-i*8,ph);
             Serial.print(ph);
             if(i<param-1){
               Serial.print(F(", "));
@@ -451,7 +356,7 @@ void serialEvent() {                                  //if the hardware serial p
           int param = parameter[3].toInt();
           float ec=0;
           for (int i=0;i<param;i++){
-            EEPROM.get(3996-i*8,ec);
+            //EEPROM.get(3996-i*8,ec);
             Serial.print(ec);
             if(i<param-1){
               Serial.print(F(", "));
@@ -587,6 +492,11 @@ void serialEvent() {                                  //if the hardware serial p
       }
       else if(parameter[1]==F("clean") || parameter[1]==F("clean\n")){ // -> Form "eeprom,clean"
         sMaker.clean_EEPROM(); 
+      }
+      else if(parameter[1]==F("write") || parameter[1]==F("write\n")){ // -> Form "eeprom,write"
+        int pos = parameter[2].toInt();
+        byte val = parameter[3].toInt();
+        sMaker.write_EEPROM(pos,val); 
       }
     }
 

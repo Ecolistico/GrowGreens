@@ -57,6 +57,7 @@ with open("config.json") as f:
     env_data = data["env"]              # Include all the configuration to control the environment
     floors = int(artDay_data['floors']) # Number of floors
     growerData = data["growers"]
+    commands = data["commands"]
 
 # Charge logger parameters
 log = logger(floors)
@@ -203,6 +204,7 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     day = 0
     hour = 0
     minute = 0
+    second = 0
     boot = False
     log.logger.info("Setting up devices...")
     serialControl.open()
@@ -271,6 +273,12 @@ try:
             if mqttControl.inRoutine>0 and mqttControl.inRoutine<=len(myDay.intensity):
                 myDay.intensity[mqttControl.inRoutine-1] = 25
                 myDay.update[mqttControl.inRoutine-1] = True
+                    
+            # If lightsGUI blocked the lights at 25% for that specific floors
+            elif gui.flagOn == True:
+                print(myDay.intensity)
+                myDay.intensity[gui.pis-1] = 25
+                myDay.update[gui.pis-1] = True
             for i in range(1,4,1):
                 ihp.request(ihp.READ_VIN, {'line': i})
                 ihp.request(ihp.READ_IIN, {'line': i})
@@ -328,6 +336,17 @@ try:
                 sub, msg = growCal.getEmail()
                 if(msg!=''): mail.sendMail(sub, msg)
             """
+
+        # When it is a new second
+        if second!=now.second:
+            # Update second
+            second = now.second
+            # Check if there are commands to run
+            dTime = strftime("%H:%M:%S", localtime())
+            for command in commands:
+                if dTime in command:
+                    # Send to generalControl command
+                    serialControl.write(serialControl.generalControl, command[dTime])
 
         # Check Serial Pending
         for i in range(len(mGrower.Gr)): checkSerialMsg(mGrower.Gr[i])

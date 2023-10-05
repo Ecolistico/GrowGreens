@@ -17,6 +17,9 @@ class GUI:
         self.window = None
         self.isOpen = True
         
+        self.gr = ''
+        self.flagOn = False
+        
         # Timer
         self.timer = time.time()
         
@@ -81,10 +84,10 @@ class GUI:
                 [sg.Text('Temp: {}°C'.format(temp), font='Any 12', key='temp'), sg.ProgressBar(100, size=(30, 10), key='tempBar', bar_color=("red", "white")),
                  sg.Text('HR: {}%'.format(hum), font='Any 12', key='hum'), sg.ProgressBar(100, size=(30, 10), key='humBar', bar_color=("blue", "white"))]]
 
-        block_2 = [[sg.Text(' '*20 + 'Rutinas', font='Any 18')],
-                    [sg.Text('Seleccione:', font='Any 12', key="rut"), sg.Combo(self.levels, font='Any 12'),
+        block_2 = [[sg.Text(' '*10 + 'Luces manual(On/Off)', font='Any 16')],
+                    [sg.Text('Seleccione:', font='Any 12', key="rut"), sg.Combo(self.levels, font='Any 12', key="pis"),
                      sg.Text('Estatus', font='Any 12'), sg.Input('No hay selección', size=(20,10), key="rut_status")],
-                    [sg.Text(' '*25), sg.Button('Iniciar', key="data_start"), sg.Text(' '*10), sg.Button('Parar', key="data_stop")]]
+                    [sg.Text(' '*25), sg.Button('ON  ►', key="data_on", button_color=('black','green')), sg.Text(' '*10), sg.Button('OFF', key="data_off", button_color=('black','red'), disabled=True)]]
 
         block_3 = [[sg.Text(' '*15 + 'Dispósitivos', font='Any 18')], CB1, CB2, CB3, CB4]
 
@@ -123,6 +126,21 @@ class GUI:
             self.ser.write(self.ser.generalControl, msg)
         else:
             self.str2log(msg, 3)
+            
+            
+    def getFloor(self, values):
+        self.pis = 0
+        if values['pis'] == "Piso 1": self.pis = 1
+        elif values['pis'] == "Piso 2": self.pis = 2
+        elif values['pis'] == "Piso 3": self.pis = 3
+        elif values['pis'] == "Piso 4": self.pis = 4
+        elif values['pis'] == "Piso 5": self.pis = 5
+        elif values['pis'] == "Piso 6": self.pis = 6
+        elif values['pis'] == "Piso 7": self.pis = 7
+        elif values['pis'] == "Piso 8": self.pis = 8
+        elif self.pis == 0:
+            print("ERROR:Seleccione un piso disponible")
+            #sys.exit()
     
     def updateGeneral(self, temp, hum):
         self.window['temp'].Update(value='Temp: {}°C'.format(temp))
@@ -164,7 +182,21 @@ class GUI:
                 self.isOpen = False
             elif event == "Left:113": print("LEFT")
             elif event == "Right:114": print("RIGHT")
-            
+            elif event == "data_on":
+                self.getFloor(values)
+                if self.pis != 0:
+                    self.flagOn = True
+                    self.window['pis'].update(disabled=True)
+                    self.window['data_on'].update(disabled=True)
+                    self.window['data_off'].update(disabled=False)
+                    print(self.pis, "On", self.flagOn)
+            elif event == "data_off":
+                self.getFloor(values)
+                self.flagOn = False
+                self.window['pis'].update(disabled=False)
+                self.window['data_on'].update(disabled=False)
+                self.window['data_off'].update(disabled=True)
+                print(self.pis, "Off", self.flagOn)
         except Exception as e:
             self.str2log("GUI Closed: {}".format(e), 2)
             self.isOpen = False

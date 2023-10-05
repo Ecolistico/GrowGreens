@@ -52,10 +52,10 @@ class logDataLogger:
                     self.values["T3L"] = float(values[5])
                     self.values["H3L"] = float(values[7])
                 elif("T4R" in msg):
-                    self.values["T4R"] = float(values[0])
-                    self.values["H4R"] = float(values[1])
-                    self.values["T4L"] = float(values[2])
-                    self.values["H4L"] = float(values[3])
+                    self.values["T4R"] = float(values[1])
+                    self.values["H4R"] = float(values[3])
+                    self.values["T4L"] = float(values[5])
+                    self.values["H4L"] = float(values[7])
             
         elif(dev.endswith("2")):
             if("M5" in msg):

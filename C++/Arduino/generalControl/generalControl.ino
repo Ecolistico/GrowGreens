@@ -45,6 +45,8 @@ dateTime dTime;         // Time info
 
 // auxVariables
 bool memoryReady = false;
+bool lastState = false; 
+
 
 // Serial comunication
 String inputstring = "";
@@ -106,6 +108,18 @@ void emergencyButtonPressed() {
     digitalWrite(relay2, !true);
   }
 }
+
+
+void checkPump() {
+  bool currentState = mySensors->_mySwitches[1]->getState();  // Obtener el estado actual del pin EMERG2
+  
+  if (currentState != lastState) {  
+    if (currentState) Serial.println(F("info,recirculation pump OFF"));
+    else Serial.println(F("info,recirculation pump ON"));
+    lastState = currentState; 
+  }
+}
+
 
 void setup() {
   // Initialize serial
@@ -242,4 +256,5 @@ void loop() {
     else Serial.println(F("warning,System leaving in emergency mode"));
     emergencyPrint = emergencyFlag;
   }
+  checkPump();
 }

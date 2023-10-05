@@ -9,6 +9,7 @@
 
 // Solenoids
 #define DEFAULT_TIME_ON         4  // 4 seconds
+#define DEFAULT_CYCLES          1  // 1 cycle
 #define DEFAULT_CYCLE_TIME      30 // 30 minutes
 #define MAX_VALVES_PER_REGION   10 // 10 solenoids
 
@@ -136,5 +137,10 @@ typedef struct {
 typedef struct {
   bool *st[OUT_PER_PCB];
 } MuxOut;
+
+typedef struct {
+  uint8_t timeOnS;
+  uint8_t cycles;
+} solenoid_memory;
 
 #endif

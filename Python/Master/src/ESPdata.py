@@ -52,24 +52,32 @@ class dataESP32:
         
         self.T1R = self.checkValue(float(strSplit[0]), self.T1R, self.missingData, "T1R")
         self.H1R = self.checkValue(float(strSplit[1]), self.H1R, self.missingData, "H1R")
+        if(self.H1R == 1): self.H1R *= 100
         self.T1L = self.checkValue(float(strSplit[2]), self.T1L, self.missingData, "T1L")
         self.H1L = self.checkValue(float(strSplit[3]), self.H1L, self.missingData, "H1L")
-        
+        if(self.H1L == 1): self.H1L *= 100
+
         self.T2R = self.checkValue(float(strSplit[4]), self.T2R, self.missingData, "T2R")
         self.H2R = self.checkValue(float(strSplit[5]), self.H2R, self.missingData, "H2R")
+        if(self.H2R == 1): self.H2R *= 100
         self.T2L = self.checkValue(float(strSplit[6]), self.T2L, self.missingData, "T2L")
         self.H2L = self.checkValue(float(strSplit[7]), self.H2L, self.missingData, "H2L")
-        
+        if(self.H2L == 1): self.H2L *= 100
+
         self.T3R = self.checkValue(float(strSplit[8]), self.T3R, self.missingData, "T3R")
         self.H3R = self.checkValue(float(strSplit[9]), self.H3R, self.missingData, "H3R")
+        if(self.H3R == 1): self.H3R *= 100
         self.T3L = self.checkValue(float(strSplit[10]), self.T3L, self.missingData, "T3L")
         self.H3L = self.checkValue(float(strSplit[11]), self.H3L, self.missingData, "H3L")
-        
+        if(self.H3L == 1): self.H3L *= 100
+
         self.T4R = self.checkValue(float(strSplit[12]), self.T4R, self.missingData, "T4R")
         self.H4R = self.checkValue(float(strSplit[13]), self.H4R, self.missingData, "H4R")
+        if(self.H4R == 1): self.H4R *= 100
         self.T4L = self.checkValue(float(strSplit[14]), self.T4L, self.missingData, "T4L")
         self.H4L = self.checkValue(float(strSplit[15]), self.H4L, self.missingData, "H4L")
-        
+        if(self.H4L == 1): self.H4L *= 100
+
         self.M1 = strSplit[16]
         self.M2 = strSplit[17]
         self.M3 = strSplit[18]
