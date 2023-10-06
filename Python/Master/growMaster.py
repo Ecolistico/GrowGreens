@@ -27,6 +27,8 @@ from growerData import multiGrower
 from inputHandler import inputHandler
 from mqttCallback import mqttController
 from serialCallback import serialController
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 # Colored traceback useful for raise exception with colors in terminal
 colored_traceback.add_hook()
@@ -44,7 +46,7 @@ if not os.path.exists('data/'): os.makedirs('data/')
 # Check if eeprom config file exists, if not then create it
 if not os.path.exists('eeprom.config'):
     with open('eeprom.config', 'w') as f: f.write('')
-
+"""
 # Define config variables
 with open("config.json") as f:
     data = json.load(f)
@@ -58,6 +60,23 @@ with open("config.json") as f:
     floors = int(artDay_data['floors']) # Number of floors
     growerData = data["growers"]
     commands = data["commands"]
+"""
+def load_config():
+    with open("config.json") as f:
+        data = json.load(f)
+    return data
+
+config_data = load_config()
+ID = config_data["ID"]
+brokerIP = config_data["staticIP"]
+city = config_data["city"]
+state = config_data["state"]
+ihp_data = config_data["ihp"]              # Must include 'MAC', 'ip_range' and 'port'
+artDay_data = config_data["day"]           # Include all the configuration to control the artifitial light
+env_data = config_data["env"]              # Include all the configuration to control the environment
+floors = int(artDay_data['floors']) # Number of floors
+growerData = config_data["growers"]
+commands = config_data["commands"]
 
 # Charge logger parameters
 log = logger(floors)
@@ -78,6 +97,7 @@ def mainClose(): # When program is finishing
     conn.close() # Database pointer
     serialControl.close()
     log.logger.info("GrowGreens Finished")
+    observer.stop()
     if run: mail.sendMail("ALERTA", "GrowGreens se detuvo")
     else: mail.sendMail("ALERTA", "GrowGreens fue detenido por el operador")
 
@@ -132,6 +152,73 @@ def checkMqttMsg(grower):
         else: log.logger.warning("Resending Grower{} mqttRequest: {}".format(grower.floor, req2log))
         grower.mqttRequestCounter += 1
         grower.actualTime = time()
+        
+# Función que se ejecutará cuando se modifique el archivo JSON
+def on_config_modified():
+    global config_data, ihp
+    print("Config file modified. Reloading variables...")
+    config_data = load_config()
+    ID = config_data["ID"]
+    brokerIP = config_data["staticIP"]
+    city = config_data["city"]
+    state = config_data["state"]
+    ihp_data = config_data["ihp"]              # Must include 'MAC', 'ip_range' and 'port'
+    artDay_data = config_data["day"]           # Include all the configuration to control the artifitial light
+    env_data = config_data["env"]              # Include all the configuration to control the environment
+    floors = int(artDay_data['floors']) # Number of floors
+    growerData = config_data["growers"]
+    commands = config_data["commands"]
+    # Charge logger parameters
+    log = logger(floors)
+
+    # Charge calendar parameters
+    #growCal = Calendar()
+
+    # From communication
+    mGrower = multiGrower(log, growerData)
+
+    # From Serial Callback
+    serialControl = serialController(mGrower, log, "state.json")
+
+
+
+    # Charge GUI parameters and connect logger and serialControl
+    gui = GUI(ID, log.logger, serialControl)
+
+    # Define day object
+    myDay = Day()
+    myDay.set_function(artDay_data) # Initialize functions
+
+    # Define IHP object and connect logger
+    ihp = IHP(ihp_data, log)
+    # Set all floors OFF by default
+    for i in range(myDay.fl): ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': 0})
+
+    # Define Mail object
+    #mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
+    # Main logger, me and @IFTTT
+    mail = Mail(["jmcasimar@sippys.com.mx", "trigger@applet.ifttt.com"], city, state, ID, log.logger)
+
+    # Define variables imported form other files
+    # From MQTT Callback
+    mqttControl = mqttController(ID,
+                                 brokerIP,
+                                 conn,
+                                 serialControl.mGrower,
+                                 log)
+
+    # Define environment controller
+    env = EnvControl(env_data, mqttControl)
+
+    # From inputHandler
+    inputControl = inputHandler(ID, brokerIP, log.logger, serialControl, mqttControl, gui)
+
+
+
+class JSONFileHandler(FileSystemEventHandler):
+    def on_modified(self, event):
+        if event.src_path.endswith("config.json"):
+            on_config_modified()        
 
 # Aux Variables
 try: param = sys.argv[1]
@@ -148,6 +235,11 @@ if(param==""):
 if(start.startswith("y") or start.startswith("Y") or param=="start"):
     run = True
     log.logger.debug("Permission to start GrowGreens accepted")
+    
+    #WatchDog
+    observer = Observer()
+    observer.schedule(JSONFileHandler(), path=".")
+    observer.start()    
 
     # Define database
     DataBase = './data/{}.db'.format(strftime("%Y-%m-%d", localtime()))
@@ -372,4 +464,5 @@ except Exception as e:
     raise e
 
 finally:
+    observer.join()
     if run: mainClose() # Finished the program
