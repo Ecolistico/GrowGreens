@@ -163,7 +163,12 @@ class mqttController:
             steps = int(message.split(",")[3])
             self.grower.motorMove(direction, message.split(",")[2], steps)          
             self.sendLog("Moving {} Camera to {}, {} steps".format(message.split(",")[2], direction, steps))
-              
+ 
+        elif(message.startswith("servoMove")):
+            cycle = float(message.split(",")[2])
+            self.grower.moveServo(message.split(",")[1], cycle)          
+            self.sendLog("Moving servo {}, {} cycles".format(message.split(",")[1], cycle))
+  
         elif(message == "IrOff"):
             self.grower.turnOn(self.grower.SCL)
             self.grower.turnOn(self.grower.SDA)

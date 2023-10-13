@@ -7,6 +7,7 @@ import RPi.GPIO as GPIO
 import cozir
 from sysGrower import getIPaddr
 import time
+import pigpio
 
 """
 Functions resume:
@@ -31,7 +32,10 @@ class Grower:
         self.OUT2 = out2    # GPIO to activate LED
         self.SDA = 2
         self.SCL = 3
-                
+        
+        self.servoPIN1 = 5
+        self.servoPIN2 = 19
+        
         self.in1 = 17 #For Pins For 28BYJ-48 X
         self.in2 = 18
         self.in3 = 27
@@ -89,6 +93,9 @@ class Grower:
         GPIO.setup(self.SDA, GPIO.OUT)
         GPIO.setup(self.SCL, GPIO.OUT)
         
+        GPIO.setup(self.servoPIN1, GPIO.OUT)
+        GPIO.setup(self.servoPIN2, GPIO.OUT)
+        
         GPIO.setup( self.in1, GPIO.OUT )
         GPIO.setup( self.in2, GPIO.OUT )
         GPIO.setup( self.in3, GPIO.OUT )
@@ -126,7 +133,15 @@ class Grower:
         
         self.motor_pins1 = [self.iny1,self.iny2,self.iny3,self.iny4]
         self.motor_step_counter1 = 0 ;
-
+        """
+        self.p1 = GPIO.PWM(self.servoPIN1, 50) # GPIO 17 for PWM with 50Hz
+        self.p1.start(2.5)
+        self.p1.stop()
+        #GPIO.output( self.servoPIN1, GPIO.LOW )
+        """
+        # connect to the 
+        self.pi = pigpio.pi()
+        
     def getState(self, gpio):
         return GPIO.input(gpio)
 
@@ -263,8 +278,14 @@ class Grower:
                 GPIO.output( self.iny2, GPIO.LOW )
                 GPIO.output( self.iny3, GPIO.LOW )
                 GPIO.output( self.iny4, GPIO.LOW )
-          
 
+    def moveServo(self, servo, cycle):
+        if servo == "1":
+            if cycle >= 1000  and cycle <= 2000:
+                self.pi.set_servo_pulsewidth(19, cycle) # position anti-clockwise
+        elif servo == "2":
+            if cycle >= 1000  and cycle <= 2000:
+                self.pi.set_servo_pulsewidth(5, cycle)
     def close(self):
         GPIO.cleanup() # Clean GPIO
         if(self.coz != None): self.coz.close() # Close serial Cozir port
