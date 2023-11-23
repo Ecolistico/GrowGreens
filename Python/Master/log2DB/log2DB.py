@@ -157,6 +157,7 @@ if (os.path.exists('log2DB.conf')):
         lastLine = data["lastLine"]
         compressor = data["compressor"]
         pump = data["pump"]
+        pumpRec = data["pumpRec"]
         mux1 = data["mux1"]
         myiHP.setData(data["iHP"])
         myDataLogger.setData(data["dataLoggers"])
@@ -176,6 +177,7 @@ def checkLog(filePath, number = 0):
     # State variables
     global compressor
     global pump
+    global pumpRec
     global mux1
     
     if number != 0: filePath += ".{}".format(number)
@@ -285,6 +287,15 @@ def checkLog(filePath, number = 0):
                                         mux1 = False
                                         logDict.append(line2logDict(line))
                                         lineUpload = True
+                                    elif(not pumpRec and msg.startswith("recirculation pump") and "ON" in msg):
+                                        pumpRec = True
+                                        logDict.append(line2logDict(line))
+                                        lineUpload = True
+                                    elif(pumpRec and msg.startswith("recirculation pump") and "OFF" in msg): 
+                                        pumpRec = False
+                                        logDict.append(line2logDict(line))
+                                        lineUpload = True                                        
+                                    
                             
                             # Filter iHP lines
                             elif(dev.startswith("iHP")):
@@ -365,6 +376,7 @@ def checkLog(filePath, number = 0):
             data["lastLine"] = line[:-1]
             data["compressor"] = compressor
             data["pump"] = pump
+            data["pumpRec"] = pumpRec
             data["mux1"] = mux1
             data["iHP"] = myiHP.getData()
             data["dataLoggers"] = myDataLogger.getData()
