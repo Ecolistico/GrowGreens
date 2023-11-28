@@ -36,6 +36,7 @@ checkLine = False
 # State variables
 compressor = False
 pump = False
+pumpRec = False
 mux1 = False
 myiHP = logiHP()
 myDataLogger = logDataLogger()
