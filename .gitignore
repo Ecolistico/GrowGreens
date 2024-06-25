@@ -24,3 +24,5 @@ GUI/*.csv
 
 # Security files
 Python/Master/src/credentials.py
+Python/Master/src/credentials-google.json
+Python/Master/src/token.json
