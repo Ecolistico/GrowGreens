@@ -2,6 +2,7 @@
 import os
 import base64
 import os.path
+import logging
 from credentials import email
 from time import strftime, localtime
 from email.message import EmailMessage
@@ -14,6 +15,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+
+logging.getLogger('googleapicliet.discovery_cache').setLevel(logging.ERROR)
 
 class Mail:
     def __init__(self, loggerMail, city, state, ID, logger = None):
