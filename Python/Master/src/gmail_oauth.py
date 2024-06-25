@@ -78,8 +78,8 @@ class Mail:
                 .execute()
             )
 
-            if self.log != None: self.log.info(f'Message Id: {send_message["id"]}')
-            else: print(f'Message Id: {send_message["id"]}')
+            if self.log != None: self.log.info(f'Gmail Oauth Email sent with Message Id: {send_message["id"]}')
+            else: print(f'Gmail Oauth Email sent with Message Id: {send_message["id"]}')
         except HttpError as error:
             if self.log != None: self.log.error(f"An error occurred: {error}")
             else: print(f"An error occurred: {error}")
