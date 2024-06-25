@@ -165,8 +165,8 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     # Set all floors OFF by default
     for i in range(myDay.fl): ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': 0})
 
-    # Define Mail object: Main logger, redirect email to TI
-    mail = Mail(["ti@ecolistico.com"], city, state, ID, log.logger)
+    # Define Mail object: Main logger, redirect email to me and TI
+    mail = Mail(["jmcasimar@ecolistico.com", "ti@ecolistico.com"], city, state, ID, log.logger)
 
     # Define variables imported form other files
     # From MQTT Callback
