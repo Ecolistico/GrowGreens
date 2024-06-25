@@ -15,8 +15,8 @@ sys.path.insert(0, './src/')
 import EnvControl
 from gui import GUI
 from iHP import IHP
-from smtp import Mail
 from logger import logger
+from gmail_oauth import Mail
 from asciiART import asciiArt
 from artificialDay import Day
 from sensor import BMP280, BME680
@@ -165,10 +165,8 @@ if(start.startswith("y") or start.startswith("Y") or param=="start"):
     # Set all floors OFF by default
     for i in range(myDay.fl): ihp.request(ihp.IREF, {'device': i+1, 'type': 'percentage', 'iref': 0})
 
-    # Define Mail object
-    #mail = Mail(log.logger, "direccion@sippys.com.mx", city, state, ID) # Main logger, Team Ecolistico
-    # Main logger, me and @IFTTT
-    mail = Mail(["jmcasimar@sippys.com.mx", "trigger@applet.ifttt.com"], city, state, ID, log.logger)
+    # Define Mail object: Main logger, redirect email to TI
+    mail = Mail(["ti@ecolistico.com"], city, state, ID, log.logger)
 
     # Define variables imported form other files
     # From MQTT Callback
