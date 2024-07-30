@@ -13,7 +13,7 @@ colorama==0.3.7
 colored-traceback==0.3.0
 coloredlogs==10.0
 colorzero==1.1
-cryptography==1.7.1
+cryptography==42.0.4
 decorator==4.4.0
 docutils==0.13.1
 drumhat==0.1.0
