@@ -1,7 +1,7 @@
 bmp280==0.0.3
 workalendar==8.0.2
 parse_rest==0.2.20170114
-requests==2.20.0
+requests==2.32.2
 colored_traceback==0.3.0
 scikit_fuzzy==0.4.2
 twilio==6.29.4
