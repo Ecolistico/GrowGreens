@@ -18,12 +18,12 @@ colorama==0.3.7
 colored-traceback==0.3.0
 coloredlogs==10.0
 colorzero==1.1
-cryptography==3.3.2
+cryptography==42.0.4
 docutils==0.13.1
 drumhat==0.1.0
 envirophat==1.0.0
 ExplorerHAT==0.4.2
-Flask==1.0
+Flask==2.3.2
 fourletterphat==0.1.0
 gpiozero==1.5.0
 humanfriendly==4.18
@@ -31,7 +31,7 @@ idna==2.2
 isort==4.2.5
 itsdangerous==0.24
 jedi==0.10.2
-Jinja2==2.11.3
+Jinja2==3.1.4
 keyring==10.1
 keyrings.alt==1.3
 lazy-object-proxy==1.2.2
@@ -94,7 +94,7 @@ ssh-import-id==5.6
 stevedore==1.31.0
 thonny==3.1.0
 thonny-pi==1.1
-tornado==5.1.1
+tornado==6.4.1
 touchphat==0.0.1
 twython==3.4.0
 typed-ast==0.6.3
@@ -103,5 +103,5 @@ urllib3==1.26.5
 virtualenv==16.7.9
 virtualenv-clone==0.5.3
 virtualenvwrapper==4.8.4
-Werkzeug==0.15.3
+Werkzeug==2.2.3
 wrapt==1.9.0
